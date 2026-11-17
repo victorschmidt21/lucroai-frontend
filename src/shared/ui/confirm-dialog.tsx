@@ -1,16 +1,10 @@
 'use client';
 
 import { useState, type ReactElement } from 'react';
+import { getErrorMessage } from '@/shared/api/errors';
 import { Alert } from './alert';
 import { Button } from './button';
 import { Dialog } from './dialog';
-
-const ERRO_PADRAO = 'Não foi possível concluir a ação. Tente novamente.';
-
-// A FE-05 troca por `getErrorMessage()` de `shared/api/errors`, que traduz o `ApiError`.
-function mensagemDoErro(erro: unknown) {
-  return erro instanceof Error && erro.message ? erro.message : ERRO_PADRAO;
-}
 
 type ConfirmDialogProps = {
   /** Diz a ação: "Excluir gasto". */
@@ -93,7 +87,7 @@ export function ConfirmDialog({
         </>
       }
     >
-      {error ? <Alert>{mensagemDoErro(error)}</Alert> : null}
+      {error ? <Alert>{getErrorMessage(error)}</Alert> : null}
     </Dialog>
   );
 }

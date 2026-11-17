@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { apiErrorFromResponse } from '@/shared/api/errors';
 import { expectNoA11yViolations } from '@/test/a11y';
 import { Button } from './button';
 import { ConfirmDialog } from './confirm-dialog';
@@ -171,9 +172,15 @@ describe('ConfirmDialog', () => {
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 
-  it('ao falhar, continua aberto e mostra a mensagem', async () => {
+  it('ao falhar, continua aberto e mostra a mensagem do ApiError', async () => {
     renderConfirm(() =>
-      Promise.reject(new Error('Gasto vinculado a uma produção.')),
+      Promise.reject(
+        apiErrorFromResponse('catalog', 400, {
+          statusCode: 400,
+          message: 'Gasto vinculado a uma produção.',
+          error: 'Bad Request',
+        }),
+      ),
     );
 
     await abrir();
@@ -185,8 +192,8 @@ describe('ConfirmDialog', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('usa uma mensagem padrão quando o erro não tem texto', async () => {
-    renderConfirm(() => Promise.reject(new Error('')));
+  it('não expõe a mensagem de uma exceção do JavaScript', async () => {
+    renderConfirm(() => Promise.reject(new TypeError('x is undefined')));
 
     await abrir();
     await userEvent.click(screen.getByRole('button', { name: 'Excluir' }));

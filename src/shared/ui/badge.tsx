@@ -1,4 +1,10 @@
 import type { ComponentProps } from 'react';
+import {
+  METODO_RATEIO_ROTULOS,
+  STATUS_VENDA_ROTULOS,
+  type MetodoRateio,
+  type StatusVenda,
+} from '@/shared/api/contracts/enums';
 import { cn } from './cn';
 
 // Fundo com 8% da cor e texto na cor cheia, como os status de estoque_card.dart e
@@ -37,12 +43,8 @@ export function Badge({ tone = 'neutro', className, ...props }: BadgeProps) {
   );
 }
 
-// Os tipos de enum passam a vir de `shared/api/contracts/enums.ts` na FE-05.
-
 /** Resultado de `statusEstoque()` (FE-13, docs/business-rules.md#estoque-de-insumos). */
 export type StatusEstoque = 'critico' | 'baixo' | 'adequado';
-export type StatusVenda = 'PENDENTE' | 'CONCLUIDA' | 'CANCELADA';
-export type MetodoRateio = 'PROPORCIONAL' | 'POR_UNIDADE' | 'FIXO';
 
 const STATUS_ESTOQUE = {
   critico: { label: 'Crítico', tone: 'critico' },
@@ -50,16 +52,10 @@ const STATUS_ESTOQUE = {
   adequado: { label: 'Adequado', tone: 'adequado' },
 } as const satisfies Record<StatusEstoque, { label: string; tone: BadgeTone }>;
 
-const STATUS_VENDA = {
-  PENDENTE: { label: 'Pendente', tone: 'pendente' },
-  CONCLUIDA: { label: 'Concluída', tone: 'concluida' },
-  CANCELADA: { label: 'Cancelada', tone: 'cancelada' },
-} as const satisfies Record<StatusVenda, { label: string; tone: BadgeTone }>;
-
-const METODO_RATEIO: Record<MetodoRateio, string> = {
-  PROPORCIONAL: 'Proporcional à qtd. de lotes',
-  POR_UNIDADE: 'Proporcional ao total de unidades',
-  FIXO: 'Valor fixo por produção',
+const TOM_STATUS_VENDA: Record<StatusVenda, BadgeTone> = {
+  PENDENTE: 'pendente',
+  CONCLUIDA: 'concluida',
+  CANCELADA: 'cancelada',
 };
 
 export function StatusEstoqueBadge({ status }: { status: StatusEstoque }) {
@@ -69,11 +65,13 @@ export function StatusEstoqueBadge({ status }: { status: StatusEstoque }) {
 }
 
 export function StatusVendaBadge({ status }: { status: StatusVenda }) {
-  const { label, tone } = STATUS_VENDA[status];
-
-  return <Badge tone={tone}>{label}</Badge>;
+  return (
+    <Badge tone={TOM_STATUS_VENDA[status]}>
+      {STATUS_VENDA_ROTULOS[status]}
+    </Badge>
+  );
 }
 
 export function MetodoRateioBadge({ metodo }: { metodo: MetodoRateio }) {
-  return <Badge>{METODO_RATEIO[metodo]}</Badge>;
+  return <Badge>{METODO_RATEIO_ROTULOS[metodo]}</Badge>;
 }
