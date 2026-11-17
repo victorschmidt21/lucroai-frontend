@@ -1,0 +1,99 @@
+'use client';
+
+import { useState, type ReactElement } from 'react';
+import { Alert } from './alert';
+import { Button } from './button';
+import { Dialog } from './dialog';
+
+const ERRO_PADRAO = 'Não foi possível concluir a ação. Tente novamente.';
+
+// A FE-05 troca por `getErrorMessage()` de `shared/api/errors`, que traduz o `ApiError`.
+function mensagemDoErro(erro: unknown) {
+  return erro instanceof Error && erro.message ? erro.message : ERRO_PADRAO;
+}
+
+type ConfirmDialogProps = {
+  /** Diz a ação: "Excluir gasto". */
+  title: string;
+  /** Cita o item entre aspas e, se houver, a consequência. */
+  description?: string;
+  /** Descreve a ação ("Excluir", "Cancelar venda"), nunca "OK". */
+  confirmLabel: string;
+  cancelLabel?: string;
+  /** Ao rejeitar, o diálogo continua aberto, com a mensagem de erro. */
+  onConfirm: () => Promise<unknown> | void;
+  trigger?: ReactElement;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function ConfirmDialog({
+  title,
+  description,
+  confirmLabel,
+  cancelLabel = 'Cancelar',
+  onConfirm,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: ConfirmDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [isPending, setIsPending] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+
+  function handleOpenChange(next: boolean) {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+
+    // Uma nova confirmação não herda o erro da tentativa anterior.
+    if (!next) setError(null);
+  }
+
+  async function handleConfirm() {
+    if (isPending) return;
+    setIsPending(true);
+    setError(null);
+
+    try {
+      await onConfirm();
+      handleOpenChange(false);
+    } catch (cause) {
+      setError(cause);
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  return (
+    <Dialog
+      title={title}
+      description={description}
+      trigger={trigger}
+      open={open}
+      onOpenChange={(next) => {
+        if (!isPending) handleOpenChange(next);
+      }}
+      footer={
+        <>
+          <Button
+            variant="secundario"
+            disabled={isPending}
+            onClick={() => handleOpenChange(false)}
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            variant="perigo"
+            loading={isPending}
+            onClick={() => void handleConfirm()}
+          >
+            {confirmLabel}
+          </Button>
+        </>
+      }
+    >
+      {error ? <Alert>{mensagemDoErro(error)}</Alert> : null}
+    </Dialog>
+  );
+}
