@@ -1,0 +1,116 @@
+name: CI
+
+# Sem filtro de branch no pull_request: os PRs são empilhados e apontam para a
+# branch da issue anterior, não só para a main (ver docs/testing.md).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Um novo push no mesmo PR/branch cancela a execução anterior
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# Valores fictícios: o CI não sobe o backend. NEXT_PUBLIC_* é incorporada ao
+# bundle, então o build exige o valor; as URLs dos serviços só são lidas pelo
+# servidor. Nos e2e, o playwright.config.ts as aponta para a API falsa.
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  AUTH_API_URL: http://127.0.0.1:3999
+  CATALOG_API_URL: http://127.0.0.1:3999
+  RECIPE_API_URL: http://127.0.0.1:3999
+  OPERATIONS_API_URL: http://127.0.0.1:3999
+  SALES_API_URL: http://127.0.0.1:3999
+
+jobs:
+  verificacao:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Tipos
+        run: npm run typecheck
+
+      # Falha com cobertura abaixo de 80% nos caminhos de docs/testing.md.
+      - name: Testes com cobertura
+        run: npm run test:cov
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: Testes e2e
+    runs-on: ubuntu-latest
+    # Build, instalação do navegador (runner frio) e a suíte inteira com retries;
+    # ver grupo7-biopark/urbizzi-frontend#71, que estourou com 10 minutos.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Obter a versão do Playwright
+        id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Restaurar navegadores do cache
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
+
+      - name: Instalar navegador
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # O cache guarda só os navegadores; as bibliotecas do sistema não.
+      - name: Instalar dependências do navegador
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      # Contra o build de produção (servidor standalone) e a API falsa.
+      - name: Testes e2e
+        run: npm run test:e2e
+        env:
+          E2E_USAR_BUILD: 'true'
+
+      - name: Publicar relatório e traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
