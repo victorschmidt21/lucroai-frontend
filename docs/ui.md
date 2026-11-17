@@ -1,6 +1,6 @@
 # Interface
 
-> **Status:** o design system ainda não existe. Os tokens, a tipografia e os componentes base são entregues na **FE-04**; os blocos de listagem e formulário (`ListPage`, `FormDialog`, campos numéricos, `ConfirmDialog`), na **FE-06**. Este documento define o que eles devem ser e como as telas os usam. As APIs de componente descritas aqui são o alvo: se a FE-04 ou a FE-06 precisarem mudá-las, atualizem este arquivo no mesmo PR. A referência visual é o app Flutter (`lib/main.dart` e as telas de `lib/features/*/presentation/`).
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `FormDialog`, `Form` e os campos numéricos) são **previstos na FE-06**; as APIs descritas para eles são o alvo, e a FE-06 atualiza este arquivo se precisar mudá-las. A referência visual é o app Flutter (`lib/main.dart` e as telas de `lib/features/*/presentation/`).
 
 ## Princípios
 
@@ -10,105 +10,127 @@
 4. **Acessibilidade não é opcional**: teclado, foco visível, rótulos, contraste de 4,5:1 e status com cor **e** texto.
 5. **Celular primeiro.** O público usa o celular na produção; toda tela funciona em 360px sem rolagem horizontal.
 
-## Tokens (FE-04)
+## Tokens
 
-Extraídos de `lib/main.dart` e das telas do mobile. Ficam em variáveis CSS e no tema do Tailwind em `src/app/globals.css`; nas telas, use só as utilidades geradas (`bg-surface`, `text-ink-muted`, `border-border`). As utilidades prontas do Tailwind (`bg-orange-500`, `text-gray-400`) não devem ser usadas.
+Extraídos de `lib/main.dart` e das telas do mobile. Ficam em variáveis CSS (`:root`) e no tema do Tailwind em `src/app/globals.css`; nas telas, use só as utilidades geradas (`bg-surface`, `text-ink-muted`, `border-border`). As cores, sombras, raios e tamanhos de texto prontos do Tailwind foram removidos do tema: `bg-orange-500`, `text-white`, `shadow-md` e `text-sm` não geram estilo. O teste `src/shared/ui/sem-cores-fixas.test.ts` falha se aparecer cor fixa (hex, `rgb()`, paleta do Tailwind) fora de `globals.css`.
 
-| Token            | Valor                  | Uso                                             |
-| ---------------- | ---------------------- | ----------------------------------------------- |
-| `bg`             | #050505                | fundo da página e da barra inferior             |
-| `bg-alt`         | #0A0A0A                | fundo de telas internas (cálculo real, estoque) |
-| `surface`        | #111111                | cartões                                         |
-| `surface-alt`    | #171717                | campos e cartões internos                       |
-| `surface-raised` | #1A1A1A                | Dialog, Drawer, Toast                           |
-| `border`         | #272727                | borda de campo e de cartão                      |
-| `border-strong`  | #2B2B2B                | divisores de destaque                           |
-| `ink`            | #FFFFFF                | texto principal                                 |
-| `ink-muted`      | #8A8A8A                | subtítulos, rótulos e texto secundário          |
-| `ink-subtle`     | #7C7C7C                | legendas (ver contraste abaixo)                 |
-| `accent`         | #FF6B3D                | cor primária: valores em destaque, foco, links  |
-| `accent-strong`  | #E85D33                | botão primário e item ativo do menu             |
-| `on-accent`      | a definir pela medição | texto e ícone sobre `accent` e `accent-strong`  |
-| `success`        | #4CAF50                | lucro positivo, status Adequado e Concluída     |
-| `warning`        | #FFB000                | status Baixo e Pendente                         |
-| `danger`         | #FF5252                | erro, lucro negativo, status Crítico            |
-| `danger-strong`  | #E53935                | botão de perigo                                 |
+| Token            | Valor                         | Uso                                                       |
+| ---------------- | ----------------------------- | --------------------------------------------------------- |
+| `bg`             | #050505                       | fundo da página e da barra inferior                       |
+| `bg-alt`         | #0A0A0A                       | fundo de telas internas (cálculo real, estoque)           |
+| `surface`        | #111111                       | cartões                                                   |
+| `surface-alt`    | #171717                       | campos e cartões internos; hover de botões                |
+| `surface-raised` | #1A1A1A                       | Dialog, Drawer, Toast, lista do Combobox                  |
+| `border`         | #272727                       | borda de campo e de cartão                                |
+| `border-strong`  | #2B2B2B                       | divisores de destaque, trilho da `ProgressBar`            |
+| `ink`            | #FFFFFF                       | texto principal                                           |
+| `ink-muted`      | #8A8A8A                       | rótulos, texto secundário e status Cancelada              |
+| `ink-subtle`     | **#858585** (mobile: #7C7C7C) | subtítulo do `PageHeader`, placeholder, trilho do Slider  |
+| `accent`         | #FF6B3D                       | cor primária: valores em destaque, foco, aba ativa, links |
+| `accent-strong`  | #E85D33                       | botão primário, item ativo do menu, SegmentedControl      |
+| `on-accent`      | **#000000**                   | texto e ícone sobre `accent` e `accent-strong`            |
+| `success`        | #4CAF50                       | lucro positivo, status Adequado e Concluída               |
+| `warning`        | #FFB000                       | status Baixo e Pendente                                   |
+| `danger`         | #FF5252                       | erro, lucro negativo, status Crítico                      |
+| `danger-strong`  | #E53935                       | botão de perigo                                           |
+| `on-danger`      | **#000000**                   | texto sobre `danger-strong`                               |
+| `overlay`        | preto com 87%                 | fundo atrás de Dialog e Drawer (`Colors.black87`)         |
 
-Medições preliminares de contraste (a FE-04 confirma e registra no PR):
+### Contraste
 
-| Combinação                      | Contraste | Conclusão                                                                            |
-| ------------------------------- | --------- | ------------------------------------------------------------------------------------ |
-| `ink-muted` sobre `surface`     | 5,47:1    | ok                                                                                   |
-| `ink-subtle` sobre `surface`    | 4,52:1    | no limite; sobre `surface-raised` cai para 4,17:1 e **não** serve para texto pequeno |
-| `accent` sobre `bg`             | 7,20:1    | ok em qualquer tamanho                                                               |
-| branco sobre `accent-strong`    | 3,47:1    | **reprovado** para texto normal                                                      |
-| preto sobre `accent-strong`     | 6,04:1    | ok: `on-accent` deve ser preto, salvo decisão registrada na FE-04                    |
-| `danger-strong` sobre `surface` | 4,47:1    | só em fundo de botão, nunca como cor de texto                                        |
+Medido em `src/shared/ui/tokens.test.ts`, que lê `globals.css` e calcula a razão do WCAG para cada par usado. Token ou combinação nova entra nesse teste. No navegador, o `axe` do `e2e/design-system.spec.ts` confere o contraste da página `/design-system` inteira.
+
+| Combinação                                                          | Contraste                                | Decisão                                                                                    |
+| ------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `ink-muted` sobre `surface`                                         | 5,47:1                                   | ok; passa de 4,5:1 em todos os fundos                                                      |
+| `ink-subtle` original (#7C7C7C) sobre `surface-raised`              | 4,17:1                                   | **reprovado**: o token foi clareado para #858585, o cinza do painel e das vendas no mobile |
+| `ink-subtle` (#858585) sobre `surface-raised`                       | 4,72:1                                   | ok em todos os fundos                                                                      |
+| `accent` sobre `bg`                                                 | 7,20:1                                   | ok em qualquer tamanho e em todos os fundos; é a cor do foco                               |
+| branco sobre `accent-strong` / `accent`                             | 3,47:1 / 2,83:1                          | **reprovado**: o mobile usa texto branco nos botões laranja; a web usa preto               |
+| preto sobre `accent-strong`                                         | 6,04:1                                   | ok: `on-accent` é preto                                                                    |
+| branco sobre `danger-strong`                                        | 4,23:1                                   | **reprovado**                                                                              |
+| preto sobre `danger-strong`                                         | 4,97:1                                   | ok: `on-danger` é preto                                                                    |
+| `accent-strong` sobre `bg` (item ativo do menu)                     | 5,87:1                                   | ok sobre `bg` e `bg-alt`                                                                   |
+| texto do status sobre 12% da própria cor (como o `venda_card.dart`) | Cancelada: 4,30:1 sobre `surface-raised` | **reprovado**: o Badge usa 8% de fundo, que passa em todos os fundos                       |
+| `accent-strong` sobre 20% dele (FilterChip do mobile)               | 3,89:1                                   | **reprovado**: o `ToggleChip` selecionado usa texto `accent` (4,77:1 ou mais)              |
+| `danger`, `success`, `warning` sobre `surface`                      | ≥ 4,5:1                                  | ok como texto                                                                              |
+
+A borda dos campos (`border` sobre `surface-alt`, 1,2:1) segue o mobile e não atinge os 3:1 de contraste não textual. O campo é identificado pelo rótulo visível acima dele e pelo fundo; no foco, a borda fica `accent`.
 
 ### Status
 
-Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](business-rules.md#enumerações-e-rótulos).
+Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](business-rules.md#enumerações-e-rótulos). Cada status tem um token próprio (`status-critico`, `status-pendente` etc.), que aponta para o semântico:
 
-| Domínio | Valor       | Texto     | Token       |
-| ------- | ----------- | --------- | ----------- |
-| Estoque | crítico     | Crítico   | `danger`    |
-| Estoque | baixo       | Baixo     | `warning`   |
-| Estoque | adequado    | Adequado  | `success`   |
-| Venda   | `PENDENTE`  | Pendente  | `warning`   |
-| Venda   | `CONCLUIDA` | Concluída | `success`   |
-| Venda   | `CANCELADA` | Cancelada | `ink-muted` |
+| Domínio | Valor       | Texto     | Token              | Aponta para |
+| ------- | ----------- | --------- | ------------------ | ----------- |
+| Estoque | crítico     | Crítico   | `status-critico`   | `danger`    |
+| Estoque | baixo       | Baixo     | `status-baixo`     | `warning`   |
+| Estoque | adequado    | Adequado  | `status-adequado`  | `success`   |
+| Venda   | `PENDENTE`  | Pendente  | `status-pendente`  | `warning`   |
+| Venda   | `CONCLUIDA` | Concluída | `status-concluida` | `success`   |
+| Venda   | `CANCELADA` | Cancelada | `status-cancelada` | `ink-muted` |
+
+O mobile pinta "Cancelada" com #E53935; a web segue a issue e usa `ink-muted`, para uma venda cancelada não parecer um erro.
 
 ### Forma e profundidade
 
-- **Cantos arredondados**, diferente da Urbizzi: `radius-md` 12px em cartões e campos (padrão), `radius-sm` 8px em badges e chips, `radius-lg` 14px em cartões de resumo.
-- **Sem gradientes.** Sombra só onde o mobile usa elevação: Dialog e Drawer.
+- **Cantos arredondados**, diferente da Urbizzi: `rounded-md` (12px) em cartões, campos e botões (padrão), `rounded-sm` (8px) em badges e chips, `rounded-lg` (14px) em cartões de resumo e no `StatCard`, `rounded-xl` (18px) no Dialog e no Drawer (o `Dialog` de cadastro do mobile usa 18px). `rounded-full` em `IconButton`, `SegmentedControl` e Spinner.
+- **Sem gradientes.** Sombra (`shadow-elevacao`) só onde o mobile usa elevação: Dialog, Drawer, Toast e a lista do Combobox.
 - Separação entre áreas por fundo e borda (`surface` com `border`).
 
 ### Tipografia
 
-Roboto (a fonte padrão do Material no Flutter), via `next/font`, nos pesos 400, 500, 600 e 700.
+Roboto (a fonte padrão do Material no Flutter), via `next/font/google` em `src/app/fonts.ts`, nos pesos 400, 500, 600 e 700. O `next/font` hospeda os arquivos no próprio app: o navegador não chama o Google. Onde o mobile usa `w800`, a web usa 700.
 
-| Classe               | Uso                                                                              |
-| -------------------- | -------------------------------------------------------------------------------- |
-| `text-display`       | valor dos indicadores do painel e destaque "CUSTO POR UNIDADE"                   |
-| `text-heading`       | título da página (`h1`), como "Insumos"                                          |
-| `text-subtitle`      | texto cinza sob o título                                                         |
-| `text-section-label` | rótulos de seção em caixa alta, como "CUSTOS INVISÍVEIS"; nunca em texto corrido |
-| `text-body`          | texto                                                                            |
-| `text-small`         | texto de apoio e linhas de lista                                                 |
-| `text-caption`       | legendas e metadados                                                             |
+| Classe               | Tamanho (mobile)      | Uso                                                                |
+| -------------------- | --------------------- | ------------------------------------------------------------------ |
+| `text-display-lg`    | 36px, 700             | destaque "CUSTO POR UNIDADE" do cálculo real                       |
+| `text-display`       | 22px, 700             | valor dos indicadores do painel (`StatCard`)                       |
+| `text-heading`       | 27px, 700             | título da página (`h1`), como "Insumos"; a `Logo`                  |
+| `text-title`         | 18px, 700             | título de Dialog e Drawer, valor do Slider                         |
+| `text-subtitle`      | 12,5px                | texto cinza sob o título (com `text-ink-subtle`)                   |
+| `text-section-label` | 11px, 700, caixa alta | rótulos de seção, como "CUSTOS INVISÍVEIS"; nunca em texto corrido |
+| `text-field`         | 16px                  | texto digitado nos campos (o iOS amplia a tela com menos de 16px)  |
+| `text-body`          | 14px                  | texto, botões e rótulos                                            |
+| `text-small`         | 12px                  | texto de apoio, dicas e erros dos campos                           |
+| `text-caption`       | 11px                  | legendas, metadados e badges                                       |
 
-Em texto corrido, escreva **LucroAI**.
+`text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva **LucroAI**.
 
 ## Componentes (`src/shared/ui/`)
 
-Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tabs, Toast, Combobox, Slider, Select); nativos onde já funcionam bem (Checkbox, Input).
+Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tabs, Toast, Slider, SegmentedControl e ToggleChip); nativos onde já funcionam bem (Input, Select, Checkbox, datas). O `Combobox` é próprio, porque o Radix não tem combobox. Para ver tudo funcionando, abra [`/design-system`](http://localhost:3000/design-system), disponível só em desenvolvimento.
 
-| Arquivo                              | Exporta                                                                | Observações                                                                                                                                                  |
-| ------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `button.tsx`                         | `Button`, `IconButton`                                                 | variantes `primario`, `secundario`, `perigo`, `fantasma`; `size="icone"` exige `aria-label`; `loading` mantém o texto e desabilita; `type` padrão é `button` |
-| `input.tsx`, `textarea.tsx`          | `Input`, `Textarea`                                                    | `label` obrigatório; `error` e `hint` ligados ao campo (`aria-describedby`)                                                                                  |
-| `number-input.tsx`                   | `NumberInput`                                                          | base dos campos numéricos brasileiros (FE-06)                                                                                                                |
-| `select.tsx`, `combobox.tsx`         | `Select`, `Combobox`                                                   | `Combobox` com busca, para escolher receita ou insumo                                                                                                        |
-| `checkbox.tsx`, `chip.tsx`           | `Checkbox`, `Chip`, `ToggleChip`                                       | `ToggleChip` para os gastos da produção                                                                                                                      |
-| `segmented-control.tsx`              | `SegmentedControl`                                                     | filtro "Todos / Baixo" do estoque                                                                                                                            |
-| `slider.tsx`                         | `Slider`                                                               | setas, Home/End e valor anunciado; usado na simulação                                                                                                        |
-| `label.tsx`                          | `Label`, `FieldError`                                                  | para campos fora dos componentes acima                                                                                                                       |
-| `dialog.tsx`, `drawer.tsx`           | `Dialog`, `Drawer`                                                     | `title` obrigatório; o `Drawer` abre de baixo no celular, como o `showModalBottomSheet`                                                                      |
-| `confirm-dialog.tsx`                 | `ConfirmDialog`                                                        | ver [Confirmação](#confirmação-de-exclusão-e-de-ações)                                                                                                       |
-| `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                       | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                             |
-| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                     | `StatCard`: título, valor, detalhe e cor do detalhe (painel)                                                                                                 |
-| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge` | sempre com cor e texto                                                                                                                                       |
-| `progress-bar.tsx`                   | `ProgressBar`                                                          | `value` de 0 a 1 e `aria-label` obrigatório                                                                                                                  |
-| `toast.tsx`                          | `ToastProvider`, `useToast`                                            | `toast.success(texto)`, `toast.error(texto)`; equivale ao `SnackBar`                                                                                         |
-| `skeleton.tsx`, `spinner.tsx`        | `Skeleton`, `Spinner`                                                  | `Skeleton` exige `aria-label`                                                                                                                                |
-| `empty-state.tsx`, `error-state.tsx` | `EmptyState`, `ErrorState`                                             | `ErrorState` tem "Tentar novamente" (`onRetry`)                                                                                                              |
-| `page-header.tsx`                    | `PageHeader`                                                           | `title` (o `h1`), `subtitle` e `actions`                                                                                                                     |
-| `date-picker.tsx`                    | `DateRangePicker`                                                      | período do histórico de vendas, em `YYYY-MM-DD`                                                                                                              |
-| `logo.tsx`                           | `Logo`                                                                 | wordmark "LucroAI" do cabeçalho do painel                                                                                                                    |
-| `icons/`                             | `menu.tsx`, `acoes.tsx`                                                | SVGs locais equivalentes aos ícones Material do mobile; decorativos (`aria-hidden`)                                                                          |
+| Arquivo                              | Exporta                                                                | Observações                                                                                                                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `button.tsx`                         | `Button`, `IconButton`, `buttonClasses`                                | variantes `primario`, `secundario`, `perigo`, `fantasma`; tamanhos `padrao`, `compacto`, `icone`; `loading` mantém o texto e desabilita; `type` padrão é `button`; `IconButton` exige `aria-label`       |
+| `input.tsx`, `textarea.tsx`          | `Input`, `Textarea`                                                    | `label` obrigatório; `error` e `hint` ligados ao campo (`aria-describedby`); `Input` aceita `icon` à esquerda                                                                                            |
+| `number-input.tsx`                   | `NumberInput`                                                          | base dos campos numéricos brasileiros (FE-06): `type="text"`, `inputMode="decimal"`, `prefixo` (`R$`) e `sufixo` (`kg`, `%`); guarda o texto, sem converter                                              |
+| `select.tsx`                         | `Select`                                                               | `<select>` nativo, com as `<option>` como filhas; aceita `{...register('campo')}`                                                                                                                        |
+| `combobox.tsx`                       | `Combobox`                                                             | busca sem acentos para escolher receita ou insumo: `options` (`{ value, label }`), `value` (`string \| null`), `onValueChange`, `emptyMessage`; setas, Home/End, Enter e Esc                             |
+| `checkbox.tsx`, `chip.tsx`           | `Checkbox`, `Chip`, `ToggleChip`                                       | `Checkbox` nativo; `Chip` é só texto; `ToggleChip` (`selected`, `onSelectedChange`) para os gastos da produção                                                                                           |
+| `segmented-control.tsx`              | `SegmentedControl`                                                     | filtro "Todos / Baixo" do estoque: `aria-label`, `options`, `value`, `onValueChange`; sempre há uma opção escolhida                                                                                      |
+| `slider.tsx`                         | `Slider`                                                               | `label`, `value`, `min`, `max`, `step`, `formatValue` (exibido e anunciado), `hint`; setas, Page Up/Down, Home/End; usado na simulação                                                                   |
+| `label.tsx`                          | `Label`, `FieldError`                                                  | para campos fora dos componentes acima                                                                                                                                                                   |
+| `alert.tsx`                          | `Alert`                                                                | erro que não pertence a um campo: formulário, diálogo, login                                                                                                                                             |
+| `dialog.tsx`, `drawer.tsx`           | `Dialog`, `DialogClose`, `Drawer`                                      | `title` obrigatório; `trigger`, ou controle com `open` e `onOpenChange`; `footer`; o `Drawer` (`side="bottom"`, padrão) sobe de baixo no celular e fica à direita a partir de `lg`                       |
+| `confirm-dialog.tsx`                 | `ConfirmDialog`                                                        | ver [Confirmação](#confirmação-de-exclusão-e-de-ações); entregue na FE-04, junto com os componentes base                                                                                                 |
+| `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                       | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                                                                         |
+| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                     | `Card` com `title` vira seção com rótulo em caixa alta; `variant="resumo"` tem cantos de 14px. `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                    |
+| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge` | sempre com cor e texto; os tipos `StatusEstoque`, `StatusVenda` e `MetodoRateio` passam a vir dos contratos na FE-05                                                                                     |
+| `progress-bar.tsx`                   | `ProgressBar`                                                          | `<progress>` nativo; `value` de 0 a 1 (limitado), `aria-label` obrigatório, `tone` (`accent` ou a cor do status) e `valueText`                                                                           |
+| `toast.tsx`                          | `ToastProvider`, `useToast`                                            | `toast.success(texto)`, `toast.error(texto)`, `toast.info(texto)`; some em 4 s, como o `SnackBar`; o provider fica no layout de `(app)` (FE-08) e em `/design-system`                                    |
+| `skeleton.tsx`, `spinner.tsx`        | `Skeleton`, `Spinner`                                                  | `Skeleton` exige `aria-label`; `Spinner` tem `label` ("Carregando")                                                                                                                                      |
+| `empty-state.tsx`, `error-state.tsx` | `EmptyState`, `ErrorState`                                             | `EmptyState`: `title`, `description`, `action`; `ErrorState`: `title`, `message`, `onRetry` ("Tentar novamente") e `retrying`                                                                            |
+| `page-header.tsx`                    | `PageHeader`                                                           | `title` (o `h1`), `subtitle` e `actions`                                                                                                                                                                 |
+| `date-picker.tsx`                    | `DateRangePicker`, `isPeriodoValido`                                   | período do histórico de vendas: `legend`, `value` e `onChange` com `{ inicio, fim }` em `YYYY-MM-DD`; dois `<input type="date">` ("Data inicial", "Data final") e o erro de data inicial depois da final |
+| `logo.tsx`                           | `Logo`                                                                 | wordmark "LucroAI" do cabeçalho do painel, em texto (o mobile não tem logo em imagem); `size="compacto"` para o menu                                                                                     |
+| `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…              | SVGs locais equivalentes aos Material Icons do mobile; decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone`                                                                                 |
+| `cn.ts`                              | `cn`                                                                   | junta classes condicionais                                                                                                                                                                               |
 
-A página `/design-system` (só em desenvolvimento, FE-04) mostra todos os tokens e componentes.
+O favicon (`src/app/icon.svg`) repete a identidade: fundo `bg`, "L" branco e a linha de gráfico em `accent`. É um arquivo de imagem, por isso tem as cores escritas nele.
+
+A página `/design-system` (`src/app/design-system/page.tsx`, com o catálogo em `src/features/design-system/`) mostra todos os tokens e componentes. Ela devolve 404 no build de produção.
 
 ### Ações
 
@@ -235,7 +257,8 @@ Exclusões e ações de negócio (excluir, concluir ou cancelar venda) usam `Con
 
 - O título diz a ação; a descrição cita o item entre aspas e, se houver, a consequência.
 - O botão de confirmar usa a variante `perigo` e descreve a ação ("Excluir", "Cancelar venda"), nunca "OK".
-- Ao falhar, o diálogo continua aberto, com a mensagem de erro.
+- Ao falhar, o diálogo continua aberto, com a mensagem de erro num `Alert`. Até a FE-05, a mensagem é o `message` do erro (ou "Não foi possível concluir a ação. Tente novamente."); a FE-05 troca por `getErrorMessage()`.
+- O botão de voltar diz "Cancelar" (`cancelLabel` muda o texto). Durante `onConfirm`, os dois botões ficam inativos e o diálogo não fecha.
 
 ## Estados
 

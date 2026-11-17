@@ -9,7 +9,7 @@ Objetivos:
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
 - **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
 
-> **Status:** só a base da FE-01 existe: `src/app` (layout raiz, página provisória e `GET /api/health`), `src/shared/config` (validação de ambiente) e `src/instrumentation*.ts`. Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
+> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) e o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
 ## Estrutura de pastas
 
@@ -19,8 +19,11 @@ src/
 ├── instrumentation-node.ts       # existe
 ├── proxy.ts                      # previsto (FE-07): redirecionamento otimista por sessão
 ├── app/                          # só rotas: páginas finas que compõem funcionalidades
-│   ├── layout.tsx                # existe: layout raiz
-│   ├── globals.css               # existe; tokens do LucroAI na FE-04
+│   ├── layout.tsx                # existe: layout raiz, com a Roboto
+│   ├── fonts.ts                  # existe: Roboto via next/font
+│   ├── icon.svg                  # existe: favicon
+│   ├── globals.css               # existe: tokens do LucroAI (FE-04)
+│   ├── design-system/            # existe: catálogo do design system, só em desenvolvimento
 │   ├── page.tsx                  # existe: página provisória, substituída pelo painel em (app) na FE-08
 │   ├── (auth)/                   # previsto (FE-07): login
 │   ├── (app)/                    # previsto (FE-08): telas internas, com sessão e menu
@@ -28,7 +31,8 @@ src/
 │       ├── health/route.ts       # existe: GET /api/health
 │       ├── auth/                 # previsto (FE-07): login, logout e sessão
 │       └── backend/[servico]/[...path]/  # previsto (FE-07): proxy autenticado por serviço
-├── features/                     # funcionalidades de negócio (vazio até a FE-07)
+├── features/                     # funcionalidades de negócio
+│   ├── design-system/            # existe: catálogo de /design-system (FE-04)
 │   └── <modulo>/
 │       ├── components/
 │       ├── hooks/
@@ -40,9 +44,9 @@ src/
 │   ├── api/                      # previsto (FE-05): contratos, cliente, erros, TanStack Query
 │   ├── format/                   # previsto (FE-05, FE-06): formatação e leitura de números e datas
 │   ├── domain/                   # previsto: regras de negócio usadas por mais de uma funcionalidade
-│   ├── ui/                       # previsto (FE-04, FE-06): design system (ver docs/ui.md)
+│   ├── ui/                       # existe (FE-04); blocos de listagem e formulário na FE-06 (ver docs/ui.md)
 │   └── auth/                     # previsto (FE-07): sessão e usuário atual
-└── test/                         # previsto (FE-05): MSW, renderização e factories
+└── test/                         # existe: a11y.ts (FE-04); MSW, renderização e factories na FE-05
 e2e/                              # existe: testes do Playwright
 docs/                             # esta documentação
 ```
@@ -74,8 +78,8 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 | `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | previsto (FE-05)        |
 | `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`, `parseNumeroBR`, `numeroBR()` | previsto (FE-05, FE-06) |
 | `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
-| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, estados                                                                                        | previsto (FE-04)        |
-| `ui/`                  | `ListPage`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`, `ConfirmDialog`                           | previsto (FE-06)        |
+| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
+| `ui/`                  | `ListPage`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`                                            | previsto (FE-06)        |
 | `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                                    | previsto (FE-07)        |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
@@ -224,7 +228,7 @@ Não migre o código morto: `lib/features/insumos/presentation/pages/app_shell_p
 
 ## Exemplo completo: funcionalidade `insumos`
 
-> **Previsto (FE-09).** Modelo a ser copiado para as funcionalidades novas, com o contrato real do backend e as regras de [business-rules.md](business-rules.md#insumos). Ele usa a camada de API da FE-05 e os blocos de tela da FE-06 (`ListPage`, `FormDialog`, campos numéricos, `ConfirmDialog`), com as APIs descritas em [ui.md](ui.md#listagens-e-formulários). Quando a FE-09 for entregue, o código real em `src/features/insumos/` passa a ser a referência, e este exemplo deve ser conferido com ele.
+> **Previsto (FE-09).** Modelo a ser copiado para as funcionalidades novas, com o contrato real do backend e as regras de [business-rules.md](business-rules.md#insumos). Ele usa a camada de API da FE-05 e os blocos de tela da FE-06 (`ListPage`, `FormDialog`, campos numéricos) e o `ConfirmDialog` da FE-04, com as APIs descritas em [ui.md](ui.md#listagens-e-formulários). Quando a FE-09 for entregue, o código real em `src/features/insumos/` passa a ser a referência, e este exemplo deve ser conferido com ele.
 
 Arquivos:
 

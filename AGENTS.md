@@ -16,8 +16,8 @@ A web **substitui o app Flutter** [`lucroai_mobile`](https://github.com/GrupoDoi
 | ----------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | Runtime           | Node.js 24, ESM (`"type": "module"`)                   | em uso                                                                                                                                   |
 | Framework         | Next.js 16 (App Router), React 19, TypeScript `strict` | em uso                                                                                                                                   |
-| Estilo            | Tailwind CSS v4, com os tokens do LucroAI              | em uso; tokens na FE-04                                                                                                                  |
-| Componentes       | Radix UI (`radix-ui`), só onde há foco e teclado       | instalado; uso a partir da FE-04                                                                                                         |
+| Estilo            | Tailwind CSS v4, com os tokens do LucroAI              | em uso, com os tokens da FE-04                                                                                                           |
+| Componentes       | Radix UI (`radix-ui`), só onde há foco e teclado       | em uso no design system (`src/shared/ui/`)                                                                                               |
 | Validação         | Zod 4 (ambiente, contratos da API, formulários e URL)  | em uso no ambiente; contratos na FE-05                                                                                                   |
 | Dados             | TanStack Query 5                                       | instalado; uso a partir da FE-05                                                                                                         |
 | Formulários       | `react-hook-form` + `@hookform/resolvers`              | instalado; uso a partir da FE-06                                                                                                         |
@@ -109,20 +109,26 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 
 Cada PR mantém esta tabela atualizada.
 
-| Caminho                                         | O que é                                                                                                              |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `instrumentation.ts`, `instrumentation-node.ts` | validam o ambiente ao subir o servidor e encerram o processo se houver erro                                          |
-| `shared/config/env.schema.ts`                   | schemas Zod das variáveis (as cinco URLs de serviço e `NEXT_PUBLIC_APP_URL`) e `parseEnv()`                          |
-| `shared/config/env.server.ts`                   | `getServerEnv()`, só no servidor                                                                                     |
-| `shared/config/env.public.ts`                   | `publicEnv`, disponível também no navegador                                                                          |
-| `app/layout.tsx`, `app/globals.css`             | layout raiz (`lang="pt-BR"`, título "LucroAI") e estilos globais, ainda sem os tokens da FE-04                       |
-| `app/page.tsx`                                  | página inicial provisória, substituída pelo painel na FE-08 e na FE-22                                               |
-| `app/api/health/route.ts`                       | `GET /api/health`, informando se cada um dos cinco serviços foi alcançado                                            |
-| `features/`, `test/`                            | vazios (`.gitkeep`)                                                                                                  |
-| `e2e/home.spec.ts` (fora de `src/`)             | e2e da página inicial e do health, contra a API falsa                                                                |
-| `e2e/support/fake-api.mjs` (fora de `src/`)     | API falsa dos e2e (porta 3999), que atende as cinco URLs de serviço; por ora só `/health` e `/docs-json`             |
-| `e2e/support/servir-build.mjs` (fora de `src/`) | serve o build standalone nos e2e com `E2E_USAR_BUILD=true` (o CI usa)                                                |
-| `.github/workflows/ci.yml` (fora de `src/`)     | CI com os jobs "Lint, tipos, testes e build" e "Testes e2e" ([docs/testing.md](docs/testing.md#integração-contínua)) |
+| Caminho                                         | O que é                                                                                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `instrumentation.ts`, `instrumentation-node.ts` | validam o ambiente ao subir o servidor e encerram o processo se houver erro                                                             |
+| `shared/config/env.schema.ts`                   | schemas Zod das variáveis (as cinco URLs de serviço e `NEXT_PUBLIC_APP_URL`) e `parseEnv()`                                             |
+| `shared/config/env.server.ts`                   | `getServerEnv()`, só no servidor                                                                                                        |
+| `shared/config/env.public.ts`                   | `publicEnv`, disponível também no navegador                                                                                             |
+| `app/layout.tsx`, `app/fonts.ts`                | layout raiz (`lang="pt-BR"`, título "LucroAI", fundo `bg`) com a Roboto via `next/font`                                                 |
+| `app/globals.css`                               | tokens do LucroAI (cores, status, raios, sombra, tipografia) no tema do Tailwind ([docs/ui.md](docs/ui.md#tokens))                      |
+| `app/icon.svg`                                  | favicon                                                                                                                                 |
+| `app/design-system/page.tsx`                    | `/design-system`, catálogo de tokens e componentes; só em desenvolvimento (404 no build)                                                |
+| `features/design-system/`                       | `DesignSystemShowcase`, o conteúdo de `/design-system`                                                                                  |
+| `shared/ui/`                                    | design system da FE-04: componentes base, `icons/`, `Logo`, `Toast`, `ConfirmDialog` ([docs/ui.md](docs/ui.md#componentes-srcsharedui)) |
+| `test/a11y.ts`                                  | `expectNoA11yViolations()`, o `axe` dos testes de componente                                                                            |
+| `app/page.tsx`                                  | página inicial provisória, substituída pelo painel na FE-08 e na FE-22                                                                  |
+| `app/api/health/route.ts`                       | `GET /api/health`, informando se cada um dos cinco serviços foi alcançado                                                               |
+| `e2e/home.spec.ts` (fora de `src/`)             | e2e da página inicial e do health, contra a API falsa                                                                                   |
+| `e2e/design-system.spec.ts` (fora de `src/`)    | `axe` com contraste, teclado e larguras em `/design-system` (só com `next dev`); no build, confere o 404                                |
+| `e2e/support/fake-api.mjs` (fora de `src/`)     | API falsa dos e2e (porta 3999), que atende as cinco URLs de serviço; por ora só `/health` e `/docs-json`                                |
+| `e2e/support/servir-build.mjs` (fora de `src/`) | serve o build standalone nos e2e com `E2E_USAR_BUILD=true` (o CI usa)                                                                   |
+| `.github/workflows/ci.yml` (fora de `src/`)     | CI com os jobs "Lint, tipos, testes e build" e "Testes e2e" ([docs/testing.md](docs/testing.md#integração-contínua))                    |
 
 <!-- BEGIN:nextjs-agent-rules -->
 

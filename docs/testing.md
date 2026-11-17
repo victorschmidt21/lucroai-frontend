@@ -1,6 +1,6 @@
 # Testes
 
-> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `renderWithQuery`, factories) são da **FE-05**; o `axe` nos componentes, da **FE-04**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
+> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `renderWithQuery`, factories) são da **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
 
 Ferramentas: **Vitest** com **Testing Library** em testes unitários e de componente, **MSW** para simular a API e **Playwright** nos e2e.
 
@@ -58,9 +58,11 @@ Server Components `async` não são renderizados pelo Testing Library: cubra-os 
 
 ### Acessibilidade
 
-- **Componente:** `expectNoA11yViolations()` (`src/test/a11y.ts`, previsto na FE-04) roda o `axe` na árvore renderizada, com o componente aberto quando for o caso (Dialog, Drawer). O jsdom não calcula cores, então o contraste fica de fora.
-- **Contraste dos tokens:** um teste em `src/shared/ui/` (FE-04) calcula as combinações aprovadas de [ui.md](ui.md#tokens-fe-04). Token novo entra nessa lista.
-- **Navegador real:** `@axe-core/playwright` nas rotas (FE-23), sem violações sérias ou críticas.
+- **Componente:** `expectNoA11yViolations()` (`src/test/a11y.ts`) roda o `axe` na árvore renderizada, com o componente aberto quando for o caso (Dialog, Drawer, Combobox, Toast). O jsdom não calcula cores, então o contraste fica de fora. O `oxlint` aceita `expectNoA11yViolations` como asserção (`vitest/expect-expect`).
+- **Contraste dos tokens:** `src/shared/ui/tokens.test.ts` lê `globals.css` e calcula as combinações de [ui.md](ui.md#contraste), inclusive o fundo translúcido dos Badges. Token novo entra nessa lista.
+- **Cores fixas:** `src/shared/ui/sem-cores-fixas.test.ts` falha se houver hex, `rgb()` ou paleta pronta do Tailwind fora de `globals.css`.
+- **Navegador real:** `e2e/design-system.spec.ts` roda o `@axe-core/playwright` na página `/design-system`, **com contraste**, e com o Dialog e o Drawer abertos. Como a página só existe em desenvolvimento (no build, 404, como na Urbizzi), esses testes rodam com `npm run test:e2e` local (`next dev`); com `E2E_USAR_BUILD=true` (o CI) eles são pulados e só se confere o 404.
+- **Rotas:** `@axe-core/playwright` nas telas (FE-23), sem violações sérias ou críticas.
 
 ### E2E (`e2e/<funcionalidade>.spec.ts`)
 
