@@ -1,6 +1,6 @@
 # Integração com a API
 
-> **Status:** nada desta camada existe ainda. O cliente, os contratos, os erros, o TanStack Query e o MSW são entregues na **FE-05**; o proxy autenticado `/api/backend` e a sessão, na **FE-07**. Este documento descreve a forma que o código deve ter. Ao implementar, atualize-o no mesmo PR se o resultado for diferente. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
+> **Status:** o cliente, os contratos, os erros, o TanStack Query e o MSW **existem** desde a **FE-05** (`src/shared/api/` e `src/test/`). O proxy autenticado `/api/backend` e a sessão são da **FE-07**: até lá, o `apiFetch` do navegador já aponta para o proxy, mas a rota não existe. As funções de `features/<modulo>/api/` chegam com as telas. Ao mudar algo, atualize este documento no mesmo PR. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
 
 ## Os cinco serviços
 
@@ -70,7 +70,7 @@ Conferidas nos DTOs e entidades de cada serviço. "omitido" quer dizer que, sem 
 | `ReceitaCusto`        | `quantidade_lotes`, `total_unidades`, `custo_invisivel`, `custo_total_producao`, `custo_por_unidade` (**snake_case**, ao contrário do OVERVIEW)                                                                                                                 | `recipe-service/.../custos/application/dto/receita-custo.dto.ts`                     |
 | `SimulacaoCenario`    | `custoUnitario`, `precoVenda`, `volume`, `lucroEstimado`, `margemProjetada` (fração), `breakEven`                                                                                                                                                               | `simulacao-cenario-resultado.dto.ts`                                                 |
 | `PrecoVenda`          | `custo_total_unitario`, `preco_sugerido`, `lucro_por_unidade`                                                                                                                                                                                                   | `recipe-service/.../receitas/application/dto/preco-venda.dto.ts`                     |
-| `Estoque`             | `id` (0 quando o registro ainda não existe), `insumoId`, `quantidadeDisponivel`, `quantidadeMinima`, `dataAlteracao` (`null`)                                                                                                                                   | `operations-service/.../estoque/application/dto/estoque.dto.ts`                      |
+| `Estoque`             | `id` (0 quando o registro ainda não existe), `insumoId`, `quantidadeDisponivel` (pode ser negativa), `quantidadeMinima`, `dataAlteracao` (`null` sem alteração)                                                                                                 | `operations-service/.../estoque/application/dto/estoque.dto.ts`                      |
 | `MovimentacaoEstoque` | `id`, `insumoId`, `tipo` (`ENTRADA \| SAIDA`), `origem` (`COMPRA \| PRODUCAO`), `quantidade`, `referenciaId` (`null`), `dataMovimentacao`                                                                                                                       | `movimentacao-estoque.dto.ts`                                                        |
 | `Producao`            | `id`, `receitaId`, `empresaId`, `quantidade` (lotes), `custoTotal` (`null`), `custoUnitario` (`null`), `dataProducao`, `rateios: [{ gastoIndiretoId, valorRateado }]`                                                                                           | `operations-service/.../producoes/domain/models/producao.entity.ts`                  |
 | `Venda`               | `id`, `empresaId`, `total` (`null`), `status`, `dataVenda`, `itens: [{ id, vendaId, receitaId, quantidade, precoUnitarioReal, custoUnitario (`null`), margemRealizada (`null`) }]`                                                                              | `sales-service/.../vendas/domain/models/venda.entity.ts`                             |
@@ -103,7 +103,7 @@ Regras:
 8. **Enums** ficam em `enums.ts`, cada um com o schema, o tipo e os rótulos de tela de [business-rules.md](business-rules.md#enumerações-e-rótulos): `unidadeMedidaSchema`, `UnidadeMedida` e `UNIDADE_MEDIDA_ROTULOS`; `metodoRateioSchema`, `MetodoRateio`, `METODO_RATEIO_ROTULOS` e `METODO_RATEIO_DESCRICOES`; `statusVendaSchema`, `StatusVenda` e `STATUS_VENDA_ROTULOS`; `tipoMovimentacaoSchema`, `origemMovimentacaoSchema` e seus rótulos.
 
 ```ts
-// src/shared/api/contracts/catalog.ts (previsto na FE-05)
+// src/shared/api/contracts/catalog.ts (FE-05)
 import { z } from 'zod';
 import { unidadeMedidaSchema } from './enums';
 
@@ -149,25 +149,26 @@ export type UpdateInsumoBody = Partial<
 
 ## Cliente
 
-Há um único jeito de chamar o backend: `apiFetch(servico, caminho, opcoes)`, com duas variantes de mesma assinatura (previstas na FE-05).
+Há um único jeito de chamar o backend: `apiFetch(servico, caminho, opcoes)`, com duas variantes de mesma assinatura (FE-05).
 
-Arquivos previstos em `src/shared/api/`:
+Arquivos de `src/shared/api/`:
 
-| Arquivo              | Exporta                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `servicos.ts`        | o tipo `Servico` e a lista `SERVICOS`                                               |
-| `client.ts`          | `apiFetch` do navegador (pelo proxy)                                                |
-| `client.server.ts`   | `apiFetch` do servidor (direto no serviço), com `import 'server-only'`              |
-| `request.ts`         | `unwrap()`                                                                          |
-| `errors.ts`          | `ApiError`, `ContratoInvalidoError`, `getErrorMessage()`, `isEstoqueInsuficiente()` |
-| `filtros.ts`         | `filtrarPorTexto()` e a leitura e escrita de filtros na URL                         |
-| `query-provider.tsx` | `QueryProvider`, com os padrões do `QueryClient`                                    |
-| `contracts/`         | os contratos ([acima](#contratos-tipados-estratégia-da-fe-05))                      |
+| Arquivo              | Exporta                                                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `servicos.ts`        | o tipo `Servico`, a lista `SERVICOS` e `isServico()`                                                                             |
+| `client.ts`          | `apiFetch` do navegador (pelo proxy)                                                                                             |
+| `client.server.ts`   | `apiFetch` do servidor (direto no serviço), com `import 'server-only'`                                                           |
+| `request.ts`         | `unwrap()`, o tipo `ApiFetchOptions`, `requisitar()` (o núcleo comum às duas variantes), `validarCaminho()` e `TIMEOUT_MS`       |
+| `errors.ts`          | `ApiError`, `ApiNetworkError`, `ContratoInvalidoError`, `apiErrorFromResponse()`, `getErrorMessage()`, `isEstoqueInsuficiente()` |
+| `filtros.ts`         | `normalizarTexto()`, `filtrarPorTexto()`, `lerFiltros()`, `atualizarFiltros()` e `hrefComFiltros()`                              |
+| `query-client.ts`    | `makeQueryClient()`, `getQueryClient()`, `shouldRetryQuery()`, `isSessaoExpirada()`                                              |
+| `query-provider.tsx` | `QueryProvider`, com o `QueryClient` de `getQueryClient()`                                                                       |
+| `contracts/`         | os contratos ([acima](#contratos-tipados-estratégia-da-fe-05))                                                                   |
 
-| Variante  | Arquivo                                                | Usado em                          | Destino                                                                      |
-| --------- | ------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------- |
-| navegador | `shared/api/client.ts`                                 | Client Components, hooks          | proxy BFF: `/api/backend/<servico>/<caminho>` (FE-07)                        |
-| servidor  | `shared/api/client.server.ts` (`import 'server-only'`) | Server Components, Route Handlers | `<SERVICO>_API_URL` + caminho, com o token lido do cookie (`getServerEnv()`) |
+| Variante  | Arquivo                                                | Usado em                          | Destino                                                                                  |
+| --------- | ------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| navegador | `shared/api/client.ts`                                 | Client Components, hooks          | proxy BFF: `/api/backend/<servico>/<caminho>` (FE-07)                                    |
+| servidor  | `shared/api/client.server.ts` (`import 'server-only'`) | Server Components, Route Handlers | `<SERVICO>_API_URL` + caminho (`getServerEnv()`), com o token recebido em `opcoes.token` |
 
 ```ts
 type Servico = 'auth' | 'catalog' | 'recipe' | 'operations' | 'sales';
@@ -190,6 +191,8 @@ function apiFetch(
 function unwrap<S extends z.ZodType>(corpo: unknown, schema: S): z.output<S>;
 ```
 
+A variante do servidor aceita também `opcoes.token`, enviado como `Authorization: Bearer`. O token é parâmetro, e não lido do cookie dentro do `apiFetch`, porque o login não tem token e o cookie de sessão é da FE-07, que passa o token lido dele (como o `getServerApi(accessToken)` da Urbizzi).
+
 Cada funcionalidade expõe funções em `features/<modulo>/api/<modulo>.api.ts`, que chamam `apiFetch` e `unwrap`. Componentes e hooks chamam essas funções, nunca `apiFetch` nem `fetch` direto:
 
 ```ts
@@ -206,7 +209,9 @@ export async function deleteInsumo(id: number) {
 
 Cuidados:
 
-- **Timeout de 10 s**, como o mobile (`lib/core/network/api_client.dart`), somado ao `signal` de quem chamou (`AbortSignal.any`). Timeout vira `ApiError` de rede; cancelamento continua como `AbortError`, que o TanStack Query trata.
+- **Timeout de 10 s**, como o mobile (`lib/core/network/api_client.dart`), somado ao `signal` de quem chamou por um `AbortController` próprio (e não `AbortSignal.any`/`timeout`, que se comportam diferente no jsdom). Timeout vira `ApiNetworkError` (`isTimeout: true`); cancelamento continua como `AbortError`, que o TanStack Query trata.
+- **Caminho conferido** por `validarCaminho` nas duas variantes: precisa começar com `/` e não pode ter segmento `internal` nem `..` (lança `Error`, porque é erro de programação).
+- **Corpo de sucesso que não é JSON** (ex.: HTML de um intermediário) vira `ContratoInvalidoError`; corpo de erro fora do formato do NestJS vira `ApiError` com o texto do status.
 - **URL absoluta no navegador**: `new URL('/api/backend/...', window.location.origin)`, porque o `Request` do Node (testes) não aceita URL relativa.
 - **`fetch` lido a cada chamada** (`globalThis.fetch(...)`), e não guardado no import, para o MSW interceptar nos testes.
 - **Ids na URL** são números do contrato; monte o caminho com template string e nunca com texto digitado pelo usuário.
@@ -261,7 +266,7 @@ O backend não tem filtro de exceção próprio, então o erro é o padrão do N
 - Não há `code` estável, ao contrário da Urbizzi. Trate pelo **`statusCode`**. O texto da mensagem só é usado nos detectores documentados, como `isEstoqueInsuficiente` ([business-rules.md](business-rules.md#detector-de-estoque-insuficiente)).
 - As mensagens de negócio do backend já estão em português ("Insumo não encontrado", "Venda já finalizada não pode ser alterada", "CNPJ já cadastrado") e podem ser exibidas.
 
-Todo erro vira um `ApiError` (`shared/api/errors.ts`, FE-05):
+Todo erro vira um `ApiError` (`shared/api/errors.ts`):
 
 ```ts
 class ApiError extends Error {
@@ -271,9 +276,16 @@ class ApiError extends Error {
   error?: string; // "Bad Request", "Not Found"...
   servico: Servico;
 }
+
+// Rede ou timeout: um ApiError com statusCode 0 e "Sem conexão com o servidor.".
+class ApiNetworkError extends ApiError {
+  isTimeout: boolean;
+}
 ```
 
-Resposta fora do contrato vira `ContratoInvalidoError`, com a lista de problemas do Zod para o teste e a mensagem "Resposta inesperada do servidor." para a tela. Mostre qualquer erro com `getErrorMessage(error)`, que também cobre o que não é `ApiError`.
+Resposta fora do contrato vira `ContratoInvalidoError`, com a lista de problemas do Zod para o teste (`issues`, `detalhes` e o `ZodError` em `cause`) e a mensagem "Resposta inesperada do servidor." para a tela.
+
+Como o `message` é montado (`apiErrorFromResponse`): `401`, `5xx` e rede têm texto fixo; nos outros status, as mensagens do backend vêm juntas, separadas por `; `, desde que não sejam as mensagens padrão em inglês do NestJS (`Not Found`, `Cannot GET /x`, `Bad Request` etc.); sem mensagem própria, `404` usa "Registro não encontrado." e os demais, "Não foi possível concluir a ação. Tente novamente." (também o texto de `getErrorMessage` para qualquer erro que não seja da API). Mostre qualquer erro com `getErrorMessage(error)`, que também cobre o que não é `ApiError`.
 
 | HTTP     | Situação                                          | `message` do `ApiError` (tela)                                         | Na interface                                            |
 | -------- | ------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -295,11 +307,11 @@ Regras:
 
 ### Configuração (FE-05)
 
-`QueryClientProvider` em um Client Component (`shared/api/query-provider.tsx`), renderizado pelo layout de `(app)`: um `QueryClient` novo por requisição no servidor e um único no navegador.
+`QueryProvider` (`shared/api/query-provider.tsx`), um Client Component a ser renderizado pelo layout de `(app)` (FE-08), com o cliente de `getQueryClient()` (`query-client.ts`): um `QueryClient` novo por requisição no servidor e um único no navegador.
 
 - `retry` de queries: só para erro de rede e 5xx, até 3 vezes. Nunca em 4xx. Mutações não repetem.
 - `refetchOnWindowFocus` ligado e `staleTime` de 30 s. Isso equivale ao "recarrega os dados ao trocar de aba" do mobile: ao voltar a uma tela, os dados antigos aparecem na hora e são revalidados.
-- `onError` nos caches de query e de mutação: `401` leva ao login preservando a rota. As telas não tratam `401`.
+- `onError` nos caches de query e de mutação: em `401`, `makeQueryClient({ onSessaoExpirada })` chama o callback. A FE-07 passa a função que leva a `/login?redirect=<rota>`; até lá, nenhum callback é passado. As telas não tratam `401`.
 
 ### Chaves
 
@@ -364,7 +376,8 @@ Não faça atualização otimista: o backend recalcula custos, rateios e totais,
 
 Nenhuma rota pagina nem busca por texto. As listas vêm inteiras e são pequenas (uma empresa tem dezenas de insumos e receitas).
 
-- A busca e os filtros que o backend não faz rodam no cliente, sobre o resultado da query, com `filtrarPorTexto(lista, campo, termo)` (FE-05), que ignora acentos e maiúsculas.
+- A busca e os filtros que o backend não faz rodam no cliente, sobre o resultado da query, com `filtrarPorTexto(lista, campo, termo)` (FE-05), que ignora acentos e maiúsculas. O `campo` é o nome de uma propriedade de texto ou uma função.
+- `lerFiltros(schema, searchParams)` lê os filtros com o schema Zod da tela (aceita o `searchParams` da página e o `useSearchParams()`), e `hrefComFiltros(pathname, atual, mudancas)` monta o `href` para `router.replace`; vazio, `null`, `undefined` e `false` removem o parâmetro, e `true` vira `1`.
 - O estado de busca e filtros fica nos **search params**, para sobreviver a recarregar e ser compartilhado. Valide-os com Zod e `.catch()`, porque a URL é entrada do usuário.
 - A busca textual usa `q`, com debounce de 300 ms antes de alterar a URL.
 - Os filtros que o backend aplica (vendas e produções) usam os mesmos nomes da API.
@@ -414,6 +427,9 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 15. **`ReceitaCusto` em `snake_case`**, ao contrário do exemplo do OVERVIEW de receitas (`quantidadeLotes`, `custoProducao`). → O contrato segue o DTO.
 16. **Links HATEOAS incorretos** (`update` sempre `PATCH`, links para rotas inexistentes). → Ignorados.
 17. **Seed com empresa fixa.** Os seeds de catalog, recipe, operations e sales usam `EMPRESA_ID = 1`, mas o id da empresa criada pelo seed do auth depende da sequência do banco. Num banco que já teve empresas, o usuário do seed entra e vê listas vazias. → Rode o seed num banco novo (ver [testing.md](testing.md#dados-de-teste)).
+18. **Custo invisível soma todos os gastos da empresa.** O `DefaultCustoInvisivelResultProvider` do recipe-service soma, no custo de produção de **toda** receita, o rateio de **todos** os gastos indiretos da empresa para 1 lote (com Aluguel de R$ 1.800 fixo, o Pão Francês passou de R$ 3,31 para R$ 2.253,31). O seed grava os custos sem isso, então os números do seed não batem com uma receita recriada pela API. → A prévia da FE-12 inclui o custo invisível ([business-rules.md](business-rules.md#receitas-formulário-e-custo)); a regra em si é do backend.
+19. **`GET /estoque/insumos/:id` de insumo inexistente** responde `404` "Insumo não encontrado" (não o `id: 0` do insumo sem registro). → Trate como 404 comum.
+20. **`POST /receitas/:id/preco-venda` sem arredondamento** devolve ruído de ponto flutuante (`preco_sugerido: 72.11200000000001`). → Formate com `formatMoeda`; não compare com `===`.
 
 ## Divergências entre as issues e o backend
 

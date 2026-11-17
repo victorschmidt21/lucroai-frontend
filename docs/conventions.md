@@ -64,7 +64,7 @@ A formatação é responsabilidade do Prettier (`.prettierrc`: aspas simples, v�
 
 Diferente da Urbizzi, que recebe dinheiro como string decimal, o LucroAI recebe e envia valores monetários, quantidades e margens como **`number`** (ponto flutuante). Por isso:
 
-1. **Nunca exiba um `number` cru nem use `toFixed` para exibir.** Use os formatadores de `src/shared/format/` (FE-05), que usam `Intl.NumberFormat('pt-BR')`: `formatMoeda` (`R$ 1.234,56`), `formatCustoUnitario` (`R$ 0,0240/g`, 4 casas), `formatPercentual` (`86,0%`), `formatQuantidade` (`1,5 kg`), `formatNumero`.
+1. **Nunca exiba um `number` cru nem use `toFixed` para exibir.** Use os formatadores de `src/shared/format/` (existem desde a FE-05), que usam `Intl.NumberFormat('pt-BR')`: `formatMoeda` (`R$ 1.234,56`), `formatCustoUnitario` (`R$ 0,0240/g`, 4 casas), `formatPercentual` (`86,0%`), `formatQuantidade` (`1,5 kg`), `formatNumero`.
 2. **Some em `number` e arredonde para centavos só na exibição.** Somas de ponto flutuante acumulam erro (`0.1 + 0.2 !== 0.3`); o formatador arredonda ao exibir. Nunca compare dinheiro com `===`: use a tolerância de R$ 0,01 (`Math.abs(a - b) < 0.005`) ou compare depois de `arredondarCentavos`.
 3. **Prévias que precisam bater com o backend** repetem o arredondamento dele em cada etapa com `arredondarCentavos(valor)`, que é `Number(valor.toFixed(2))`, a mesma função do backend ([business-rules.md](business-rules.md#arredondamento)).
 4. **Ao enviar**, arredonde o que o backend limita: `preco_unitario_real` aceita no máximo 2 casas (`arredondarCentavos`). Quantidades vendidas, rendimento, lotes e volume são inteiros.
@@ -72,7 +72,7 @@ Diferente da Urbizzi, que recebe dinheiro como string decimal, o LucroAI recebe 
 6. **Ausência não é zero.** Campo omitido ou `null` (ex.: `precoSugerido` de receita sem margem) aparece como `—`, nunca `R$ 0,00`, e não entra em soma como se fosse zero, a menos que a regra diga isso ([business-rules.md](business-rules.md)).
 7. **Entrada do usuário**: campos numéricos aceitam `1.234,56`, `1234,56` e `1234.56` (`parseNumeroBR`, FE-06) e mostram o valor no formato brasileiro.
 
-Organização prevista de `src/shared/format/`: `moeda.ts` (`formatMoeda`, `formatCustoUnitario`, `arredondarCentavos`), `numero.ts` (`formatNumero`, `formatQuantidade`, `formatPercentual`), `data.ts` (`formatData`, `parseDataSemHora`, `inicioDoDia`, `fimDoDia`) e `numero-br.ts` (`parseNumeroBR`, `formatNumeroEditavel`, `numeroBR`, `numeroBROpcional`). Se a FE-05 ou a FE-06 organizarem de outro jeito, atualizem esta lista.
+Organização de `src/shared/format/`: `moeda.ts` (`formatMoeda`, `formatCustoUnitario`, `arredondarCentavos`), `numero.ts` (`formatNumero`, `formatQuantidade`, `formatPercentual`, `fracaoParaPercentual`), `data.ts` (`formatData`, `parseDataSemHora`, `toDataSemHora`, `inicioDoDia`, `fimDoDia`) e `texto.ts` (`SEM_VALOR`, o `—` de valor ausente), existentes desde a FE-05; previsto na FE-06, `numero-br.ts` (`parseNumeroBR`, `formatNumeroEditavel`, `numeroBR`, `numeroBROpcional`). Todos recebem `null`/`undefined` e devolvem `—`.
 
 ## Rotas de tela
 

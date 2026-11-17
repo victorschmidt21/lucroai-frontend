@@ -1,6 +1,6 @@
 # Testes
 
-> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `renderWithQuery`, factories) são da **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
+> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `api.ts` com os handlers tipados, `renderWithQuery`, factories e fixtures) existem desde a **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
 
 Ferramentas: **Vitest** com **Testing Library** em testes unitários e de componente, **MSW** para simular a API e **Playwright** nos e2e.
 
@@ -10,6 +10,8 @@ Ferramentas: **Vitest** com **Testing Library** em testes unitários e de compon
 | `npm run test:cov`         | os mesmos, com cobertura (v8)                        | `vitest.config.ts`     |
 | `npx vitest run <arquivo>` | um arquivo                                           | —                      |
 | `npm run test:e2e`         | e2e (`e2e/**/*.spec.ts`)                             | `playwright.config.ts` |
+
+Os testes rodam no fuso `America/Sao_Paulo` (`test.env.TZ` no `vitest.config.ts`), para os testes de data darem o mesmo resultado em qualquer máquina e no CI.
 
 O Vitest roda **sem** `globals`: importe `describe`, `it`, `expect` e `vi` de `vitest` em cada arquivo. O ambiente padrão é `jsdom`; para Route Handlers e código de servidor, comece o arquivo com `// @vitest-environment node`. O jsdom não implementa as APIs de layout que o Radix chama; os substitutos ficam em `vitest.setup.ts`.
 
@@ -78,7 +80,7 @@ O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa**, 
 
 Hoje (FE-03) a API falsa só responde `GET /health` (para o Playwright saber que ela subiu) e `GET /docs-json` (sondado pelo `/api/health`); o resto devolve `404` no formato do NestJS. Cada issue de tela acrescenta ao objeto `routes` do arquivo as rotas que o seu e2e usa, com o envelope `{ data, links }` e os dados do seed; a **FE-23** completa o conjunto. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
 
-## Uso do MSW (previsto na FE-05)
+## Uso do MSW
 
 O servidor do MSW é um só, em `src/test/server.ts`, e a preparação fica em `src/test/msw-setup.ts`, registrado em `setupFiles` no `vitest.config.ts`. Requisição sem handler **falha o teste**, para não deixar uma chamada passar despercebida:
 
@@ -101,10 +103,29 @@ afterAll(() => server.close());
 
 No MSW 3, a opção se chama `onUnhandledFrame` (no MSW 2 era `onUnhandledRequest`).
 
-Cada teste declara as respostas de que precisa com `server.use(...)`. Os ajudantes de `src/test/api.ts` montam a URL do proxy e o envelope, para os handlers seguirem o contrato:
+Cada teste declara as respostas de que precisa com `server.use(...)`. Os ajudantes de `src/test/api.ts` montam a URL do proxy e o envelope, para os handlers seguirem o contrato. Prefira `mockApi`, tipado pela rota: o `data` da resposta tem o tipo do contrato (`RotasDaApi`), e o status padrão é o do NestJS (201 no `POST`, 204 no `DELETE` com `undefined`):
 
 ```ts
-// src/test/api.ts
+server.use(
+  mockApi('GET catalog /insumos', [makeInsumo()]),
+  mockApi('POST catalog /insumos', async ({ request }) => {
+    corpos.push(await request.json());
+    return makeInsumo();
+  }),
+  mockApiErro(
+    'DELETE catalog /insumos/:id',
+    404,
+    'Insumo não encontrado',
+    'Not Found',
+  ),
+  mockApiSemConexao('GET sales /vendas'),
+);
+```
+
+Para casos fora do contrato (corpo inválido, HTML, atraso), use o `http` do MSW com `apiUrl`, `envelope` e `nestError`:
+
+```ts
+// src/test/api.ts (trecho)
 import type { Servico } from '@/shared/api/servicos';
 
 /** URL do proxy BFF, sem depender da origem: `*\/api/backend/catalog/insumos`. */
@@ -174,7 +195,7 @@ Os dados de teste são baseados no seed **"Padaria Pão Feliz"** do backend (`se
 | Receitas         | Pão Francês (50 un, margem 60%, custo de produção 3,31, unitário 0,07, preço 0,11); Bolo de Chocolate (12 un, 50%, 9,70, 0,81, 1,22); Brigadeiro Gourmet (40 un, 60%, 15,48, 0,39, 0,62); Quindim (12 un, 55%, 10,80, 0,90, 1,40)                                                                                                                                                                                                            |
 | Vendas           | três `CONCLUIDA`, uma `PENDENTE` e uma `CANCELADA`, com `margemRealizada` de 0,28 a 0,86                                                                                                                                                                                                                                                                                                                                                     |
 
-Fixtures de respostas reais (capturadas do backend com o seed) ficam em `src/test/fixtures/<servico>/<recurso>.json` e são usadas nos testes de contrato. Factories ficam em `src/test/factories/<entidade>.factory.ts`, com valores válidos e sobrescritas, tipadas pelo contrato:
+Fixtures de respostas reais ficam em `src/test/fixtures/<servico>/<recurso>.json`, com o envelope, e são usadas nos testes de contrato (`src/shared/api/contracts/contracts.test.ts`); as respostas de erro do NestJS ficam em `src/test/fixtures/erros/`. As da FE-05 foram capturadas do backend em execução em 17/11/2026, com dados criados pela API na empresa do usuário do seed (empresa 3, porque o banco já tinha outras empresas; ver a lacuna 17), a partir dos valores do seed. O `access_token` de `auth/login.json` tem a assinatura trocada e não vale em servidor nenhum. Ao recapturar, faça o mesmo. Factories ficam em `src/test/factories/<entidade>.factory.ts`, com valores do seed e sobrescritas, tipadas pelo contrato: `makeInsumo` e `makeInsumosDoSeed`, `makeGastoIndireto` e `makeGastosDoSeed`, `makeReceita`, `makeReceitasDoSeed`, `makeReceitaCusto`, `makeSimulacaoCenario`, `makePrecoVenda`, `makeEstoque`, `makeMovimentacaoEstoque`, `makeProducao`, `makeVenda`, `makeItemVenda`, `makeJwtPayload` e `makeLoginResponse`. O teste de contrato confere que toda factory segue o schema:
 
 ```ts
 // src/test/factories/insumo.factory.ts

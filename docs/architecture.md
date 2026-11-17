@@ -9,7 +9,7 @@ Objetivos:
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
 - **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
 
-> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) e o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
+> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`) e a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
 ## Estrutura de pastas
 
@@ -41,12 +41,12 @@ src/
 │       └── <modulo>.calculos.ts  # regras puras da tela, quando houver
 ├── shared/                       # código transversal
 │   ├── config/                   # existe: validação de ambiente
-│   ├── api/                      # previsto (FE-05): contratos, cliente, erros, TanStack Query
-│   ├── format/                   # previsto (FE-05, FE-06): formatação e leitura de números e datas
+│   ├── api/                      # existe (FE-05): contratos, cliente, erros, filtros, TanStack Query
+│   ├── format/                   # existe (FE-05): formatação; leitura de números na FE-06
 │   ├── domain/                   # previsto: regras de negócio usadas por mais de uma funcionalidade
 │   ├── ui/                       # existe (FE-04); blocos de listagem e formulário na FE-06 (ver docs/ui.md)
 │   └── auth/                     # previsto (FE-07): sessão e usuário atual
-└── test/                         # existe: a11y.ts (FE-04); MSW, renderização e factories na FE-05
+└── test/                         # existe: a11y.ts (FE-04); MSW, api.ts, render.tsx, factories e fixtures (FE-05)
 e2e/                              # existe: testes do Playwright
 docs/                             # esta documentação
 ```
@@ -69,18 +69,19 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 
 ## O que fica em `src/shared/`
 
-| Caminho                | O que é                                                                                                                                                             | Situação                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                  |
-| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                  |
-| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                  |
-| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                                       | previsto (FE-05)        |
-| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | previsto (FE-05)        |
-| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`, `parseNumeroBR`, `numeroBR()` | previsto (FE-05, FE-06) |
-| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
-| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
-| `ui/`                  | `ListPage`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`                                            | previsto (FE-06)        |
-| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                                    | previsto (FE-07)        |
+| Caminho                | O que é                                                                                                                                                    | Situação                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                   | existe                  |
+| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                           | existe                  |
+| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                | existe                  |
+| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                              | existe (FE-05)          |
+| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider` | existe (FE-05)          |
+| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                       | existe (FE-05)          |
+| `format/`              | `parseNumeroBR`, `numeroBR()`                                                                                                                              | previsto (FE-06)        |
+| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                   | previsto (FE-13, FE-18) |
+| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                              | existe (FE-04)          |
+| `ui/`                  | `ListPage`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`                                   | previsto (FE-06)        |
+| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                           | previsto (FE-07)        |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
 
