@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": 8,
+    "insumoId": 19,
+    "quantidadeDisponivel": 13,
+    "quantidadeMinima": 0,
+    "dataAlteracao": "2026-11-17T20:31:11.227Z"
+  },
+  "links": {
+    "getAll": {
+      "href": "/estoque",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/estoque",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/estoque/19",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/estoque/19",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/estoque/19",
+      "method": "DELETE"
+    }
+  }
+}

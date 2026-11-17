@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "id": 12,
+      "insumoId": 19,
+      "tipo": "SAIDA",
+      "origem": "PRODUCAO",
+      "quantidade": 2,
+      "referenciaId": 3,
+      "dataMovimentacao": "2026-11-17T20:31:11.228Z"
+    },
+    {
+      "id": 11,
+      "insumoId": 19,
+      "tipo": "ENTRADA",
+      "origem": "COMPRA",
+      "quantidade": 5,
+      "referenciaId": null,
+      "dataMovimentacao": "2026-11-17T20:31:11.166Z"
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/estoque",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/estoque",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/estoque/19",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/estoque/19",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/estoque/19",
+      "method": "DELETE"
+    }
+  }
+}

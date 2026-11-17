@@ -1,0 +1,36 @@
+{
+  "data": {
+    "id": 19,
+    "empresaId": 3,
+    "nome": "Farinha de Trigo",
+    "quantidadeBaseCusto": 5,
+    "quantidadeDisponivel": 13,
+    "unidade": "KG",
+    "valorPago": 15,
+    "custoUnitario": 3,
+    "precoUnitario": 3,
+    "dataCriacao": "2026-11-17T20:31:08.639Z"
+  },
+  "links": {
+    "getAll": {
+      "href": "/insumos",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/insumos",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/insumos/19",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/insumos/19",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/insumos/19",
+      "method": "DELETE"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "data": [
+    {
+      "id": 19,
+      "empresaId": 3,
+      "nome": "Farinha de Trigo",
+      "quantidadeBaseCusto": 5,
+      "quantidadeDisponivel": 13,
+      "unidade": "KG",
+      "valorPago": 15,
+      "custoUnitario": 3,
+      "precoUnitario": 3,
+      "dataCriacao": "2026-11-17T20:31:08.639Z"
+    },
+    {
+      "id": 20,
+      "empresaId": 3,
+      "nome": "Sal",
+      "quantidadeBaseCusto": 1,
+      "quantidadeDisponivel": -0.04,
+      "unidade": "KG",
+      "valorPago": 2.5,
+      "custoUnitario": 2.5,
+      "precoUnitario": 2.5,
+      "dataCriacao": "2026-11-17T20:31:08.668Z"
+    },
+    {
+      "id": 21,
+      "empresaId": 3,
+      "nome": "Fermento Biológico Seco",
+      "quantidadeBaseCusto": 500,
+      "quantidadeDisponivel": -30,
+      "unidade": "G",
+      "valorPago": 8.5,
+      "custoUnitario": 0.017,
+      "precoUnitario": 0.017,
+      "dataCriacao": "2026-11-17T20:31:08.709Z"
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/insumos",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/insumos",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/insumos/:id",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/insumos/:id",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/insumos/:id",
+      "method": "DELETE"
+    }
+  }
+}

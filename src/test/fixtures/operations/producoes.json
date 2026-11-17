@@ -1,0 +1,41 @@
+{
+  "data": [
+    {
+      "id": 3,
+      "receitaId": 9,
+      "empresaId": 3,
+      "quantidade": 2,
+      "custoTotal": 5406.62,
+      "custoUnitario": 54.07,
+      "dataProducao": "2026-11-17T20:31:11.208Z",
+      "rateios": [
+        {
+          "gastoIndiretoId": 9,
+          "valorRateado": 900
+        }
+      ]
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/producoes",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/producoes",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/producoes/:id",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/producoes/:id",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/producoes/:id",
+      "method": "DELETE"
+    }
+  }
+}
