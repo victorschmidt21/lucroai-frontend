@@ -16,7 +16,11 @@ export async function preencherLogin(page: Page, senha = SENHA) {
 export async function entrar(page: Page) {
   await page.goto('/login');
   await preencherLogin(page);
-  await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible();
+  // O primeiro acesso ao layout de `(app)` no `next dev` compila a rota, o que
+  // passa dos 5 s padrão quando vários testes começam juntos.
+  await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 function base64Url(valor: unknown) {
