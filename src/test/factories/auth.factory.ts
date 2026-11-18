@@ -26,3 +26,25 @@ export function makeLoginResponse(
 ): LoginResponse {
   return { access_token: 'token-de-teste', ...overrides };
 }
+
+function base64Url(valor: unknown) {
+  return Buffer.from(JSON.stringify(valor)).toString('base64url');
+}
+
+/**
+ * JWT de teste com o payload do seed, válido por 4 h a partir de agora (ou de
+ * `agoraMs`). A assinatura é falsa: o front só decodifica o payload.
+ */
+export function makeJwt(
+  overrides: Partial<JwtPayload> = {},
+  agoraMs = Date.now(),
+) {
+  const iat = Math.floor(agoraMs / 1000);
+  const payload = makeJwtPayload({ iat, exp: iat + 4 * 60 * 60, ...overrides });
+
+  return [
+    base64Url({ alg: 'HS256', typ: 'JWT' }),
+    base64Url(payload),
+    'assinatura-de-teste',
+  ].join('.');
+}

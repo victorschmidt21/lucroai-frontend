@@ -1,0 +1,35 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/shared/api/errors';
+import { navigateTo } from './navigation';
+import { handleSessaoExpirada } from './sessao-expirada';
+
+vi.mock('./navigation', () => ({
+  navigateTo: vi.fn<(path: string) => void>(),
+}));
+
+const ERRO_401 = new ApiError({ statusCode: 401, servico: 'catalog' });
+
+afterEach(() => {
+  vi.mocked(navigateTo).mockClear();
+  window.history.replaceState(null, '', '/');
+});
+
+describe('handleSessaoExpirada', () => {
+  it('leva ao login com a rota atual e o aviso de sessão expirada', () => {
+    window.history.replaceState(null, '', '/insumos?q=acucar');
+
+    handleSessaoExpirada(ERRO_401);
+
+    expect(navigateTo).toHaveBeenCalledWith(
+      '/login?redirect=%2Finsumos%3Fq%3Dacucar&expirada=1',
+    );
+  });
+
+  it('não faz nada no próprio login, onde 401 é senha errada', () => {
+    window.history.replaceState(null, '', '/login?redirect=%2Finsumos');
+
+    handleSessaoExpirada(ERRO_401);
+
+    expect(navigateTo).not.toHaveBeenCalled();
+  });
+});
