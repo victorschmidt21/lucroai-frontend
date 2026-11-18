@@ -310,12 +310,12 @@ Regras:
 
 ### Configuração (FE-05)
 
-`QueryProvider` (`shared/api/query-provider.tsx`), um Client Component a ser renderizado pelo layout de `(app)` (FE-08), com o cliente de `getQueryClient()` (`query-client.ts`): um `QueryClient` novo por requisição no servidor e um único no navegador.
+`QueryProvider` (`shared/api/query-provider.tsx`), um Client Component renderizado pelos layouts de `(app)` (FE-08) e de `(auth)` (FE-07), com o cliente de `getQueryClient()` (`query-client.ts`): um `QueryClient` novo por requisição no servidor e um único no navegador.
 
 - `retry` de queries: só para erro de rede e 5xx, até 3 vezes. Nunca em 4xx. Mutações não repetem.
 - `refetchOnWindowFocus` ligado e `staleTime` de 30 s. Isso equivale ao "recarrega os dados ao trocar de aba" do mobile: ao voltar a uma tela, os dados antigos aparecem na hora e são revalidados.
 - `onError` nos caches de query e de mutação: em `401`, `makeQueryClient({ onSessaoExpirada })` chama o callback. O `QueryProvider` passa `handleSessaoExpirada` (FE-07), que leva a `/login?redirect=<rota>&expirada=1` ([security.md](security.md#sessão-bff--cookie-httponly)). As telas não tratam `401`.
-- O `QueryProvider` é renderizado pelo layout de `(auth)` (FE-07) e, até a FE-08, pela página inicial provisória.
+- O layout de `(app)` coloca o usuário lido do cookie em `sessaoKeys.usuario()` (`setQueryData` + `HydrationBoundary`), para o `UserMenu` não repetir a busca ao abrir a tela; depois do `staleTime`, a sessão é conferida de novo.
 - A sessão usa a chave `['sessao', 'usuario']` (`sessaoKeys`, em `shared/auth/usuario-atual.queries.ts`), com o `staleTime` padrão: voltar à aba confere a sessão de novo.
 
 ### Chaves

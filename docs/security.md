@@ -64,7 +64,7 @@ São duas camadas, com papéis diferentes:
 | Camada     | Arquivo                        | O que faz                                                                                                                               |
 | ---------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Otimista   | `src/proxy.ts`                 | lê só o cookie, sem chamar a API: sem cookie ou com `exp` vencido, redireciona para `/login?redirect=...`; com sessão, tira de `/login` |
-| Definitiva | layout de `(app)`, no servidor | `getUsuarioAtual()`; sem sessão válida, redireciona para o login (até a FE-08, a página inicial provisória faz isso)                    |
+| Definitiva | layout de `(app)`, no servidor | `getUsuarioAtual()`; sem sessão válida, redireciona para o login (existe desde a FE-08)                                                 |
 
 - `src/proxy.ts` substitui o `middleware.ts`, porque a convenção antiga está depreciada no Next 16 (ver `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`). Ele roda em toda rota, inclusive em pré-carregamentos, e não deve fazer buscas lentas. Não o use como única proteção.
 - O `matcher` dele exclui `/api`, `/_next` e arquivos estáticos. Rotas de API respondem `401`, sem redirecionar.
