@@ -1,6 +1,6 @@
 # Testes
 
-> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `api.ts` com os handlers tipados, `renderWithQuery`, factories e fixtures) existem desde a **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; `src/test/next-navigation.ts` e o e2e de `/design-system/listagem` (`e2e/listagem-formulario.spec.ts`), desde a **FE-06**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
+> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `api.ts` com os handlers tipados, `renderWithQuery`, factories e fixtures) existem desde a **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; `src/test/next-navigation.ts` e o e2e de `/design-system/listagem` (`e2e/listagem-formulario.spec.ts`), desde a **FE-06**; o CI e a base da API falsa dos e2e são da **FE-03**; o login e a sessão nos e2e (`e2e/auth.spec.ts`, `e2e/support/sessao.ts`, as rotas de login da API falsa) e `src/test/bff.ts`, da **FE-07**; as demais rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
 
 Ferramentas: **Vitest** com **Testing Library** em testes unitários e de componente, **MSW** para simular a API e **Playwright** nos e2e.
 
@@ -12,6 +12,8 @@ Ferramentas: **Vitest** com **Testing Library** em testes unitários e de compon
 | `npm run test:e2e`         | e2e (`e2e/**/*.spec.ts`)                             | `playwright.config.ts` |
 
 Os testes rodam no fuso `America/Sao_Paulo` (`test.env.TZ` no `vitest.config.ts`), para os testes de data darem o mesmo resultado em qualquer máquina e no CI.
+
+Route Handlers e o proxy BFF são testados no ambiente `node` com `makeNextRequest()` (com cookie de sessão e `Origin`) e `stubAmbienteDoBff()` (as cinco URLs e `NEXT_PUBLIC_APP_URL`), de `src/test/bff.ts`; o JWT de teste vem de `makeJwt()` (`src/test/factories/auth.factory.ts`). Componentes que navegam com `navigateTo` mockam `@/shared/auth/navigation`.
 
 O Vitest roda **sem** `globals`: importe `describe`, `it`, `expect` e `vi` de `vitest` em cada arquivo. O ambiente padrão é `jsdom`; para Route Handlers e código de servidor, comece o arquivo com `// @vitest-environment node`. O jsdom não implementa as APIs de layout que o Radix chama; os substitutos ficam em `vitest.setup.ts`.
 
@@ -78,7 +80,9 @@ Abre o navegador e percorre o sistema como o usuário. Fica para os fluxos que a
 
 O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa**, um servidor Node em `e2e/support/fake-api.mjs` (porta 3999) que o Playwright sobe junto com o Next. Como cada serviço tem rotas com raízes diferentes (`/auth`, `/insumos`, `/gastos-indiretos`, `/receitas`, `/estoque`, `/producoes`, `/vendas`), um único servidor pode atender as cinco URLs: o `playwright.config.ts` aponta `AUTH_API_URL`, `CATALOG_API_URL` etc. para ele. A API falsa implementa o contrato de [api-integration.md](api-integration.md#rotas-usadas-pela-web), com o envelope `{ data, links }`, um JWT de teste e os dados do seed. Localmente, os mesmos testes podem rodar contra o backend real com o seed, com `E2E_API_REAL=true`.
 
-Hoje (FE-03) a API falsa só responde `GET /health` (para o Playwright saber que ela subiu) e `GET /docs-json` (sondado pelo `/api/health`); o resto devolve `404` no formato do NestJS. Cada issue de tela acrescenta ao objeto `routes` do arquivo as rotas que o seu e2e usa, com o envelope `{ data, links }` e os dados do seed; a **FE-23** completa o conjunto. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
+Hoje a API falsa responde `GET /health` (para o Playwright saber que ela subiu), `GET /docs-json` (sondado pelo `/api/health`), `POST /auth/login` (FE-07: o usuário do seed recebe um JWT de 4 h com assinatura falsa; outra senha, `401 "Credenciais inválidas"`) e `GET /insumos` (FE-07: lista vazia com um Bearer emitido por ela e dentro do `exp`; senão, `401`); o resto devolve `404` no formato do NestJS. **Sessão nos e2e.** Toda tela, exceto `/login` e `/design-system`, exige sessão desde a FE-07: comece o teste com `entrar(page)` (`e2e/support/sessao.ts`), que usa o usuário do seed e funciona com a API falsa e com `E2E_API_REAL=true`. `tokenFalso(exp)` e `definirCookie()` simulam um cookie vencido ou recusado pelo backend.
+
+Cada issue de tela acrescenta ao objeto `routes` do arquivo as rotas que o seu e2e usa, com o envelope `{ data, links }` e os dados do seed; a **FE-23** completa o conjunto. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
 
 ## Uso do MSW
 

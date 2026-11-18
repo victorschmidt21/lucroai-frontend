@@ -9,7 +9,7 @@ Objetivos:
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
 - **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
 
-> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`) e os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
+> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`), os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`) e a sessão da FE-07 (`src/proxy.ts`, `/login` em `(auth)`, `src/app/api/auth/`, o proxy `src/app/api/backend/`, `src/shared/auth/` e `src/features/auth/`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
 ## Estrutura de pastas
 
@@ -17,22 +17,23 @@ Objetivos:
 src/
 ├── instrumentation.ts            # existe: valida o ambiente ao subir o servidor
 ├── instrumentation-node.ts       # existe
-├── proxy.ts                      # previsto (FE-07): redirecionamento otimista por sessão
+├── proxy.ts                      # existe (FE-07): redirecionamento otimista por sessão
 ├── app/                          # só rotas: páginas finas que compõem funcionalidades
 │   ├── layout.tsx                # existe: layout raiz, com a Roboto
 │   ├── fonts.ts                  # existe: Roboto via next/font
 │   ├── icon.svg                  # existe: favicon
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
-│   ├── page.tsx                  # existe: página provisória, substituída pelo painel em (app) na FE-08
-│   ├── (auth)/                   # previsto (FE-07): login
+│   ├── page.tsx                  # existe: página provisória com sessão e o menu do usuário, substituída pelo painel em (app) na FE-08
+│   ├── (auth)/                   # existe (FE-07): layout com o QueryProvider e login/
 │   ├── (app)/                    # previsto (FE-08): telas internas, com sessão e menu
 │   └── api/
 │       ├── health/route.ts       # existe: GET /api/health
-│       ├── auth/                 # previsto (FE-07): login, logout e sessão
-│       └── backend/[servico]/[...path]/  # previsto (FE-07): proxy autenticado por serviço
+│       ├── auth/                 # existe (FE-07): login, logout e sessao
+│       └── backend/[servico]/[...path]/  # existe (FE-07): proxy autenticado por serviço
 ├── features/                     # funcionalidades de negócio
 │   ├── design-system/            # existe: catálogo de /design-system (FE-04) e exemplo de listagem (FE-06)
+│   ├── auth/                     # existe (FE-07): LoginForm, UserMenu, useLogin, useLogout e os schemas do login
 │   └── <modulo>/
 │       ├── components/
 │       ├── hooks/
@@ -45,7 +46,7 @@ src/
 │   ├── format/                   # existe: formatação (FE-05) e leitura de números digitados (FE-06)
 │   ├── domain/                   # previsto: regras de negócio usadas por mais de uma funcionalidade
 │   ├── ui/                       # existe: design system (FE-04) e blocos de listagem e formulário (FE-06; ver docs/ui.md)
-│   └── auth/                     # previsto (FE-07): sessão e usuário atual
+│   └── auth/                     # existe (FE-07): sessão, cookie, proxy BFF e usuário atual
 └── test/                         # existe: a11y.ts (FE-04); MSW, api.ts, render.tsx, factories e fixtures (FE-05); next-navigation.ts (FE-06)
 e2e/                              # existe: testes do Playwright
 docs/                             # esta documentação
@@ -81,7 +82,7 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 | `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
 | `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
 | `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)          |
-| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                                    | previsto (FE-07)        |
+| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                     | existe (FE-07)          |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
 
@@ -171,7 +172,7 @@ Não há perfis: o LucroAI tem um único tipo de usuário, e todo usuário logad
 
 O layout de `(app)` traz o `<main>`; as páginas começam em `PageHeader`. As rotas do menu nascem provisórias ("Em construção") na FE-08, e cada issue substitui a sua. Páginas `not-found.tsx` e `error.tsx` ficam na raiz de `app/` e em `(app)/`.
 
-O Next 16 renomeou `middleware.ts` para `proxy.ts`. Por isso, a checagem otimista de sessão fica em `src/proxy.ts` (FE-07, ver [security.md](security.md#proteção-de-rotas)). Não confunda com o proxy BFF `/api/backend/[servico]/[...path]`, que é um Route Handler.
+O Next 16 renomeou `middleware.ts` para `proxy.ts`. Por isso, a checagem otimista de sessão fica em `src/proxy.ts` (existe desde a FE-07, ver [security.md](security.md#proteção-de-rotas)). Ele também preenche o header `x-lucroai-path`, que `getUsuarioAtual()` usa para voltar à rota atual depois do login. Não confunda com o proxy BFF `/api/backend/[servico]/[...path]`, que é um Route Handler.
 
 ## Fluxo de uma requisição
 
