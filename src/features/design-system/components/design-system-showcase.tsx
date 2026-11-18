@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { Alert } from '@/shared/ui/alert';
 import {
@@ -8,7 +9,7 @@ import {
   StatusEstoqueBadge,
   StatusVendaBadge,
 } from '@/shared/ui/badge';
-import { Button, IconButton } from '@/shared/ui/button';
+import { Button, buttonClasses, IconButton } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Chip, ToggleChip } from '@/shared/ui/chip';
@@ -566,6 +567,20 @@ export function DesignSystemShowcase() {
               onRetry={() => undefined}
             />
           </div>
+        </Secao>
+
+        <Secao titulo="Listagem e formulário">
+          <p className="max-w-prose text-body text-ink-muted">
+            ListPage com busca na URL, FormDialog com os campos numéricos
+            brasileiros, Form em página e ConfirmDialog, funcionando com uma API
+            em memória.
+          </p>
+          <Link
+            href="/design-system/listagem"
+            className={buttonClasses('secundario', 'self-start')}
+          >
+            Abrir o exemplo de listagem e formulário
+          </Link>
         </Secao>
       </main>
     </ToastProvider>
