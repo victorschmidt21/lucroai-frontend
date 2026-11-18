@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { formatNumeroEditavel, parseNumeroBR } from '@/shared/format/numero-br';
 import { cn } from './cn';
 import {
   CONTROL_CLASSES,
@@ -85,5 +86,112 @@ export function NumberInput({
         ) : null}
       </div>
     </FieldLayout>
+  );
+}
+
+type CampoNumericoProps = Omit<
+  NumberInputProps,
+  'value' | 'defaultValue' | 'onChange' | 'prefixo' | 'sufixo' | 'inputMode'
+> & {
+  /** Texto digitado; o schema converte com `numeroBR()` ou `inteiroBR()`. */
+  value: string;
+  onValueChange: (texto: string) => void;
+};
+
+type ComportamentoNumerico = {
+  /** Caracteres removidos ao digitar ou colar. */
+  recusar: RegExp;
+  /** Reescreve o texto ao sair do campo, para mostrar como o número foi lido. */
+  formatarAoSair?: (texto: string) => string;
+  prefixo?: string;
+  sufixo?: string;
+  inputMode: 'decimal' | 'numeric';
+};
+
+// O teclado decimal do mobile (`numberWithOptions(decimal: true)`) não tem sinal.
+const NAO_DECIMAL = /[^\d.,]/g;
+const NAO_DIGITO = /\D/g;
+
+function formatarDecimal(casas?: number) {
+  return (texto: string) => {
+    const numero = parseNumeroBR(texto);
+
+    return numero === null ? texto : formatNumeroEditavel(numero, casas);
+  };
+}
+
+function CampoNumerico({
+  value,
+  onValueChange,
+  onBlur,
+  recusar,
+  formatarAoSair,
+  ...props
+}: CampoNumericoProps & ComportamentoNumerico) {
+  return (
+    <NumberInput
+      {...props}
+      value={value}
+      onChange={(event) =>
+        onValueChange(event.target.value.replace(recusar, ''))
+      }
+      onBlur={(event) => {
+        const formatado = formatarAoSair?.(value) ?? value;
+
+        if (formatado !== value) onValueChange(formatado);
+        onBlur?.(event);
+      }}
+    />
+  );
+}
+
+/** Dinheiro: `R$` à esquerda; ao sair, mostra 2 casas (`1234.5` vira `1.234,50`). */
+export function MoneyInput(props: CampoNumericoProps) {
+  return (
+    <CampoNumerico
+      placeholder="0,00"
+      {...props}
+      prefixo="R$"
+      inputMode="decimal"
+      recusar={NAO_DECIMAL}
+      formatarAoSair={formatarDecimal(2)}
+    />
+  );
+}
+
+/** Quantidade com a unidade à direita (`kg`); ao sair, mostra no padrão brasileiro. */
+export function DecimalInput({
+  unidade,
+  ...props
+}: CampoNumericoProps & { unidade?: string }) {
+  return (
+    <CampoNumerico
+      {...props}
+      sufixo={unidade}
+      inputMode="decimal"
+      recusar={NAO_DECIMAL}
+      formatarAoSair={formatarDecimal()}
+    />
+  );
+}
+
+/** Rendimento, lotes, quantidade vendida e volume: só aceita dígitos. */
+export function IntegerInput(props: CampoNumericoProps) {
+  return <CampoNumerico {...props} inputMode="numeric" recusar={NAO_DIGITO} />;
+}
+
+/**
+ * Margem em pontos percentuais (`30`), com `%` à direita. A fração do contrato
+ * (`0.3`) é calculada na função `to...Body`, com `percentualParaFracao`.
+ */
+export function PercentInput(props: CampoNumericoProps) {
+  return (
+    <CampoNumerico
+      {...props}
+      sufixo="%"
+      inputMode="decimal"
+      recusar={NAO_DECIMAL}
+      formatarAoSair={formatarDecimal()}
+    />
   );
 }
