@@ -9,7 +9,7 @@ Objetivos:
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
 - **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
 
-> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`) e a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
+> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`) e os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
 ## Estrutura de pastas
 
@@ -23,7 +23,7 @@ src/
 │   ├── fonts.ts                  # existe: Roboto via next/font
 │   ├── icon.svg                  # existe: favicon
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
-│   ├── design-system/            # existe: catálogo do design system, só em desenvolvimento
+│   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
 │   ├── page.tsx                  # existe: página provisória, substituída pelo painel em (app) na FE-08
 │   ├── (auth)/                   # previsto (FE-07): login
 │   ├── (app)/                    # previsto (FE-08): telas internas, com sessão e menu
@@ -32,7 +32,7 @@ src/
 │       ├── auth/                 # previsto (FE-07): login, logout e sessão
 │       └── backend/[servico]/[...path]/  # previsto (FE-07): proxy autenticado por serviço
 ├── features/                     # funcionalidades de negócio
-│   ├── design-system/            # existe: catálogo de /design-system (FE-04)
+│   ├── design-system/            # existe: catálogo de /design-system (FE-04) e exemplo de listagem (FE-06)
 │   └── <modulo>/
 │       ├── components/
 │       ├── hooks/
@@ -42,11 +42,11 @@ src/
 ├── shared/                       # código transversal
 │   ├── config/                   # existe: validação de ambiente
 │   ├── api/                      # existe (FE-05): contratos, cliente, erros, filtros, TanStack Query
-│   ├── format/                   # existe (FE-05): formatação; leitura de números na FE-06
+│   ├── format/                   # existe: formatação (FE-05) e leitura de números digitados (FE-06)
 │   ├── domain/                   # previsto: regras de negócio usadas por mais de uma funcionalidade
-│   ├── ui/                       # existe (FE-04); blocos de listagem e formulário na FE-06 (ver docs/ui.md)
+│   ├── ui/                       # existe: design system (FE-04) e blocos de listagem e formulário (FE-06; ver docs/ui.md)
 │   └── auth/                     # previsto (FE-07): sessão e usuário atual
-└── test/                         # existe: a11y.ts (FE-04); MSW, api.ts, render.tsx, factories e fixtures (FE-05)
+└── test/                         # existe: a11y.ts (FE-04); MSW, api.ts, render.tsx, factories e fixtures (FE-05); next-navigation.ts (FE-06)
 e2e/                              # existe: testes do Playwright
 docs/                             # esta documentação
 ```
@@ -69,19 +69,19 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 
 ## O que fica em `src/shared/`
 
-| Caminho                | O que é                                                                                                                                                    | Situação                |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                   | existe                  |
-| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                           | existe                  |
-| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                | existe                  |
-| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                              | existe (FE-05)          |
-| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider` | existe (FE-05)          |
-| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                       | existe (FE-05)          |
-| `format/`              | `parseNumeroBR`, `numeroBR()`                                                                                                                              | previsto (FE-06)        |
-| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                   | previsto (FE-13, FE-18) |
-| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                              | existe (FE-04)          |
-| `ui/`                  | `ListPage`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`                                   | previsto (FE-06)        |
-| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                           | previsto (FE-07)        |
+| Caminho                | O que é                                                                                                                                                             | Situação                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                  |
+| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                  |
+| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                  |
+| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                                       | existe (FE-05)          |
+| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | existe (FE-05)          |
+| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                | existe (FE-05)          |
+| `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)          |
+| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
+| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
+| `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)          |
+| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT                                                                                    | previsto (FE-07)        |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
 
@@ -229,7 +229,7 @@ Não migre o código morto: `lib/features/insumos/presentation/pages/app_shell_p
 
 ## Exemplo completo: funcionalidade `insumos`
 
-> **Previsto (FE-09).** Modelo a ser copiado para as funcionalidades novas, com o contrato real do backend e as regras de [business-rules.md](business-rules.md#insumos). Ele usa a camada de API da FE-05 e os blocos de tela da FE-06 (`ListPage`, `FormDialog`, campos numéricos) e o `ConfirmDialog` da FE-04, com as APIs descritas em [ui.md](ui.md#listagens-e-formulários). Quando a FE-09 for entregue, o código real em `src/features/insumos/` passa a ser a referência, e este exemplo deve ser conferido com ele.
+> **Previsto (FE-09).** Modelo a ser copiado para as funcionalidades novas, com o contrato real do backend e as regras de [business-rules.md](business-rules.md#insumos). Ele usa a camada de API da FE-05, os blocos de tela da FE-06 (`ListPage`, `FormDialog`, campos numéricos, que já existem) e o `ConfirmDialog` da FE-04, com as APIs descritas em [ui.md](ui.md#listagens-e-formulários). O exemplo funcionando, com uma API em memória no lugar de `api/`, está em `src/features/design-system/components/list-form-showcase.tsx` (`/design-system/listagem`). Quando a FE-09 for entregue, o código real em `src/features/insumos/` passa a ser a referência, e este exemplo deve ser conferido com ele.
 
 Arquivos:
 
@@ -375,7 +375,7 @@ export function calcularCustoUnitario(valorPago: number, quantidade: number) {
 
 ### `schemas/`
 
-Campos numéricos guardam o texto digitado e são convertidos pelo schema com `numeroBR()` (FE-06), que aceita vírgula ou ponto ([business-rules.md](business-rules.md#leitura-de-números-digitados)). O formulário usa o tipo de entrada (`z.input`) e recebe o de saída (`z.output`) no envio.
+Campos numéricos guardam o texto digitado e são convertidos pelo schema com `numeroBR()` (existe desde a FE-06), que aceita vírgula ou ponto ([business-rules.md](business-rules.md#leitura-de-números-digitados)). O formulário usa o tipo de entrada (`z.input`) e recebe o de saída (`z.output`) no envio.
 
 ```ts
 // src/features/insumos/schemas/insumo-form.schema.ts

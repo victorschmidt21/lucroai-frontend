@@ -43,7 +43,7 @@ O mobile aceita vírgula ou ponto como separador decimal:
 - `_parseBR` (`lib/features/insumos/presentation/pages/calculo_real_screen.dart`): vazio vira `0`; inválido vira `-1`, para falhar na validação "≥ 0".
 - `vendas_page.dart` (`_parseDouble`): vazio ou inválido vira `0`, que falha na validação "> 0".
 
-Na web, `parseNumeroBR(texto)` (`src/shared/format/`, previsto na FE-06) segue a mesma ideia e aceita também separador de milhar:
+Na web, `parseNumeroBR(texto)` (`src/shared/format/numero-br.ts`, desde a FE-06) segue a mesma ideia e aceita também separador de milhar:
 
 | Entrada        | Resultado | Regra                                                     |
 | -------------- | --------- | --------------------------------------------------------- |
@@ -54,7 +54,7 @@ Na web, `parseNumeroBR(texto)` (`src/shared/format/`, previsto na FE-06) segue a
 | vazio          | `null`    | o schema decide se é obrigatório ou se conta como 0       |
 | `abc`, `1,2,3` | `null`    | inválido: o schema mostra a mensagem do campo             |
 
-Campos inteiros (rendimento, lotes, quantidade vendida, volume) só aceitam dígitos.
+Campos inteiros (rendimento, lotes, quantidade vendida, volume) só aceitam dígitos (`parseInteiroBR`: `1,5`, `1.200` e `-3` viram `null`). Os schemas usam `numeroBR()`, `numeroBROpcional()` (vazio não é enviado) e `inteiroBR()`; vazio ou inválido mostra a mensagem do campo.
 
 ### Arredondamento
 
@@ -781,18 +781,19 @@ FE-05 e FE-07. Origem: `lib/features/auth/presentation/pages/login_page.dart`, `
 
 Resumo do que a web faz diferente, de propósito. Cada item está detalhado na seção da tela e entra na matriz de paridade da FE-23.
 
-| Tela                 | Diferença                                                                                                           | Motivo                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Todas                | textos com acentuação correta                                                                                       | FE-02                                    |
-| Todas                | busca ignora acentos                                                                                                | FE-05                                    |
-| Campos numéricos     | aceitam separador de milhar (`1.234,56`)                                                                            | FE-06                                    |
-| Insumos              | custo unitário com 4 casas fixas                                                                                    | FE-05                                    |
-| Receitas             | rendimento só inteiro                                                                                               | backend `@IsInt`                         |
-| Estoque              | mostra a data da última alteração; erro isolado por cartão                                                          | FE-13                                    |
-| Entrada de estoque   | sem o campo "Observação"                                                                                            | o backend rejeita o campo                |
-| Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                  | backend `@IsInt` e `maxDecimalPlaces: 2` |
-| Confirmação de venda | vendido considera todas as vendas concluídas e soma itens da mesma receita                                          | correção do cálculo                      |
-| Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                            | lacuna do backend com `dataFim`          |
-| Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                      | FE-19                                    |
-| Simulação            | cenário do meio chamado "Base"; sempre três cenários                                                                | FE-21                                    |
-| Painel               | lucro com o snapshot de custo do item; seis meses reais no gráfico; vendas de 7 dias sobre os seis meses carregados | FE-22                                    |
+| Tela                 | Diferença                                                                                                                                     | Motivo                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Todas                | textos com acentuação correta                                                                                                                 | FE-02                                            |
+| Todas                | busca ignora acentos                                                                                                                          | FE-05                                            |
+| Campos numéricos     | aceitam separador de milhar (`1.234,56`); ao sair do campo, mostram o valor lido no formato brasileiro (`1234.5` vira `1.234,50` no dinheiro) | FE-06                                            |
+| Formulários          | erro da API num `Alert` no topo do formulário, que continua aberto, e não num SnackBar                                                        | FE-06 ([ui.md](ui.md#toasts-depois-de-mutações)) |
+| Insumos              | custo unitário com 4 casas fixas                                                                                                              | FE-05                                            |
+| Receitas             | rendimento só inteiro                                                                                                                         | backend `@IsInt`                                 |
+| Estoque              | mostra a data da última alteração; erro isolado por cartão                                                                                    | FE-13                                            |
+| Entrada de estoque   | sem o campo "Observação"                                                                                                                      | o backend rejeita o campo                        |
+| Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                                            | backend `@IsInt` e `maxDecimalPlaces: 2`         |
+| Confirmação de venda | vendido considera todas as vendas concluídas e soma itens da mesma receita                                                                    | correção do cálculo                              |
+| Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                      | lacuna do backend com `dataFim`                  |
+| Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                                                | FE-19                                            |
+| Simulação            | cenário do meio chamado "Base"; sempre três cenários                                                                                          | FE-21                                            |
+| Painel               | lucro com o snapshot de custo do item; seis meses reais no gráfico; vendas de 7 dias sobre os seis meses carregados                           | FE-22                                            |
