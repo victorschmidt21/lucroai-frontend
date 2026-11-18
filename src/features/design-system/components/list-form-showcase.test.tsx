@@ -49,46 +49,52 @@ describe('exemplo de listagem', () => {
     await expectNoA11yViolations();
   });
 
-  it('cadastra um insumo com o valor no padrão brasileiro', async () => {
-    renderExemplo();
-    await screen.findByText('8 insumos');
+  // Digita em três campos e roda o axe com o diálogo aberto: sob a carga da
+  // cobertura com a suíte inteira, passa dos 5 s padrão.
+  it(
+    'cadastra um insumo com o valor no padrão brasileiro',
+    { timeout: 20_000 },
+    async () => {
+      renderExemplo();
+      await screen.findByText('8 insumos');
 
-    await userEvent.click(
-      screen.getAllByRole('button', { name: 'Novo insumo' })[0]!,
-    );
-    const dialog = screen.getByRole('dialog', { name: 'Novo insumo' });
-    await userEvent.type(
-      within(dialog).getByRole('textbox', { name: 'Nome' }),
-      'Polvilho Doce',
-    );
-    await userEvent.type(
-      within(dialog).getByRole('textbox', { name: 'Quantidade' }),
-      '1',
-    );
-    await userEvent.type(
-      within(dialog).getByRole('textbox', { name: 'Valor pago' }),
-      '1234.5',
-    );
-    await userEvent.tab();
+      await userEvent.click(
+        screen.getAllByRole('button', { name: 'Novo insumo' })[0]!,
+      );
+      const dialog = screen.getByRole('dialog', { name: 'Novo insumo' });
+      await userEvent.type(
+        within(dialog).getByRole('textbox', { name: 'Nome' }),
+        'Polvilho Doce',
+      );
+      await userEvent.type(
+        within(dialog).getByRole('textbox', { name: 'Quantidade' }),
+        '1',
+      );
+      await userEvent.type(
+        within(dialog).getByRole('textbox', { name: 'Valor pago' }),
+        '1234.5',
+      );
+      await userEvent.tab();
 
-    expect(
-      within(dialog).getByRole('textbox', { name: 'Valor pago' }),
-    ).toHaveValue('1.234,50');
-    expect(
-      within(dialog).getByText('Custo unitário: R$ 1.234,5000/kg'),
-    ).toBeInTheDocument();
-    await expectNoA11yViolations();
+      expect(
+        within(dialog).getByRole('textbox', { name: 'Valor pago' }),
+      ).toHaveValue('1.234,50');
+      expect(
+        within(dialog).getByText('Custo unitário: R$ 1.234,5000/kg'),
+      ).toBeInTheDocument();
+      await expectNoA11yViolations();
 
-    await userEvent.click(
-      within(dialog).getByRole('button', { name: 'Salvar' }),
-    );
+      await userEvent.click(
+        within(dialog).getByRole('button', { name: 'Salvar' }),
+      );
 
-    expect(
-      await screen.findByText('Insumo criado com sucesso.'),
-    ).toBeInTheDocument();
-    expect(await screen.findByText('9 insumos')).toBeInTheDocument();
-    expect(screen.getByText('R$ 1.234,50')).toBeInTheDocument();
-  });
+      expect(
+        await screen.findByText('Insumo criado com sucesso.'),
+      ).toBeInTheDocument();
+      expect(await screen.findByText('9 insumos')).toBeInTheDocument();
+      expect(screen.getByText('R$ 1.234,50')).toBeInTheDocument();
+    },
+  );
 
   it('edita com os valores do insumo e "Atualizar"', async () => {
     renderExemplo();
