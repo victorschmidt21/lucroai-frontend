@@ -13,8 +13,10 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.clear();
+      // Navega antes de limpar: a busca da sessão que o `clear()` provoca
+      // recebe 401, e `handleSessaoExpirada` a ignora com a navegação em curso.
       navigateTo(LOGIN_PATH);
+      queryClient.clear();
     },
   });
 }

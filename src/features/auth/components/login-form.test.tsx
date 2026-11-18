@@ -11,6 +11,7 @@ import { LoginForm } from './login-form';
 
 vi.mock('@/shared/auth/navigation', () => ({
   navigateTo: vi.fn<(path: string) => void>(),
+  isNavegando: vi.fn<() => boolean>(() => false),
 }));
 
 afterEach(() => {

@@ -12,6 +12,7 @@ import { UserMenu } from './user-menu';
 
 vi.mock('@/shared/auth/navigation', () => ({
   navigateTo: vi.fn<(path: string) => void>(),
+  isNavegando: vi.fn<() => boolean>(() => false),
 }));
 
 afterEach(() => {

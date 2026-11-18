@@ -8,6 +8,7 @@ import { QueryProvider } from './query-provider';
 
 vi.mock('@/shared/auth/navigation', () => ({
   navigateTo: vi.fn<(path: string) => void>(),
+  isNavegando: vi.fn<() => boolean>(() => false),
 }));
 
 function ConsumidorDoCliente() {
