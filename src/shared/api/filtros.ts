@@ -11,7 +11,7 @@ export function normalizarTexto(texto: string) {
     .toLowerCase();
 }
 
-type CampoDeTexto<T> = {
+export type CampoDeTexto<T> = {
   [K in keyof T]: T[K] extends string | null | undefined ? K : never;
 }[keyof T];
 

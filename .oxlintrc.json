@@ -31,6 +31,12 @@
       {
         "assertFunctionNames": ["expect", "expectNoA11yViolations"]
       }
+    ],
+    "react/no-unstable-nested-components": [
+      "warn",
+      {
+        "allowAsProps": true
+      }
     ]
   },
   "overrides": [
