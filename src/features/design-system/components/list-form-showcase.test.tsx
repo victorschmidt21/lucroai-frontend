@@ -42,12 +42,17 @@ describe('exemplo de listagem', () => {
     expect(screen.getAllByText('500 g')).toHaveLength(2);
   });
 
-  it('não tem violações de acessibilidade na listagem', async () => {
-    renderExemplo();
-    await screen.findByText('8 insumos');
+  // O axe na página inteira também passa dos 5 s sob a carga da cobertura.
+  it(
+    'não tem violações de acessibilidade na listagem',
+    { timeout: 20_000 },
+    async () => {
+      renderExemplo();
+      await screen.findByText('8 insumos');
 
-    await expectNoA11yViolations();
-  });
+      await expectNoA11yViolations();
+    },
+  );
 
   // Digita em três campos e roda o axe com o diálogo aberto: sob a carga da
   // cobertura com a suíte inteira, passa dos 5 s padrão.
