@@ -20,6 +20,12 @@ export const IconExcluir = criarIcone(
   'M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z',
 );
 
+/** `Icons.science_outlined` */
+export const IconSimular = criarIcone(
+  'Simular',
+  'M13 11.33L18 18H6l5-6.67V6h2v5.33zM15.96 4H8.04c-.42 0-.65.48-.39.81L9 6.5v4.17L3.2 18.4c-.49.66-.02 1.6.8 1.6h16c.82 0 1.29-.94.8-1.6L15 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81z',
+);
+
 /** `Icons.close` */
 export const IconFechar = criarIcone(
   'Fechar',
