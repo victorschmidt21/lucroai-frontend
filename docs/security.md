@@ -1,6 +1,6 @@
 # Segurança
 
-> **Status:** a sessão, o proxy autenticado e a proteção de rotas **existem** desde a **FE-07** (`src/shared/auth/`, `src/app/api/auth/`, `src/app/api/backend/[servico]/[...path]/`, `src/proxy.ts` e `/login`), além da validação das variáveis de ambiente (`src/shared/config/`). Os cabeçalhos de segurança e a revisão de produção são da **FE-24**. A autenticação vale de verdade no backend (guard JWT global em `shared/src/infra/auth/`); aqui está como a interface a aplica.
+> **Status:** a sessão, o proxy autenticado e a proteção de rotas **existem** desde a **FE-07** (`src/shared/auth/`, `src/app/api/auth/`, `src/app/api/backend/[servico]/[...path]/`, `src/proxy.ts` e `/login`), além da validação das variáveis de ambiente (`src/shared/config/`). Os cabeçalhos de segurança e a exigência de `https` em produção existem desde a **FE-24** (publicação em [deploy.md](deploy.md)). A autenticação vale de verdade no backend (guard JWT global em `shared/src/infra/auth/`); aqui está como a interface a aplica.
 
 ## Princípios
 
@@ -105,6 +105,7 @@ O LucroAI trata poucos dados pessoais: nome e e-mail do usuário, e nome, CNPJ e
 - Variáveis são validadas com Zod na inicialização (`src/shared/config/env.schema.ts`, chamado por `src/instrumentation-node.ts`); sem elas, a aplicação não sobe.
 - Variável nova: adicione ao schema, ao `.env.example` (com valor fictício e comentário) e à tabela do README.
 - Variável de servidor é lida com `getServerEnv()`; pública, com `publicEnv`. Não leia `process.env` direto no restante do código.
+- Com `NODE_ENV=production` (build e servidor standalone), as seis URLs precisam ser `https`; `http` só em `localhost`, `127.0.0.1` e `[::1]`, que o CI e os e2e usam (FE-24).
 - `NEXT_PUBLIC_*` é incorporada ao bundle no build: não pode conter segredo, e mudar o valor exige novo build.
 - `.env` e `.env.*` nunca são commitados (só `.env.example`). O repositório é público.
 - O front não precisa do `JWT_SECRET`: ele só decodifica o payload para exibir dados, sem validar a assinatura.
@@ -115,5 +116,5 @@ O LucroAI trata poucos dados pessoais: nome e e-mail do usuário, e nome, CNPJ e
 - Não use `dangerouslySetInnerHTML` com conteúdo vindo da API ou do usuário (nomes de insumo e receita são digitados pelo usuário).
 - Valide search params e `params` com Zod: a URL é entrada do usuário.
 - Em links externos abertos em nova aba, use `rel="noopener noreferrer"`.
-- Cabeçalhos de segurança (CSP, `X-Frame-Options`, `Referrer-Policy`) entram no `next.config.ts` na FE-24.
+- **Cabeçalhos de segurança** (FE-24), em todas as rotas, pelo `headers()` do `next.config.ts`: CSP sem nonce (`default-src 'self'`; `script-src` com `'unsafe-inline'`, exigido pelos scripts inline do App Router, e `'unsafe-eval'` só no `next dev`; `frame-ancestors 'none'`; sem `upgrade-insecure-requests`, para os e2e em http), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` e `Referrer-Policy: strict-origin-when-cross-origin`. Recurso externo (fonte, imagem, script de terceiro) exige ajustar a CSP.
 - Dependências: não adicione pacotes sem manutenção; rode `npm audit` ao atualizar.
