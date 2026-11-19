@@ -1,0 +1,126 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRef, useState } from 'react';
+import type { Venda } from '@/shared/api/contracts/sales';
+import { hrefComFiltros } from '@/shared/api/filtros';
+import { buttonClasses } from '@/shared/ui/button';
+import { EmptyState } from '@/shared/ui/empty-state';
+import { IconConstrucao } from '@/shared/ui/icons/acoes';
+import { IconProducao } from '@/shared/ui/icons/menu';
+import { PageHeader } from '@/shared/ui/page-header';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { useToast } from '@/shared/ui/toast';
+import { useCreateVenda } from '../hooks/use-create-venda';
+import {
+  toCreateVendaBody,
+  type ItemCarrinho,
+} from '../schemas/item-venda.schema';
+import type { AbaVendas } from '../schemas/vendas-search.schema';
+import { AdicionarProdutoCard } from './adicionar-produto-card';
+import { CarrinhoCard } from './carrinho-card';
+
+type Props = {
+  /** Aba da URL (`aba`), já validada pela página. */
+  aba: AbaVendas;
+};
+
+/** Tela de vendas. Origem: vendas_page.dart. */
+export function VendasTela({ aba }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const toast = useToast();
+  const registrar = useCreateVenda();
+  // O carrinho fica aqui, e não na aba, para sobreviver à troca de aba.
+  // Nunca vai para o navegador: recarregar a página o descarta.
+  const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
+  const proximaChave = useRef(0);
+
+  function trocarAba(valor: string) {
+    router.replace(
+      hrefComFiltros(pathname, searchParams, {
+        aba: valor === 'registrar' ? null : valor,
+      }),
+      { scroll: false },
+    );
+  }
+
+  /**
+   * A venda nasce `PENDENTE`. O mobile abre aqui a confirmação
+   * (`_showConfirmacaoSheet`), que chega na FE-17; até lá, só o aviso.
+   */
+  function aoRegistrar(venda: Venda) {
+    toast.success(`Venda #${venda.id} registrada como pendente.`);
+  }
+
+  function registrarVenda() {
+    if (carrinho.length === 0) return;
+
+    registrar.mutate(toCreateVendaBody(carrinho), {
+      onSuccess: (venda) => {
+        setCarrinho([]);
+        aoRegistrar(venda);
+      },
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Vendas"
+        subtitle="Registre vendas e acompanhe o histórico"
+        actions={
+          <Link href="/producoes" className={buttonClasses('secundario')}>
+            <IconProducao className="size-5" />
+            Produção
+          </Link>
+        }
+      />
+
+      <Tabs value={aba} onValueChange={trocarAba}>
+        <TabsList aria-label="Seções de vendas">
+          <TabsTrigger value="registrar">Registrar</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
+        </TabsList>
+
+        <TabsContent
+          value="registrar"
+          className="grid items-start gap-4 lg:grid-cols-2"
+        >
+          <AdicionarProdutoCard
+            bloqueado={registrar.isPending}
+            onAdicionar={(item, receita) => {
+              const chave = proximaChave.current;
+              proximaChave.current += 1;
+              registrar.reset();
+              setCarrinho((atual) => [
+                ...atual,
+                { ...item, chave, nome: receita.nome },
+              ]);
+            }}
+          />
+          <CarrinhoCard
+            itens={carrinho}
+            registrando={registrar.isPending}
+            erro={registrar.error}
+            onRegistrar={registrarVenda}
+            onRemover={(chave) => {
+              registrar.reset();
+              setCarrinho((atual) => atual.filter((i) => i.chave !== chave));
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="historico">
+          <EmptyState
+            icon={<IconConstrucao />}
+            title="Em construção"
+            description="O histórico de vendas ainda não está disponível na versão web."
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
