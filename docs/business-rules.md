@@ -226,6 +226,7 @@ totalGastos = Σ gasto.valor
 FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `lib/features/receitas/presentation/widgets/receita_card.dart`. Backend: `services/recipe-service/src/modules/receitas/`.
 
 - Linha: nome; `<rendimento> <unidade> - custo <custoProducao>`; preço sugerido; margem (`margemLucro × 100`, 1 casa); custo unitário.
+- Web: colunas Nome, Rendimento (`formatQuantidade`), Custo do lote (`custoProducao`, 1 lote), Custo unitário, Margem (`formatMargem`: `0.6` → `60,0%`) e Preço sugerido (`formatMoeda`), na ordem do backend (`dataCriacao` decrescente). "Nova receita" leva a `/receitas/nova` (FE-12).
 - `custoProducao`, `custoUnitario`, `margemLucro` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`): exiba `—`.
 - Ações: Editar (`/receitas/[receitaId]/editar`), Simular (`/receitas/[receitaId]/simular`, FE-20) e Excluir.
 
