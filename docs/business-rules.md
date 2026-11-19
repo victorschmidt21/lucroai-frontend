@@ -407,6 +407,14 @@ Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _
 | Sucesso            | "Produção registrada com sucesso"                                                        | "Produção registrada com sucesso."                                            |
 | Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma produção registrada" / "Registre sua primeira produção", com o botão |
 | Erro               | "Erro ao carregar produções" e a mensagem                                                | "Erro ao carregar produções", com "Tentar novamente"                          |
+| Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                |
+| Vazio no filtro    | —                                                                                        | "Nenhuma produção registrada para esta receita"                               |
+| Prévia             | —                                                                                        | "Total de unidades", "Rateio estimado" por gasto e "Total do rateio"          |
+| Detalhe            | —                                                                                        | Drawer com os custos, o total de unidades e os rateios (abaixo)               |
+
+Chips de gastos (web): escolher um gasto desmarca "Todos" e fica só com os gastos escolhidos; marcar "Todos" limpa a seleção. O formulário já vem com a receita do filtro da lista.
+
+Detalhe (web): "Total de unidades", "Custo total", "Custo unitário" e "Rateio dos gastos indiretos" (descrição do gasto ou "Gasto #<id>"; sem rateio, "Nenhum gasto rateado."). O total de unidades usa o rendimento **atual** da receita, porque a produção não grava o rendimento nem o total de unidades (lacuna 23).
 
 O backend **não** bloqueia produção com estoque de insumo insuficiente: o saldo fica negativo (ver [lacunas](api-integration.md#lacunas-do-backend)). Mesmo assim, a tela mostra no formulário qualquer erro devolvido.
 
