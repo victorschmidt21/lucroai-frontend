@@ -1,1 +1,196 @@
 @import 'tailwindcss';
+
+/*
+ * Tokens do LucroAI, extraídos do app Flutter (`lib/main.dart` e telas de
+ * `lib/features/*\/presentation/`). Só tema escuro, como o mobile.
+ * Contraste medido em `src/shared/ui/tokens.test.ts` (docs/ui.md#contraste).
+ */
+:root {
+  color-scheme: dark;
+
+  /* Fundos: scaffold do painel e das telas internas */
+  --bg: #050505;
+  --bg-alt: #0a0a0a;
+
+  /* Superfícies: cartões, campos e sobreposições */
+  --surface: #111111;
+  --surface-alt: #171717;
+  --surface-raised: #1a1a1a;
+
+  --border: #272727;
+  --border-strong: #2b2b2b;
+
+  /* Texto. `ink-subtle` era #7C7C7C no mobile e foi clareado para #858585 (o
+   * cinza do painel e das vendas no mobile): #7C7C7C fica em 4,17:1 sobre
+   * `surface-raised`, abaixo de 4,5:1. */
+  --ink: #ffffff;
+  --ink-muted: #8a8a8a;
+  --ink-subtle: #858585;
+
+  /* Destaque. Preto sobre laranja: o branco do mobile fica em 2,83:1 e 3,47:1. */
+  --accent: #ff6b3d;
+  --accent-strong: #e85d33;
+  --on-accent: #000000;
+
+  --success: #4caf50;
+  --warning: #ffb000;
+  --danger: #ff5252;
+  --danger-strong: #e53935;
+  /* Preto sobre `danger-strong` dá 4,97:1; o branco do mobile, 4,23:1. */
+  --on-danger: #000000;
+
+  /* Status reutilizados nas telas (estoque_card.dart e venda_card.dart) */
+  --status-critico: var(--danger);
+  --status-baixo: var(--warning);
+  --status-adequado: var(--success);
+  --status-pendente: var(--warning);
+  --status-concluida: var(--success);
+  --status-cancelada: var(--ink-muted);
+
+  /* `barrierColor: Colors.black87` dos diálogos do mobile */
+  --overlay: rgb(0 0 0 / 0.87);
+}
+
+/* Tira do Tailwind o que o LucroAI não usa: cores prontas, sombras, raios e tamanhos. */
+@theme {
+  --color-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --radius-*: initial;
+
+  /* Raios do mobile: `BorderRadius.circular(8, 12, 14, 18)` */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* Elevação: só Dialog e Drawer, como no mobile. */
+  --shadow-elevacao: 0 12px 32px rgb(0 0 0 / 0.6);
+
+  /* Escala tipográfica, em px do mobile convertidos para rem. */
+  --text-*: initial;
+  --text-display-lg: 2.25rem;
+  --text-display-lg--line-height: 2.5rem;
+  --text-display-lg--font-weight: 700;
+  --text-display: 1.375rem;
+  --text-display--line-height: 1.75rem;
+  --text-display--font-weight: 700;
+  --text-heading: 1.6875rem;
+  --text-heading--line-height: 2rem;
+  --text-heading--font-weight: 700;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.5rem;
+  --text-title--font-weight: 700;
+  --text-subtitle: 0.78125rem;
+  --text-subtitle--line-height: 1.125rem;
+  --text-field: 1rem;
+  --text-field--line-height: 1.5rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.25rem;
+  --text-small: 0.75rem;
+  --text-small--line-height: 1rem;
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1rem;
+
+  /* Só `transform` nos painéis: mudar a opacidade afetaria o contraste na entrada. */
+  --animate-surgir: surgir 150ms ease-out;
+  --animate-subir: subir 200ms ease-out;
+  --animate-gaveta-baixo: gaveta-baixo 220ms ease-out;
+  --animate-gaveta-direita: gaveta-direita 220ms ease-out;
+
+  @keyframes surgir {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes subir {
+    from {
+      transform: translateY(0.5rem);
+    }
+  }
+
+  @keyframes gaveta-baixo {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes gaveta-direita {
+    from {
+      transform: translateX(100%);
+    }
+  }
+}
+
+@theme inline {
+  --font-sans: var(--font-roboto), system-ui, -apple-system, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-strong: var(--danger-strong);
+  --color-on-danger: var(--on-danger);
+  --color-overlay: var(--overlay);
+
+  --color-status-critico: var(--status-critico);
+  --color-status-baixo: var(--status-baixo);
+  --color-status-adequado: var(--status-adequado);
+  --color-status-pendente: var(--status-pendente);
+  --color-status-concluida: var(--status-concluida);
+  --color-status-cancelada: var(--status-cancelada);
+}
+
+/* Rótulos de seção em caixa alta, como "CUSTOS INVISÍVEIS" no cálculo real. */
+@utility text-section-label {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+@layer base {
+  /* `accent` tem 7,2:1 sobre `bg` e passa de 3:1 em todas as superfícies. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+
+  a,
+  button,
+  label,
+  summary {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
