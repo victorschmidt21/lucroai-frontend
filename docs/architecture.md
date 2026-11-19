@@ -9,7 +9,7 @@ Objetivos:
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
 - **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
 
-> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`), os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`) e a sessão da FE-07 (`src/proxy.ts`, `/login` em `(auth)`, `src/app/api/auth/`, o proxy `src/app/api/backend/`, `src/shared/auth/` e `src/features/auth/`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
+> **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`), os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`) a sessão da FE-07 (`src/proxy.ts`, `/login` em `(auth)`, `src/app/api/auth/`, o proxy `src/app/api/backend/`, `src/shared/auth/` e `src/features/auth/`) e o layout autenticado da FE-08 (`src/app/(app)/`, com as oito rotas do menu provisórias, o 404 e o erro dentro do layout, e `src/features/navegacao/`). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
 ## Estrutura de pastas
 
@@ -24,9 +24,9 @@ src/
 │   ├── icon.svg                  # existe: favicon
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
-│   ├── page.tsx                  # existe: página provisória com sessão e o menu do usuário, substituída pelo painel em (app) na FE-08
+│   ├── not-found.tsx, error.tsx  # existe (FE-08): 404 e erro fora do layout de (app)
 │   ├── (auth)/                   # existe (FE-07): layout com o QueryProvider e login/
-│   ├── (app)/                    # previsto (FE-08): telas internas, com sessão e menu
+│   ├── (app)/                    # existe (FE-08): layout com sessão e menu, as oito rotas do menu (provisórias), [...rota] (404), not-found.tsx e error.tsx
 │   └── api/
 │       ├── health/route.ts       # existe: GET /api/health
 │       ├── auth/                 # existe (FE-07): login, logout e sessao
@@ -34,6 +34,7 @@ src/
 ├── features/                     # funcionalidades de negócio
 │   ├── design-system/            # existe: catálogo de /design-system (FE-04) e exemplo de listagem (FE-06)
 │   ├── auth/                     # existe (FE-07): LoginForm, UserMenu, useLogin, useLogout e os schemas do login
+│   ├── navegacao/                # existe (FE-08): menu.ts, MenuNavegacao, AppShell, MenuContaCelular e TelaProvisoria
 │   └── <modulo>/
 │       ├── components/
 │       ├── hooks/
@@ -81,6 +82,7 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 | `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)          |
 | `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
 | `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
+| `ui/`                  | `StatusPage` (páginas 404 e de erro)                                                                                                                                | existe (FE-08)          |
 | `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)          |
 | `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                     | existe (FE-07)          |
 
@@ -150,7 +152,7 @@ Grupos de rota, com o nome entre parênteses, aplicam layouts diferentes sem apa
 | Grupo    | Telas                 | Layout                                                      | Sessão                          |
 | -------- | --------------------- | ----------------------------------------------------------- | ------------------------------- |
 | `(auth)` | `/login`              | marca, sem menu                                             | quem já tem sessão vai para `/` |
-| `(app)`  | todas as outras telas | menu lateral no desktop e barra inferior no celular (FE-08) | obrigatória                     |
+| `(app)`  | todas as outras telas | menu lateral no desktop e barra inferior no celular (FE-08) | obrigatória (`getUsuarioAtual`) |
 
 Não há perfis: o LucroAI tem um único tipo de usuário, e todo usuário logado vê todas as telas da própria empresa.
 
@@ -170,7 +172,17 @@ Não há perfis: o LucroAI tem um único tipo de usuário, e todo usuário logad
 | `/gastos-indiretos`             | lista, total e cadastro em diálogo        | `gastos-indiretos` | FE-10         | Gastos   |
 | `/simulacao`                    | simulação interativa (aberta pelo painel) | `simulacao`        | FE-21         | —        |
 
-O layout de `(app)` traz o `<main>`; as páginas começam em `PageHeader`. As rotas do menu nascem provisórias ("Em construção") na FE-08, e cada issue substitui a sua. Páginas `not-found.tsx` e `error.tsx` ficam na raiz de `app/` e em `(app)/`.
+O layout de `(app)` (existe desde a FE-08) confere a sessão com `getUsuarioAtual()`, coloca o usuário no cache do TanStack Query (o `UserMenu` abre preenchido, sem uma busca a mais) e renderiza o `QueryProvider`, o `ToastProvider` e o `AppShell` (`features/navegacao/`), que traz o `<main>`; as páginas começam em `PageHeader`. As oito rotas do menu existem desde a FE-08 como telas provisórias (`TelaProvisoria`: o `PageHeader` com o título e o subtítulo da tela definitiva e "Em construção"), e cada issue substitui a sua. Não há `loading.tsx` no grupo: com ele, a resposta começaria antes da conferência da sessão, e o 404 sairia com status 200.
+
+Páginas de status (FE-08, com a `StatusPage` de `shared/ui/`):
+
+| Arquivo                                            | Quando                                                                                                                                                         |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| LucroAI") |
+| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar novamente" (`retry`)                                                                                  |
+| `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                      |
+
+Sem sessão, rota inexistente também leva ao login (o `src/proxy.ts` age antes). Erros de dados da API não chegam a essas páginas: ficam no `ErrorState` de cada bloco.
 
 O Next 16 renomeou `middleware.ts` para `proxy.ts`. Por isso, a checagem otimista de sessão fica em `src/proxy.ts` (existe desde a FE-07, ver [security.md](security.md#proteção-de-rotas)). Ele também preenche o header `x-lucroai-path`, que `getUsuarioAtual()` usa para voltar à rota atual depois do login. Não confunda com o proxy BFF `/api/backend/[servico]/[...path]`, que é um Route Handler.
 
@@ -206,7 +218,7 @@ O app Flutter usa Clean Architecture com Cubit. A web troca as camadas assim:
 | `presentation/pages` e `widgets`                                          | `app/(app)/<rota>/page.tsx` + `features/<modulo>/components/`                                                  |
 | `core/auth/auth_session.dart` + `shared_preferences`                      | BFF com cookie `httpOnly` (FE-07)                                                                              |
 | `core/network/api_client.dart` (um `Dio` por serviço) e `_buildException` | `apiFetch(servico, ...)` e `ApiError` (FE-05)                                                                  |
-| `IndexedStack` + barra inferior                                           | layout `(app)` com menu lateral no desktop e barra inferior no celular (FE-08)                                 |
+| `IndexedStack` + barra inferior                                           | layout `(app)` com menu lateral no desktop e barra inferior no celular (FE-08); cada tela monta ao entrar      |
 | `showModalBottomSheet`                                                    | `FormDialog`: Dialog no desktop, Drawer de baixo no celular (FE-06)                                            |
 | `SnackBar`                                                                | Toast (FE-04)                                                                                                  |
 | `RefreshIndicator` e recarga ao trocar de aba                             | `refetchOnWindowFocus` e revalidação ao montar a tela                                                          |

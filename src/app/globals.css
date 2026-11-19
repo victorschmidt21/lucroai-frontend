@@ -93,6 +93,9 @@
   --text-small--line-height: 1rem;
   --text-caption: 0.6875rem;
   --text-caption--line-height: 1rem;
+  /* Rótulo da barra inferior com oito itens: o mobile usa 9px (main_screen.dart). */
+  --text-nav: 0.625rem;
+  --text-nav--line-height: 0.75rem;
 
   /* Só `transform` nos painéis: mudar a opacidade afetaria o contraste na entrada. */
   --animate-surgir: surgir 150ms ease-out;

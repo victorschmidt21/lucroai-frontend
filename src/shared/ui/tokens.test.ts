@@ -69,6 +69,8 @@ const TEXTO: [string, string][] = [
   // Item ativo do menu e ToggleChip selecionado usam `accent-strong` como texto.
   ['accent-strong', 'bg'],
   ['accent-strong', 'bg-alt'],
+  // Item ativo do menu lateral (FE-08), sobre o realce do item.
+  ['accent-strong', 'surface-alt'],
   ['success', 'surface'],
   ['warning', 'surface'],
   ['danger', 'surface'],
