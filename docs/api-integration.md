@@ -1,6 +1,6 @@
 # Integração com a API
 
-> **Status:** o cliente, os contratos, os erros, o TanStack Query e o MSW **existem** desde a **FE-05** (`src/shared/api/` e `src/test/`). O proxy autenticado `/api/backend` e a sessão **existem** desde a **FE-07** (`src/app/api/backend/`, `src/app/api/auth/` e `src/shared/auth/`). As funções de `features/<modulo>/api/` chegam com as telas. Ao mudar algo, atualize este documento no mesmo PR. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
+> **Status:** o cliente, os contratos, os erros, o TanStack Query e o MSW **existem** desde a **FE-05** (`src/shared/api/` e `src/test/`). O proxy autenticado `/api/backend` e a sessão **existem** desde a **FE-07** (`src/app/api/backend/`, `src/app/api/auth/` e `src/shared/auth/`). As funções de `features/<modulo>/api/` chegam com as telas: a primeira foi `features/insumos/api/` (**FE-09**). Ao mudar algo, atualize este documento no mesmo PR. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
 
 ## Os cinco serviços
 
@@ -198,7 +198,7 @@ As rotas do próprio Next em `/api/auth` (login, logout e sessão) são chamadas
 Cada funcionalidade expõe funções em `features/<modulo>/api/<modulo>.api.ts`, que chamam `apiFetch` e `unwrap`. Componentes e hooks chamam essas funções, nunca `apiFetch` nem `fetch` direto:
 
 ```ts
-// src/features/insumos/api/insumos.api.ts (previsto na FE-09)
+// src/features/insumos/api/insumos.api.ts (FE-09)
 export async function listInsumos(signal?: AbortSignal) {
   const corpo = await apiFetch('catalog', '/insumos', { signal });
   return unwrap(corpo, z.array(insumoSchema));
@@ -440,13 +440,14 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 
 Vale o backend. As issues citadas devem seguir esta tabela.
 
-| Issue | O que a issue diz                                                   | O que o backend faz                                                       | O que a web faz                                           |
-| ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                  | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400 | não mostra nem envia "Observação"                         |
-| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"             | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                   | uma chamada de estoque por insumo (lacuna 5)              |
-| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)" | não há essa validação (lacuna 10)                                         | mostra qualquer erro devolvido; não há esse caso hoje     |
-| FE-17 | "o backend valida de novo ao processar o evento"                    | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)               | a validação no cliente é a barreira real                  |
-| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                    | `snake_case` (lacuna 15)                                                  | segue o DTO                                               |
-| FE-10 | valor > 0                                                           | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário (mais restrito, compatível)      |
-| FE-09 | valor pago > 0                                                      | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                                  |
-| FE-07 | e-mail válido como no mobile (só confere o `@`)                     | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                    | o formulário usa `z.email()` ("Informe um e-mail válido") |
+| Issue | O que a issue diz                                                     | O que o backend faz                                                       | O que a web faz                                           |
+| ----- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                    | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400 | não mostra nem envia "Observação"                         |
+| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"               | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                   | uma chamada de estoque por insumo (lacuna 5)              |
+| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)"   | não há essa validação (lacuna 10)                                         | mostra qualquer erro devolvido; não há esse caso hoje     |
+| FE-17 | "o backend valida de novo ao processar o evento"                      | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)               | a validação no cliente é a barreira real                  |
+| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                      | `snake_case` (lacuna 15)                                                  | segue o DTO                                               |
+| FE-10 | valor > 0                                                             | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário (mais restrito, compatível)      |
+| FE-09 | valor pago > 0                                                        | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                                  |
+| FE-09 | erro de exclusão "ex.: insumo usado em receita, se o backend recusar" | `DELETE /insumos/:id` não confere o uso em receitas (lacuna 13)           | mostra a mensagem de qualquer recusa; hoje só há o `404`  |
+| FE-07 | e-mail válido como no mobile (só confere o `@`)                       | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                    | o formulário usa `z.email()` ("Informe um e-mail válido") |
