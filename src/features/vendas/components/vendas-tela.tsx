@@ -6,8 +6,6 @@ import { useRef, useState } from 'react';
 import type { Venda } from '@/shared/api/contracts/sales';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { buttonClasses } from '@/shared/ui/button';
-import { EmptyState } from '@/shared/ui/empty-state';
-import { IconConstrucao } from '@/shared/ui/icons/acoes';
 import { IconProducao } from '@/shared/ui/icons/menu';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
@@ -16,18 +14,20 @@ import {
   toCreateVendaBody,
   type ItemCarrinho,
 } from '../schemas/item-venda.schema';
-import type { AbaVendas } from '../schemas/vendas-search.schema';
+import type { VendasSearch } from '../schemas/vendas-search.schema';
 import { AdicionarProdutoCard } from './adicionar-produto-card';
 import { CarrinhoCard } from './carrinho-card';
 import { ConfirmacaoVenda } from './confirmacao-venda';
+import { HistoricoVendas } from './historico-vendas';
 
 type Props = {
-  /** Aba da URL (`aba`), já validada pela página. */
-  aba: AbaVendas;
+  /** Aba e filtros do histórico da URL, já validados pela página. */
+  busca: VendasSearch;
 };
 
 /** Tela de vendas. Origem: vendas_page.dart. */
-export function VendasTela({ aba }: Props) {
+export function VendasTela({ busca }: Props) {
+  const { aba } = busca;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -108,11 +108,7 @@ export function VendasTela({ aba }: Props) {
         </TabsContent>
 
         <TabsContent value="historico">
-          <EmptyState
-            icon={<IconConstrucao />}
-            title="Em construção"
-            description="O histórico de vendas ainda não está disponível na versão web."
-          />
+          <HistoricoVendas filtros={busca} onConfirmar={setEmConfirmacao} />
         </TabsContent>
       </Tabs>
 

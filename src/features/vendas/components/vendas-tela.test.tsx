@@ -20,7 +20,7 @@ function renderTela() {
   server.use(mockApi('GET recipe /receitas', makeReceitasDoSeed()));
   return renderWithQuery(
     <ToastProvider>
-      <VendasTela aba="registrar" />
+      <VendasTela busca={{ aba: 'registrar' }} />
     </ToastProvider>,
   );
 }
