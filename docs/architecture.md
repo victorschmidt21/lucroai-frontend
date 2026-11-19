@@ -26,7 +26,7 @@ src/
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
 │   ├── not-found.tsx, error.tsx  # existe (FE-08): 404 e erro fora do layout de (app)
 │   ├── (auth)/                   # existe (FE-07): layout com o QueryProvider e login/
-│   ├── (app)/                    # existe (FE-08): layout com sessão e menu, as oito rotas do menu (/insumos desde a FE-09; as outras, provisórias), [...rota] (404), not-found.tsx e error.tsx
+│   ├── (app)/                    # existe (FE-08): layout com sessão e menu, as oito rotas do menu (todas definitivas desde a FE-22), [...rota] (404), not-found.tsx e error.tsx
 │   └── api/
 │       ├── health/route.ts       # existe: GET /api/health
 │       ├── auth/                 # existe (FE-07): login, logout e sessao
