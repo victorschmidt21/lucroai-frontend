@@ -46,7 +46,7 @@ src/
 │   ├── config/                   # existe: validação de ambiente
 │   ├── api/                      # existe (FE-05): contratos, cliente, erros, filtros, TanStack Query
 │   ├── format/                   # existe: formatação (FE-05) e leitura de números digitados (FE-06)
-│   ├── domain/                   # previsto: regras de negócio usadas por mais de uma funcionalidade
+│   ├── domain/                   # regras de negócio usadas por mais de uma funcionalidade (estoque.ts)
 │   ├── ui/                       # existe: design system (FE-04) e blocos de listagem e formulário (FE-06; ver docs/ui.md)
 │   └── auth/                     # existe (FE-07): sessão, cookie, proxy BFF e usuário atual
 └── test/                         # existe: a11y.ts (FE-04); MSW, api.ts, render.tsx, factories e fixtures (FE-05); next-navigation.ts (FE-06)
