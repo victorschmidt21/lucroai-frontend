@@ -314,7 +314,7 @@ barra          = clamp(percentual / 100, 0, 1)
 - Como `Baixo` exige `percentual < 50`, e isso já implica `quantidadeDisponivel < quantidadeMinima`, o status **Baixo nunca aparece** com a regra atual do mobile: tudo abaixo do mínimo é Crítico. A web reproduz a regra como está (critério da FE-13: "confere com o mobile") e mantém o ramo, que fica testado.
 - Mínimo 0 (todo insumo criado pela API nasce com `quantidadeMinima = 0`) dá percentual 100 e status Adequado.
 - O percentual é exibido sem casas (`toStringAsFixed(0)`): `86%`.
-- `isBaixoEstoque` também é usado pelo painel (FE-22): fica em `src/shared/domain/estoque.ts`.
+- `isBaixoEstoque` também é usado pelo painel (FE-22): as fórmulas ficam em `src/shared/domain/estoque.ts`. Como o ramo Baixo é inalcançável com números reais, ele é testado por `classificarStatusEstoque(baixoEstoque, percentual)`.
 
 | Status   | Token     | Condição          |
 | -------- | --------- | ----------------- |
@@ -335,7 +335,12 @@ barra          = clamp(percentual / 100, 0, 1)
 | Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                              |
 | Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão, com "Tentar novamente" |
 
-O filtro "Baixo" mostra os itens com `isBaixoEstoque`.
+O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item cujo saldo ainda está carregando ou falhou continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
+
+- Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum insumo está abaixo do estoque mínimo.", com "Limpar filtro".
+- A ação do vazio é o link "Novo insumo" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
+- O percentual aparece com `formatNumero(percentual, 0)` + `%` (`500%`) e as quantidades com `formatQuantidade` (`10 kg`), em vez das 2 casas fixas do mobile.
+- "Registrar entrada" entra no cartão com a FE-14, junto com o formulário de entrada.
 
 ## Entrada de estoque e histórico
 
