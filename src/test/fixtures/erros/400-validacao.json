@@ -1,0 +1,13 @@
+{
+  "message": [
+    "property extra should not exist",
+    "nome must be a string",
+    "quantidadeBaseCusto must not be less than 0.000001",
+    "quantidadeBaseCusto must be a number conforming to the specified constraints",
+    "unidade must be one of the following values: G, KG, ML, L, UN",
+    "valorPago must not be less than 0",
+    "valorPago must be a number conforming to the specified constraints"
+  ],
+  "error": "Bad Request",
+  "statusCode": 400
+}

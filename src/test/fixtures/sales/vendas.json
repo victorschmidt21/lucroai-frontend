@@ -1,0 +1,80 @@
+{
+  "data": [
+    {
+      "id": 15,
+      "empresaId": 3,
+      "total": 2.5,
+      "status": "CANCELADA",
+      "dataVenda": "2026-11-17T20:31:13.326Z",
+      "itens": [
+        {
+          "id": 19,
+          "vendaId": 15,
+          "receitaId": 9,
+          "quantidade": 5,
+          "precoUnitarioReal": 0.5,
+          "custoUnitario": 45.07,
+          "margemRealizada": -89.14
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "empresaId": 3,
+      "total": 4.5,
+      "status": "PENDENTE",
+      "dataVenda": "2026-11-17T20:31:13.310Z",
+      "itens": [
+        {
+          "id": 18,
+          "vendaId": 14,
+          "receitaId": 9,
+          "quantidade": 10,
+          "precoUnitarioReal": 0.45,
+          "custoUnitario": 45.07,
+          "margemRealizada": -99.1556
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "empresaId": 3,
+      "total": 15,
+      "status": "CONCLUIDA",
+      "dataVenda": "2026-11-17T20:31:13.282Z",
+      "itens": [
+        {
+          "id": 17,
+          "vendaId": 13,
+          "receitaId": 9,
+          "quantidade": 30,
+          "precoUnitarioReal": 0.5,
+          "custoUnitario": 45.07,
+          "margemRealizada": -89.14
+        }
+      ]
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/vendas",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/vendas",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/vendas/:id",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/vendas/:id",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/vendas/:id",
+      "method": "DELETE"
+    }
+  }
+}

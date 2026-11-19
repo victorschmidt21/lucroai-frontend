@@ -1,0 +1,66 @@
+{
+  "data": [
+    {
+      "id": 10,
+      "empresaId": 3,
+      "nome": "Receita sem margem",
+      "rendimento": 10,
+      "unidadeRendimento": "UN",
+      "custoProducao": 2250,
+      "custoUnitario": 225,
+      "dataCriacao": "2026-11-17T20:31:11.042Z",
+      "itens": []
+    },
+    {
+      "id": 9,
+      "empresaId": 3,
+      "nome": "Pão Francês",
+      "rendimento": 50,
+      "unidadeRendimento": "UN",
+      "custoProducao": 2253.31,
+      "custoUnitario": 45.07,
+      "margemLucro": 0.6,
+      "precoSugerido": 72.11,
+      "dataCriacao": "2026-11-17T20:31:11.015Z",
+      "itens": [
+        {
+          "insumoId": 19,
+          "quantidade": 1,
+          "custoCalculado": 3
+        },
+        {
+          "insumoId": 20,
+          "quantidade": 0.02,
+          "custoCalculado": 0.05
+        },
+        {
+          "insumoId": 21,
+          "quantidade": 15,
+          "custoCalculado": 0.26
+        }
+      ]
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/receitas",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/receitas",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/receitas/:id",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/receitas/:id",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/receitas/:id",
+      "method": "DELETE"
+    }
+  }
+}

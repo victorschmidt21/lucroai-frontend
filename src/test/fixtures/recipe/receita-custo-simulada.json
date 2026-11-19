@@ -1,0 +1,31 @@
+{
+  "data": {
+    "quantidade_lotes": 3,
+    "total_unidades": 150,
+    "custo_invisivel": 3150,
+    "custo_total_producao": 3159.92,
+    "custo_por_unidade": 21.07
+  },
+  "links": {
+    "getAll": {
+      "href": "/receitas",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/receitas",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/receitas/9",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/receitas/9",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/receitas/9",
+      "method": "DELETE"
+    }
+  }
+}

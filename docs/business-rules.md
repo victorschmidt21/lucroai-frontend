@@ -2,7 +2,7 @@
 
 Fonte única das regras, fórmulas, validações e textos das telas do LucroAI, extraídos do app Flutter ([`lucroai_mobile`](https://github.com/GrupoDoisENG/lucroai_mobile)) e conferidos no código do [backend](https://github.com/GrupoDoisENG/lucroai-backend). As issues FE-09 a FE-22 citam este arquivo; ao implementar uma tela, siga a seção dela.
 
-> **Status:** documento de referência. Nenhuma das funções citadas existe ainda: cada uma é entregue pela issue indicada na seção. Os caminhos de origem são relativos à raiz de cada repositório: `lib/...` é do `lucroai_mobile`, `services/...` e `shared/...` são do `lucroai-backend`.
+> **Status:** documento de referência. Os formatadores, os enums com rótulos, `filtrarPorTexto`, `getErrorMessage` e `isEstoqueInsuficiente` existem desde a **FE-05**; as demais funções citadas são entregues pela issue indicada na seção. Os caminhos de origem são relativos à raiz de cada repositório: `lib/...` é do `lucroai_mobile`, `services/...` e `shared/...` são do `lucroai-backend`.
 
 Como ler:
 
@@ -73,7 +73,7 @@ O backend arredonda dinheiro com `Number(valor.toFixed(2))` em cada etapa (ex.: 
 
 ### Formatação
 
-Todos os formatadores usam `Intl.NumberFormat('pt-BR')` e ficam em `src/shared/format/` (previsto na FE-05). Nunca use `toFixed` para exibir.
+Todos os formatadores usam `Intl.NumberFormat('pt-BR')` e ficam em `src/shared/format/` (existem desde a FE-05). Nunca use `toFixed` para exibir.
 
 | Uso                                  | Formato                                                             | Exemplo             | Observação                                                                             |
 | ------------------------------------ | ------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------- |
@@ -88,13 +88,15 @@ Todos os formatadores usam `Intl.NumberFormat('pt-BR')` e ficam em `src/shared/f
 
 Valor ausente (`null` ou campo omitido) aparece como `—`, nunca como `R$ 0,00`.
 
+Os formatadores trocam o espaço inquebrável que o `Intl` põe depois de "R$" por espaço comum, para o texto bater com esta tabela; um valor que arredonda para zero não aparece como `-R$ 0,00`. Para margens, `fracaoParaPercentual(0.6)` dá `60`, que vai ao `formatPercentual`. Para o filtro de vendas, `toDataSemHora`, `inicioDoDia` e `fimDoDia` (`data.ts`) convertem entre a URL e o ISO enviado à API.
+
 ### Margem em percentual
 
 A margem de lucro é digitada em percentual e trafega como fração: `60` → `0.6`. Ao exibir, multiplique por 100 (`0.6` → `60,0%`). Origem: `receitas_page.dart` (`margemRaw / 100` ao salvar; `margemLucro * 100` ao editar).
 
 ## Enumerações e rótulos
 
-Valores do contrato (`shared/src/domain/enums/` no backend) e os rótulos de tela. Ficam em `src/shared/api/contracts/enums.ts` (previsto na FE-05). Nunca mostre o valor cru do enum.
+Valores do contrato (`shared/src/domain/enums/` no backend) e os rótulos de tela. Ficam em `src/shared/api/contracts/enums.ts` (FE-05), como `UNIDADE_MEDIDA_ROTULOS`, `METODO_RATEIO_ROTULOS`, `METODO_RATEIO_DESCRICOES`, `STATUS_VENDA_ROTULOS`, `TIPO_MOVIMENTACAO_ROTULOS` e `ORIGEM_MOVIMENTACAO_ROTULOS`. Nunca mostre o valor cru do enum.
 
 ### `UnidadeMedida`
 
@@ -245,15 +247,17 @@ FE-12. Origem: `receitas_page.dart` (`_openReceitaForm` e o diálogo de adiciona
 
 ```text
 custoItem      = round2(quantidade × insumo.custoUnitario)
-custoProducao  = round2(round2(Σ custoItem) + custoInvisivel)      // custoInvisivel = 0 na implementação padrão
+custoProducao  = round2(round2(Σ custoItem) + custoInvisivel)
+custoInvisivel = round2(Σ rateio de TODOS os gastos indiretos da empresa, para 1 lote)
 custoUnitario  = round2(custoProducao / rendimento)
 precoSugerido  = margem informada ? round2(custoUnitario × (1 + margem)) : sem preço sugerido
 ```
 
 - `insumo.custoUnitario` é o valor atual do catálogo, sem arredondamento.
+- `custoInvisivel` **não é zero**: o `DefaultCustoInvisivelResultProvider` (`services/recipe-service/src/modules/custos/infra/providers/`) soma o rateio de todos os gastos indiretos da empresa (`PROPORCIONAL`: `valor × lotes`; `POR_UNIDADE`: `valor × lotes × rendimento`; `FIXO`: `valor`), cada um com `round2`, para 1 lote. Conferido na API na FE-05: com Energia Elétrica (R$ 450, proporcional) e Aluguel (R$ 1.800, fixo), o Pão Francês ficou com `custoProducao = 3,31 + 2.250 = 2.253,31`. A prévia da FE-12 precisa da lista de gastos para bater com o backend (ver [lacuna 18](api-integration.md#lacunas-do-backend)).
 - Sem margem, o backend não calcula `precoSugerido` (o campo não vem na resposta).
 - A quantidade do item está **na unidade do insumo** (ex.: manteiga em `g`, farinha em `kg`).
-- Exemplo do seed (Bolo de Chocolate, rendimento 12, margem 50%): `custoProducao = 9,70`, `custoUnitario = round2(9,70 / 12) = 0,81`, `precoSugerido = round2(0,81 × 1,5) = 1,22`.
+- Exemplo do seed (Bolo de Chocolate, rendimento 12, margem 50%; o seed grava os valores sem o custo invisível): `custoProducao = 9,70`, `custoUnitario = round2(9,70 / 12) = 0,81`, `precoSugerido = round2(0,81 × 1,5) = 1,22`.
 - Critério da FE-12: a prévia bate com o retorno do backend com tolerância de R$ 0,01. O valor exibido depois de salvar é sempre o do backend.
 
 ### Validações

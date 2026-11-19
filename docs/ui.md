@@ -117,7 +117,7 @@ Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tab
 | `confirm-dialog.tsx`                 | `ConfirmDialog`                                                        | ver [Confirmação](#confirmação-de-exclusão-e-de-ações); entregue na FE-04, junto com os componentes base                                                                                                 |
 | `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                       | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                                                                         |
 | `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                     | `Card` com `title` vira seção com rótulo em caixa alta; `variant="resumo"` tem cantos de 14px. `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                    |
-| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge` | sempre com cor e texto; os tipos `StatusEstoque`, `StatusVenda` e `MetodoRateio` passam a vir dos contratos na FE-05                                                                                     |
+| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge` | sempre com cor e texto; `StatusVenda` e `MetodoRateio` e os rótulos vêm de `shared/api/contracts/enums.ts`; `StatusEstoque` fica aqui, porque é calculado no cliente (FE-13)                             |
 | `progress-bar.tsx`                   | `ProgressBar`                                                          | `<progress>` nativo; `value` de 0 a 1 (limitado), `aria-label` obrigatório, `tone` (`accent` ou a cor do status) e `valueText`                                                                           |
 | `toast.tsx`                          | `ToastProvider`, `useToast`                                            | `toast.success(texto)`, `toast.error(texto)`, `toast.info(texto)`; some em 4 s, como o `SnackBar`; o provider fica no layout de `(app)` (FE-08) e em `/design-system`                                    |
 | `skeleton.tsx`, `spinner.tsx`        | `Skeleton`, `Spinner`                                                  | `Skeleton` exige `aria-label`; `Spinner` tem `label` ("Carregando")                                                                                                                                      |
@@ -257,7 +257,7 @@ Exclusões e ações de negócio (excluir, concluir ou cancelar venda) usam `Con
 
 - O título diz a ação; a descrição cita o item entre aspas e, se houver, a consequência.
 - O botão de confirmar usa a variante `perigo` e descreve a ação ("Excluir", "Cancelar venda"), nunca "OK".
-- Ao falhar, o diálogo continua aberto, com a mensagem de erro num `Alert`. Até a FE-05, a mensagem é o `message` do erro (ou "Não foi possível concluir a ação. Tente novamente."); a FE-05 troca por `getErrorMessage()`.
+- Ao falhar, o diálogo continua aberto, com a mensagem de erro num `Alert`. A mensagem vem de `getErrorMessage()` (FE-05): a do `ApiError`, ou "Não foi possível concluir a ação. Tente novamente." para qualquer outro erro.
 - O botão de voltar diz "Cancelar" (`cancelLabel` muda o texto). Durante `onConfirm`, os dois botões ficam inativos e o diálogo não fecha.
 
 ## Estados

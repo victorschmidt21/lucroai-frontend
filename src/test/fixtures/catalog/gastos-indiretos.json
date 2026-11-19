@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "id": 10,
+      "empresaId": 3,
+      "descricao": "Aluguel do Espaço",
+      "valor": 1800,
+      "metodoRateio": "FIXO"
+    },
+    {
+      "id": 9,
+      "empresaId": 3,
+      "descricao": "Energia Elétrica",
+      "valor": 450,
+      "metodoRateio": "PROPORCIONAL"
+    }
+  ],
+  "links": {
+    "getAll": {
+      "href": "/gastos-indiretos",
+      "method": "GET"
+    },
+    "create": {
+      "href": "/gastos-indiretos",
+      "method": "POST"
+    },
+    "getById": {
+      "href": "/gastos-indiretos/:id",
+      "method": "GET"
+    },
+    "update": {
+      "href": "/gastos-indiretos/:id",
+      "method": "PATCH"
+    },
+    "delete": {
+      "href": "/gastos-indiretos/:id",
+      "method": "DELETE"
+    }
+  }
+}
