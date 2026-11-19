@@ -3,9 +3,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { getErrorMessage } from '@/shared/api/errors';
-import { hrefComFiltros, lerFiltros } from '@/shared/api/filtros';
+import {
+  filtrarPorTexto,
+  hrefComFiltros,
+  lerFiltros,
+} from '@/shared/api/filtros';
 import { isBaixoEstoque } from '@/shared/domain/estoque';
 import { Button, buttonClasses } from '@/shared/ui/button';
 import { Chip } from '@/shared/ui/chip';
@@ -14,12 +18,15 @@ import { ErrorState } from '@/shared/ui/error-state';
 import {
   IconAdicionar,
   IconAtualizar,
+  IconBusca,
   IconFechar,
   IconFiltro,
 } from '@/shared/ui/icons/acoes';
 import { IconEstoque } from '@/shared/ui/icons/menu';
+import { Input } from '@/shared/ui/input';
 import { PageHeader } from '@/shared/ui/page-header';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
+import { useBuscaNaUrl } from '@/shared/ui/use-busca-na-url';
 import { estoqueKeys } from '../api/estoque.queries';
 import { useEstoques, type ItemEstoque } from '../hooks/use-estoques';
 import { estoqueSearchSchema } from '../schemas/estoque-search.schema';
@@ -51,6 +58,14 @@ export function EstoqueLista() {
   const searchParams = useSearchParams();
   const apenasBaixo =
     lerFiltros(estoqueSearchSchema, searchParams).baixo === '1';
+  // Busca pelo nome do insumo em `?q=`, como o "Buscar insumos..." do mobile.
+  const busca = useBuscaNaUrl();
+  const campoDeBusca = useRef<HTMLInputElement>(null);
+
+  function limparBusca() {
+    busca.limpar();
+    campoDeBusca.current?.focus();
+  }
 
   function alterarFiltro(baixo: boolean) {
     router.replace(hrefComFiltros(pathname, searchParams, { baixo }), {
@@ -70,7 +85,11 @@ export function EstoqueLista() {
     }
   }
 
-  const visiveis = itens.filter((item) => passaNoFiltro(item, apenasBaixo));
+  const visiveis = filtrarPorTexto(
+    itens,
+    (item) => item.insumo.nome,
+    busca.termo,
+  ).filter((item) => passaNoFiltro(item, apenasBaixo));
 
   return (
     <div className="flex flex-col gap-5">
@@ -88,6 +107,28 @@ export function EstoqueLista() {
           </Button>
         }
       />
+
+      <search>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            busca.aplicarAgora();
+          }}
+        >
+          <Input
+            ref={campoDeBusca}
+            type="search"
+            label="Buscar insumos"
+            hideLabel
+            placeholder="Buscar insumos"
+            icon={<IconBusca className="size-5" />}
+            value={busca.texto}
+            onChange={(event) => busca.alterar(event.target.value)}
+            autoComplete="off"
+            enterKeyHint="search"
+          />
+        </form>
+      </search>
 
       <div className="flex flex-wrap items-center gap-3">
         <span aria-hidden className="text-small text-ink-muted">
@@ -145,6 +186,16 @@ export function EstoqueLista() {
               <IconAdicionar className="size-5" />
               Novo insumo
             </Link>
+          }
+        />
+      ) : visiveis.length === 0 && busca.termo ? (
+        <EmptyState
+          icon={<IconBusca />}
+          title={`Nenhum resultado para "${busca.termo}"`}
+          action={
+            <Button variant="secundario" onClick={limparBusca}>
+              Limpar busca
+            </Button>
           }
         />
       ) : visiveis.length === 0 ? (

@@ -324,16 +324,17 @@ barra          = clamp(percentual / 100, 0, 1)
 
 ### Textos
 
-| Onde               | Mobile                                                       | Web                                                                                           |
-| ------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | igual                                                                                         |
-| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                    |
-| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)             |
-| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                         |
-| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | igual; `baixo=1` na URL                                                                       |
-| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | igual, com link para `/insumos`                                                               |
-| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                              |
-| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão, com "Tentar novamente" |
+| Onde               | Mobile                                                       | Web                                                                                                                              |
+| ------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | igual                                                                                                                            |
+| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                                                       |
+| Busca              | "Buscar insumos..."                                          | "Buscar insumos", pelo nome e sem acentos, em `?q=`; sem resultado, "Nenhum resultado para "<termo>"" com "Limpar busca" (FE-23) |
+| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)                                                |
+| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                            |
+| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | igual; `baixo=1` na URL                                                                                                          |
+| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | igual, com link para `/insumos`                                                                                                  |
+| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                                                                 |
+| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão, com "Tentar novamente"                                    |
 
 O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item cujo saldo ainda está carregando ou falhou continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
 

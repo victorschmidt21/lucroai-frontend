@@ -163,6 +163,10 @@ docker run -p 3000:3000 \
   lucroai-frontend
 ```
 
+## Deploy
+
+A produção roda na Vercel, com preview por PR e deploy automático na `main`; o `Dockerfile` acima é a alternativa para Render, Railway, Fly ou VPS. Passo a passo, variáveis, domínio, rollback e checklist em [docs/deploy.md](docs/deploy.md). Em produção, as URLs precisam ser `https` (só `localhost` aceita `http`).
+
 ## Solução de problemas
 
 **`Cannot find native binding` ao rodar o Vitest.** Bug do npm com dependências opcionais ([npm/cli#4828](https://github.com/npm/cli/issues/4828)): `npm install <pacote>` ou `npm uninstall <pacote>` com o `node_modules` já existente pode remover os binários nativos do `package-lock.json`. Depois de alterar dependências, confira se o lock ainda tem as entradas `@rolldown/binding-*`. Se não tiver, regenere:
