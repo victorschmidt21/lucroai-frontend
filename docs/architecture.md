@@ -72,20 +72,20 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 
 ## O que fica em `src/shared/`
 
-| Caminho                | O que é                                                                                                                                                             | Situação                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                  |
-| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                  |
-| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                  |
-| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                                       | existe (FE-05)          |
-| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | existe (FE-05)          |
-| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                | existe (FE-05)          |
-| `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)          |
-| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | previsto (FE-13, FE-18) |
-| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)          |
-| `ui/`                  | `StatusPage` (páginas 404 e de erro)                                                                                                                                | existe (FE-08)          |
-| `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)          |
-| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                     | existe (FE-07)          |
+| Caminho                | O que é                                                                                                                                                             | Situação                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                                                    |
+| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                                                    |
+| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                                                    |
+| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                                       | existe (FE-05)                                            |
+| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | existe (FE-05)                                            |
+| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                | existe (FE-05)                                            |
+| `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)                                            |
+| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | `estoque.ts` existe (FE-13); `vendas.ts` previsto (FE-18) |
+| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)                                            |
+| `ui/`                  | `StatusPage` (páginas 404 e de erro)                                                                                                                                | existe (FE-08)                                            |
+| `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)                                            |
+| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                     | existe (FE-07)                                            |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
 
@@ -359,18 +359,15 @@ As três mutações invalidam as mesmas raízes ([matriz](api-integration.md#inv
 // src/features/insumos/hooks/invalidacoes.ts
 import type { QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/errors';
+import { estoqueKeys } from '@/features/estoque/api/estoque.queries';
+import { receitasKeys } from '@/features/receitas/api/receitas.queries';
 import { insumosKeys } from '../api/insumos.queries';
-
-// `estoque` (FE-13) e `receitas` (FE-11) ainda não existem: as raízes vão pelo
-// literal. Troque por `estoqueKeys.all` e `receitasKeys.all` quando elas chegarem.
-const ESTOQUE_KEY = ['estoque'] as const;
-const RECEITAS_KEY = ['receitas'] as const;
 
 export function invalidarAposMutacaoDeInsumo(queryClient: QueryClient) {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: insumosKeys.all }),
-    queryClient.invalidateQueries({ queryKey: ESTOQUE_KEY }),
-    queryClient.invalidateQueries({ queryKey: RECEITAS_KEY }),
+    queryClient.invalidateQueries({ queryKey: estoqueKeys.all }),
+    queryClient.invalidateQueries({ queryKey: receitasKeys.all }),
   ]);
 }
 

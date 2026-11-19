@@ -340,28 +340,31 @@ O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item cujo sald
 - Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum insumo está abaixo do estoque mínimo.", com "Limpar filtro".
 - A ação do vazio é o link "Novo insumo" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
 - O percentual aparece com `formatNumero(percentual, 0)` + `%` (`500%`) e as quantidades com `formatQuantidade` (`10 kg`), em vez das 2 casas fixas do mobile.
-- "Registrar entrada" entra no cartão com a FE-14, junto com o formulário de entrada.
+- Ações do cartão (FE-14): "Registrar entrada" (só com o saldo carregado, porque o diálogo mostra a quantidade atual) e "Histórico", que abre a gaveta de movimentações. No mobile, tocar no cartão ou no menu ⋮ abre a entrada; a web usa botões visíveis.
 
 ## Entrada de estoque e histórico
 
 FE-14. Origem: `lib/features/estoques/presentation/widgets/registrar_entrada_modal.dart`, `lib/features/estoques/presentation/cubit/estoques_cubit.dart`, `movimentacao_estoque.dart`. Backend: `services/operations-service/src/modules/estoque/application/dto/registrar-entrada-estoque.dto.ts`.
 
 - Corpo: `{ quantidade }`, com `quantidade > 0`. O DTO **não** tem `observacao` e o backend rejeita campos extras (`forbidNonWhitelisted`), então a web **não** envia nem mostra o campo "Observação" pedido na FE-14 (ex.: "Compra de reposição, NF 4521") (ver [divergências](api-integration.md#divergências-entre-as-issues-e-o-backend)).
-- Prévia do saldo: `quantidadeDisponivel + quantidade`.
-- Histórico: `GET /estoque/insumos/:id/movimentacoes`, já ordenado da mais recente para a mais antiga. Quantidade com sinal: `+` em Entrada, `−` em Saída. Referência: em `PRODUCAO`, "Produção #<referenciaId>" (ex.: "Produção #12"); em `COMPRA`, sem referência.
+- Prévia do saldo: `saldoAposEntrada(quantidadeDisponivel, quantidade)` = `quantidadeDisponivel + quantidade`, arredondado a 6 casas para tirar o ruído de ponto flutuante (`entrada-estoque.schema.ts`). Com o campo vazio ou inválido, a prévia mostra o saldo atual.
+- Depois da entrada, a web invalida `estoque` (saldo, status, histórico e painel) e `insumos`, e revalida `insumos` de novo 2 s depois, porque o catalog atualiza `quantidadeDisponivel` por evento.
+- Histórico: gaveta "Histórico" (o mobile busca as movimentações, mas não tem tela), com `GET /estoque/insumos/:id/movimentacoes`, já ordenado da mais recente para a mais antiga. Cada item: ícone de seta (para baixo em Entrada, verde; para cima em Saída, vermelha), tipo, origem, data `dd/mm/aaaa` e quantidade com sinal e unidade: `+` em Entrada, `−` em Saída. Referência: em `PRODUCAO`, "Produção #<referenciaId>" (ex.: "Produção #12"); em `COMPRA`, sem referência.
 - Não existe endpoint para alterar a quantidade mínima nem para corrigir o saldo (`atualizarEstoque` lança `UnsupportedError` no mobile). Não crie essas ações.
 
-| Onde            | Mobile                                                         | Web                                            |
-| --------------- | -------------------------------------------------------------- | ---------------------------------------------- |
-| Título          | "Registrar Entrada"                                            | igual                                          |
-| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | igual                                          |
-| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"     |
-| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                       |
-| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>" |
-| Botão           | "Confirmar Entrada"                                            | igual                                          |
-| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."   |
-| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo            |
-| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."             |
+| Onde            | Mobile                                                         | Web                                                    |
+| --------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| Título          | "Registrar Entrada"                                            | igual                                                  |
+| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | igual                                                  |
+| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"             |
+| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                               |
+| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>"         |
+| Botão           | "Confirmar Entrada"                                            | igual                                                  |
+| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."           |
+| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo                    |
+| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."                     |
+| Histórico       | —                                                              | título "Histórico", com o nome do insumo               |
+| Histórico, erro | —                                                              | "Erro ao carregar o histórico", com "Tentar novamente" |
 
 ## Produções e rateio
 
@@ -812,7 +815,7 @@ Resumo do que a web faz diferente, de propósito. Cada item está detalhado na s
 | Insumos              | custo unitário com 4 casas fixas                                                                                                                                                          | FE-05                                            |
 | Receitas             | rendimento só inteiro                                                                                                                                                                     | backend `@IsInt`                                 |
 | Estoque              | mostra a data da última alteração; erro isolado por cartão                                                                                                                                | FE-13                                            |
-| Entrada de estoque   | sem o campo "Observação"                                                                                                                                                                  | o backend rejeita o campo                        |
+| Entrada de estoque   | sem o campo "Observação"; prévia do saldo; gaveta "Histórico"                                                                                                                             | o backend rejeita o campo                        |
 | Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                                                                                        | backend `@IsInt` e `maxDecimalPlaces: 2`         |
 | Confirmação de venda | vendido considera todas as vendas concluídas e soma itens da mesma receita                                                                                                                | correção do cálculo                              |
 | Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                                                                  | lacuna do backend com `dataFim`                  |

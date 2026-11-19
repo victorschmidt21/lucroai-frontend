@@ -348,16 +348,16 @@ O painel (FE-22) e a simulação (FE-21) não têm chave própria: usam as queri
 
 Toda mutação invalida, no `onSuccess`, o que ela pode ter alterado **no sistema inteiro**, devolvendo a `Promise`. A invalidação compara por prefixo: invalidar a raiz (`insumosKeys.all`) alcança listas e detalhes. Para invalidar a chave de outra funcionalidade, importe as chaves do `api/<outro>.queries.ts` dela, que é a única importação permitida entre funcionalidades (ver [architecture.md](architecture.md#regras-de-dependência)).
 
-| Mutação                                             | Invalida                         | Por quê                                                                                                                    |
-| --------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| criar, editar ou excluir insumo                     | `insumos`, `estoque`, `receitas` | insumo novo cria estoque; o custo das receitas depende do custo do insumo                                                  |
-| criar, editar ou excluir gasto indireto             | `gastos-indiretos`               | a lista também alimenta os chips do formulário de produção                                                                 |
-| criar, editar ou excluir receita                    | `receitas`                       | a mesma lista alimenta Vendas, Produções, Simulação e Painel                                                               |
-| registrar entrada de estoque                        | `estoque`, `insumos`             | saldo, status e histórico; o catalog atualiza `quantidadeDisponivel` por evento, com atraso (consistência eventual aceita) |
-| registrar produção                                  | `producoes`, `estoque`           | baixa dos insumos; as produções alimentam o estoque disponível de produto acabado (FE-17)                                  |
-| registrar venda                                     | `vendas`                         | histórico, painel e simulação                                                                                              |
-| concluir ou cancelar venda                          | `vendas`                         | histórico, painel e estoque disponível de produto acabado                                                                  |
-| simular cenário, preço de venda ou custo de N lotes | nada                             | não grava                                                                                                                  |
+| Mutação                                             | Invalida                         | Por quê                                                                                                                                |
+| --------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| criar, editar ou excluir insumo                     | `insumos`, `estoque`, `receitas` | insumo novo cria estoque; o custo das receitas depende do custo do insumo                                                              |
+| criar, editar ou excluir gasto indireto             | `gastos-indiretos`               | a lista também alimenta os chips do formulário de produção                                                                             |
+| criar, editar ou excluir receita                    | `receitas`                       | a mesma lista alimenta Vendas, Produções, Simulação e Painel                                                                           |
+| registrar entrada de estoque                        | `estoque`, `insumos`             | saldo, status e histórico; o catalog atualiza `quantidadeDisponivel` por evento, com atraso: `insumos` é revalidado de novo 2 s depois |
+| registrar produção                                  | `producoes`, `estoque`           | baixa dos insumos; as produções alimentam o estoque disponível de produto acabado (FE-17)                                              |
+| registrar venda                                     | `vendas`                         | histórico, painel e simulação                                                                                                          |
+| concluir ou cancelar venda                          | `vendas`                         | histórico, painel e estoque disponível de produto acabado                                                                              |
+| simular cenário, preço de venda ou custo de N lotes | nada                             | não grava                                                                                                                              |
 
 ```ts
 // src/features/producoes/hooks/use-create-producao.ts (previsto na FE-15)
@@ -436,6 +436,7 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 19. **`GET /estoque/insumos/:id` de insumo inexistente** responde `404` "Insumo não encontrado" (não o `id: 0` do insumo sem registro). → Trate como 404 comum.
 20. **`POST /receitas/:id/preco-venda` sem arredondamento** devolve ruído de ponto flutuante (`preco_sugerido: 72.11200000000001`). → Formate com `formatMoeda`; não compare com `===`.
 21. **`PUT /receitas/:id` não remove a margem.** Campo omitido mantém o valor salvo, e `margem_lucro: null` passa na validação (`@IsOptional`) mas grava a margem nula sem limpar o `precoSugerido` antigo (o repositório Prisma ignora `undefined`). → A web não envia margem vazia (como o mobile), a prévia usa a margem salva nesse caso, e não há como apagar a margem pela tela; pedido ao backend: aceitar `null` e limpar o preço sugerido.
+22. **OVERVIEW do estoque documenta `observacao` na entrada**, mas o `RegistrarEntradaEstoqueDto` só tem `quantidade` e a movimentação não guarda observação; enviar o campo dá `400`. → A web não tem o campo "Observação" (FE-14); pedido ao backend: aceitar e guardar a observação, ou corrigir o OVERVIEW.
 
 ## Divergências entre as issues e o backend
 
