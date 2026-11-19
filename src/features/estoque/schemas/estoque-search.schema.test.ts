@@ -17,3 +17,8 @@ it('ignora valores inválidos sem derrubar a tela', () => {
     estoqueSearchSchema.parse({ baixo: ['1', '1'] }).baixo,
   ).toBeUndefined();
 });
+
+it('lê a busca e ignora a busca vazia', () => {
+  expect(estoqueSearchSchema.parse({ q: ' farinha ' }).q).toBe('farinha');
+  expect(estoqueSearchSchema.parse({ q: '  ' }).q).toBeUndefined();
+});
