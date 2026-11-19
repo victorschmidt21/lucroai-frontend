@@ -458,7 +458,7 @@ Na web (FE-16):
 - Os erros do registro aparecem num `Alert` dentro do cartão do carrinho (o mobile usa `SnackBar`), e o carrinho é mantido. No estoque insuficiente, o `Alert` traz o link "Ir para Produções" (a ação "Produção" do `SnackBar`).
 - Carrinho vazio: o cartão continua visível, com "0 itens", "Adicione produtos para registrar a venda." e "Registrar Venda" desabilitado (o mobile esconde o cartão).
 - O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
-- Até a FE-17, depois de registrar a tela mostra o Toast "Venda #<id> registrada como pendente."; a FE-17 troca o Toast pela confirmação.
+- Depois de registrar, a tela abre a confirmação (FE-17); o Toast provisório "Venda #<id> registrada como pendente." saiu.
 - A aba "Histórico" mostra "Em construção" até a FE-18.
 
 ### Detector de estoque insuficiente
@@ -505,6 +505,9 @@ Diferenças em relação ao mobile, registradas como decisão:
 1. **Vendas consideradas.** O mobile soma só as vendas concluídas do período carregado no histórico (o mês atual), o que superestima o disponível. A web busca `GET /vendas?status=CONCLUIDA` sem período, porque as produções também não têm período.
 2. **Mesma receita em duas linhas.** O mobile confere cada item isoladamente. A web soma as quantidades da mesma receita antes de comparar.
 3. **Rendimento.** O estoque real usa o rendimento da receita no momento da produção; a produção não guarda esse valor, então o cálculo usa o rendimento atual (limitação também do mobile).
+4. **Falha na consulta.** O mobile ignora a falha item a item; a web consulta juntas as receitas, as vendas concluídas e as produções de cada receita e, se qualquer uma falhar, segue com a conclusão sem conferir nenhum item.
+5. **Depois de concluir ou cancelar, o diálogo continua aberto**, com o status devolvido (Badge "Concluída" ou "Cancelada") e só o botão "Fechar"; o mobile fecha a folha. Assim a tela mostra o status real, consultado de novo.
+6. **Disponível negativo** (vendas concluídas acima do produzido) aparece como está na mensagem ("disponível -20"), como no mobile.
 
 ### Textos
 
@@ -516,7 +519,7 @@ Diferenças em relação ao mobile, registradas como decisão:
 | Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente) |
 | Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | igual                                                           |
 
-Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido.
+Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido. Na web: `ConfirmacaoVenda`, `useVerificarEstoqueParaVenda` e `useAtualizarStatusVenda` (`features/vendas/`); o histórico (FE-18) abre o mesmo componente com a venda `PENDENTE`.
 
 ## Vendas: histórico e resumo
 
