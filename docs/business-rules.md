@@ -588,7 +588,7 @@ custoPorUnidade     = rendimento > 0 ? custoTotal / rendimento : 0
 percentualInvisivel = custoTotal > 0 ? custosInvisiveis / custoTotal × 100 : 0
 ```
 
-Campo vazio conta como 0 (`_parseBR`); nenhum resultado pode virar `NaN`.
+Campo vazio conta como 0 (`_parseBR`); nenhum resultado pode virar `NaN`. No resultado ao vivo, texto inválido também conta como 0 (o mobile usa -1); o erro aparece ao salvar.
 
 ### Validações e textos
 
