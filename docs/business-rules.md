@@ -453,6 +453,14 @@ total    = Σ subtotal                       // o backend grava round2(Σ quanti
 | Estoque insuficiente  | "Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções."    | igual, com link para `/producoes`         |
 | Outros erros          | mensagem do backend                                                                         | `getErrorMessage(error)`                  |
 
+Na web (FE-16):
+
+- Os erros do registro aparecem num `Alert` dentro do cartão do carrinho (o mobile usa `SnackBar`), e o carrinho é mantido. No estoque insuficiente, o `Alert` traz o link "Ir para Produções" (a ação "Produção" do `SnackBar`).
+- Carrinho vazio: o cartão continua visível, com "0 itens", "Adicione produtos para registrar a venda." e "Registrar Venda" desabilitado (o mobile esconde o cartão).
+- O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
+- Até a FE-17, depois de registrar a tela mostra o Toast "Venda #<id> registrada como pendente."; a FE-17 troca o Toast pela confirmação.
+- A aba "Histórico" mostra "Em construção" até a FE-18.
+
 ### Detector de estoque insuficiente
 
 `isEstoqueInsuficiente(error)` (`src/shared/api/`, FE-05) reproduz `_isStockError` de `vendas_page.dart`: normaliza a mensagem (minúsculas, sem acentos) e retorna `true` se ela contém `estoque` **e** um destes: `insuficiente`, `indisponivel`, `nao ha`, `sem estoque`. É o único caso em que a tela decide pelo texto da mensagem.
