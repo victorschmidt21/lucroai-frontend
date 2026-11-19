@@ -4,6 +4,15 @@ const watchPollIntervalMs = Number(process.env.WATCH_POLL_INTERVAL_MS);
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// Nos previews da Vercel, NEXT_PUBLIC_APP_URL fica sem valor e vira a URL da
+// branch (VERCEL_BRANCH_URL, variável de sistema da Vercel): a checagem de
+// `Origin` do BFF precisa da URL real do deploy (docs/deploy.md).
+const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_BRANCH_URL
+    ? `https://${process.env.VERCEL_BRANCH_URL}`
+    : undefined);
+
 // CSP sem nonce (node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md):
 // o App Router injeta scripts inline, por isso 'unsafe-inline'; o `next dev`
 // precisa também de 'unsafe-eval'. O navegador só fala com o próprio Next (BFF),
@@ -30,6 +39,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  ...(appUrl && { env: { NEXT_PUBLIC_APP_URL: appUrl } }),
   // Embaixo, o indicador do `next dev` cobriria a barra inferior fixa do celular
   // (FE-08). Em cima à esquerda, cobre só a logo, que repete o item Home.
   devIndicators: { position: 'top-left' },
