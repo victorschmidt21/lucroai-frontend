@@ -76,3 +76,13 @@ export function percentualParaFracao(pontos: number) {
   // Arredonda o ruído de ponto flutuante (7 / 100 pode virar 0.07000000000000001).
   return Number((pontos / 100).toFixed(10));
 }
+
+/**
+ * Margem de lucro do contrato (fração) em percentual com 1 casa: `0.6` →
+ * `60,0%`; sem valor, `—`. Origem: `receita_card.dart` (`margemLucro * 100`).
+ */
+export function formatMargem(fracao: number | null | undefined) {
+  return isSemValor(fracao)
+    ? SEM_VALOR
+    : formatPercentual(fracaoParaPercentual(fracao));
+}
