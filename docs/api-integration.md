@@ -435,6 +435,7 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 18. **Custo invisível soma todos os gastos da empresa.** O `DefaultCustoInvisivelResultProvider` do recipe-service soma, no custo de produção de **toda** receita, o rateio de **todos** os gastos indiretos da empresa para 1 lote (com Aluguel de R$ 1.800 fixo, o Pão Francês passou de R$ 3,31 para R$ 2.253,31). O seed grava os custos sem isso, então os números do seed não batem com uma receita recriada pela API. → A prévia da FE-12 inclui o custo invisível ([business-rules.md](business-rules.md#receitas-formulário-e-custo)); a regra em si é do backend.
 19. **`GET /estoque/insumos/:id` de insumo inexistente** responde `404` "Insumo não encontrado" (não o `id: 0` do insumo sem registro). → Trate como 404 comum.
 20. **`POST /receitas/:id/preco-venda` sem arredondamento** devolve ruído de ponto flutuante (`preco_sugerido: 72.11200000000001`). → Formate com `formatMoeda`; não compare com `===`.
+21. **`PUT /receitas/:id` não remove a margem.** Campo omitido mantém o valor salvo, e `margem_lucro: null` passa na validação (`@IsOptional`) mas grava a margem nula sem limpar o `precoSugerido` antigo (o repositório Prisma ignora `undefined`). → A web não envia margem vazia (como o mobile), a prévia usa a margem salva nesse caso, e não há como apagar a margem pela tela; pedido ao backend: aceitar `null` e limpar o preço sugerido.
 
 ## Divergências entre as issues e o backend
 
@@ -451,3 +452,4 @@ Vale o backend. As issues citadas devem seguir esta tabela.
 | FE-09 | valor pago > 0                                                        | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                                  |
 | FE-09 | erro de exclusão "ex.: insumo usado em receita, se o backend recusar" | `DELETE /insumos/:id` não confere o uso em receitas (lacuna 13)           | mostra a mensagem de qualquer recusa; hoje só há o `404`  |
 | FE-07 | e-mail válido como no mobile (só confere o `@`)                       | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                    | o formulário usa `z.email()` ("Informe um e-mail válido") |
+| FE-12 | "custo invisível = 0 na implementação padrão"                         | soma o rateio de todos os gastos da empresa para 1 lote (lacuna 18)       | a prévia inclui o custo invisível, com a lista de gastos  |
