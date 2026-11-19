@@ -131,7 +131,7 @@ describe('registrar venda', OPCOES, () => {
     ).toBeDisabled();
   });
 
-  it('registra a venda com o corpo do contrato e limpa o carrinho', async () => {
+  it('registra a venda, limpa o carrinho e abre a confirmação', async () => {
     let corpo: CreateVendaBody | undefined;
     const venda = makeVenda({ id: 7, status: 'PENDENTE' });
     server.use(
@@ -150,9 +150,12 @@ describe('registrar venda', OPCOES, () => {
       screen.getByRole('button', { name: 'Registrar Venda' }),
     );
 
-    expect(
-      await screen.findByText('Venda #7 registrada como pendente.'),
-    ).toBeInTheDocument();
+    // A venda nasce pendente e abre a confirmação (FE-17).
+    const confirmacao = await screen.findByRole('dialog', {
+      name: 'Confirmar venda',
+    });
+    expect(within(confirmacao).getByText('Venda #7')).toBeInTheDocument();
+    expect(within(confirmacao).getByText('Pendente')).toBeInTheDocument();
     expect(corpo).toEqual({
       itens: [
         { receita_id: 1, quantidade: 50, preco_unitario_real: 0.5 },
@@ -161,6 +164,15 @@ describe('registrar venda', OPCOES, () => {
     });
     // O total do carrinho era o `total` devolvido pelo backend.
     expect(venda.total).toBe(45);
+
+    // "Fechar" mantém a venda pendente e volta ao carrinho, já vazio.
+    const [, fechar] = within(confirmacao).getAllByRole('button', {
+      name: 'Fechar',
+    });
+    await userEvent.click(fechar);
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
     expect(carrinho().getByText('0 itens')).toBeInTheDocument();
   });
 

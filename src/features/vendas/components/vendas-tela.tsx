@@ -11,7 +11,6 @@ import { IconConstrucao } from '@/shared/ui/icons/acoes';
 import { IconProducao } from '@/shared/ui/icons/menu';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { useToast } from '@/shared/ui/toast';
 import { useCreateVenda } from '../hooks/use-create-venda';
 import {
   toCreateVendaBody,
@@ -20,6 +19,7 @@ import {
 import type { AbaVendas } from '../schemas/vendas-search.schema';
 import { AdicionarProdutoCard } from './adicionar-produto-card';
 import { CarrinhoCard } from './carrinho-card';
+import { ConfirmacaoVenda } from './confirmacao-venda';
 
 type Props = {
   /** Aba da URL (`aba`), já validada pela página. */
@@ -31,7 +31,6 @@ export function VendasTela({ aba }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const toast = useToast();
   const registrar = useCreateVenda();
   // O carrinho fica aqui, e não na aba, para sobreviver à troca de aba.
   // Nunca vai para o navegador: recarregar a página o descarta.
@@ -47,13 +46,8 @@ export function VendasTela({ aba }: Props) {
     );
   }
 
-  /**
-   * A venda nasce `PENDENTE`. O mobile abre aqui a confirmação
-   * (`_showConfirmacaoSheet`), que chega na FE-17; até lá, só o aviso.
-   */
-  function aoRegistrar(venda: Venda) {
-    toast.success(`Venda #${venda.id} registrada como pendente.`);
-  }
+  // A venda nasce `PENDENTE` e abre a confirmação (`_showConfirmacaoSheet`).
+  const [emConfirmacao, setEmConfirmacao] = useState<Venda | null>(null);
 
   function registrarVenda() {
     if (carrinho.length === 0) return;
@@ -61,7 +55,7 @@ export function VendasTela({ aba }: Props) {
     registrar.mutate(toCreateVendaBody(carrinho), {
       onSuccess: (venda) => {
         setCarrinho([]);
-        aoRegistrar(venda);
+        setEmConfirmacao(venda);
       },
     });
   }
@@ -121,6 +115,11 @@ export function VendasTela({ aba }: Props) {
           />
         </TabsContent>
       </Tabs>
+
+      <ConfirmacaoVenda
+        venda={emConfirmacao}
+        onFechar={() => setEmConfirmacao(null)}
+      />
     </div>
   );
 }
