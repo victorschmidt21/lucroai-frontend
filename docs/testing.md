@@ -2,6 +2,19 @@
 
 > **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `api.ts` com os handlers tipados, `renderWithQuery`, factories e fixtures) existem desde a **FE-05**; o `axe` nos componentes (`src/test/a11y.ts`) e o e2e de `/design-system` existem desde a **FE-04**; `src/test/next-navigation.ts` e o e2e de `/design-system/listagem` (`e2e/listagem-formulario.spec.ts`), desde a **FE-06**; o CI e a base da API falsa dos e2e são da **FE-03**; o login e a sessão nos e2e (`e2e/auth.spec.ts`, `e2e/support/sessao.ts`, as rotas de login da API falsa) e `src/test/bff.ts`, da **FE-07**; o e2e do layout e da navegação (`e2e/navegacao.spec.ts`), da **FE-08**; as demais rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
 
+## Política atual: produto inicial (desde 2026-11-19)
+
+O LucroAI ainda está validando o produto, então os testes cobrem **o que é caro errar** e nada além disso. Esta seção prevalece sobre o resto deste documento, que descreve a infraestrutura disponível.
+
+| Obrigatório em toda issue                                                                                                       | Opcional (só quando a issue pede)                                                                                           | Não fazer por enquanto                                       |
+| ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Teste unitário de cada fórmula de [business-rules.md](business-rules.md) usada (`*.calculos.ts`) e de cada schema de formulário | Teste de componente com MSW em telas de interação complexa (formulário de receita, carrinho de venda, confirmação de venda) | e2e novo por tela (o único e2e novo é o de fumaça da FE-23)  |
+| Contrato Zod do recurso com teste e fixture                                                                                     |                                                                                                                             | `axe` em componente ou rota nova                             |
+| `lint`, `format:check`, `typecheck`, `test` e `build` passando                                                                  |                                                                                                                             | Meta de cobertura (não há mais limite no `vitest.config.ts`) |
+| Teste manual rápido do fluxo principal contra o backend real                                                                    |                                                                                                                             | Capturas de tela commitadas em `docs/capturas/`              |
+
+Os e2e que já existem (sessão, layout e design system) continuam rodando no CI como testes de fumaça. Se uma mudança quebrar um deles, corrija o teste ou a tela; não acrescente specs novos.
+
 Ferramentas: **Vitest** com **Testing Library** em testes unitários e de componente, **MSW** para simular a API e **Playwright** nos e2e.
 
 | Comando                    | O que roda                                           | Config                 |
@@ -67,11 +80,10 @@ Server Components `async` não são renderizados pelo Testing Library: cubra-os 
 - **Cores fixas:** `src/shared/ui/sem-cores-fixas.test.ts` falha se houver hex, `rgb()` ou paleta pronta do Tailwind fora de `globals.css`.
 - **Navegador real:** `e2e/design-system.spec.ts` roda o `@axe-core/playwright` na página `/design-system`, **com contraste**, e com o Dialog e o Drawer abertos; `e2e/listagem-formulario.spec.ts` faz o mesmo em `/design-system/listagem`, com o `FormDialog` aberto e com erros. Como a página só existe em desenvolvimento (no build, 404, como na Urbizzi), esses testes rodam com `npm run test:e2e` local (`next dev`); com `E2E_USAR_BUILD=true` (o CI) eles são pulados e só se confere o 404.
 - **Layout:** `e2e/navegacao.spec.ts` roda o `axe` com contraste no layout em 1280px e em 360px (com a gaveta "Conta" aberta) e no 404 (FE-08); também roda no build.
-- **Rotas:** `@axe-core/playwright` nas telas (FE-23), sem violações sérias ou críticas.
 
 ### E2E (`e2e/<funcionalidade>.spec.ts`)
 
-Abre o navegador e percorre o sistema como o usuário. Fica para os fluxos que atravessam várias camadas:
+Abre o navegador e percorre o sistema como o usuário. **Pela [política atual](#política-atual-produto-inicial-desde-2026-11-19), não se escrevem specs novos por tela**: só o de fumaça da FE-23. A lista abaixo descreve o que os specs existentes cobrem:
 
 1. Caminho principal de cada funcionalidade (criar, editar, buscar, excluir).
 2. Sessão: login, senha errada, logout, rota protegida, sessão expirada (401) preservando o destino.
@@ -83,7 +95,7 @@ O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa**, 
 
 Hoje a API falsa responde `GET /health` (para o Playwright saber que ela subiu), `GET /docs-json` (sondado pelo `/api/health`), `POST /auth/login` (FE-07: o usuário do seed recebe um JWT de 4 h com assinatura falsa; outra senha, `401 "Credenciais inválidas"`) e `GET /insumos` (FE-07: lista vazia com um Bearer emitido por ela e dentro do `exp`; senão, `401`); o resto devolve `404` no formato do NestJS. **Sessão nos e2e.** Toda tela, exceto `/login` e `/design-system`, exige sessão desde a FE-07: comece o teste com `entrar(page)` (`e2e/support/sessao.ts`), que usa o usuário do seed e funciona com a API falsa e com `E2E_API_REAL=true`. Ele espera o botão "Sair" do menu lateral (até 30 s, porque o `next dev` compila o layout na primeira visita), então entre com a largura de desktop e só depois mude para a do celular (`page.setViewportSize`). O layout não chama a API (a sessão vem do cookie), por isso a FE-08 não acrescentou rotas à API falsa. `tokenFalso(exp)` e `definirCookie()` simulam um cookie vencido ou recusado pelo backend.
 
-Cada issue de tela acrescenta ao objeto `routes` do arquivo as rotas que o seu e2e usa, com o envelope `{ data, links }` e os dados do seed; a **FE-23** completa o conjunto. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
+As issues de tela **não** acrescentam rotas à API falsa; a **FE-23** acrescenta só as que o spec de fumaça usa, com o envelope `{ data, links }` e os dados do seed. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
 
 ## Uso do MSW
 
@@ -501,11 +513,9 @@ test('cadastra, busca e exclui um insumo', async ({ page }) => {
 
 ## Cobertura mínima
 
-- **80% de linhas e de branches** em `src/shared/**` e em `src/features/**/{api,hooks,schemas}/**`.
-- Os `*.calculos.ts` e `shared/domain/` não têm meta própria além dessa, mas **cada fórmula e cada ramo** de [business-rules.md](business-rules.md) precisa de um teste: na prática, ficam perto de 100%.
-- Componentes são cobertos pelos cenários acima, sem meta numérica.
+- **Sem meta numérica** desde 2026-11-19 ([política atual](#política-atual-produto-inicial-desde-2026-11-19)). `npm run test:cov` continua disponível para consulta, mas não falha por cobertura, e o CI roda `npm test`.
+- **Cada fórmula e cada ramo** de [business-rules.md](business-rules.md) usados no cliente precisam de um teste unitário.
 - Todo bug corrigido ganha um teste que falhava antes da correção.
-- O limite fica em `vitest.config.ts` (`coverage.thresholds`), com uma entrada para `src/shared/**` e outra para `src/features/**/{api,hooks,schemas}/**`, e `npm run test:cov` falha abaixo de 80% em qualquer uma delas. A cobertura inclui todos os arquivos de `src/`, mesmo os que nenhum teste importa: arquivo novo sem teste nesses caminhos conta como 0% e derruba o CI.
 
 ## Integração contínua
 
@@ -513,7 +523,7 @@ O workflow `.github/workflows/ci.yml` tem dois jobs, que rodam em paralelo:
 
 | Job                             | Limite | Etapas                                                                                                                                                                                                                                                  |
 | ------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Lint, tipos, testes e build** | 10 min | `npm ci` (com cache do npm) → `lint` → `format:check` → `typecheck` → `test:cov` (com limite de cobertura) → `build`                                                                                                                                    |
+| **Lint, tipos, testes e build** | 10 min | `npm ci` (com cache do npm) → `lint` → `format:check` → `typecheck` → `test` → `build`                                                                                                                                                                  |
 | **Testes e2e**                  | 15 min | `npm ci` → Chromium do Playwright (cache por versão do Playwright) → `build` → `test:e2e` com `E2E_USAR_BUILD=true`, contra o build de produção e a API falsa → relatório e traces publicados como artefato `playwright-report` quando falhar (14 dias) |
 
 Gatilhos:
@@ -537,7 +547,7 @@ on:
 Para reproduzir localmente o que o CI faz:
 
 ```bash
-npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build && E2E_USAR_BUILD=true npm run test:e2e
+npm run lint && npm run format:check && npm run typecheck && npm test && npm run build && E2E_USAR_BUILD=true npm run test:e2e
 ```
 
 ## Boas práticas

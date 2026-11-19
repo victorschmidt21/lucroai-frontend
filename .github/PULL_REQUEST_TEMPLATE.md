@@ -12,7 +12,7 @@ Closes #<!-- número da issue -->
 
 ## Capturas de tela
 
-<!-- Antes e depois, em desktop (1280px) e celular (390px), ao lado da tela equivalente do app Flutter quando houver. Use os dados do seed "Padaria Pão Feliz". Escreva "Não se aplica" se não houver mudança visual. -->
+<!-- Opcional. Se quiser, anexe aqui uma imagem da tela principal (não commite em docs/capturas/). -->
 
 ## Testes realizados
 
@@ -20,11 +20,8 @@ Closes #<!-- número da issue -->
 - [ ] `npm run format:check` ok
 - [ ] `npm run typecheck` ok
 - [ ] `npm run build` ok
-- [ ] `npm test` passando (unitários e de componente novos/alterados: <!-- quais -->)
-- [ ] `npm run test:e2e` passando (e2e novos/alterados: <!-- quais -->)
-- [ ] Cobertura de `shared/` e de `api/`, `hooks/` e `schemas/` da funcionalidade ≥ 80% (`npm run test:cov`)
+- [ ] `npm test` passando (novos/alterados: <!-- quais -->)
 - [ ] Cada fórmula de `docs/business-rules.md` usada no PR tem teste unitário
-- [ ] Estados de carregamento, vazio e erro testados
 - [ ] Testado manualmente contra o backend com o seed (descreva abaixo, se aplicável)
 
 <!-- Passos manuais executados e resultado. -->
@@ -34,9 +31,7 @@ Closes #<!-- número da issue -->
 - [ ] Navegável só por teclado, com foco visível
 - [ ] Campos com rótulo; erros anunciados e ligados ao campo
 - [ ] Status não depende só da cor (Badge com cor e texto)
-- [ ] Contraste de pelo menos 4,5:1 no texto
-- [ ] Utilizável em 360px, sem rolagem horizontal da página
-- [ ] `axe` sem violações nos componentes novos
+- [ ] Utilizável em 390px, sem rolagem horizontal da página
 
 ## Paridade com o mobile
 

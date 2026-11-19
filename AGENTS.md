@@ -42,7 +42,7 @@ npm run test:e2e               # testes e2e (Playwright)
 npx vitest run caminho/arquivo.test.ts   # um arquivo só
 ```
 
-Antes de dizer que terminou: `npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build` precisam passar (é o que o CI roda, em `.github/workflows/ci.yml`; `test:cov` falha com cobertura abaixo de 80% nos caminhos de [docs/testing.md](docs/testing.md#cobertura-mínima)). Se mexeu em tela, rota ou sessão, rode também `npm run test:e2e`.
+Antes de dizer que terminou: `npm run lint && npm run format:check && npm run typecheck && npm test && npm run build` precisam passar (é o que o CI roda, em `.github/workflows/ci.yml`). Se mexeu no layout, na sessão ou no proxy, rode também `E2E_USAR_BUILD=true npm run test:e2e` (os e2e existentes são testes de fumaça; não escreva specs novos). O que testar segue a [política atual de testes](<docs/testing.md(#política-atual-produto-inicial-desde-2026-11-19)>).
 
 O backend roda à parte (portas 3001 a 3005), com o seed "Padaria Pão Feliz": login `joao@padariapaofeliz.com.br`, senha `123456`. Como subir os dois está no [README](README.md#subindo-o-ambiente-do-zero).
 
@@ -83,7 +83,7 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 16. **Nunca guarde o token nem dados de negócio no navegador** (`localStorage`, `sessionStorage`, cookie legível) e nunca envie `empresaId`: ele vem do token ([docs/security.md](docs/security.md)).
 17. **Código com cookie de sessão ou URL de serviço usa `import 'server-only'`** e sufixo `.server.ts`. Variáveis de ambiente passam pelo schema de `src/shared/config/`.
 18. **Nunca chame rotas `/internal/*` do backend**: elas não têm autenticação.
-19. **Toda mudança de comportamento vem com teste** (ver [docs/testing.md](docs/testing.md)).
+19. **Toda fórmula de regra de negócio e todo schema de formulário vêm com teste unitário**; o resto segue a [política atual de testes](<docs/testing.md(#política-atual-produto-inicial-desde-2026-11-19)>).
 20. **Idioma do código**: termos de domínio em português sem acento (`Insumo`, `custoUnitario`); termos técnicos em inglês (`useCreateInsumo`, `queryKey`).
 21. **Não use o que ainda não existe.** Itens marcados como "previsto (FE-NN)" dependem da issue citada. Ao entregar um deles, atualize a documentação no mesmo PR.
 22. **Se a issue e o backend divergirem, vale o backend.** Registre a divergência em [docs/api-integration.md](docs/api-integration.md#divergências-entre-as-issues-e-o-backend) e no PR.
@@ -102,8 +102,8 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 4. Substitua a tela provisória da rota em `src/app/(app)/<rota>/page.tsx` (as oito rotas do menu existem desde a FE-08, com `TelaProvisoria`) ou crie a rota nova, com `metadata.title`. O layout de `(app)` já garante a sessão e traz o `<main>`, o `QueryProvider` e o `ToastProvider`.
 5. Use os textos exatos de [docs/business-rules.md](docs/business-rules.md), com acentuação.
 6. Trate carregamento, vazio, vazio por busca e erro; confira em 360px e em 1280px, só com teclado.
-7. Escreva os testes: unitários dos schemas e cálculos, de componente com MSW e e2e do fluxo principal.
-8. Rode a verificação completa (seção [Comandos](#comandos)), atualize "O que já existe em `src/`" abaixo e os itens "previsto" que este PR entregou, e abra o PR usando o template, com capturas de tela.
+7. Escreva os testes unitários dos schemas e cálculos. Teste de componente só quando a issue pedir; e2e, `axe` e capturas, não ([política atual](<docs/testing.md(#política-atual-produto-inicial-desde-2026-11-19)>)).
+8. Rode a verificação completa (seção [Comandos](#comandos)), atualize "O que já existe em `src/`" abaixo e, se houver regra nova, o `docs/business-rules.md`, e abra o PR usando o template. Outros `docs/` só mudam se o padrão mudou.
 
 ## O que já existe em `src/`
 

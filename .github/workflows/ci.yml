@@ -52,9 +52,9 @@ jobs:
       - name: Tipos
         run: npm run typecheck
 
-      # Falha com cobertura abaixo de 80% nos caminhos de docs/testing.md.
-      - name: Testes com cobertura
-        run: npm run test:cov
+      # Sem meta de cobertura (docs/testing.md, "Política atual").
+      - name: Testes
+        run: npm test
 
       - name: Build
         run: npm run build
