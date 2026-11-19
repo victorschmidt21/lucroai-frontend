@@ -175,6 +175,15 @@
     outline-offset: 2px;
   }
 
+  /*
+   * No Chromium, o Tab passa pelo botão do calendário dentro do campo de data
+   * sem `:focus-visible` no campo, e o foco some (FE-23).
+   */
+  input[type='date']:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+  }
+
   h1,
   h2 {
     text-wrap: balance;
