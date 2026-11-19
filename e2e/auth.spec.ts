@@ -22,7 +22,9 @@ test('leva ao login sem sessão e, ao entrar, volta à página de destino', asyn
 
   await expect(page).toHaveURL('/?origem=teste');
   await expect(page.getByText('João da Silva')).toBeVisible();
-  await expect(page.getByText('Padaria Pão Feliz Ltda')).toBeVisible();
+  await expect(
+    page.getByRole('complementary').getByText('Padaria Pão Feliz Ltda'),
+  ).toBeVisible();
 
   // Nenhum token fica ao alcance do JavaScript da página.
   const visivel = await page.evaluate(() => ({

@@ -1,5 +1,5 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
-import { isFaturavel } from '@/shared/domain/vendas';
+import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
 import { toDataSemHora } from '@/shared/format/data';
 import { arredondarCentavos } from '@/shared/format/moeda';
 
@@ -91,18 +91,8 @@ type VendaParaHistorico = {
   itens: readonly ItemParaHistorico[];
 };
 
-/** `total` gravado; sem ele, `round2(Σ quantidade × precoUnitarioReal)`, como o mobile. */
-export function totalDaVenda({ total, itens }: VendaParaHistorico) {
-  return (
-    total ??
-    totalCarrinho(
-      itens.map((i) => ({
-        quantidade: i.quantidade,
-        precoUnitario: i.precoUnitarioReal,
-      })),
-    )
-  );
-}
+// `totalDaVenda` fica em `shared/domain/vendas.ts`, porque o painel também usa.
+export { totalDaVenda };
 
 /** Soma das quantidades dos itens (a coluna "un" do `venda_card.dart`). */
 export function quantidadeDaVenda({ itens }: VendaParaHistorico) {

@@ -788,8 +788,8 @@ Título "Evolução mensal", subtítulo "Receita dos últimos 6 meses". A tendê
 
 Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
 
-- **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - margem X%`. O mobile agrupa pelo nome; a web agrupa por `receitaId` e usa o nome atual da receita.
-- **Sem vendas:** usa as receitas com `lucro = precoSugerido − custoUnitario > 0` (ausente conta como 0); `margem = preco == 0 ? margemLucro × 100 : lucro / preco × 100`; a quantidade exibida é o rendimento.
+- **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - margem X%`. O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
+- **Sem vendas:** usa as receitas com `lucro = precoSugerido − custoUnitario > 0` (ausente conta como 0); `margem = preco == 0 ? margemLucro × 100 : lucro / preco × 100`. Linha: `sem vendas no período - margem X%` (o `unitsLabel` do mobile sem vendas).
 - **Vazio:** "Cadastre receitas e registre vendas para ver rentabilidade.".
 
 ### Cabeçalho e ações rápidas
