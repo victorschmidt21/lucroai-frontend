@@ -704,6 +704,8 @@ faixa de 1 a ceil(max(20, base × 3)), passo 1
 
 Valores iniciais: preço = `precoAtual`; volume = `volumeAtual`. Ambos ficam presos à faixa (`clamp`). Trocar a receita ou "Restaurar" volta tudo ao inicial.
 
+Sem custo nem preço, a fórmula do mobile dá `max = 0 < min = 0,01` (o Slider do Flutter quebra); a web usa `max = max(…, min)` e passo `0,01`. Cada controle tem, embaixo, um campo com o mesmo valor ("Preço de venda (R$)", "Variação de custo (%)", "Volume projetado (unidades)"), aplicado ao sair do campo ou com Enter, preso à faixa (o volume é arredondado). A receita é escolhida num `Select` "Receita" (o mobile usa chips), que grava `receitaId` na URL.
+
 ### Resultado
 
 ```text
@@ -733,7 +735,7 @@ O mobile chama o cenário do meio de "Simulado" e, como usa os volumes como chav
 | Produto            | "Produto"; "Custo unitario", "Preco atual", "Volume atual no periodo" (`N unidades`)                                                                  | "Produto"; "Custo unitário", "Preço atual", "Volume atual no período"                    |
 | Controles          | "Preco de venda" ("Atual: R$ X"); "Variacao de custo" ("Custo projetado: R$ X", "-50%", "+100%"); "Volume projetado" (`N un.`, "Volume atual: N un.") | "Preço de venda"; "Variação de custo"; "Volume projetado", com os mesmos textos de apoio |
 | Resultado          | "PRECO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                                                                              | "PREÇO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                 |
-| Gráfico            | "Lucro projetado vs atual"; diferença com sinal; "Atual" / "Projetado", `X% margem`                                                                   | igual, com tabela equivalente para leitor de tela                                        |
+| Gráfico            | "Lucro projetado vs atual"; diferença com sinal; "Atual" / "Projetado", `X% margem`                                                                   | igual, com "Diferença: +R$ X" e tabela equivalente para leitor de tela                   |
 | Cenários           | "Simulacao de volume"; `N unidades`; receita; "Lucro: R$ X"                                                                                           | "Simulação de volume"; mesmos textos                                                     |
 | Ação               | —                                                                                                                                                     | "Restaurar"                                                                              |
 
@@ -849,5 +851,5 @@ Resumo do que a web faz diferente, de propósito. Cada item está detalhado na s
 | Confirmação de venda | vendido considera todas as vendas concluídas e soma itens da mesma receita                                                                                                                | correção do cálculo                              |
 | Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                                                                  | lacuna do backend com `dataFim`                  |
 | Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                                                                                            | FE-19                                            |
-| Simulação            | cenário do meio chamado "Base"; sempre três cenários                                                                                                                                      | FE-21                                            |
+| Simulação            | cenário do meio chamado "Base"; sempre três cenários; receita num `Select`; cada controle tem um campo para digitar; faixa de preço nunca com `max < min`                                 | FE-21                                            |
 | Painel               | lucro com o snapshot de custo do item; seis meses reais no gráfico; vendas de 7 dias sobre os seis meses carregados                                                                       | FE-22                                            |
