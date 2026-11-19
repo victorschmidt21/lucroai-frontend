@@ -1,0 +1,324 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useState, useSyncExternalStore } from 'react';
+import type { Receita } from '@/shared/api/contracts/recipe';
+import type { Venda } from '@/shared/api/contracts/sales';
+import { getErrorMessage } from '@/shared/api/errors';
+import { hrefComFiltros } from '@/shared/api/filtros';
+import { fimDoDia, inicioDoDia } from '@/shared/format/data';
+import { formatMoeda } from '@/shared/format/moeda';
+import {
+  formatNumero,
+  formatPercentual,
+  formatQuantidade,
+} from '@/shared/format/numero';
+import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
+import { cn } from '@/shared/ui/cn';
+import { EmptyState } from '@/shared/ui/empty-state';
+import { ErrorState } from '@/shared/ui/error-state';
+import { IconAtualizar } from '@/shared/ui/icons/acoes';
+import { PageHeader } from '@/shared/ui/page-header';
+import { Select } from '@/shared/ui/select';
+import { Skeleton } from '@/shared/ui/skeleton';
+import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
+import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
+import {
+  FAIXA_VARIACAO_CUSTO,
+  calcularBase,
+  calcularProjecao,
+  cenariosDeVolume,
+  faixaPreco,
+  faixaVolume,
+  limitarNaFaixa,
+} from '../simulacao.calculos';
+import { ControleSimulacao } from './controle-simulacao';
+import { GraficoLucro } from './grafico-lucro';
+
+function nada() {
+  return () => {};
+}
+
+/**
+ * Mês atual (`YYYY-MM`) no fuso do navegador; `null` no servidor, que pode
+ * estar em outro fuso.
+ */
+function useMesAtual() {
+  return useSyncExternalStore(
+    nada,
+    () => {
+      const hoje = new Date();
+      return `${hoje.getFullYear()}-${hoje.getMonth()}`;
+    },
+    () => null,
+  );
+}
+
+/** Do dia 1 ao último dia do mês, em ISO (o backend lê com `new Date()`). */
+function periodoDoMes(mes: string) {
+  const [ano, indice] = mes.split('-').map(Number);
+  return {
+    dataInicio: inicioDoDia(new Date(ano, indice, 1)).toISOString(),
+    dataFim: fimDoDia(new Date(ano, indice + 1, 0)).toISOString(),
+  };
+}
+
+/**
+ * Simulação interativa (FE-21). Origem: simulacao_page.dart. Receitas e vendas
+ * `CONCLUIDA` do mês atual; todo o cálculo é no cliente.
+ */
+export function SimulacaoTela({ receitaId }: { receitaId?: number }) {
+  const mes = useMesAtual();
+  const receitas = useQuery(receitasListOptions());
+  const vendas = useQuery({
+    ...vendasListOptions(mes ? periodoDoMes(mes) : {}),
+    enabled: mes !== null,
+  });
+
+  let conteudo;
+  if (receitas.isError || vendas.isError) {
+    const falha = receitas.isError ? receitas : vendas;
+    conteudo = (
+      <ErrorState
+        title="Não foi possível carregar a simulação."
+        message={getErrorMessage(falha.error)}
+        retrying={receitas.isFetching || vendas.isFetching}
+        onRetry={() => {
+          if (receitas.isError) void receitas.refetch();
+          if (vendas.isError) void vendas.refetch();
+        }}
+      />
+    );
+  } else if (!receitas.data || !vendas.data) {
+    conteudo = <Skeleton aria-label="Carregando simulação" className="h-96" />;
+  } else if (receitas.data.length === 0) {
+    conteudo = (
+      <EmptyState title="Cadastre uma receita para simular cenários." />
+    );
+  } else {
+    const receita =
+      receitas.data.find((r) => r.id === receitaId) ?? receitas.data[0];
+    conteudo = (
+      <Simulacao
+        // Trocar de receita volta os ajustes ao inicial.
+        key={receita.id}
+        receitas={receitas.data}
+        receita={receita}
+        vendas={vendas.data}
+      />
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+      <PageHeader
+        title="Simulação"
+        subtitle="Projete preço, custo e volume antes de agir"
+      />
+      {conteudo}
+    </div>
+  );
+}
+
+function formatVariacao(valor: number) {
+  return `${valor > 0 ? '+' : ''}${formatNumero(valor)}%`;
+}
+
+function Simulacao({
+  receitas,
+  receita,
+  vendas,
+}: {
+  receitas: Receita[];
+  receita: Receita;
+  vendas: Venda[];
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [precoAjustado, setPrecoAjustado] = useState<number | null>(null);
+  const [variacaoCusto, setVariacaoCusto] = useState(0);
+  const [volumeAjustado, setVolumeAjustado] = useState<number | null>(null);
+
+  const base = calcularBase(receita, vendas);
+  const faixaDoPreco = faixaPreco(receita);
+  const faixaDoVolume = faixaVolume(base.volumeAtual, receita.rendimento);
+  const preco = limitarNaFaixa(precoAjustado ?? base.precoAtual, faixaDoPreco);
+  const volume = limitarNaFaixa(
+    volumeAjustado ?? base.volumeAtual,
+    faixaDoVolume,
+  );
+  const projecao = calcularProjecao({ base, preco, variacaoCusto, volume });
+  const cenarios = cenariosDeVolume(preco, projecao.custoProjetado, volume);
+  const lucroPositivo = projecao.lucroProjetado >= 0;
+
+  function restaurar() {
+    setPrecoAjustado(null);
+    setVariacaoCusto(0);
+    setVolumeAjustado(null);
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card className="items-center text-center" variant="resumo">
+        <h2 className="text-section-label text-ink-muted">PREÇO SIMULADO</h2>
+        <p
+          aria-live="polite"
+          className="text-display-lg wrap-anywhere text-accent tabular-nums"
+        >
+          {formatMoeda(preco)}
+        </p>
+        <p
+          className={cn(
+            'text-small font-semibold',
+            projecao.lucroPorUnidade >= 0 ? 'text-success' : 'text-danger',
+          )}
+        >
+          Lucro: {formatMoeda(projecao.lucroPorUnidade)} por unidade
+        </p>
+        <dl className="grid w-full grid-cols-2 divide-x divide-border">
+          <div className="flex flex-col-reverse gap-0.5 px-2">
+            <dt className="text-caption text-ink-muted">Lucro projetado</dt>
+            <dd
+              className={cn(
+                'text-body font-extrabold wrap-anywhere tabular-nums',
+                lucroPositivo ? 'text-success' : 'text-danger',
+              )}
+            >
+              {formatMoeda(projecao.lucroProjetado)}
+            </dd>
+          </div>
+          <div className="flex flex-col-reverse gap-0.5 px-2">
+            <dt className="text-caption text-ink-muted">Margem</dt>
+            <dd className="text-body font-extrabold text-warning tabular-nums">
+              {formatPercentual(projecao.margemProjetada)}
+            </dd>
+          </div>
+        </dl>
+      </Card>
+
+      <Card title="Produto">
+        <Select
+          label="Receita"
+          value={receita.id}
+          onChange={(event) =>
+            router.replace(
+              hrefComFiltros(pathname, searchParams, {
+                receitaId: event.target.value,
+              }),
+              { scroll: false },
+            )
+          }
+        >
+          {receitas.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.nome}
+            </option>
+          ))}
+        </Select>
+        <dl className="grid gap-2.5 sm:grid-cols-3">
+          <Info rotulo="Custo unitário" valor={formatMoeda(base.custo)} />
+          <Info rotulo="Preço atual" valor={formatMoeda(base.precoAtual)} />
+          <Info
+            rotulo="Volume atual no período"
+            valor={`${formatQuantidade(base.volumeAtual)} unidades`}
+          />
+        </dl>
+      </Card>
+
+      <ControleSimulacao
+        label="Preço de venda"
+        labelCampo="Preço de venda (R$)"
+        value={preco}
+        onValueChange={setPrecoAjustado}
+        faixa={faixaDoPreco}
+        formatValue={formatMoeda}
+        hint={`Atual: ${formatMoeda(base.precoAtual)}`}
+        casas={2}
+        prefixo="R$"
+      />
+      <ControleSimulacao
+        label="Variação de custo"
+        labelCampo="Variação de custo (%)"
+        value={variacaoCusto}
+        onValueChange={setVariacaoCusto}
+        faixa={FAIXA_VARIACAO_CUSTO}
+        formatValue={formatVariacao}
+        hint={`Custo projetado: ${formatMoeda(projecao.custoProjetado)}`}
+        casas={0}
+        sufixo="%"
+        aceitaNegativo
+      />
+      <ControleSimulacao
+        label="Volume projetado"
+        labelCampo="Volume projetado (unidades)"
+        value={volume}
+        onValueChange={setVolumeAjustado}
+        faixa={faixaDoVolume}
+        formatValue={(v) => `${formatNumero(v)} un.`}
+        hint={`Volume atual: ${formatQuantidade(base.volumeAtual)} un.`}
+        casas={0}
+        sufixo="un."
+      />
+
+      <Button variant="secundario" onClick={restaurar} className="self-end">
+        <IconAtualizar className="size-4" />
+        Restaurar
+      </Button>
+
+      <GraficoLucro
+        lucroAtual={base.lucroAtual}
+        lucroProjetado={projecao.lucroProjetado}
+        margemAtual={base.margemAtual}
+        margemProjetada={projecao.margemProjetada}
+        diferenca={projecao.diferenca}
+      />
+
+      <Card title="Simulação de volume">
+        <ul className="flex flex-col divide-y divide-border">
+          {cenarios.map((cenario) => (
+            <li
+              key={cenario.nome}
+              className="flex items-center justify-between gap-3 py-2.5"
+            >
+              <div className="flex min-w-0 flex-col">
+                <span className="text-body text-ink">
+                  {formatNumero(cenario.volume)} unidades
+                </span>
+                <span className="text-caption text-ink-muted">
+                  {cenario.nome}
+                </span>
+              </div>
+              <div className="flex flex-col items-end text-right">
+                <span className="text-body font-extrabold text-ink tabular-nums">
+                  {formatMoeda(cenario.receita)}
+                </span>
+                <span
+                  className={cn(
+                    'text-caption font-bold tabular-nums',
+                    cenario.lucro >= 0 ? 'text-success' : 'text-danger',
+                  )}
+                >
+                  Lucro: {formatMoeda(cenario.lucro)}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </div>
+  );
+}
+
+function Info({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="flex min-w-0 flex-col-reverse gap-1 rounded-md border border-border bg-surface-alt px-3 py-2.5">
+      <dt className="text-caption text-ink-muted">{rotulo}</dt>
+      <dd className="text-body font-bold wrap-anywhere text-ink tabular-nums">
+        {valor}
+      </dd>
+    </div>
+  );
+}
