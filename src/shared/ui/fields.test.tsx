@@ -145,6 +145,22 @@ describe('Input com ícone', () => {
   });
 });
 
+describe('Input com controle à direita', () => {
+  it('mostra o controle e abre espaço para ele', () => {
+    render(
+      <Input
+        label="Senha"
+        trailing={<button type="button">Mostrar senha</button>}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Mostrar senha' }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Senha')).toHaveClass('pr-13');
+  });
+});
+
 describe('NumberInput', () => {
   it('guarda o texto com vírgula e abre o teclado numérico', async () => {
     render(<NumberInput label="Valor pago" prefixo="R$" />);

@@ -51,15 +51,15 @@ docker compose up --build
 
 ### 3. Confira
 
-| O quê           | Endereço                                                      |
-| --------------- | ------------------------------------------------------------- |
-| Aplicação       | [localhost:3000](http://localhost:3000)                       |
-| Health do front | [localhost:3000/api/health](http://localhost:3000/api/health) |
-| auth-service    | [localhost:3001/docs](http://localhost:3001/docs)             |
-| catalog-service | [localhost:3002/docs](http://localhost:3002/docs)             |
-| recipe-service  | [localhost:3003/docs](http://localhost:3003/docs)             |
-| operations      | [localhost:3004/docs](http://localhost:3004/docs)             |
-| sales-service   | [localhost:3005/docs](http://localhost:3005/docs)             |
+| O quê           | Endereço                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| Aplicação       | [localhost:3000](http://localhost:3000) (leva ao `/login`; entre com `joao@padariapaofeliz.com.br` / `123456`) |
+| Health do front | [localhost:3000/api/health](http://localhost:3000/api/health)                                                  |
+| auth-service    | [localhost:3001/docs](http://localhost:3001/docs)                                                              |
+| catalog-service | [localhost:3002/docs](http://localhost:3002/docs)                                                              |
+| recipe-service  | [localhost:3003/docs](http://localhost:3003/docs)                                                              |
+| operations      | [localhost:3004/docs](http://localhost:3004/docs)                                                              |
+| sales-service   | [localhost:3005/docs](http://localhost:3005/docs)                                                              |
 
 Com tudo no ar, o health responde:
 
@@ -139,11 +139,12 @@ Antes do primeiro `npm run test:e2e`, instale o navegador com `npx playwright in
 
 ```text
 src/
-  app/            rotas do App Router (inclui api/health)
+  app/            rotas do App Router: (auth)/login, api/health, api/auth e o proxy api/backend
   features/       módulos por funcionalidade
   shared/         código compartilhado (ex.: config/ com a validação de ambiente)
   test/           utilitários de teste
   instrumentation.ts   valida o ambiente ao subir o servidor
+  proxy.ts        checagem otimista de sessão (o antigo middleware.ts)
 e2e/              testes do Playwright
 ```
 

@@ -770,12 +770,21 @@ FE-05 e FE-07. Origem: `lib/features/auth/presentation/pages/login_page.dart`, `
 | Senha vazia             | "Informe sua senha"                                                |
 | Login 401               | "E-mail ou senha inválidos"                                        |
 | Login, outros erros     | "Não foi possível entrar. Verifique o servidor e tente novamente." |
+| Login, botão do olho    | "Mostrar senha" / "Ocultar senha" (nome acessível do botão)        |
+| Login, cabeçalho        | "LucroAI" e "Entre para acessar os dados da sua empresa"           |
 | 401 em qualquer serviço | "Sessão expirada. Faça login novamente." (leva ao login)           |
 | 404                     | "Registro não encontrado."                                         |
 | 409                     | mensagem do backend ("CNPJ já cadastrado", "E-mail já cadastrado") |
 | 400                     | mensagens de validação do backend, juntas                          |
 | Rede ou timeout (10 s)  | "Sem conexão com o servidor."                                      |
 | 5xx                     | "Erro no servidor. Tente novamente."                               |
+
+Como a web aplica (FE-07, `features/auth/`):
+
+- `loginFormSchema` (`schemas/login-form.schema.ts`): o e-mail é aparado e conferido com `z.email()`, o mesmo critério do `@IsEmail()` do backend (o mobile só confere o `@`); a senha não é aparada. Com erro, o foco vai para o primeiro campo inválido.
+- `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Verifique o servidor e tente novamente.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
+- `?expirada=1` mostra "Sessão expirada. Faça login novamente." num aviso (`role="status"`) acima dos campos, que some quando há erro de login.
+- Depois de entrar, a web vai para o `redirect` (só caminho interno) ou para `/`.
 
 ## Diferenças intencionais em relação ao mobile
 
@@ -785,6 +794,7 @@ Resumo do que a web faz diferente, de propósito. Cada item está detalhado na s
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Todas                | textos com acentuação correta                                                                                                                 | FE-02                                            |
 | Todas                | busca ignora acentos                                                                                                                          | FE-05                                            |
+| Login                | e-mail conferido com `z.email()` (o mobile só exige `@`); erro num `Alert` no formulário; volta à página de destino e avisa a sessão expirada | FE-07 e backend `@IsEmail()`                     |
 | Campos numéricos     | aceitam separador de milhar (`1.234,56`); ao sair do campo, mostram o valor lido no formato brasileiro (`1234.5` vira `1.234,50` no dinheiro) | FE-06                                            |
 | Formulários          | erro da API num `Alert` no topo do formulário, que continua aberto, e não num SnackBar                                                        | FE-06 ([ui.md](ui.md#toasts-depois-de-mutações)) |
 | Insumos              | custo unitário com 4 casas fixas                                                                                                              | FE-05                                            |

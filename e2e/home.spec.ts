@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { entrar } from './support/sessao';
 
-test('abre a página inicial e recebe 200', async ({ page }) => {
+test('abre a página inicial com sessão e recebe 200', async ({ page }) => {
+  await entrar(page);
+
   const response = await page.goto('/');
 
   expect(response?.status()).toBe(200);

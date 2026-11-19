@@ -14,6 +14,11 @@ type InputProps = ComponentProps<'input'> &
     icon?: ReactNode;
     /** Rótulo só para leitor de tela; o `placeholder` mostra o que digitar. */
     hideLabel?: boolean;
+    /**
+     * Controle à direita, dentro do campo, como o "Mostrar senha" do login. É
+     * interativo (um `IconButton`), ao contrário do `icon`.
+     */
+    trailing?: ReactNode;
   };
 
 export function Input({
@@ -24,6 +29,7 @@ export function Input({
   required,
   icon,
   hideLabel,
+  trailing,
   className,
   ...props
 }: InputProps) {
@@ -41,6 +47,7 @@ export function Input({
         CONTROL_CLASSES,
         CONTROL_HEIGHT_CLASSES,
         Boolean(icon) && 'pl-11',
+        Boolean(trailing) && 'pr-13',
         className,
       )}
       {...controlProps}
@@ -59,12 +66,19 @@ export function Input({
       errorId={errorId}
       hideLabel={hideLabel}
     >
-      {icon ? (
+      {icon || trailing ? (
         <div className="relative">
-          <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-muted">
-            {icon}
-          </span>
+          {icon ? (
+            <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-muted">
+              {icon}
+            </span>
+          ) : null}
           {input}
+          {trailing ? (
+            <span className="absolute top-1/2 right-1 -translate-y-1/2">
+              {trailing}
+            </span>
+          ) : null}
         </div>
       ) : (
         input

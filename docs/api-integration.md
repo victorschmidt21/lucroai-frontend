@@ -1,6 +1,6 @@
 # Integração com a API
 
-> **Status:** o cliente, os contratos, os erros, o TanStack Query e o MSW **existem** desde a **FE-05** (`src/shared/api/` e `src/test/`). O proxy autenticado `/api/backend` e a sessão são da **FE-07**: até lá, o `apiFetch` do navegador já aponta para o proxy, mas a rota não existe. As funções de `features/<modulo>/api/` chegam com as telas. Ao mudar algo, atualize este documento no mesmo PR. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
+> **Status:** o cliente, os contratos, os erros, o TanStack Query e o MSW **existem** desde a **FE-05** (`src/shared/api/` e `src/test/`). O proxy autenticado `/api/backend` e a sessão **existem** desde a **FE-07** (`src/app/api/backend/`, `src/app/api/auth/` e `src/shared/auth/`). As funções de `features/<modulo>/api/` chegam com as telas. Ao mudar algo, atualize este documento no mesmo PR. A fonte da verdade do contrato é o código do [backend](https://github.com/GrupoDoisENG/lucroai-backend) (DTOs, entidades e controllers); se uma issue divergir dele, vale o backend, e a divergência entra em [Divergências entre as issues e o backend](#divergências-entre-as-issues-e-o-backend).
 
 ## Os cinco serviços
 
@@ -167,7 +167,7 @@ Arquivos de `src/shared/api/`:
 
 | Variante  | Arquivo                                                | Usado em                          | Destino                                                                                  |
 | --------- | ------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------- |
-| navegador | `shared/api/client.ts`                                 | Client Components, hooks          | proxy BFF: `/api/backend/<servico>/<caminho>` (FE-07)                                    |
+| navegador | `shared/api/client.ts`                                 | Client Components, hooks          | proxy BFF: `/api/backend/<servico>/<caminho>`                                            |
 | servidor  | `shared/api/client.server.ts` (`import 'server-only'`) | Server Components, Route Handlers | `<SERVICO>_API_URL` + caminho (`getServerEnv()`), com o token recebido em `opcoes.token` |
 
 ```ts
@@ -191,7 +191,9 @@ function apiFetch(
 function unwrap<S extends z.ZodType>(corpo: unknown, schema: S): z.output<S>;
 ```
 
-A variante do servidor aceita também `opcoes.token`, enviado como `Authorization: Bearer`. O token é parâmetro, e não lido do cookie dentro do `apiFetch`, porque o login não tem token e o cookie de sessão é da FE-07, que passa o token lido dele (como o `getServerApi(accessToken)` da Urbizzi).
+A variante do servidor aceita também `opcoes.token`, enviado como `Authorization: Bearer`. O token é parâmetro, e não lido do cookie dentro do `apiFetch`, porque o login não tem token. Em Server Components, passe o de `getTokenDaSessao()` (`shared/auth/usuario-atual.server.ts`), como o `getServerApi(accessToken)` da Urbizzi.
+
+As rotas do próprio Next em `/api/auth` (login, logout e sessão) são chamadas por `bffFetch` (`shared/auth/bff-client.ts`), com o mesmo núcleo (`requisitar`): timeout de 10 s e erro como `ApiError`.
 
 Cada funcionalidade expõe funções em `features/<modulo>/api/<modulo>.api.ts`, que chamam `apiFetch` e `unwrap`. Componentes e hooks chamam essas funções, nunca `apiFetch` nem `fetch` direto:
 
@@ -219,13 +221,14 @@ Cuidados:
 
 ### Proxy BFF
 
-O navegador fala só com o Next. O Route Handler `src/app/api/backend/[servico]/[...path]/route.ts` (FE-07):
+O navegador fala só com o Next. O Route Handler `src/app/api/backend/[servico]/[...path]/route.ts` (FE-07, com a lógica em `shared/auth/backend-proxy.server.ts`):
 
 1. aceita só os cinco serviços conhecidos (outro nome → 404);
-2. recusa qualquer caminho com um segmento `internal`, como `/insumos/internal/1` (→ 403), e caminhos com `..`;
+2. recusa qualquer caminho com um segmento `internal`, como `/insumos/internal/1` (→ 403), caminhos malformados, com `..` (→ 400), e o login e o cadastro de empresa do auth-service (→ 404);
 3. monta a URL a partir da variável de ambiente do serviço, nunca de algo vindo da requisição;
 4. injeta `Authorization: Bearer <token do cookie>` e repassa método, query, corpo e status;
-5. em `401`, apaga o cookie e devolve `401`, para o cliente levar ao login.
+5. em `401`, apaga o cookie e devolve `401`, para o cliente levar ao login; sem sessão em vigor, responde `401` sem chamar o serviço;
+6. com o serviço fora do ar, `502` ("Erro no servidor. Tente novamente." na tela).
 
 Detalhes de segurança em [security.md](security.md#proxy-bff).
 
@@ -287,15 +290,15 @@ Resposta fora do contrato vira `ContratoInvalidoError`, com a lista de problemas
 
 Como o `message` é montado (`apiErrorFromResponse`): `401`, `5xx` e rede têm texto fixo; nos outros status, as mensagens do backend vêm juntas, separadas por `; `, desde que não sejam as mensagens padrão em inglês do NestJS (`Not Found`, `Cannot GET /x`, `Bad Request` etc.); sem mensagem própria, `404` usa "Registro não encontrado." e os demais, "Não foi possível concluir a ação. Tente novamente." (também o texto de `getErrorMessage` para qualquer erro que não seja da API). Mostre qualquer erro com `getErrorMessage(error)`, que também cobre o que não é `ApiError`.
 
-| HTTP     | Situação                                          | `message` do `ApiError` (tela)                                         | Na interface                                            |
-| -------- | ------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
-| 400      | validação (`message` lista, em inglês)            | as mensagens juntas; o schema Zod do formulário deve ter barrado antes | `Alert` no formulário                                   |
-| 400      | regra de negócio (`message` string, em português) | a mensagem do backend                                                  | `Alert` ou Toast                                        |
-| 401      | token ausente, inválido ou expirado               | "Sessão expirada. Faça login novamente."                               | o `QueryClient` leva a `/login?redirect=<rota>` (FE-07) |
-| 404      | registro inexistente ou de outra empresa          | "Registro não encontrado." (ou a mensagem do backend, se em português) | estado de não encontrado; em lista, recarrega           |
-| 409      | CNPJ ou e-mail duplicado                          | a mensagem do backend                                                  | no formulário                                           |
-| 500, 503 | erro interno ou serviço dependente fora do ar     | "Erro no servidor. Tente novamente."                                   | `ErrorState` com "Tentar novamente"                     |
-| 0        | rede ou timeout                                   | "Sem conexão com o servidor."                                          | `ErrorState` com "Tentar novamente"                     |
+| HTTP     | Situação                                          | `message` do `ApiError` (tela)                                         | Na interface                                               |
+| -------- | ------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 400      | validação (`message` lista, em inglês)            | as mensagens juntas; o schema Zod do formulário deve ter barrado antes | `Alert` no formulário                                      |
+| 400      | regra de negócio (`message` string, em português) | a mensagem do backend                                                  | `Alert` ou Toast                                           |
+| 401      | token ausente, inválido ou expirado               | "Sessão expirada. Faça login novamente."                               | o `QueryClient` leva a `/login?redirect=<rota>&expirada=1` |
+| 404      | registro inexistente ou de outra empresa          | "Registro não encontrado." (ou a mensagem do backend, se em português) | estado de não encontrado; em lista, recarrega              |
+| 409      | CNPJ ou e-mail duplicado                          | a mensagem do backend                                                  | no formulário                                              |
+| 500, 503 | erro interno ou serviço dependente fora do ar     | "Erro no servidor. Tente novamente."                                   | `ErrorState` com "Tentar novamente"                        |
+| 0        | rede ou timeout                                   | "Sem conexão com o servidor."                                          | `ErrorState` com "Tentar novamente"                        |
 
 Regras:
 
@@ -311,7 +314,9 @@ Regras:
 
 - `retry` de queries: só para erro de rede e 5xx, até 3 vezes. Nunca em 4xx. Mutações não repetem.
 - `refetchOnWindowFocus` ligado e `staleTime` de 30 s. Isso equivale ao "recarrega os dados ao trocar de aba" do mobile: ao voltar a uma tela, os dados antigos aparecem na hora e são revalidados.
-- `onError` nos caches de query e de mutação: em `401`, `makeQueryClient({ onSessaoExpirada })` chama o callback. A FE-07 passa a função que leva a `/login?redirect=<rota>`; até lá, nenhum callback é passado. As telas não tratam `401`.
+- `onError` nos caches de query e de mutação: em `401`, `makeQueryClient({ onSessaoExpirada })` chama o callback. O `QueryProvider` passa `handleSessaoExpirada` (FE-07), que leva a `/login?redirect=<rota>&expirada=1` ([security.md](security.md#sessão-bff--cookie-httponly)). As telas não tratam `401`.
+- O `QueryProvider` é renderizado pelo layout de `(auth)` (FE-07) e, até a FE-08, pela página inicial provisória.
+- A sessão usa a chave `['sessao', 'usuario']` (`sessaoKeys`, em `shared/auth/usuario-atual.queries.ts`), com o `staleTime` padrão: voltar à aba confere a sessão de novo.
 
 ### Chaves
 
@@ -435,12 +440,13 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 
 Vale o backend. As issues citadas devem seguir esta tabela.
 
-| Issue | O que a issue diz                                                   | O que o backend faz                                                       | O que a web faz                                       |
-| ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------- |
-| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                  | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400 | não mostra nem envia "Observação"                     |
-| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"             | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                   | uma chamada de estoque por insumo (lacuna 5)          |
-| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)" | não há essa validação (lacuna 10)                                         | mostra qualquer erro devolvido; não há esse caso hoje |
-| FE-17 | "o backend valida de novo ao processar o evento"                    | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)               | a validação no cliente é a barreira real              |
-| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                    | `snake_case` (lacuna 15)                                                  | segue o DTO                                           |
-| FE-10 | valor > 0                                                           | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário (mais restrito, compatível)  |
-| FE-09 | valor pago > 0                                                      | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                              |
+| Issue | O que a issue diz                                                   | O que o backend faz                                                       | O que a web faz                                           |
+| ----- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                  | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400 | não mostra nem envia "Observação"                         |
+| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"             | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                   | uma chamada de estoque por insumo (lacuna 5)              |
+| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)" | não há essa validação (lacuna 10)                                         | mostra qualquer erro devolvido; não há esse caso hoje     |
+| FE-17 | "o backend valida de novo ao processar o evento"                    | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)               | a validação no cliente é a barreira real                  |
+| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                    | `snake_case` (lacuna 15)                                                  | segue o DTO                                               |
+| FE-10 | valor > 0                                                           | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário (mais restrito, compatível)      |
+| FE-09 | valor pago > 0                                                      | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                                  |
+| FE-07 | e-mail válido como no mobile (só confere o `@`)                     | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                    | o formulário usa `z.email()` ("Informe um e-mail válido") |
