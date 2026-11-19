@@ -1,6 +1,6 @@
 # Testes
 
-> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `renderWithQuery`, factories) são da **FE-05**; o `axe` nos componentes, da **FE-04**; o CI, da **FE-03**; a API falsa dos e2e, da **FE-03** e da **FE-23**. Itens marcados como "previsto" ainda não existem.
+> **Status:** Vitest, Testing Library, MSW, Playwright e `@axe-core/playwright` estão instalados e configurados desde a FE-01 (`vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`), com testes de `src/shared/config`, de `/api/health` e da página inicial. Os utilitários de `src/test/` (servidor do MSW, `renderWithQuery`, factories) são da **FE-05**; o `axe` nos componentes, da **FE-04**; o CI e a base da API falsa dos e2e são da **FE-03**; as rotas da API falsa chegam com as telas e na **FE-23**. Itens marcados como "previsto" ainda não existem.
 
 Ferramentas: **Vitest** com **Testing Library** em testes unitários e de componente, **MSW** para simular a API e **Playwright** nos e2e.
 
@@ -14,6 +14,14 @@ Ferramentas: **Vitest** com **Testing Library** em testes unitários e de compon
 O Vitest roda **sem** `globals`: importe `describe`, `it`, `expect` e `vi` de `vitest` em cada arquivo. O ambiente padrão é `jsdom`; para Route Handlers e código de servidor, comece o arquivo com `// @vitest-environment node`. O jsdom não implementa as APIs de layout que o Radix chama; os substitutos ficam em `vitest.setup.ts`.
 
 Antes do primeiro e2e, instale o navegador: `npx playwright install chromium`.
+
+O Playwright sobe sozinho a API falsa e o Next. Variáveis que mudam isso:
+
+| Variável                 | Efeito                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `E2E_USAR_BUILD=true`    | serve o build de produção (`e2e/support/servir-build.mjs`) em vez do `next dev`; rode `npm run build` antes. O CI usa             |
+| `E2E_API_REAL=true`      | não sobe a API falsa e aponta as cinco URLs para o backend local (`localhost:3001` a `3005`), com o seed                          |
+| `E2E_REUSE_SERVERS=true` | reaproveita servidores já abertos nas portas 3000 e 3999 (fora do CI). Sem ela, uma porta ocupada faz o Playwright parar com erro |
 
 ## O que testar em cada nível
 
@@ -64,9 +72,9 @@ Abre o navegador e percorre o sistema como o usuário. Fica para os fluxos que a
 4. Estado na URL que sobrevive a recarregar (busca, filtro "Baixo", período de vendas).
 5. Celular (390px) e desktop (1280px), sem rolagem horizontal.
 
-O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa** (previsto: FE-03 e FE-23), um servidor Node em `e2e/support/fake-api.mjs` que o Playwright sobe junto com o Next. Como cada serviço tem rotas com raízes diferentes (`/auth`, `/insumos`, `/gastos-indiretos`, `/receitas`, `/estoque`, `/producoes`, `/vendas`), um único servidor pode atender as cinco URLs: o `playwright.config.ts` aponta `AUTH_API_URL`, `CATALOG_API_URL` etc. para ele. A API falsa implementa o contrato de [api-integration.md](api-integration.md#rotas-usadas-pela-web), com o envelope `{ data, links }`, um JWT de teste e os dados do seed. Localmente, os mesmos testes podem rodar contra o backend real com o seed, apontando as variáveis para `localhost:3001` a `3005`.
+O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa**, um servidor Node em `e2e/support/fake-api.mjs` (porta 3999) que o Playwright sobe junto com o Next. Como cada serviço tem rotas com raízes diferentes (`/auth`, `/insumos`, `/gastos-indiretos`, `/receitas`, `/estoque`, `/producoes`, `/vendas`), um único servidor pode atender as cinco URLs: o `playwright.config.ts` aponta `AUTH_API_URL`, `CATALOG_API_URL` etc. para ele. A API falsa implementa o contrato de [api-integration.md](api-integration.md#rotas-usadas-pela-web), com o envelope `{ data, links }`, um JWT de teste e os dados do seed. Localmente, os mesmos testes podem rodar contra o backend real com o seed, com `E2E_API_REAL=true`.
 
-O teste e2e atual (`e2e/home.spec.ts`) não depende do backend.
+Hoje (FE-03) a API falsa só responde `GET /health` (para o Playwright saber que ela subiu) e `GET /docs-json` (sondado pelo `/api/health`); o resto devolve `404` no formato do NestJS. Cada issue de tela acrescenta ao objeto `routes` do arquivo as rotas que o seu e2e usa, com o envelope `{ data, links }` e os dados do seed; a **FE-23** completa o conjunto. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
 
 ## Uso do MSW (previsto na FE-05)
 
@@ -469,18 +477,16 @@ test('cadastra, busca e exclui um insumo', async ({ page }) => {
 - Os `*.calculos.ts` e `shared/domain/` não têm meta própria além dessa, mas **cada fórmula e cada ramo** de [business-rules.md](business-rules.md) precisa de um teste: na prática, ficam perto de 100%.
 - Componentes são cobertos pelos cenários acima, sem meta numérica.
 - Todo bug corrigido ganha um teste que falhava antes da correção.
-- O limite fica em `vitest.config.ts` (`coverage.thresholds`), e `npm run test:cov` falha abaixo de 80%. Hoje só `src/shared/**` está configurado; a FE-03 acrescenta `src/features/**/{api,hooks,schemas}/**`.
+- O limite fica em `vitest.config.ts` (`coverage.thresholds`), com uma entrada para `src/shared/**` e outra para `src/features/**/{api,hooks,schemas}/**`, e `npm run test:cov` falha abaixo de 80% em qualquer uma delas. A cobertura inclui todos os arquivos de `src/`, mesmo os que nenhum teste importa: arquivo novo sem teste nesses caminhos conta como 0% e derruba o CI.
 
 ## Integração contínua
 
-> **Previsto (FE-03).** O workflow ainda não existe.
+O workflow `.github/workflows/ci.yml` tem dois jobs, que rodam em paralelo:
 
-O workflow `.github/workflows/ci.yml` terá dois jobs em paralelo:
-
-| Job                             | Etapas                                                                                                                                                      |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Lint, tipos, testes e build** | `npm ci` (com cache do npm) → `lint` → `format:check` → `typecheck` → `test:cov` (com limite de cobertura) → `build`                                        |
-| **Testes e2e**                  | `npm ci` → navegador do Playwright (com cache) → `test:e2e` contra o build de produção e a API falsa, com o relatório publicado como artefato quando falhar |
+| Job                             | Limite | Etapas                                                                                                                                                                                                                                                  |
+| ------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lint, tipos, testes e build** | 10 min | `npm ci` (com cache do npm) → `lint` → `format:check` → `typecheck` → `test:cov` (com limite de cobertura) → `build`                                                                                                                                    |
+| **Testes e2e**                  | 15 min | `npm ci` → Chromium do Playwright (cache por versão do Playwright) → `build` → `test:e2e` com `E2E_USAR_BUILD=true`, contra o build de produção e a API falsa → relatório e traces publicados como artefato `playwright-report` quando falhar (14 dias) |
 
 Gatilhos:
 
@@ -494,14 +500,16 @@ on:
 - **O gatilho `pull_request` não filtra a branch de base.** Os PRs deste repositório são **empilhados**: o PR de uma issue aponta para a branch da issue que a bloqueia (ex.: o da FE-02 aponta para `chore/fe-01-inicializacao-nextjs`), não para a `main`. Com `pull_request: { branches: [main] }`, esses PRs ficariam sem CI. Não acrescente esse filtro.
 - O `push` fica restrito à `main`, para não rodar duas vezes em cada push de branch com PR aberto.
 - Um novo push no mesmo PR cancela a execução anterior (`concurrency`).
-- O build e os testes usam variáveis de ambiente fictícias, declaradas no workflow (nunca segredos reais).
+- O build e os testes usam variáveis de ambiente fictícias, declaradas no `env` do workflow (nunca segredos reais): `NEXT_PUBLIC_APP_URL=http://localhost:3000` e as cinco URLs de serviço apontando para a API falsa. Variável nova no schema de `src/shared/config/` entra também ali.
+- O limite do e2e cobre o build, a instalação do navegador com o cache frio e a suíte com os retries do CI. A Urbizzi estourou os 10 minutos quando a suíte cresceu ([grupo7-biopark/urbizzi-frontend#71](https://github.com/grupo7-biopark/urbizzi-frontend/issues/71)); se acontecer aqui, aumente o `timeout-minutes` do job e2e sem mexer nos testes.
+- O cache do Playwright guarda só os navegadores; com ele, o job instala apenas as bibliotecas do sistema (`playwright install-deps`).
 
-**Proteção da `main`:** ao configurar, exija como verificações obrigatórias `Lint, tipos, testes e build` e `Testes e2e`. Se renomear um job, atualize também essas verificações.
+**Proteção da `main`:** em _Settings → Branches_, exija como verificações obrigatórias `Lint, tipos, testes e build` e `Testes e2e`. Se renomear um job, atualize também essas verificações.
 
 Para reproduzir localmente o que o CI faz:
 
 ```bash
-npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build && npm run test:e2e
+npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build && E2E_USAR_BUILD=true npm run test:e2e
 ```
 
 ## Boas práticas

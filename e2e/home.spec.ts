@@ -8,9 +8,7 @@ test('abre a página inicial e recebe 200', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'LucroAI' })).toBeVisible();
 });
 
-test('informa o estado dos cinco serviços em /api/health', async ({
-  request,
-}) => {
+test('alcança os cinco serviços em /api/health', async ({ request }) => {
   const response = await request.get('/api/health');
 
   expect(response.status()).toBe(200);
@@ -26,4 +24,8 @@ test('informa o estado dos cinco serviços em /api/health', async ({
     'recipe',
     'sales',
   ]);
+  // A API falsa (ou o backend local, com E2E_API_REAL) atende os cinco.
+  expect(
+    Object.values(body.services).every((service) => service.reachable),
+  ).toBe(true);
 });

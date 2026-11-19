@@ -133,7 +133,7 @@ npm run dev
 | `npm run test:cov`     | Testes com relatório de cobertura           |
 | `npm run test:e2e`     | Testes e2e (Playwright)                     |
 
-Antes do primeiro `npm run test:e2e`, instale o navegador com `npx playwright install chromium`. O Playwright sobe o servidor sozinho, ou reaproveita o que já estiver na porta 3000. Os testes e2e não dependem do backend no ar.
+Antes do primeiro `npm run test:e2e`, instale o navegador com `npx playwright install chromium`. O Playwright sobe sozinho o Next (porta 3000) e uma API falsa (porta 3999), então os testes e2e não dependem do backend no ar. Para reaproveitar servidores já abertos ou rodar contra o build de produção ou o backend local, veja as variáveis em [docs/testing.md](docs/testing.md).
 
 ## Estrutura
 

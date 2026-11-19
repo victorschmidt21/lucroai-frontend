@@ -42,7 +42,7 @@ npm run test:e2e               # testes e2e (Playwright)
 npx vitest run caminho/arquivo.test.ts   # um arquivo só
 ```
 
-Antes de dizer que terminou: `npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build` precisam passar (é o que o CI da FE-03 vai rodar; `test:cov` falha com cobertura abaixo de 80% nos caminhos de [docs/testing.md](docs/testing.md#cobertura-mínima)). Se mexeu em tela, rota ou sessão, rode também `npm run test:e2e`.
+Antes de dizer que terminou: `npm run lint && npm run format:check && npm run typecheck && npm run test:cov && npm run build` precisam passar (é o que o CI roda, em `.github/workflows/ci.yml`; `test:cov` falha com cobertura abaixo de 80% nos caminhos de [docs/testing.md](docs/testing.md#cobertura-mínima)). Se mexeu em tela, rota ou sessão, rode também `npm run test:e2e`.
 
 O backend roda à parte (portas 3001 a 3005), com o seed "Padaria Pão Feliz": login `joao@padariapaofeliz.com.br`, senha `123456`. Como subir os dois está no [README](README.md#subindo-o-ambiente-do-zero).
 
@@ -109,17 +109,20 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 
 Cada PR mantém esta tabela atualizada.
 
-| Caminho                                         | O que é                                                                                        |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `instrumentation.ts`, `instrumentation-node.ts` | validam o ambiente ao subir o servidor e encerram o processo se houver erro                    |
-| `shared/config/env.schema.ts`                   | schemas Zod das variáveis (as cinco URLs de serviço e `NEXT_PUBLIC_APP_URL`) e `parseEnv()`    |
-| `shared/config/env.server.ts`                   | `getServerEnv()`, só no servidor                                                               |
-| `shared/config/env.public.ts`                   | `publicEnv`, disponível também no navegador                                                    |
-| `app/layout.tsx`, `app/globals.css`             | layout raiz (`lang="pt-BR"`, título "LucroAI") e estilos globais, ainda sem os tokens da FE-04 |
-| `app/page.tsx`                                  | página inicial provisória, substituída pelo painel na FE-08 e na FE-22                         |
-| `app/api/health/route.ts`                       | `GET /api/health`, informando se cada um dos cinco serviços foi alcançado                      |
-| `features/`, `test/`                            | vazios (`.gitkeep`)                                                                            |
-| `e2e/home.spec.ts` (fora de `src/`)             | e2e da página inicial e do health, sem depender do backend                                     |
+| Caminho                                         | O que é                                                                                                              |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `instrumentation.ts`, `instrumentation-node.ts` | validam o ambiente ao subir o servidor e encerram o processo se houver erro                                          |
+| `shared/config/env.schema.ts`                   | schemas Zod das variáveis (as cinco URLs de serviço e `NEXT_PUBLIC_APP_URL`) e `parseEnv()`                          |
+| `shared/config/env.server.ts`                   | `getServerEnv()`, só no servidor                                                                                     |
+| `shared/config/env.public.ts`                   | `publicEnv`, disponível também no navegador                                                                          |
+| `app/layout.tsx`, `app/globals.css`             | layout raiz (`lang="pt-BR"`, título "LucroAI") e estilos globais, ainda sem os tokens da FE-04                       |
+| `app/page.tsx`                                  | página inicial provisória, substituída pelo painel na FE-08 e na FE-22                                               |
+| `app/api/health/route.ts`                       | `GET /api/health`, informando se cada um dos cinco serviços foi alcançado                                            |
+| `features/`, `test/`                            | vazios (`.gitkeep`)                                                                                                  |
+| `e2e/home.spec.ts` (fora de `src/`)             | e2e da página inicial e do health, contra a API falsa                                                                |
+| `e2e/support/fake-api.mjs` (fora de `src/`)     | API falsa dos e2e (porta 3999), que atende as cinco URLs de serviço; por ora só `/health` e `/docs-json`             |
+| `e2e/support/servir-build.mjs` (fora de `src/`) | serve o build standalone nos e2e com `E2E_USAR_BUILD=true` (o CI usa)                                                |
+| `.github/workflows/ci.yml` (fora de `src/`)     | CI com os jobs "Lint, tipos, testes e build" e "Testes e2e" ([docs/testing.md](docs/testing.md#integração-contínua)) |
 
 <!-- BEGIN:nextjs-agent-rules -->
 
