@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   envSchema,
   parseEnv,
@@ -86,5 +86,63 @@ describe('parseEnv', () => {
     expect(parseEnv(publicEnvSchema, validEnv)).toEqual({
       NEXT_PUBLIC_APP_URL: validEnv.NEXT_PUBLIC_APP_URL,
     });
+  });
+});
+
+describe('https em produção', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('rejeita http fora de localhost quando NODE_ENV é production', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+
+    expect(() =>
+      parseEnv(serverEnvSchema, {
+        ...serverEnv,
+        SALES_API_URL: 'http://vendas.exemplo.com',
+      }),
+    ).toThrow(/SALES_API_URL deve usar https em produção/);
+    expect(() =>
+      parseEnv(publicEnvSchema, {
+        NEXT_PUBLIC_APP_URL: 'http://app.exemplo.com',
+      }),
+    ).toThrow(/NEXT_PUBLIC_APP_URL deve usar https em produção/);
+  });
+
+  it('aceita https e http em localhost, 127.0.0.1 e [::1] em produção', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const env = {
+      AUTH_API_URL: 'https://auth.exemplo.com',
+      CATALOG_API_URL: 'http://localhost:3002',
+      RECIPE_API_URL: 'http://127.0.0.1:3999',
+      OPERATIONS_API_URL: 'http://[::1]:3004',
+      SALES_API_URL: 'https://vendas.exemplo.com',
+    };
+
+    expect(parseEnv(serverEnvSchema, env)).toEqual(env);
+  });
+
+  it('aceita http fora de localhost em desenvolvimento', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    const env = {
+      ...serverEnv,
+      AUTH_API_URL: 'http://host.docker.internal:3001',
+    };
+
+    expect(parseEnv(serverEnvSchema, env)).toEqual(env);
+  });
+
+  it('não repete o erro de https quando a URL é inválida', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    let message = '';
+    try {
+      parseEnv(serverEnvSchema, { ...serverEnv, AUTH_API_URL: 'nao-e-url' });
+    } catch (error) {
+      message = error instanceof Error ? error.message : '';
+    }
+
+    expect(message).toContain('AUTH_API_URL é obrigatória');
+    expect(message).not.toContain('https em produção');
   });
 });

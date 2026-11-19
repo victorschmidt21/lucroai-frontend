@@ -1,10 +1,33 @@
 import { z } from 'zod';
 
+/** Hosts que podem usar `http` mesmo no build de produção (CI e e2e). */
+const HOSTS_LOCAIS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Em produção (`NODE_ENV=production`, que vale no `next build` e no servidor
+ * standalone), só `https`, exceto para endereços locais: o CI e os e2e rodam
+ * o build contra `http://localhost` e `http://127.0.0.1`.
+ */
+function usaHttpsSeExigido(valor: string) {
+  if (process.env.NODE_ENV !== 'production') return true;
+  try {
+    const url = new URL(valor);
+    return url.protocol === 'https:' || HOSTS_LOCAIS.has(url.hostname);
+  } catch {
+    // URL inválida já é apontada pela validação de formato.
+    return true;
+  }
+}
+
 function requiredHttpUrl(name: string) {
-  return z.url({
-    protocol: /^https?$/,
-    error: `${name} é obrigatória e deve ser uma URL http(s) válida`,
-  });
+  return z
+    .url({
+      protocol: /^https?$/,
+      error: `${name} é obrigatória e deve ser uma URL http(s) válida`,
+    })
+    .refine(usaHttpsSeExigido, {
+      error: `${name} deve usar https em produção (http só para localhost)`,
+    });
 }
 
 /**
