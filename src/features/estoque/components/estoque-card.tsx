@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import {
   UNIDADE_MEDIDA_ROTULOS,
   type UnidadeMedida,
@@ -16,15 +16,23 @@ import { formatNumero, formatQuantidade } from '@/shared/format/numero';
 import { StatusEstoqueBadge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Chip } from '@/shared/ui/chip';
-import { IconAtualizar } from '@/shared/ui/icons/acoes';
+import {
+  IconAdicionar,
+  IconAtualizar,
+  IconHistorico,
+} from '@/shared/ui/icons/acoes';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { Skeleton } from '@/shared/ui/skeleton';
 import type { ItemEstoque } from '../hooks/use-estoques';
+import { EntradaEstoqueDialog } from './entrada-estoque-dialog';
+import { MovimentacoesDrawer } from './movimentacoes-drawer';
 
 /** Cartão de um insumo. Origem: estoque_card.dart. */
 export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
   const tituloId = useId();
   const unidade = UNIDADE_MEDIDA_ROTULOS[insumo.unidade];
+  const [entradaAberta, setEntradaAberta] = useState(false);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
 
   return (
     <article
@@ -65,6 +73,38 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
           className="h-20"
         />
       )}
+
+      {/* "Registrar entrada" precisa do saldo atual; o histórico, não. */}
+      <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        {estoque.isSuccess ? (
+          <Button size="compacto" onClick={() => setEntradaAberta(true)}>
+            <IconAdicionar className="size-4" />
+            Registrar entrada
+          </Button>
+        ) : null}
+        <Button
+          variant="secundario"
+          size="compacto"
+          onClick={() => setHistoricoAberto(true)}
+        >
+          <IconHistorico className="size-4" />
+          Histórico
+        </Button>
+      </div>
+
+      {estoque.isSuccess ? (
+        <EntradaEstoqueDialog
+          open={entradaAberta}
+          onOpenChange={setEntradaAberta}
+          insumo={insumo}
+          estoque={estoque.data}
+        />
+      ) : null}
+      <MovimentacoesDrawer
+        open={historicoAberto}
+        onOpenChange={setHistoricoAberto}
+        insumo={insumo}
+      />
     </article>
   );
 }
