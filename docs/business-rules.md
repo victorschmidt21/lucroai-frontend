@@ -459,7 +459,7 @@ Na web (FE-16):
 - Carrinho vazio: o cartão continua visível, com "0 itens", "Adicione produtos para registrar a venda." e "Registrar Venda" desabilitado (o mobile esconde o cartão).
 - O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
 - Depois de registrar, a tela abre a confirmação (FE-17); o Toast provisório "Venda #<id> registrada como pendente." saiu.
-- A aba "Histórico" mostra "Em construção" até a FE-18.
+- A aba "Histórico" é a da FE-18 ([histórico e resumo](#vendas-histórico-e-resumo)).
 
 ### Detector de estoque insuficiente
 
@@ -565,6 +565,14 @@ Exemplo do OVERVIEW: pão a R$ 0,50 com custo R$ 0,07 → `86,0%`.
 | Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                              |
 | Vazio  | "Nenhuma venda encontrada no período."    | igual                                                                  |
 | Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar novamente"                                          |
+
+Na web (FE-18):
+
+- Sem `dataInicio`/`dataFim` na URL, vale o mês atual no fuso do navegador; a URL só recebe as datas quando o usuário muda o período. Data inválida ou período invertido vindo da URL voltam ao padrão.
+- Com a data inicial depois da final (ou uma data apagada), a busca anterior continua na tela e o erro aparece no campo; nada vai para a URL.
+- O resumo usa as vendas devolvidas pelo filtro (com status "Pendente" ou "Cancelada", ele fica zerado).
+- Venda sem `total` usa `round2(Σ quantidade × precoUnitarioReal)`, como o `VendaModel.fromJson` do mobile.
+- Cada linha tem "Confirmar" (só `PENDENTE`) e "Ver detalhes", que abre a gaveta "Venda #<id>" com a data, o status, os itens (nome ou "Produto #<id>", `qtd × preço`, "Custo unitário", "Margem realizada", subtotal) e o total. O detalhe não existe no mobile.
 
 ## Custos: cálculo real
 
