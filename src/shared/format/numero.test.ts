@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMargem,
   formatNumero,
   formatPercentual,
   formatQuantidade,
@@ -60,5 +61,18 @@ describe('fracaoParaPercentual', () => {
     expect(fracaoParaPercentual(0.6)).toBe(60);
     expect(fracaoParaPercentual(0.07)).toBe(7);
     expect(formatPercentual(fracaoParaPercentual(0.86))).toBe('86,0%');
+  });
+});
+
+describe('formatMargem', () => {
+  it('mostra a fração do contrato em percentual', () => {
+    expect(formatMargem(0.6)).toBe('60,0%');
+    expect(formatMargem(0.075)).toBe('7,5%');
+    expect(formatMargem(0)).toBe('0,0%');
+  });
+
+  it('mostra "—" sem valor', () => {
+    expect(formatMargem(undefined)).toBe('—');
+    expect(formatMargem(null)).toBe('—');
   });
 });

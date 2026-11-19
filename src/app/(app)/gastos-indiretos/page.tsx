@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import { TelaProvisoria } from '@/features/navegacao/components/tela-provisoria';
+import { GastosIndiretosLista } from '@/features/gastos-indiretos/components/gastos-indiretos-lista';
+import { gastosIndiretosSearchSchema } from '@/features/gastos-indiretos/schemas/gastos-indiretos-search.schema';
 
 export const metadata: Metadata = { title: 'Gastos Indiretos' };
 
-/** Provisória: substituída pelos gastos indiretos na FE-10. */
-export default function GastosIndiretosPage() {
-  return (
-    <TelaProvisoria
-      title="Gastos Indiretos"
-      subtitle="Custos rateados automaticamente nas receitas"
-    />
-  );
+/** Só o `novo=1` das ações rápidas vem da URL. */
+export default async function GastosIndiretosPage({
+  searchParams,
+}: PageProps<'/gastos-indiretos'>) {
+  const { novo } = gastosIndiretosSearchSchema.parse(await searchParams);
+
+  return <GastosIndiretosLista abrirNovo={novo === '1'} />;
 }

@@ -88,7 +88,6 @@ async function navegarPelosOitoItens(page: Page, menu: Locator) {
     await expect(
       page.getByRole('heading', { level: 1, name: destino.titulo }),
     ).toBeVisible();
-    await expect(page.getByText('Em construção')).toBeVisible();
     await expect(page).toHaveTitle(destino.aba);
     await expect(
       menu.getByRole('link', { name: destino.rotulo }),

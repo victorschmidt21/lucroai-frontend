@@ -159,7 +159,7 @@ Exemplo do seed: farinha, 5 kg por R$ 15,00 → `R$ 3,0000/kg`; manteiga, 500 g 
 | ----------------------------- | ----------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `nome`                        | obrigatório, até 80 caracteres                        | "Informe o nome" / "Use até 80 caracteres"     | mobile; o limite vem da coluna do banco (o DTO não o valida, ver [lacunas](api-integration.md#lacunas-do-backend)) |
 | `quantidadeBaseCusto`         | número > 0                                            | "Informe uma quantidade maior que zero"        | mobile; backend `@Min(0.000001)`                                                                                   |
-| `unidade`                     | `G`, `KG`, `ML`, `L` ou `UN`                          | —                                              | Select com valor padrão                                                                                            |
+| `unidade`                     | `G`, `KG`, `ML`, `L` ou `UN`                          | —                                              | Select com valor padrão `G` (g), como o mobile (`InsumoUnidadeMedida.gramas`)                                      |
 | `valorPago`                   | número > 0                                            | "Informe um valor maior que zero"              | mobile; o backend aceita 0                                                                                         |
 | `quantidadeDisponivelInicial` | número ≥ 0, só na criação, padrão vazio = não enviado | "Informe uma quantidade maior ou igual a zero" | FE-09; backend `@Min(0)`, opcional                                                                                 |
 
@@ -226,6 +226,7 @@ totalGastos = Σ gasto.valor
 FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `lib/features/receitas/presentation/widgets/receita_card.dart`. Backend: `services/recipe-service/src/modules/receitas/`.
 
 - Linha: nome; `<rendimento> <unidade> - custo <custoProducao>`; preço sugerido; margem (`margemLucro × 100`, 1 casa); custo unitário.
+- Web: colunas Nome, Rendimento (`formatQuantidade`), Custo do lote (`custoProducao`, 1 lote), Custo unitário, Margem (`formatMargem`: `0.6` → `60,0%`) e Preço sugerido (`formatMoeda`), na ordem do backend (`dataCriacao` decrescente). "Nova receita" leva a `/receitas/nova` (FE-12).
 - `custoProducao`, `custoUnitario`, `margemLucro` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`): exiba `—`.
 - Ações: Editar (`/receitas/[receitaId]/editar`), Simular (`/receitas/[receitaId]/simular`, FE-20) e Excluir.
 
@@ -271,22 +272,27 @@ precoSugerido  = margem informada ? round2(custoUnitario × (1 + margem)) : sem 
 | `insumos[].insumo_id`  | insumo do catálogo, sem repetir                                  | —                                               | o diálogo só oferece insumos que ainda não estão na receita |
 | `insumos[].quantidade` | número > 0 (mínimo do backend: 0,001)                            | no diálogo: "Obrigatório"; na linha: "Inválido" | mobile; backend `@Min(0.001)`                               |
 
-Na edição, margem `null`, ausente ou ≤ 0 aparece vazia (mobile: `(margemLucro ?? 0) <= 0 ? ''`). Campo de margem vazio não é enviado.
+Na edição, margem `null`, ausente ou ≤ 0 aparece vazia (mobile: `(margemLucro ?? 0) <= 0 ? ''`). Campo de margem vazio não é enviado, e o `PUT` mantém a margem salva ([lacuna 21](api-integration.md#lacunas-do-backend)); por isso, na edição com o campo vazio, a prévia usa a margem salva.
+
+A prévia (`calcularPreviaReceita`, `receitas.calculos.ts`) mostra `—` no que não dá para calcular: quantidade ou rendimento inválido, ou insumo fora do catálogo (que o backend recusa ao salvar, com 404 "Insumo não encontrado").
 
 ### Textos
 
-| Onde                           | Mobile                                                               | Web                                                                                              |
-| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Título                         | "Nova receita" / "Editar receita"                                    | igual                                                                                            |
-| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"    | igual                                                                                            |
-| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)   | igual                                                                                            |
-| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar"  | igual, com a unidade do insumo ao lado da quantidade                                             |
-| Insumo fora do catálogo        | "Insumo #<id>"                                                       | igual                                                                                            |
-| Lista vazia                    | "Nenhum insumo adicionado."                                          | igual                                                                                            |
-| Valores salvos (edição)        | "Custo producao", "Custo unitario", "Preco sugerido"; `–` se ausente | "Custo produção", "Custo unitário", "Preço sugerido"; `—` se ausente                             |
-| Botão                          | "Salvar" / "Atualizar"                                               | igual                                                                                            |
-| Toasts                         | —                                                                    | "Receita criada com sucesso." / "Receita atualizada com sucesso."                                |
-| Sair com alterações não salvas | —                                                                    | ConfirmDialog "Descartar alterações?" / "As alterações não salvas serão perdidas." / "Descartar" |
+| Onde                           | Mobile                                                               | Web                                                                                                                                                                                                         |
+| ------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título                         | "Nova receita" / "Editar receita"                                    | igual                                                                                                                                                                                                       |
+| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"    | igual                                                                                                                                                                                                       |
+| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)   | igual                                                                                                                                                                                                       |
+| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar"  | igual, com a unidade do insumo ao lado da quantidade                                                                                                                                                        |
+| Insumo fora do catálogo        | "Insumo #<id>"                                                       | igual                                                                                                                                                                                                       |
+| Lista vazia                    | "Nenhum insumo adicionado."                                          | igual                                                                                                                                                                                                       |
+| Valores salvos (edição)        | "Custo producao", "Custo unitario", "Preco sugerido"; `–` se ausente | "Custo produção", "Custo unitário", "Preço sugerido"; `—` se ausente                                                                                                                                        |
+| Botão                          | "Salvar" / "Atualizar"                                               | igual                                                                                                                                                                                                       |
+| Toasts                         | —                                                                    | "Receita criada com sucesso." / "Receita atualizada com sucesso."                                                                                                                                           |
+| Sair com alterações não salvas | —                                                                    | ConfirmDialog "Descartar alterações?" / "As alterações não salvas serão perdidas." / "Descartar"                                                                                                            |
+| Prévia (sem equivalente)       | —                                                                    | "Prévia dos custos": "Insumos", "Gastos indiretos (1 lote)", "Custo produção", "Custo unitário", "Preço sugerido"; "Estimativa enquanto você edita. O valor gravado é o calculado pelo servidor ao salvar." |
+| Linha do insumo                | nome e unidade                                                       | nome, "Custo: R$ X", quantidade com a unidade e "Remover <nome>"                                                                                                                                            |
+| Valores salvos (seção)         | —                                                                    | "Valores salvos"                                                                                                                                                                                            |
 
 ## Estoque de insumos
 
