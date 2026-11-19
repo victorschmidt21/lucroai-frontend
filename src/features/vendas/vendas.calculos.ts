@@ -1,3 +1,6 @@
+import type { StatusVenda } from '@/shared/api/contracts/enums';
+import { isFaturavel } from '@/shared/domain/vendas';
+import { toDataSemHora } from '@/shared/format/data';
 import { arredondarCentavos } from '@/shared/format/moeda';
 
 /*
@@ -70,4 +73,72 @@ export function quantidadesPorReceita(
     );
   }
   return total;
+}
+
+/*
+ * Histórico e resumo (docs/business-rules.md#vendas-histórico-e-resumo). Origem:
+ * `VendaResumo.fromVendas` de venda.dart, `VendasState.initial` de
+ * vendas_state.dart e `VendaModel.fromJson` (quantidade e total pelos itens).
+ */
+
+type ItemParaHistorico = {
+  quantidade: number;
+  precoUnitarioReal: number;
+};
+type VendaParaHistorico = {
+  status: StatusVenda;
+  total: number | null;
+  itens: readonly ItemParaHistorico[];
+};
+
+/** `total` gravado; sem ele, `round2(Σ quantidade × precoUnitarioReal)`, como o mobile. */
+export function totalDaVenda({ total, itens }: VendaParaHistorico) {
+  return (
+    total ??
+    totalCarrinho(
+      itens.map((i) => ({
+        quantidade: i.quantidade,
+        precoUnitario: i.precoUnitarioReal,
+      })),
+    )
+  );
+}
+
+/** Soma das quantidades dos itens (a coluna "un" do `venda_card.dart`). */
+export function quantidadeDaVenda({ itens }: VendaParaHistorico) {
+  return itens.reduce((soma, item) => soma + item.quantidade, 0);
+}
+
+export type ResumoVendas = {
+  totalVendido: number;
+  quantidadeVendas: number;
+  ticketMedio: number;
+};
+
+/** Só vendas faturáveis (`CONCLUIDA`); ticket médio 0 sem vendas. */
+export function resumirVendas(
+  vendas: readonly VendaParaHistorico[],
+): ResumoVendas {
+  const faturaveis = vendas.filter(isFaturavel);
+  const totalVendido = faturaveis.reduce(
+    (soma, venda) => soma + totalDaVenda(venda),
+    0,
+  );
+
+  return {
+    totalVendido,
+    quantidadeVendas: faturaveis.length,
+    ticketMedio: faturaveis.length > 0 ? totalVendido / faturaveis.length : 0,
+  };
+}
+
+/**
+ * Mês de `hoje`, do dia 1 ao último dia (`DateTime(ano, mes + 1, 0)`), em
+ * `YYYY-MM-DD` no fuso local.
+ */
+export function periodoPadrao(hoje: Date) {
+  return {
+    inicio: toDataSemHora(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
+    fim: toDataSemHora(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)),
+  };
 }

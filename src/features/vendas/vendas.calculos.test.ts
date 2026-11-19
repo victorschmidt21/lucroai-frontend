@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   calcularEstoqueDisponivel,
+  periodoPadrao,
+  quantidadeDaVenda,
+  resumirVendas,
   subtotalItem,
   totalCarrinho,
+  totalDaVenda,
 } from './vendas.calculos';
 
 describe('subtotalItem', () => {
@@ -93,5 +97,83 @@ describe('calcularEstoqueDisponivel', () => {
     expect(
       calcularEstoqueDisponivel(9, [{ receitaId: 9, quantidade: 4 }], [], []),
     ).toBe(4);
+  });
+});
+
+const item = (quantidade: number, precoUnitarioReal: number) => ({
+  quantidade,
+  precoUnitarioReal,
+});
+
+describe('resumirVendas', () => {
+  it('soma só as vendas concluídas', () => {
+    const resumo = resumirVendas([
+      { status: 'CONCLUIDA', total: 45, itens: [] },
+      { status: 'CONCLUIDA', total: 15, itens: [] },
+      { status: 'PENDENTE', total: 100, itens: [] },
+      { status: 'CANCELADA', total: 200, itens: [] },
+    ]);
+
+    expect(resumo).toEqual({
+      totalVendido: 60,
+      quantidadeVendas: 2,
+      ticketMedio: 30,
+    });
+  });
+
+  it('ticket médio é 0 sem vendas concluídas', () => {
+    expect(resumirVendas([])).toEqual({
+      totalVendido: 0,
+      quantidadeVendas: 0,
+      ticketMedio: 0,
+    });
+    expect(
+      resumirVendas([{ status: 'PENDENTE', total: 10, itens: [] }]).ticketMedio,
+    ).toBe(0);
+  });
+
+  it('venda sem total usa a soma dos itens', () => {
+    expect(
+      resumirVendas([
+        { status: 'CONCLUIDA', total: null, itens: [item(50, 0.5)] },
+      ]).totalVendido,
+    ).toBe(25);
+  });
+});
+
+describe('totalDaVenda e quantidadeDaVenda', () => {
+  const venda = {
+    status: 'PENDENTE' as const,
+    total: null,
+    itens: [item(50, 0.5), item(3, 12.5)],
+  };
+
+  it('total: o gravado ou a soma dos itens', () => {
+    expect(totalDaVenda(venda)).toBe(62.5);
+    expect(totalDaVenda({ ...venda, total: 60 })).toBe(60);
+  });
+
+  it('quantidade: soma dos itens', () => {
+    expect(quantidadeDaVenda(venda)).toBe(53);
+  });
+});
+
+describe('periodoPadrao', () => {
+  it('vai do dia 1 ao último dia do mês, no fuso local', () => {
+    expect(periodoPadrao(new Date(2026, 10, 19, 23, 30))).toEqual({
+      inicio: '2026-11-01',
+      fim: '2026-11-30',
+    });
+  });
+
+  it('fevereiro de ano bissexto e dezembro', () => {
+    expect(periodoPadrao(new Date(2028, 1, 10))).toEqual({
+      inicio: '2028-02-01',
+      fim: '2028-02-29',
+    });
+    expect(periodoPadrao(new Date(2026, 11, 31, 23, 59))).toEqual({
+      inicio: '2026-12-01',
+      fim: '2026-12-31',
+    });
   });
 });
