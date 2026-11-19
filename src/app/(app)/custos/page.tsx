@@ -1,14 +1,9 @@
 import type { Metadata } from 'next';
-import { TelaProvisoria } from '@/features/navegacao/components/tela-provisoria';
+import { CalculoRealTela } from '@/features/custos/components/calculo-real-tela';
 
 export const metadata: Metadata = { title: 'Cálculo Real' };
 
-/** Provisória: substituída pelo cálculo real na FE-19. */
+/** Aba "Custos" (FE-19): cálculo do custo real, 100% no cliente. */
 export default function CustosPage() {
-  return (
-    <TelaProvisoria
-      title="Cálculo Real"
-      subtitle="Custo verdadeiro incluindo custos invisíveis"
-    />
-  );
+  return <CalculoRealTela />;
 }
