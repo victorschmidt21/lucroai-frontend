@@ -443,6 +443,7 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 24. **`POST /vendas` não confere o estoque de produto acabado.** O `venda.service.ts` (`create`) só busca a receita e grava a venda `PENDENTE`; nenhum erro de "estoque insuficiente" sai do registro. → A tela da FE-16 trata `isEstoqueInsuficiente` como o mobile, mas hoje esse caso não acontece; a barreira é a validação no cliente antes de concluir (FE-17).
 25. **`POST /vendas` aceita a lista de itens vazia.** O `CreateVendaDto` tem `@IsArray()`, mas não `@ArrayNotEmpty()`: `{ itens: [] }` grava uma venda de total 0. → "Registrar Venda" fica desabilitado com o carrinho vazio (FE-16). Pedido ao backend: `@ArrayNotEmpty()`.
 26. **`POST /vendas` não confere a empresa da receita.** A receita é buscada pela rota `/receitas/internal/:id` do recipe-service, sem o token do usuário, como na produção (lacuna 11). → A web só oferece as receitas da própria empresa; a correção é do backend.
+27. **`POST /receitas/:id/simular` divide pelo preço sem conferir zero.** Sem `novoPreco` e com `precoSugerido = 0` (margem 0 e custo 0), `margemProjetada` vira `NaN`/`Infinity`, que o JSON serializa como `null`. → O contrato falha e a tela da FE-20 mostra "Erro ao simular."; pedido ao backend: responder 400 quando o preço for 0.
 
 ## Divergências entre as issues e o backend
 

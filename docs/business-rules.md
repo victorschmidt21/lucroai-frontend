@@ -629,7 +629,7 @@ breakEven       = ceil(custoUnitario × volume / precoVenda)
 | Preço de venda (R$)    | `precoSugerido`, se > 0            | `novoPreco`, número > 0   |
 | Quantidade (unidades)  | `rendimento`                       | `volume`, **inteiro** > 0 |
 
-Campo vazio não é enviado (o backend usa o valor da receita). Dicas: "Ex.: 2,50", "Ex.: 5,00", "Ex.: 12".
+Campo vazio não é enviado (o backend usa o valor da receita). Dicas: "Ex.: 2,50", "Ex.: 5,00", "Ex.: 12". O mobile não valida os campos; a web segue o DTO: valor inválido ou ≤ 0, "Informe um valor maior que zero"; quantidade não inteira ou ≤ 0, "Informe uma quantidade inteira maior que zero".
 
 ### Resultado e textos
 
@@ -653,6 +653,8 @@ Mensagens de erro do backend (400): "Receita sem custo calculado. Informe novoCu
 | "Preço para margem desejada" | `POST /receitas/:id/preco-venda`   | `{ margem_lucro }` (fração ≥ 0)     | `{ custo_total_unitario, preco_sugerido, lucro_por_unidade }`, sem arredondamento                |
 | "Custo para N lotes"         | `POST /receitas/:id/custo/simular` | `{ quantidadeLotes }` (inteiro > 0) | `{ quantidade_lotes, total_unidades, custo_invisivel, custo_total_producao, custo_por_unidade }` |
 | Custo atual de 1 lote        | `GET /receitas/:id/custo`          | —                                   | mesmo formato do anterior                                                                        |
+
+Na web (FE-20), os dois blocos ficam lado a lado sob o resultado. "Preço para margem desejada": campo "Margem de lucro" em %, começando pela margem salva (≥ 0: "Informe uma margem válida"), botão "Calcular preço", resultado "Preço sugerido", "Custo/unidade" e "Lucro por unidade". "Custo para N lotes": "Quantidade de lotes" começando em 1 ("Informe a quantidade de lotes"), botão "Calcular custo"; mostra o custo de 1 lote ao abrir e, depois, o simulado: "Custo total (N lote(s))", "Custo/unidade", "Custos invisíveis" e "Total de unidades".
 
 `preco_sugerido = custoUnitario × (1 + margem_lucro)` e `lucro_por_unidade = preco_sugerido − custoUnitario`. "Receita sem custo calculado" (400) quando a receita não tem `custoUnitario`.
 
