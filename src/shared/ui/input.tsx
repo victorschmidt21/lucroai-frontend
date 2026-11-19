@@ -12,6 +12,8 @@ type InputProps = ComponentProps<'input'> &
   FieldProps & {
     /** Ícone decorativo à esquerda, como a lupa da busca. */
     icon?: ReactNode;
+    /** Rótulo só para leitor de tela; o `placeholder` mostra o que digitar. */
+    hideLabel?: boolean;
   };
 
 export function Input({
@@ -21,6 +23,7 @@ export function Input({
   id,
   required,
   icon,
+  hideLabel,
   className,
   ...props
 }: InputProps) {
@@ -54,6 +57,7 @@ export function Input({
       controlId={controlProps.id}
       hintId={hintId}
       errorId={errorId}
+      hideLabel={hideLabel}
     >
       {icon ? (
         <div className="relative">

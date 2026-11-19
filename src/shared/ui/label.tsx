@@ -70,6 +70,8 @@ export function useFieldControl({ id, error, hint, required }: FieldProps) {
 }
 
 type FieldLayoutProps = FieldProps & {
+  /** Rótulo só para leitor de tela, quando o contexto já diz o que é (a busca). */
+  hideLabel?: boolean;
   controlId: string;
   hintId?: string;
   errorId?: string;
@@ -84,11 +86,16 @@ export function FieldLayout({
   controlId,
   hintId,
   errorId,
+  hideLabel = false,
   children,
 }: FieldLayoutProps) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <Label htmlFor={controlId} required={required}>
+      <Label
+        htmlFor={controlId}
+        required={required}
+        className={cn(hideLabel && 'sr-only')}
+      >
         {label}
       </Label>
       {children}

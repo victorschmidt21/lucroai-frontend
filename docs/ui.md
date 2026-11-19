@@ -1,6 +1,6 @@
 # Interface
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `FormDialog`, `Form` e os campos numéricos) são **previstos na FE-06**; as APIs descritas para eles são o alvo, e a FE-06 atualiza este arquivo se precisar mudá-las. A referência visual é o app Flutter (`lib/main.dart` e as telas de `lib/features/*/presentation/`).
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). A referência visual é o app Flutter (`lib/main.dart` e as telas de `lib/features/*/presentation/`).
 
 ## Princípios
 
@@ -101,36 +101,40 @@ Roboto (a fonte padrão do Material no Flutter), via `next/font/google` em `src/
 
 Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tabs, Toast, Slider, SegmentedControl e ToggleChip); nativos onde já funcionam bem (Input, Select, Checkbox, datas). O `Combobox` é próprio, porque o Radix não tem combobox. Para ver tudo funcionando, abra [`/design-system`](http://localhost:3000/design-system), disponível só em desenvolvimento.
 
-| Arquivo                              | Exporta                                                                | Observações                                                                                                                                                                                              |
-| ------------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `button.tsx`                         | `Button`, `IconButton`, `buttonClasses`                                | variantes `primario`, `secundario`, `perigo`, `fantasma`; tamanhos `padrao`, `compacto`, `icone`; `loading` mantém o texto e desabilita; `type` padrão é `button`; `IconButton` exige `aria-label`       |
-| `input.tsx`, `textarea.tsx`          | `Input`, `Textarea`                                                    | `label` obrigatório; `error` e `hint` ligados ao campo (`aria-describedby`); `Input` aceita `icon` à esquerda                                                                                            |
-| `number-input.tsx`                   | `NumberInput`                                                          | base dos campos numéricos brasileiros (FE-06): `type="text"`, `inputMode="decimal"`, `prefixo` (`R$`) e `sufixo` (`kg`, `%`); guarda o texto, sem converter                                              |
-| `select.tsx`                         | `Select`                                                               | `<select>` nativo, com as `<option>` como filhas; aceita `{...register('campo')}`                                                                                                                        |
-| `combobox.tsx`                       | `Combobox`                                                             | busca sem acentos para escolher receita ou insumo: `options` (`{ value, label }`), `value` (`string \| null`), `onValueChange`, `emptyMessage`; setas, Home/End, Enter e Esc                             |
-| `checkbox.tsx`, `chip.tsx`           | `Checkbox`, `Chip`, `ToggleChip`                                       | `Checkbox` nativo; `Chip` é só texto; `ToggleChip` (`selected`, `onSelectedChange`) para os gastos da produção                                                                                           |
-| `segmented-control.tsx`              | `SegmentedControl`                                                     | filtro "Todos / Baixo" do estoque: `aria-label`, `options`, `value`, `onValueChange`; sempre há uma opção escolhida                                                                                      |
-| `slider.tsx`                         | `Slider`                                                               | `label`, `value`, `min`, `max`, `step`, `formatValue` (exibido e anunciado), `hint`; setas, Page Up/Down, Home/End; usado na simulação                                                                   |
-| `label.tsx`                          | `Label`, `FieldError`                                                  | para campos fora dos componentes acima                                                                                                                                                                   |
-| `alert.tsx`                          | `Alert`                                                                | erro que não pertence a um campo: formulário, diálogo, login                                                                                                                                             |
-| `dialog.tsx`, `drawer.tsx`           | `Dialog`, `DialogClose`, `Drawer`                                      | `title` obrigatório; `trigger`, ou controle com `open` e `onOpenChange`; `footer`; o `Drawer` (`side="bottom"`, padrão) sobe de baixo no celular e fica à direita a partir de `lg`                       |
-| `confirm-dialog.tsx`                 | `ConfirmDialog`                                                        | ver [Confirmação](#confirmação-de-exclusão-e-de-ações); entregue na FE-04, junto com os componentes base                                                                                                 |
-| `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                       | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                                                                         |
-| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                     | `Card` com `title` vira seção com rótulo em caixa alta; `variant="resumo"` tem cantos de 14px. `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                    |
-| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge` | sempre com cor e texto; `StatusVenda` e `MetodoRateio` e os rótulos vêm de `shared/api/contracts/enums.ts`; `StatusEstoque` fica aqui, porque é calculado no cliente (FE-13)                             |
-| `progress-bar.tsx`                   | `ProgressBar`                                                          | `<progress>` nativo; `value` de 0 a 1 (limitado), `aria-label` obrigatório, `tone` (`accent` ou a cor do status) e `valueText`                                                                           |
-| `toast.tsx`                          | `ToastProvider`, `useToast`                                            | `toast.success(texto)`, `toast.error(texto)`, `toast.info(texto)`; some em 4 s, como o `SnackBar`; o provider fica no layout de `(app)` (FE-08) e em `/design-system`                                    |
-| `skeleton.tsx`, `spinner.tsx`        | `Skeleton`, `Spinner`                                                  | `Skeleton` exige `aria-label`; `Spinner` tem `label` ("Carregando")                                                                                                                                      |
-| `empty-state.tsx`, `error-state.tsx` | `EmptyState`, `ErrorState`                                             | `EmptyState`: `title`, `description`, `action`; `ErrorState`: `title`, `message`, `onRetry` ("Tentar novamente") e `retrying`                                                                            |
-| `page-header.tsx`                    | `PageHeader`                                                           | `title` (o `h1`), `subtitle` e `actions`                                                                                                                                                                 |
-| `date-picker.tsx`                    | `DateRangePicker`, `isPeriodoValido`                                   | período do histórico de vendas: `legend`, `value` e `onChange` com `{ inicio, fim }` em `YYYY-MM-DD`; dois `<input type="date">` ("Data inicial", "Data final") e o erro de data inicial depois da final |
-| `logo.tsx`                           | `Logo`                                                                 | wordmark "LucroAI" do cabeçalho do painel, em texto (o mobile não tem logo em imagem); `size="compacto"` para o menu                                                                                     |
-| `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…              | SVGs locais equivalentes aos Material Icons do mobile; decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone`                                                                                 |
-| `cn.ts`                              | `cn`                                                                   | junta classes condicionais                                                                                                                                                                               |
+| Arquivo                              | Exporta                                                                     | Observações                                                                                                                                                                                                                     |
+| ------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `button.tsx`                         | `Button`, `IconButton`, `buttonClasses`                                     | variantes `primario`, `secundario`, `perigo`, `fantasma`; tamanhos `padrao`, `compacto`, `icone`; `loading` mantém o texto e desabilita; `type` padrão é `button`; `IconButton` exige `aria-label`                              |
+| `input.tsx`, `textarea.tsx`          | `Input`, `Textarea`                                                         | `label` obrigatório; `error` e `hint` ligados ao campo (`aria-describedby`); `Input` aceita `icon` à esquerda e `hideLabel` (rótulo só para leitor de tela, usado na busca)                                                     |
+| `number-input.tsx`                   | `NumberInput`, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput` | `NumberInput` é a base: `type="text"`, `inputMode`, `prefixo` (`R$`) e `sufixo` (`kg`, `%`). Os outros quatro são controlados (`value`, `onValueChange`) e seguem [Campos numéricos brasileiros](#campos-numéricos-brasileiros) |
+| `unidade-select.tsx`                 | `UnidadeSelect`                                                             | `Select` com os rótulos `g`, `kg`, `ml`, `L`, `un` e os valores `G \| KG \| ML \| L \| UN`; aceita `{...register('unidade')}`                                                                                                   |
+| `select.tsx`                         | `Select`                                                                    | `<select>` nativo, com as `<option>` como filhas; aceita `{...register('campo')}`                                                                                                                                               |
+| `form.tsx`                           | `Form`, `FormDialog` e os campos `Form*`                                    | ver [`Form` e `FormDialog`](#form-e-formdialog) (FE-06)                                                                                                                                                                         |
+| `list-page.tsx`, `data-table.tsx`    | `ListPage`, `DataTable`                                                     | ver [`ListPage`](#listpage) (FE-06); `DataTable` é a lista em cartões no celular e tabela a partir de `md`, sem estados                                                                                                         |
+| `use-busca-na-url.ts`                | `useBuscaNaUrl`, `DEBOUNCE_BUSCA_MS`                                        | busca textual em `?q=`, com debounce de 300 ms; usado pela `ListPage` e por telas com busca fora dela                                                                                                                           |
+| `combobox.tsx`                       | `Combobox`                                                                  | busca sem acentos para escolher receita ou insumo: `options` (`{ value, label }`), `value` (`string \| null`), `onValueChange`, `emptyMessage`; setas, Home/End, Enter e Esc                                                    |
+| `checkbox.tsx`, `chip.tsx`           | `Checkbox`, `Chip`, `ToggleChip`                                            | `Checkbox` nativo; `Chip` é só texto; `ToggleChip` (`selected`, `onSelectedChange`) para os gastos da produção                                                                                                                  |
+| `segmented-control.tsx`              | `SegmentedControl`                                                          | filtro "Todos / Baixo" do estoque: `aria-label`, `options`, `value`, `onValueChange`; sempre há uma opção escolhida                                                                                                             |
+| `slider.tsx`                         | `Slider`                                                                    | `label`, `value`, `min`, `max`, `step`, `formatValue` (exibido e anunciado), `hint`; setas, Page Up/Down, Home/End; usado na simulação                                                                                          |
+| `label.tsx`                          | `Label`, `FieldError`                                                       | para campos fora dos componentes acima                                                                                                                                                                                          |
+| `alert.tsx`                          | `Alert`                                                                     | erro que não pertence a um campo: formulário, diálogo, login                                                                                                                                                                    |
+| `dialog.tsx`, `drawer.tsx`           | `Dialog`, `DialogClose`, `Drawer`                                           | `title` obrigatório; `trigger`, ou controle com `open` e `onOpenChange`; `footer`; o `Drawer` (`side="bottom"`, padrão) sobe de baixo no celular e fica à direita a partir de `lg`                                              |
+| `confirm-dialog.tsx`                 | `ConfirmDialog`                                                             | ver [Confirmação](#confirmação-de-exclusão-e-de-ações); entregue na FE-04, com a `consequence` opcional da FE-06                                                                                                                |
+| `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                            | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                                                                                                |
+| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                          | `Card` com `title` vira seção com rótulo em caixa alta; `variant="resumo"` tem cantos de 14px. `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                                           |
+| `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `MetodoRateioBadge`      | sempre com cor e texto; `StatusVenda` e `MetodoRateio` e os rótulos vêm de `shared/api/contracts/enums.ts`; `StatusEstoque` fica aqui, porque é calculado no cliente (FE-13)                                                    |
+| `progress-bar.tsx`                   | `ProgressBar`                                                               | `<progress>` nativo; `value` de 0 a 1 (limitado), `aria-label` obrigatório, `tone` (`accent` ou a cor do status) e `valueText`                                                                                                  |
+| `toast.tsx`                          | `ToastProvider`, `useToast`                                                 | `toast.success(texto)`, `toast.error(texto)`, `toast.info(texto)`; some em 4 s, como o `SnackBar`; o provider fica no layout de `(app)` (FE-08) e em `/design-system`                                                           |
+| `skeleton.tsx`, `spinner.tsx`        | `Skeleton`, `Spinner`                                                       | `Skeleton` exige `aria-label`; `Spinner` tem `label` ("Carregando")                                                                                                                                                             |
+| `empty-state.tsx`, `error-state.tsx` | `EmptyState`, `ErrorState`                                                  | `EmptyState`: `title`, `description`, `action`; `ErrorState`: `title`, `message`, `onRetry` ("Tentar novamente") e `retrying`                                                                                                   |
+| `page-header.tsx`                    | `PageHeader`                                                                | `title` (o `h1`), `subtitle` e `actions`                                                                                                                                                                                        |
+| `date-picker.tsx`                    | `DateRangePicker`, `isPeriodoValido`                                        | período do histórico de vendas: `legend`, `value` e `onChange` com `{ inicio, fim }` em `YYYY-MM-DD`; dois `<input type="date">` ("Data inicial", "Data final") e o erro de data inicial depois da final                        |
+| `logo.tsx`                           | `Logo`                                                                      | wordmark "LucroAI" do cabeçalho do painel, em texto (o mobile não tem logo em imagem); `size="compacto"` para o menu                                                                                                            |
+| `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…                   | SVGs locais equivalentes aos Material Icons do mobile; decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone`                                                                                                        |
+| `cn.ts`                              | `cn`                                                                        | junta classes condicionais                                                                                                                                                                                                      |
 
 O favicon (`src/app/icon.svg`) repete a identidade: fundo `bg`, "L" branco e a linha de gráfico em `accent`. É um arquivo de imagem, por isso tem as cores escritas nele.
 
-A página `/design-system` (`src/app/design-system/page.tsx`, com o catálogo em `src/features/design-system/`) mostra todos os tokens e componentes. Ela devolve 404 no build de produção.
+A página `/design-system` (`src/app/design-system/page.tsx`, com o catálogo em `src/features/design-system/`) mostra todos os tokens e componentes. `/design-system/listagem` (FE-06) é o exemplo funcionando da listagem de insumos com busca, cadastro, edição e exclusão, do `Form` em página e dos estados, sobre uma API em memória (`src/features/design-system/exemplo-api.ts`) com os cenários "Falhar ao carregar", "Lista vazia" e "Falhar ao salvar e excluir". As duas devolvem 404 no build de produção.
 
 ### Ações
 
@@ -146,7 +150,7 @@ Cada tela tem **uma** ação primária, no `PageHeader`. O que se repete em cada
 
 ## Listagens e formulários
 
-Blocos da FE-06, que fazem uma tela nova ser só configuração. O [exemplo completo de insumos](architecture.md#exemplo-completo-funcionalidade-insumos) usa todos eles.
+Blocos da FE-06, que fazem uma tela nova ser só configuração. O [exemplo completo de insumos](architecture.md#exemplo-completo-funcionalidade-insumos) usa todos eles, e `/design-system/listagem` (`src/features/design-system/components/list-form-showcase.tsx`) é o mesmo exemplo funcionando.
 
 ### `ListPage`
 
@@ -155,24 +159,31 @@ Blocos da FE-06, que fazem uma tela nova ser só configuração. O [exemplo comp
   title="Insumos"
   subtitle="Gerencie quantidade, valor pago e custo unitário"
   actions={<Button variant="primario">Novo insumo</Button>}
-  label="Insumos"                       // nome acessível da lista
+  label="Insumos"                       // nome acessível da lista ("Carregando insumos" no esqueleto)
   query={query}                         // resultado de useQuery com a lista inteira
-  searchField="nome"                    // campo da busca; sem ele, não há busca
+  searchField="nome"                    // campo de texto ou função; sem ele, não há busca
   searchPlaceholder="Buscar insumo"
+  itemLabel={{ singular: 'insumo', plural: 'insumos' }} // contagem; padrão "resultado(s)"
   columns={[{ id, header, cell, align?: 'right', acoes?: true }]}
   getRowKey={(item) => item.id}
   emptyTitle="Nenhum insumo encontrado."
+  emptyDescription="..."                // opcional
   emptyAction={<Button>Novo insumo</Button>}   // opcional
   errorTitle="Não foi possível carregar os insumos."
   filter={(item) => ...}                // opcional: filtro extra, como `baixo=1` no estoque
+  filterEmptyTitle="..."                // opcional: quando só o `filter` esvazia a lista
+  filterEmptyAction={<Button>...</Button>}     // opcional
   summary={<Card>...</Card>}            // opcional: cartão de resumo acima da lista (total de gastos)
 />
 ```
 
-- Arquivo `shared/ui/list-page.tsx`. Renderiza o `PageHeader`, a busca (`type="search"`, com rótulo acessível igual ao `searchPlaceholder`) com debounce de 300 ms gravando `q` na URL, a contagem ("12 insumos"), a lista em **cartões no celular** e em **tabela no desktop**, e os estados.
-- A busca filtra no cliente com `filtrarPorTexto`, sem diferenciar acentos nem maiúsculas.
-- Estados: carregando (`Skeleton`), vazio (`emptyTitle`), vazio por busca ("Nenhum resultado para "x"", com "Limpar busca") e erro (`ErrorState` com `errorTitle` e "Tentar novamente", que chama `query.refetch`).
-- `align: 'right'` em números e valores; `acoes: true` alinha os botões à direita e os leva ao rodapé do cartão no celular.
+- Arquivo `shared/ui/list-page.tsx`, Client Component. Renderiza o `PageHeader`, a busca (`type="search"` dentro de `<search>`, com o rótulo visualmente oculto igual ao `searchPlaceholder`), a contagem ("12 insumos", num `<output>` para o leitor de tela anunciar o resultado da busca), a lista e os estados.
+- A busca usa `useBuscaNaUrl` (`shared/ui/use-busca-na-url.ts`): o campo responde a cada tecla; 300 ms depois da última, o termo filtra a lista e é gravado em `q` com `router.replace` (sem `scroll`). Enter aplica na hora. Recarregar a página ou voltar no navegador mantém o filtro. Os outros parâmetros da URL são preservados.
+- A busca filtra no cliente com `filtrarPorTexto`, sem diferenciar acentos nem maiúsculas, depois do `filter`.
+- Estados: carregando (esqueleto de cartões num `<output aria-label="Carregando insumos">`), vazio (`emptyTitle`, sem contagem), vazio por busca (`Nenhum resultado para "x"`, com "Limpar busca", que devolve o foco ao campo), vazio por filtro (`filterEmptyTitle`) e erro (`ErrorState` com `errorTitle`, a mensagem de `getErrorMessage()` e "Tentar novamente", que chama `query.refetch`).
+- A lista é o `DataTable` (`shared/ui/data-table.tsx`): **cartões no celular** e **tabela a partir de `md`** (768px), só com CSS. No cartão, a primeira coluna é o título, as outras levam o rótulo da coluna e as ações vão ao rodapé. Os papéis de tabela são explícitos, porque `display: block` apaga a semântica.
+- `align: 'right'` em números e valores (com `tabular-nums`); `acoes: true` alinha os botões à direita e os leva ao rodapé do cartão no celular.
+- A página que usa `ListPage` precisa ler `searchParams` (ou ficar dentro de um `<Suspense>`), porque a busca usa `useSearchParams`.
 
 ### `Form` e `FormDialog`
 
@@ -193,27 +204,39 @@ Blocos da FE-06, que fazem uma tela nova ser só configuração. O [exemplo comp
 ```
 
 - Tudo em `shared/ui/form.tsx`: `Form`, `FormDialog` e os campos ligados ao formulário.
-- `Form` é a versão sem diálogo (páginas `/receitas/nova` e `/receitas/[receitaId]/editar`, cálculo real). `FormDialog` abre como Dialog no desktop e como Drawer de baixo no celular, com "Cancelar" e a ação primária.
-- Usa `react-hook-form` com `zodResolver`. O erro aparece embaixo do campo, ligado por `aria-describedby`, e o foco vai para o primeiro campo inválido.
-- O botão de envio fica desabilitado durante o envio, mantendo o texto.
-- `onSubmit` precisa **rejeitar** com o `ApiError` (use `mutateAsync`, não `mutate`): é assim que o formulário mostra a mensagem do backend num `Alert` no topo.
-- Os campos ligados ao formulário são `FormInput`, `FormTextarea`, `FormSelect`, `FormCombobox`, `FormMoneyInput`, `FormDecimalInput`, `FormIntegerInput`, `FormPercentInput` e `FormUnidadeSelect`, todos com `name` e `label`.
+- `Form` é a versão sem diálogo (páginas `/receitas/nova` e `/receitas/[receitaId]/editar`, cálculo real), com `cancelHref` (link "Cancelar") ou `onCancel` (botão). `FormDialog` é **Drawer de baixo no celular** (como o `showModalBottomSheet`, até 90% da altura, com rolagem interna) e **Dialog centralizado a partir de `md`**, só com CSS, com "Cancelar" e a ação primária.
+- O `FormDialog` monta o formulário a cada abertura, com os `defaultValues`: fechar e abrir de novo descarta o que foi digitado. Para editar outro item, mude a `key` (como no exemplo de insumos).
+- Usa `react-hook-form` com `zodResolver` e `noValidate`. O erro aparece embaixo do campo (`FieldError`, `role="alert"`), ligado por `aria-describedby` e com `aria-invalid`, e o foco vai para o primeiro campo inválido, na ordem da tela (o `FormCombobox` também recebe o foco).
+- Ao abrir, o Radix foca o primeiro controle do diálogo (o botão "Fechar"); o Tab leva ao primeiro campo. Enter num campo envia o formulário.
+- O botão de envio fica desabilitado durante o envio, mantendo o texto. No `FormDialog`, "Cancelar", Esc e o clique fora também ficam inativos até a chamada terminar.
+- `onSubmit` precisa **rejeitar** com o `ApiError` (use `mutateAsync`, não `mutate`): é assim que o formulário mostra a mensagem do backend (`getErrorMessage()`) num `Alert` no topo, sem perder o que foi digitado. O backend do LucroAI não devolve erro por campo, então não há mapeamento de campo.
+- Os campos ligados ao formulário são `FormInput`, `FormTextarea`, `FormSelect`, `FormCombobox`, `FormMoneyInput`, `FormDecimalInput`, `FormIntegerInput`, `FormPercentInput` e `FormUnidadeSelect`, todos com `name` e `label`. Os de texto e seleção usam `register`; os numéricos e o `FormCombobox` usam `useController`.
 - `FormDecimalInput` aceita `unidade` (o rótulo da unidade, como `kg`, exibido à direita do campo); `FormMoneyInput` e `FormPercentInput` já mostram `R$` e `%`.
+- Prévias ao vivo usam `useWatch` do `react-hook-form` dentro dos filhos do formulário (ver o exemplo de insumos).
 - Formulário com alterações não salvas pede confirmação antes de sair (FE-12).
+
+### Toasts depois de mutações
+
+- Sucesso: `toast.success` com o texto de [business-rules.md](business-rules.md) ("Insumo criado com sucesso."), chamado no `onSubmit` ou no `onConfirm` depois do `mutateAsync`, e antes de fechar o diálogo.
+- Erro em formulário ou confirmação: **não** use Toast. O `Alert` dentro do diálogo, que continua aberto, mostra a mensagem; um Toast repetiria o anúncio ao leitor de tela.
+- Erro de uma mutação disparada fora de diálogo (botão direto na linha, quando houver): `toast.error(getErrorMessage(error))` no `onError` da mutação.
 
 ### Campos numéricos brasileiros
 
-Guardam o texto digitado e são convertidos pelo schema com `numeroBR()` ([business-rules.md](business-rules.md#leitura-de-números-digitados)).
+Guardam o texto digitado e são convertidos pelo schema com `numeroBR()`, `numeroBROpcional()` ou `inteiroBR()` de `src/shared/format/numero-br.ts` ([business-rules.md](business-rules.md#leitura-de-números-digitados)). Ao editar, preencha o campo com `formatNumeroEditavel(valor)` (`formatNumeroEditavel(valor, 2)` no dinheiro).
 
-| Campo           | Mostra                                | Envia                                        | Uso                                           |
-| --------------- | ------------------------------------- | -------------------------------------------- | --------------------------------------------- |
-| `MoneyInput`    | `R$` à esquerda, 2 casas (`1.234,56`) | `number`, 2 casas                            | valor pago, valor do gasto, preço             |
-| `DecimalInput`  | unidade à direita (`kg`)              | `number`                                     | quantidade de insumo e de estoque             |
-| `IntegerInput`  | só dígitos                            | inteiro                                      | rendimento, lotes, quantidade vendida, volume |
-| `PercentInput`  | `%` à direita                         | fração (`30` → `0.3`), na função `to...Body` | margem de lucro                               |
-| `UnidadeSelect` | rótulos `g`, `kg`, `ml`, `L`, `un`    | `G \| KG \| ML \| L \| UN`                   | unidade do insumo e do rendimento             |
+| Campo           | Ao digitar                                   | Ao sair do campo                                 | Envia                                                                                             | Uso                                           |
+| --------------- | -------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `MoneyInput`    | `R$` à esquerda; dígitos, `.` e `,`          | 2 casas: `1234.5` vira `1.234,50`                | `number` (`numeroBR`)                                                                             | valor pago, valor do gasto, preço             |
+| `DecimalInput`  | unidade à direita (`kg`); dígitos, `.` e `,` | padrão brasileiro, sem arredondar (`1.234,5678`) | `number` (`numeroBR` ou `numeroBROpcional`)                                                       | quantidade de insumo e de estoque             |
+| `IntegerInput`  | só dígitos (`inputMode="numeric"`)           | —                                                | inteiro (`inteiroBR`)                                                                             | rendimento, lotes, quantidade vendida, volume |
+| `PercentInput`  | `%` à direita; dígitos, `.` e `,`            | padrão brasileiro, sem arredondar (`12,5`)       | pontos percentuais; a fração (`30` → `0.3`) sai na função `to...Body`, com `percentualParaFracao` | margem de lucro                               |
+| `UnidadeSelect` | rótulos `g`, `kg`, `ml`, `L`, `un`           | —                                                | `G \| KG \| ML \| L \| UN`                                                                        | unidade do insumo e do rendimento             |
 
-Use `inputMode="decimal"` (ou `numeric`) para abrir o teclado numérico no celular.
+- Os campos recusam letras e o sinal de menos na digitação, como o teclado `numberWithOptions(decimal: true)` do mobile; o `parseNumeroBR` ainda lê negativos, para o schema dar a mensagem certa se o valor vier de outro lugar.
+- Texto que não é número (`1,2,3`) fica como foi digitado ao sair do campo, para a mensagem do schema apontar o que está errado.
+- Reescrever ao sair mostra como o valor foi lido: sem vírgula, o ponto é decimal (`1.234` vira `1,234`), como no mobile.
+- `MoneyInput`, `DecimalInput`, `IntegerInput` e `PercentInput` são controlados (`value` e `onValueChange` com o texto) e abrem o teclado numérico no celular (`inputMode="decimal"` ou `numeric`).
 
 ## Padrões de tela
 
@@ -249,13 +272,14 @@ Exclusões e ações de negócio (excluir, concluir ou cancelar venda) usam `Con
   open={aberto}
   onOpenChange={setAberto}
   title="Excluir gasto"
-  description={`Deseja excluir "${gasto.descricao}"? Isso afetará o custo de todas as receitas.`}
+  description={`Deseja excluir "${gasto.descricao}"?`}
+  consequence="Isso afetará o custo de todas as receitas." // opcional, numa linha própria
   confirmLabel="Excluir"
   onConfirm={async () => { ... }}   // rejeitar mantém aberto e mostra a mensagem
 />
 ```
 
-- O título diz a ação; a descrição cita o item entre aspas e, se houver, a consequência.
+- O título diz a ação; a descrição cita o item entre aspas; a `consequence`, se houver, aparece numa linha própria, em destaque, como o `\n` do mobile. As duas formam a descrição acessível do diálogo.
 - O botão de confirmar usa a variante `perigo` e descreve a ação ("Excluir", "Cancelar venda"), nunca "OK".
 - Ao falhar, o diálogo continua aberto, com a mensagem de erro num `Alert`. A mensagem vem de `getErrorMessage()` (FE-05): a do `ApiError`, ou "Não foi possível concluir a ação. Tente novamente." para qualquer outro erro.
 - O botão de voltar diz "Cancelar" (`cancelLabel` muda o texto). Durante `onConfirm`, os dois botões ficam inativos e o diálogo não fecha.

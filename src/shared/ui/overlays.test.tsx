@@ -402,3 +402,31 @@ describe('Toast', () => {
     await expectNoA11yViolations();
   });
 });
+
+describe('ConfirmDialog com consequência', () => {
+  it('cita o item e anuncia a consequência numa linha própria', async () => {
+    render(
+      <ConfirmDialog
+        title="Excluir gasto"
+        description='Deseja excluir "Energia Elétrica"?'
+        consequence="Isso afetará o custo de todas as receitas."
+        confirmLabel="Excluir"
+        trigger={<Button>Excluir Energia Elétrica</Button>}
+        onConfirm={() => undefined}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Excluir Energia Elétrica' }),
+    );
+
+    const dialog = screen.getByRole('dialog', { name: 'Excluir gasto' });
+    expect(dialog).toHaveAccessibleDescription(
+      'Deseja excluir "Energia Elétrica"? Isso afetará o custo de todas as receitas.',
+    );
+    expect(
+      within(dialog).getByText('Isso afetará o custo de todas as receitas.'),
+    ).toHaveClass('block');
+    await expectNoA11yViolations();
+  });
+});

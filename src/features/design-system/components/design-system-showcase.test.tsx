@@ -33,6 +33,7 @@ it('tem um só h1 e uma seção para cada grupo', () => {
     'Sobreposições',
     'Abas',
     'Estados',
+    'Listagem e formulário',
   ]);
 });
 

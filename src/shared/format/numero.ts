@@ -67,3 +67,12 @@ export function fracaoParaPercentual(fracao: number) {
   // Arredonda o ruído de ponto flutuante (0.07 * 100 = 7.000000000000001).
   return Number((fracao * 100).toFixed(10));
 }
+
+/**
+ * Margem digitada em pontos percentuais (`30`) na fração do contrato (`0.3`),
+ * para a função `to...Body`. Origem: `receitas_page.dart` (`margemRaw / 100`).
+ */
+export function percentualParaFracao(pontos: number) {
+  // Arredonda o ruído de ponto flutuante (7 / 100 pode virar 0.07000000000000001).
+  return Number((pontos / 100).toFixed(10));
+}

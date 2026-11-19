@@ -11,6 +11,11 @@ type ConfirmDialogProps = {
   title: string;
   /** Cita o item entre aspas e, se houver, a consequência. */
   description?: string;
+  /**
+   * O que muda além do item, numa linha própria e anunciada junto com a descrição:
+   * "Isso afetará o custo de todas as receitas."
+   */
+  consequence?: string;
   /** Descreve a ação ("Excluir", "Cancelar venda"), nunca "OK". */
   confirmLabel: string;
   cancelLabel?: string;
@@ -24,6 +29,7 @@ type ConfirmDialogProps = {
 export function ConfirmDialog({
   title,
   description,
+  consequence,
   confirmLabel,
   cancelLabel = 'Cancelar',
   onConfirm,
@@ -62,7 +68,19 @@ export function ConfirmDialog({
   return (
     <Dialog
       title={title}
-      description={description}
+      description={
+        consequence ? (
+          <>
+            {/* O espaço separa as frases no texto anunciado. */}
+            {description}{' '}
+            <span className="mt-2 block font-medium text-ink">
+              {consequence}
+            </span>
+          </>
+        ) : (
+          description
+        )
+      }
       trigger={trigger}
       open={open}
       onOpenChange={(next) => {
