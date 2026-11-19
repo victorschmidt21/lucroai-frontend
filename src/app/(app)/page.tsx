@@ -1,6 +1,9 @@
-import { TelaProvisoria } from '@/features/navegacao/components/tela-provisoria';
+import { PainelTela } from '@/features/painel/components/painel-tela';
+import { getUsuarioAtual } from '@/shared/auth/usuario-atual.server';
 
-/** Provisória: substituída pelo painel na FE-22. Sem `metadata.title`: a aba mostra "LucroAI". */
-export default function HomePage() {
-  return <TelaProvisoria title="LucroAI" subtitle="Seu painel financeiro" />;
+/** Painel (FE-22). Sem `metadata.title`: a aba mostra "LucroAI". */
+export default async function HomePage() {
+  const usuario = await getUsuarioAtual();
+
+  return <PainelTela empresa={usuario.empresa.nome} />;
 }
