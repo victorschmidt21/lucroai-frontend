@@ -1,11 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/errors';
+import { estoqueKeys } from '@/features/estoque/api/estoque.queries';
 import { receitasKeys } from '@/features/receitas/api/receitas.queries';
 import { insumosKeys } from '../api/insumos.queries';
-
-// `estoque` (FE-13) ainda não existe: a raiz vai pelo literal. Troque por
-// `estoqueKeys.all` quando ela chegar.
-const ESTOQUE_KEY = ['estoque'] as const;
 
 /**
  * Matriz de docs/api-integration.md#invalidação-após-mutações: o insumo novo cria
@@ -14,7 +11,7 @@ const ESTOQUE_KEY = ['estoque'] as const;
 export function invalidarAposMutacaoDeInsumo(queryClient: QueryClient) {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: insumosKeys.all }),
-    queryClient.invalidateQueries({ queryKey: ESTOQUE_KEY }),
+    queryClient.invalidateQueries({ queryKey: estoqueKeys.all }),
     queryClient.invalidateQueries({ queryKey: receitasKeys.all }),
   ]);
 }

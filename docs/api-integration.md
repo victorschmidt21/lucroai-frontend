@@ -348,19 +348,20 @@ O painel (FE-22) e a simulação (FE-21) não têm chave própria: usam as queri
 
 Toda mutação invalida, no `onSuccess`, o que ela pode ter alterado **no sistema inteiro**, devolvendo a `Promise`. A invalidação compara por prefixo: invalidar a raiz (`insumosKeys.all`) alcança listas e detalhes. Para invalidar a chave de outra funcionalidade, importe as chaves do `api/<outro>.queries.ts` dela, que é a única importação permitida entre funcionalidades (ver [architecture.md](architecture.md#regras-de-dependência)).
 
-| Mutação                                             | Invalida                         | Por quê                                                                                                                    |
-| --------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| criar, editar ou excluir insumo                     | `insumos`, `estoque`, `receitas` | insumo novo cria estoque; o custo das receitas depende do custo do insumo                                                  |
-| criar, editar ou excluir gasto indireto             | `gastos-indiretos`               | a lista também alimenta os chips do formulário de produção                                                                 |
-| criar, editar ou excluir receita                    | `receitas`                       | a mesma lista alimenta Vendas, Produções, Simulação e Painel                                                               |
-| registrar entrada de estoque                        | `estoque`, `insumos`             | saldo, status e histórico; o catalog atualiza `quantidadeDisponivel` por evento, com atraso (consistência eventual aceita) |
-| registrar produção                                  | `producoes`, `estoque`           | baixa dos insumos; as produções alimentam o estoque disponível de produto acabado (FE-17)                                  |
-| registrar venda                                     | `vendas`                         | histórico, painel e simulação                                                                                              |
-| concluir ou cancelar venda                          | `vendas`                         | histórico, painel e estoque disponível de produto acabado                                                                  |
-| simular cenário, preço de venda ou custo de N lotes | nada                             | não grava                                                                                                                  |
+| Mutação                                             | Invalida                          | Por quê                                                                                                                                                                   |
+| --------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| criar, editar ou excluir insumo                     | `insumos`, `estoque`, `receitas`  | insumo novo cria estoque; o custo das receitas depende do custo do insumo                                                                                                 |
+| criar, editar ou excluir gasto indireto             | `gastos-indiretos`                | a lista também alimenta os chips do formulário de produção                                                                                                                |
+| criar, editar ou excluir receita                    | `receitas`                        | a mesma lista alimenta Vendas, Produções, Simulação e Painel                                                                                                              |
+| registrar entrada de estoque                        | `estoque`, `insumos`              | saldo, status e histórico; o catalog atualiza `quantidadeDisponivel` por evento, com atraso: `insumos` é revalidado de novo 2 s depois                                    |
+| registrar produção                                  | `producoes`, `estoque`, `insumos` | baixa dos insumos (saldo e histórico); as produções alimentam o estoque disponível de produto acabado (FE-17); `insumos` é revalidado de novo 2 s depois, como na entrada |
+| registrar venda                                     | `vendas`                          | histórico, painel e simulação                                                                                                                                             |
+| concluir ou cancelar venda                          | `vendas`                          | histórico, painel e estoque disponível de produto acabado                                                                                                                 |
+| simular cenário, preço de venda ou custo de N lotes | nada                              | não grava                                                                                                                                                                 |
 
 ```ts
-// src/features/producoes/hooks/use-create-producao.ts (previsto na FE-15)
+// src/features/producoes/hooks/use-create-producao.ts (FE-15, resumido: o real
+// também revalida `insumos` de novo 2 s depois)
 export function useCreateProducao() {
   const queryClient = useQueryClient();
 
@@ -370,6 +371,7 @@ export function useCreateProducao() {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: producoesKeys.all }),
         queryClient.invalidateQueries({ queryKey: estoqueKeys.all }),
+        queryClient.invalidateQueries({ queryKey: insumosKeys.all }),
       ]),
   });
 }
@@ -436,20 +438,23 @@ Encontradas na análise do código e da API em execução. Cada uma diz o que a 
 19. **`GET /estoque/insumos/:id` de insumo inexistente** responde `404` "Insumo não encontrado" (não o `id: 0` do insumo sem registro). → Trate como 404 comum.
 20. **`POST /receitas/:id/preco-venda` sem arredondamento** devolve ruído de ponto flutuante (`preco_sugerido: 72.11200000000001`). → Formate com `formatMoeda`; não compare com `===`.
 21. **`PUT /receitas/:id` não remove a margem.** Campo omitido mantém o valor salvo, e `margem_lucro: null` passa na validação (`@IsOptional`) mas grava a margem nula sem limpar o `precoSugerido` antigo (o repositório Prisma ignora `undefined`). → A web não envia margem vazia (como o mobile), a prévia usa a margem salva nesse caso, e não há como apagar a margem pela tela; pedido ao backend: aceitar `null` e limpar o preço sugerido.
+22. **OVERVIEW do estoque documenta `observacao` na entrada**, mas o `RegistrarEntradaEstoqueDto` só tem `quantidade` e a movimentação não guarda observação; enviar o campo dá `400`. → A web não tem o campo "Observação" (FE-14); pedido ao backend: aceitar e guardar a observação, ou corrigir o OVERVIEW.
+23. **Produção não grava o rendimento nem o total de unidades.** Só `quantidade` (lotes), custos e rateios. → O detalhe da FE-15 calcula o total de unidades com o rendimento **atual** da receita; se a receita mudou o rendimento depois, o número diverge do usado no custo unitário gravado. Pedido ao backend: gravar `totalUnidades` na produção.
 
 ## Divergências entre as issues e o backend
 
 Vale o backend. As issues citadas devem seguir esta tabela.
 
-| Issue | O que a issue diz                                                     | O que o backend faz                                                       | O que a web faz                                           |
-| ----- | --------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                    | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400 | não mostra nem envia "Observação"                         |
-| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"               | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                   | uma chamada de estoque por insumo (lacuna 5)              |
-| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)"   | não há essa validação (lacuna 10)                                         | mostra qualquer erro devolvido; não há esse caso hoje     |
-| FE-17 | "o backend valida de novo ao processar o evento"                      | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)               | a validação no cliente é a barreira real                  |
-| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                      | `snake_case` (lacuna 15)                                                  | segue o DTO                                               |
-| FE-10 | valor > 0                                                             | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário (mais restrito, compatível)      |
-| FE-09 | valor pago > 0                                                        | aceita 0 (`@Min(0)`)                                                      | mantém > 0 no formulário                                  |
-| FE-09 | erro de exclusão "ex.: insumo usado em receita, se o backend recusar" | `DELETE /insumos/:id` não confere o uso em receitas (lacuna 13)           | mostra a mensagem de qualquer recusa; hoje só há o `404`  |
-| FE-07 | e-mail válido como no mobile (só confere o `@`)                       | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                    | o formulário usa `z.email()` ("Informe um e-mail válido") |
-| FE-12 | "custo invisível = 0 na implementação padrão"                         | soma o rateio de todos os gastos da empresa para 1 lote (lacuna 18)       | a prévia inclui o custo invisível, com a lista de gastos  |
+| Issue | O que a issue diz                                                     | O que o backend faz                                                           | O que a web faz                                                                           |
+| ----- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| FE-14 | `observacao` opcional "aceita pelo DTO do backend"                    | `RegistrarEntradaEstoqueDto` só tem `quantidade`, e campos extras dão 400     | não mostra nem envia "Observação"                                                         |
+| FE-13 | "confirme se `GET /insumos` já traz o estoque embutido"               | traz `quantidadeDisponivel`, mas não `quantidadeMinima`                       | uma chamada de estoque por insumo (lacuna 5)                                              |
+| FE-15 | "mensagem de erro do backend (ex.: estoque de insumo insuficiente)"   | não há essa validação (lacuna 10)                                             | mostra qualquer erro devolvido; não há esse caso hoje                                     |
+| FE-15 | invalidar `vendas/estoque-disponivel` (FE-17) e o `painel`            | não há rota de estoque de produto acabado (lacuna 6) nem de painel (lacuna 4) | invalida `producoes`, `estoque` e `insumos`, que são as fontes desses cálculos no cliente |
+| FE-17 | "o backend valida de novo ao processar o evento"                      | valida, mas a venda fica `CONCLUIDA` mesmo assim (lacuna 9)                   | a validação no cliente é a barreira real                                                  |
+| FE-20 | resposta de custo de N lotes conforme o OVERVIEW                      | `snake_case` (lacuna 15)                                                      | segue o DTO                                                                               |
+| FE-10 | valor > 0                                                             | aceita 0 (`@Min(0)`)                                                          | mantém > 0 no formulário (mais restrito, compatível)                                      |
+| FE-09 | valor pago > 0                                                        | aceita 0 (`@Min(0)`)                                                          | mantém > 0 no formulário                                                                  |
+| FE-09 | erro de exclusão "ex.: insumo usado em receita, se o backend recusar" | `DELETE /insumos/:id` não confere o uso em receitas (lacuna 13)               | mostra a mensagem de qualquer recusa; hoje só há o `404`                                  |
+| FE-07 | e-mail válido como no mobile (só confere o `@`)                       | `LoginDto` tem `@IsEmail()`; `joao@x` dá 400 em inglês                        | o formulário usa `z.email()` ("Informe um e-mail válido")                                 |
+| FE-12 | "custo invisível = 0 na implementação padrão"                         | soma o rateio de todos os gastos da empresa para 1 lote (lacuna 18)           | a prévia inclui o custo invisível, com a lista de gastos                                  |
