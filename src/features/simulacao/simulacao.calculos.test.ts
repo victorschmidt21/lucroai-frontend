@@ -31,9 +31,9 @@ describe('precoBaseDaReceita', () => {
 
   it('sem preço sugerido, usa custo × (1 + margem)', () => {
     expect(precoBaseDaReceita({ ...receita, precoSugerido: 0 })).toBe(3);
-    expect(
-      precoBaseDaReceita({ id: 1, rendimento: 1, custoUnitario: 4 }),
-    ).toBe(4);
+    expect(precoBaseDaReceita({ id: 1, rendimento: 1, custoUnitario: 4 })).toBe(
+      4,
+    );
   });
 });
 
@@ -44,8 +44,12 @@ describe('calcularBase', () => {
         { receitaId: 1, quantidade: 4, precoUnitarioReal: 5 },
         { receitaId: 2, quantidade: 9, precoUnitarioReal: 99 },
       ]),
-      venda('CONCLUIDA', [{ receitaId: 1, quantidade: 6, precoUnitarioReal: 4 }]),
-      venda('PENDENTE', [{ receitaId: 1, quantidade: 50, precoUnitarioReal: 1 }]),
+      venda('CONCLUIDA', [
+        { receitaId: 1, quantidade: 6, precoUnitarioReal: 4 },
+      ]),
+      venda('PENDENTE', [
+        { receitaId: 1, quantidade: 50, precoUnitarioReal: 1 },
+      ]),
       venda('CANCELADA', [
         { receitaId: 1, quantidade: 50, precoUnitarioReal: 1 },
       ]),
@@ -96,7 +100,11 @@ describe('faixaPreco', () => {
 
   it('a base é pelo menos custo × 1,25', () => {
     // base = max(1, 10 × 1,25) = 12,5; max = max(27,5; 30) = 30
-    const faixa = faixaPreco({ ...receita, custoUnitario: 10, precoSugerido: 1 });
+    const faixa = faixaPreco({
+      ...receita,
+      custoUnitario: 10,
+      precoSugerido: 1,
+    });
 
     expect(faixa.min).toBe(7.5);
     expect(faixa.max).toBe(30);
