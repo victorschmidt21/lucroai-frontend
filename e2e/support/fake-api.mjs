@@ -101,6 +101,11 @@ const routes = {
   // troca a lista vazia pelos insumos do seed.
   'GET /insumos': (req) =>
     isAutenticado(req) ? [200, envelope([])] : NAO_AUTENTICADO,
+  // recipe-service e sales-service: listas vazias para o painel da Home (FE-22).
+  'GET /receitas': (req) =>
+    isAutenticado(req) ? [200, envelope([])] : NAO_AUTENTICADO,
+  'GET /vendas': (req) =>
+    isAutenticado(req) ? [200, envelope([])] : NAO_AUTENTICADO,
 };
 
 async function readJson(req) {
