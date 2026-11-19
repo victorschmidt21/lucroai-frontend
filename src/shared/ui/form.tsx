@@ -24,7 +24,7 @@ import { getErrorMessage } from '@/shared/api/errors';
 import { Alert } from './alert';
 import { Button, buttonClasses } from './button';
 import { Combobox } from './combobox';
-import { Modal } from './dialog';
+import { Modal, RESPONSIVE_DIALOG_CLASSES } from './dialog';
 import { Input } from './input';
 import {
   DecimalInput,
@@ -144,14 +144,6 @@ export function Form<Input extends FieldValues, Output>({
   return <FormBody {...props} cancel={cancel} />;
 }
 
-/**
- * Drawer de baixo no celular (como o `showModalBottomSheet` do mobile) e Dialog
- * centralizado a partir de `md`. Só CSS: o mesmo conteúdo serve aos dois, sem
- * depender da largura no servidor.
- */
-const FORM_DIALOG_CLASSES =
-  'inset-x-0 bottom-0 max-h-[90dvh] animate-gaveta-baixo rounded-t-xl pb-[max(1.25rem,env(safe-area-inset-bottom))] md:inset-x-auto md:top-1/2 md:bottom-auto md:left-1/2 md:max-h-[calc(100dvh-2rem)] md:w-[calc(100%-2rem)] md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:animate-subir md:rounded-xl md:pb-5';
-
 type FormDialogProps<Input extends FieldValues, Output> = FormBaseProps<
   Input,
   Output
@@ -195,7 +187,7 @@ export function FormDialog<Input extends FieldValues, Output>({
       onOpenChange={(next) => {
         if (!isPending) onOpenChange(next);
       }}
-      contentClassName={FORM_DIALOG_CLASSES}
+      contentClassName={RESPONSIVE_DIALOG_CLASSES}
     >
       <FormBody
         {...props}
