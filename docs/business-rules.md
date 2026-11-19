@@ -453,6 +453,14 @@ total    = Σ subtotal                       // o backend grava round2(Σ quanti
 | Estoque insuficiente  | "Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções."    | igual, com link para `/producoes`         |
 | Outros erros          | mensagem do backend                                                                         | `getErrorMessage(error)`                  |
 
+Na web (FE-16):
+
+- Os erros do registro aparecem num `Alert` dentro do cartão do carrinho (o mobile usa `SnackBar`), e o carrinho é mantido. No estoque insuficiente, o `Alert` traz o link "Ir para Produções" (a ação "Produção" do `SnackBar`).
+- Carrinho vazio: o cartão continua visível, com "0 itens", "Adicione produtos para registrar a venda." e "Registrar Venda" desabilitado (o mobile esconde o cartão).
+- O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
+- Depois de registrar, a tela abre a confirmação (FE-17); o Toast provisório "Venda #<id> registrada como pendente." saiu.
+- A aba "Histórico" é a da FE-18 ([histórico e resumo](#vendas-histórico-e-resumo)).
+
 ### Detector de estoque insuficiente
 
 `isEstoqueInsuficiente(error)` (`src/shared/api/`, FE-05) reproduz `_isStockError` de `vendas_page.dart`: normaliza a mensagem (minúsculas, sem acentos) e retorna `true` se ela contém `estoque` **e** um destes: `insuficiente`, `indisponivel`, `nao ha`, `sem estoque`. É o único caso em que a tela decide pelo texto da mensagem.
@@ -497,6 +505,9 @@ Diferenças em relação ao mobile, registradas como decisão:
 1. **Vendas consideradas.** O mobile soma só as vendas concluídas do período carregado no histórico (o mês atual), o que superestima o disponível. A web busca `GET /vendas?status=CONCLUIDA` sem período, porque as produções também não têm período.
 2. **Mesma receita em duas linhas.** O mobile confere cada item isoladamente. A web soma as quantidades da mesma receita antes de comparar.
 3. **Rendimento.** O estoque real usa o rendimento da receita no momento da produção; a produção não guarda esse valor, então o cálculo usa o rendimento atual (limitação também do mobile).
+4. **Falha na consulta.** O mobile ignora a falha item a item; a web consulta juntas as receitas, as vendas concluídas e as produções de cada receita e, se qualquer uma falhar, segue com a conclusão sem conferir nenhum item.
+5. **Depois de concluir ou cancelar, o diálogo continua aberto**, com o status devolvido (Badge "Concluída" ou "Cancelada") e só o botão "Fechar"; o mobile fecha a folha. Assim a tela mostra o status real, consultado de novo.
+6. **Disponível negativo** (vendas concluídas acima do produzido) aparece como está na mensagem ("disponível -20"), como no mobile.
 
 ### Textos
 
@@ -508,7 +519,7 @@ Diferenças em relação ao mobile, registradas como decisão:
 | Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente) |
 | Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | igual                                                           |
 
-Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido.
+Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido. Na web: `ConfirmacaoVenda`, `useVerificarEstoqueParaVenda` e `useAtualizarStatusVenda` (`features/vendas/`); o histórico (FE-18) abre o mesmo componente com a venda `PENDENTE`.
 
 ## Vendas: histórico e resumo
 
@@ -554,6 +565,14 @@ Exemplo do OVERVIEW: pão a R$ 0,50 com custo R$ 0,07 → `86,0%`.
 | Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                              |
 | Vazio  | "Nenhuma venda encontrada no período."    | igual                                                                  |
 | Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar novamente"                                          |
+
+Na web (FE-18):
+
+- Sem `dataInicio`/`dataFim` na URL, vale o mês atual no fuso do navegador; a URL só recebe as datas quando o usuário muda o período. Data inválida ou período invertido vindo da URL voltam ao padrão.
+- Com a data inicial depois da final (ou uma data apagada), a busca anterior continua na tela e o erro aparece no campo; nada vai para a URL.
+- O resumo usa as vendas devolvidas pelo filtro (com status "Pendente" ou "Cancelada", ele fica zerado).
+- Venda sem `total` usa `round2(Σ quantidade × precoUnitarioReal)`, como o `VendaModel.fromJson` do mobile.
+- Cada linha tem "Confirmar" (só `PENDENTE`) e "Ver detalhes", que abre a gaveta "Venda #<id>" com a data, o status, os itens (nome ou "Produto #<id>", `qtd × preço`, "Custo unitário", "Margem realizada", subtotal) e o total. O detalhe não existe no mobile.
 
 ## Custos: cálculo real
 

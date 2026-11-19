@@ -91,4 +91,17 @@ export function Dialog({
   );
 }
 
+/**
+ * Drawer de baixo no celular (como o `showModalBottomSheet` do mobile) e Dialog
+ * centralizado a partir de `md`. Só CSS: o mesmo conteúdo serve aos dois, sem
+ * depender da largura no servidor. Usado pelo `FormDialog` e pelo `ResponsiveDialog`.
+ */
+export const RESPONSIVE_DIALOG_CLASSES =
+  'inset-x-0 bottom-0 max-h-[90dvh] animate-gaveta-baixo rounded-t-xl pb-[max(1.25rem,env(safe-area-inset-bottom))] md:inset-x-auto md:top-1/2 md:bottom-auto md:left-1/2 md:max-h-[calc(100dvh-2rem)] md:w-[calc(100%-2rem)] md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:animate-subir md:rounded-xl md:pb-5';
+
+/** Drawer de baixo no celular e Dialog a partir de `md` (confirmação de venda, FE-17). */
+export function ResponsiveDialog(props: ModalProps) {
+  return <Modal {...props} contentClassName={RESPONSIVE_DIALOG_CLASSES} />;
+}
+
 export const DialogClose = RadixDialog.Close;

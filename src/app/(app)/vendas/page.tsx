@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
-import { TelaProvisoria } from '@/features/navegacao/components/tela-provisoria';
+import { VendasTela } from '@/features/vendas/components/vendas-tela';
+import { vendasSearchSchema } from '@/features/vendas/schemas/vendas-search.schema';
 
 export const metadata: Metadata = { title: 'Vendas' };
 
-/** Provisória: substituída pelas vendas nas FE-16 a FE-18. */
-export default function VendasPage() {
-  return (
-    <TelaProvisoria
-      title="Vendas"
-      subtitle="Registre vendas e acompanhe o histórico"
-    />
-  );
+/**
+ * Abas "Registrar" (FE-16) e "Histórico" (FE-18), em `aba` na URL, com o
+ * período (`dataInicio`, `dataFim`) e o `status` do histórico.
+ */
+export default async function VendasPage({
+  searchParams,
+}: PageProps<'/vendas'>) {
+  const busca = vendasSearchSchema.parse(await searchParams);
+
+  return <VendasTela busca={busca} />;
 }
