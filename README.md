@@ -1,0 +1,176 @@
+# LucroAI Frontend
+
+Interface web do LucroAI, que substitui o app Flutter [`lucroai_mobile`](https://github.com/GrupoDoisENG/lucroai_mobile). Construída com [Next.js](https://nextjs.org/docs) (App Router, TypeScript `strict`, ESM) e [Tailwind CSS](https://tailwindcss.com/docs) v4, rodando em containers Docker.
+
+## Pré-requisitos
+
+- [Docker](https://docs.docker.com/get-docker/) com Docker Compose v2.24+
+- [Node.js](https://nodejs.org) 24 (para rodar lint, testes e o Playwright fora do container, e o seed do backend)
+- [Git](https://git-scm.com/)
+
+## Subindo o ambiente do zero
+
+O front e o back ficam em repositórios separados, cada um com o seu compose. O front alcança os cinco microsserviços pelas portas que o backend publica no host (3001 a 3005), então a ordem de subida não importa. O front usa a porta **3000**.
+
+### 1. Backend
+
+No repositório [`lucroai-backend`](https://github.com/GrupoDoisENG/lucroai-backend), em outro terminal:
+
+```bash
+git clone https://github.com/GrupoDoisENG/lucroai-backend.git
+cd lucroai-backend
+cp .env.example .env
+docker compose up -d
+```
+
+As migrations rodam sozinhas na subida de cada serviço. Confira se os cinco estão no ar abrindo o Swagger de um deles, por exemplo [localhost:3001/docs](http://localhost:3001/docs).
+
+**Dados de exemplo (seed).** O seed roda no host, não no container, e grava no banco dos serviços publicado na porta 5433. Cada serviço precisa das próprias dependências e do próprio `.env`:
+
+```bash
+for s in auth catalog recipe operations sales; do
+  cp services/$s-service/.env.example services/$s-service/.env
+  npm install --prefix services/$s-service
+  npm run db:generate --prefix services/$s-service
+done
+npm run seed:all
+```
+
+Rode o seed uma vez, num banco vazio: ele cria registros, não os atualiza. Depois dele, entre com `joao@padariapaofeliz.com.br` e senha `123456` (empresa Padaria Pão Feliz).
+
+### 2. Frontend
+
+Neste repositório:
+
+```bash
+git clone https://github.com/victorschmidt21/lucroai-frontend.git
+cd lucroai-frontend
+cp .env.example .env
+docker compose up --build
+```
+
+### 3. Confira
+
+| O quê           | Endereço                                                      |
+| --------------- | ------------------------------------------------------------- |
+| Aplicação       | [localhost:3000](http://localhost:3000)                       |
+| Health do front | [localhost:3000/api/health](http://localhost:3000/api/health) |
+| auth-service    | [localhost:3001/docs](http://localhost:3001/docs)             |
+| catalog-service | [localhost:3002/docs](http://localhost:3002/docs)             |
+| recipe-service  | [localhost:3003/docs](http://localhost:3003/docs)             |
+| operations      | [localhost:3004/docs](http://localhost:3004/docs)             |
+| sales-service   | [localhost:3005/docs](http://localhost:3005/docs)             |
+
+Com tudo no ar, o health responde:
+
+```json
+{
+  "status": "ok",
+  "services": {
+    "auth": { "reachable": true },
+    "catalog": { "reachable": true },
+    "recipe": { "reachable": true },
+    "operations": { "reachable": true },
+    "sales": { "reachable": true }
+  }
+}
+```
+
+`reachable: false` indica que o front está no ar, mas não alcançou aquele serviço. Confira, no backend, `docker compose ps` e `docker compose logs <serviço>` (por exemplo `docker compose logs sales-service`). Como o backend não tem rota de health, o front consulta o `/docs-json` (Swagger) de cada serviço, e qualquer resposta HTTP conta como alcançado.
+
+Alterações em `src/` e `public/` recarregam sozinhas, por polling (`WATCH_POLL_INTERVAL_MS`), porque eventos de arquivo não atravessam bind mounts no Docker Desktop. O polling consome mais CPU e I/O; se pesar, rode o front [fora do Docker](#desenvolvimento-local-fora-do-docker). Depois de mudar dependências ou arquivos de configuração da raiz, suba de novo com `docker compose up --build`.
+
+Para parar: `docker compose down`.
+
+## Variáveis de ambiente
+
+Todas estão documentadas em [`.env.example`](.env.example) e são validadas com Zod em `src/shared/config/env.schema.ts`. Se alguma obrigatória faltar ou for inválida, a aplicação não inicia e mostra quais estão com problema:
+
+```text
+Variáveis de ambiente inválidas. Confira o .env.example.
+✖ SALES_API_URL é obrigatória e deve ser uma URL http(s) válida
+  → at SALES_API_URL
+```
+
+| Variável                    | Obrigatória | Padrão no compose                    | Descrição                                            |
+| --------------------------- | ----------- | ------------------------------------ | ---------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`       | sim         | `http://localhost:3000`              | URL pública do front; incorporada ao bundle no build |
+| `AUTH_API_URL`              | sim         | valor de `DOCKER_AUTH_API_URL`       | auth-service: empresas, usuários e login             |
+| `CATALOG_API_URL`           | sim         | valor de `DOCKER_CATALOG_API_URL`    | catalog-service: insumos e gastos indiretos          |
+| `RECIPE_API_URL`            | sim         | valor de `DOCKER_RECIPE_API_URL`     | recipe-service: receitas, custos e simulação         |
+| `OPERATIONS_API_URL`        | sim         | valor de `DOCKER_OPERATIONS_API_URL` | operations-service: estoque e produções              |
+| `SALES_API_URL`             | sim         | valor de `DOCKER_SALES_API_URL`      | sales-service: vendas                                |
+| `DOCKER_AUTH_API_URL`       | compose     | `http://host.docker.internal:3001`   | auth-service visto de dentro do container            |
+| `DOCKER_CATALOG_API_URL`    | compose     | `http://host.docker.internal:3002`   | catalog-service visto de dentro do container         |
+| `DOCKER_RECIPE_API_URL`     | compose     | `http://host.docker.internal:3003`   | recipe-service visto de dentro do container          |
+| `DOCKER_OPERATIONS_API_URL` | compose     | `http://host.docker.internal:3004`   | operations-service visto de dentro do container      |
+| `DOCKER_SALES_API_URL`      | compose     | `http://host.docker.internal:3005`   | sales-service visto de dentro do container           |
+| `WEB_PORT`                  | compose     | `3000`                               | Porta do front no host                               |
+
+As URLs dos serviços são usadas só no servidor, sem prefixo de versão (o backend não usa `/v1`). Dentro do compose, cada `*_API_URL` recebe o valor do `DOCKER_*_API_URL` correspondente, porque `localhost` no container é o próprio container. Os `*_API_URL` do `.env` valem para o `npm run dev` fora do Docker.
+
+Variáveis de servidor são lidas com `getServerEnv()` (`env.server.ts`), que não pode ser importado por código do navegador. Variáveis públicas vêm de `publicEnv` (`env.public.ts`).
+
+## Desenvolvimento local (fora do Docker)
+
+```bash
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+## Scripts
+
+| Comando                | O que faz                                   |
+| ---------------------- | ------------------------------------------- |
+| `npm run dev`          | Servidor de desenvolvimento na porta 3000   |
+| `npm run build`        | Build de produção (exige `.env` preenchido) |
+| `npm run lint`         | oxlint                                      |
+| `npm run format`       | Formata com Prettier                        |
+| `npm run format:check` | Confere a formatação                        |
+| `npm run typecheck`    | Gera os tipos de rota e roda o `tsc`        |
+| `npm test`             | Testes unitários e de componente (Vitest)   |
+| `npm run test:cov`     | Testes com relatório de cobertura           |
+| `npm run test:e2e`     | Testes e2e (Playwright)                     |
+
+Antes do primeiro `npm run test:e2e`, instale o navegador com `npx playwright install chromium`. O Playwright sobe o servidor sozinho, ou reaproveita o que já estiver na porta 3000. Os testes e2e não dependem do backend no ar.
+
+## Estrutura
+
+```text
+src/
+  app/            rotas do App Router (inclui api/health)
+  features/       módulos por funcionalidade
+  shared/         código compartilhado (ex.: config/ com a validação de ambiente)
+  test/           utilitários de teste
+  instrumentation.ts   valida o ambiente ao subir o servidor
+e2e/              testes do Playwright
+```
+
+## Imagem de produção
+
+O `Dockerfile` é multi-stage. O target `development` é usado pelo compose; o target `production` gera uma imagem só com o servidor [`standalone`](https://nextjs.org/docs/app/api-reference/config/next-config-js/output). Como `NEXT_PUBLIC_APP_URL` é incorporada no build, ela é um argumento da imagem, enquanto as URLs dos serviços são informadas ao executar:
+
+```bash
+docker build --target production --build-arg NEXT_PUBLIC_APP_URL=https://app.exemplo.com -t lucroai-frontend .
+docker run -p 3000:3000 \
+  -e AUTH_API_URL=https://auth.exemplo.com \
+  -e CATALOG_API_URL=https://catalogo.exemplo.com \
+  -e RECIPE_API_URL=https://receitas.exemplo.com \
+  -e OPERATIONS_API_URL=https://operacoes.exemplo.com \
+  -e SALES_API_URL=https://vendas.exemplo.com \
+  lucroai-frontend
+```
+
+## Solução de problemas
+
+**`Cannot find native binding` ao rodar o Vitest.** Bug do npm com dependências opcionais ([npm/cli#4828](https://github.com/npm/cli/issues/4828)): `npm install <pacote>` ou `npm uninstall <pacote>` com o `node_modules` já existente pode remover os binários nativos do `package-lock.json`. Depois de alterar dependências, confira se o lock ainda tem as entradas `@rolldown/binding-*`. Se não tiver, regenere:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Porta 3000 ocupada.** Defina outra em `WEB_PORT` e ajuste `NEXT_PUBLIC_APP_URL` no `.env`. Não use 3001 a 3005, que são dos serviços do backend.
+
+**Health com todos os serviços `reachable: false` no Docker.** Confira se o backend está no ar (`curl http://localhost:3001/docs` no host). No Linux, o `host.docker.internal` depende do `extra_hosts` do compose, já configurado.

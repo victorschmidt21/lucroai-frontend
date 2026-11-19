@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: .
+      target: development
+    environment:
+      AUTH_API_URL: ${DOCKER_AUTH_API_URL:-http://host.docker.internal:3001}
+      CATALOG_API_URL: ${DOCKER_CATALOG_API_URL:-http://host.docker.internal:3002}
+      RECIPE_API_URL: ${DOCKER_RECIPE_API_URL:-http://host.docker.internal:3003}
+      OPERATIONS_API_URL: ${DOCKER_OPERATIONS_API_URL:-http://host.docker.internal:3004}
+      SALES_API_URL: ${DOCKER_SALES_API_URL:-http://host.docker.internal:3005}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      WATCH_POLL_INTERVAL_MS: 1000
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    # Alcança os serviços publicados no host pelo compose do backend; necessário no Linux.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public

@@ -1,0 +1,25 @@
+# dependências e build
+node_modules
+.next
+coverage
+next-env.d.ts
+
+# testes e2e
+playwright-report
+test-results
+
+# variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# logs / SO / IDE
+*.log
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# TypeScript incremental
+*.tsbuildinfo
+e2e/.auth
