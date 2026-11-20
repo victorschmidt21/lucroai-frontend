@@ -3,6 +3,7 @@ import type { LoginResponse } from '@/shared/api/contracts/auth';
 import type { GastoIndireto, Insumo } from '@/shared/api/contracts/catalog';
 import type {
   Estoque,
+  EstoqueProduto,
   MovimentacaoEstoque,
   Producao,
 } from '@/shared/api/contracts/operations';
@@ -13,25 +14,25 @@ import type {
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
 import type { Venda } from '@/shared/api/contracts/sales';
-import type { Servico } from '@/shared/api/servicos';
 
-/** URL do proxy BFF, sem depender da origem: `*\/api/backend/catalog/insumos`. */
-export function apiUrl(servico: Servico, caminho: string) {
-  return `*/api/backend/${servico}${caminho}`;
+/** URL do proxy BFF, sem depender da origem: `*\/api/backend/insumos`. */
+export function apiUrl(caminho: string) {
+  return `*/api/backend${caminho}`;
 }
 
-/** Corpo como o `HateoasInterceptor` devolve (os `links` são ignorados pela web). */
-export function envelope<T>(data: T) {
-  return { data, links: {} };
-}
-
-/** Erro no formato padrão do NestJS. */
-export function nestError(
+/** Erro no formato da API (`AllExceptionsFilter`). */
+export function apiErrorBody(
   statusCode: number,
   message: string | string[],
-  error?: string,
+  code?: string,
 ) {
-  return { statusCode, message, ...(error ? { error } : {}) };
+  return {
+    statusCode,
+    ...(code ? { code } : {}),
+    message,
+    path: '/',
+    timestamp: '2026-11-19T12:00:00.000Z',
+  };
 }
 
 /**
@@ -40,36 +41,38 @@ export function nestError(
  * aponta os testes desatualizados. `undefined` é resposta vazia (204).
  */
 export type RotasDaApi = {
-  'POST auth /auth/login': LoginResponse;
-  'GET catalog /insumos': Insumo[];
-  'GET catalog /insumos/:id': Insumo;
-  'POST catalog /insumos': Insumo;
-  'PATCH catalog /insumos/:id': Insumo;
-  'DELETE catalog /insumos/:id': undefined;
-  'GET catalog /gastos-indiretos': GastoIndireto[];
-  'GET catalog /gastos-indiretos/:id': GastoIndireto;
-  'POST catalog /gastos-indiretos': GastoIndireto;
-  'PUT catalog /gastos-indiretos/:id': GastoIndireto;
-  'DELETE catalog /gastos-indiretos/:id': undefined;
-  'GET recipe /receitas': Receita[];
-  'GET recipe /receitas/:id': Receita;
-  'POST recipe /receitas': Receita;
-  'PUT recipe /receitas/:id': Receita;
-  'DELETE recipe /receitas/:id': undefined;
-  'GET recipe /receitas/:id/custo': ReceitaCusto;
-  'POST recipe /receitas/:id/custo/simular': ReceitaCusto;
-  'POST recipe /receitas/:id/simular': SimulacaoCenario;
-  'POST recipe /receitas/:id/preco-venda': PrecoVenda;
-  'GET operations /estoque/insumos/:id': Estoque;
-  'POST operations /estoque/insumos/:id/entrada': Estoque;
-  'GET operations /estoque/insumos/:id/movimentacoes': MovimentacaoEstoque[];
-  'GET operations /producoes': Producao[];
-  'GET operations /producoes/:id': Producao;
-  'POST operations /producoes': Producao;
-  'GET sales /vendas': Venda[];
-  'GET sales /vendas/:id': Venda;
-  'POST sales /vendas': Venda;
-  'PATCH sales /vendas/:id/status': Venda;
+  'POST /auth/login': LoginResponse;
+  'GET /insumos': Insumo[];
+  'GET /insumos/:id': Insumo;
+  'POST /insumos': Insumo;
+  'PATCH /insumos/:id': Insumo;
+  'DELETE /insumos/:id': undefined;
+  'GET /gastos-indiretos': GastoIndireto[];
+  'GET /gastos-indiretos/:id': GastoIndireto;
+  'POST /gastos-indiretos': GastoIndireto;
+  'PUT /gastos-indiretos/:id': GastoIndireto;
+  'DELETE /gastos-indiretos/:id': undefined;
+  'GET /receitas': Receita[];
+  'GET /receitas/:id': Receita;
+  'POST /receitas': Receita;
+  'PUT /receitas/:id': Receita;
+  'DELETE /receitas/:id': undefined;
+  'GET /receitas/:id/custo': ReceitaCusto;
+  'POST /receitas/:id/custo/simular': ReceitaCusto;
+  'POST /receitas/:id/simular': SimulacaoCenario;
+  'POST /receitas/:id/preco-venda': PrecoVenda;
+  'GET /estoque/insumos': Estoque[];
+  'POST /estoque/insumos/:id/entrada': Estoque;
+  'PATCH /estoque/insumos/:id/minimo': Estoque;
+  'GET /estoque/insumos/:id/movimentacoes': MovimentacaoEstoque[];
+  'GET /estoque/produtos': EstoqueProduto[];
+  'GET /producoes': Producao[];
+  'GET /producoes/:id': Producao;
+  'POST /producoes': Producao;
+  'GET /vendas': Venda[];
+  'GET /vendas/:id': Venda;
+  'POST /vendas': Venda;
+  'PATCH /vendas/:id/status': Venda;
 };
 
 export type RotaDaApi = keyof RotasDaApi;
@@ -92,20 +95,19 @@ const STATUS_PADRAO = {
 };
 
 function separarRota(rota: RotaDaApi) {
-  const [method, servico, caminho] = rota.split(' ') as [
+  const [method, caminho] = rota.split(' ') as [
     keyof typeof STATUS_PADRAO,
-    Servico,
     string,
   ];
 
-  return { method, servico, caminho };
+  return { method, caminho };
 }
 
 function handlerDe(
   rota: RotaDaApi,
   responder: (contexto: Contexto) => Promise<Response> | Response,
 ) {
-  const { method, servico, caminho } = separarRota(rota);
+  const { method, caminho } = separarRota(rota);
   const criar = {
     GET: http.get,
     POST: http.post,
@@ -114,18 +116,18 @@ function handlerDe(
     DELETE: http.delete,
   }[method];
 
-  return criar(apiUrl(servico, caminho), ({ request, params }) =>
+  return criar(apiUrl(caminho), ({ request, params }) =>
     responder({ request, params }),
   );
 }
 
 /**
- * Handler do MSW de uma rota da API, com a resposta no envelope e o status
+ * Handler do MSW de uma rota da API, com a resposta em JSON puro e o status
  * padrão do NestJS (201 nos `POST`, 204 nos `DELETE`). A resposta pode ser uma
  * função, para ler o corpo ou os parâmetros da requisição:
  *
  * ```ts
- * server.use(mockApi('GET catalog /insumos', [makeInsumo()]));
+ * server.use(mockApi('GET /insumos', [makeInsumo()]));
  * ```
  */
 export function mockApi<R extends RotaDaApi>(
@@ -146,19 +148,19 @@ export function mockApi<R extends RotaDaApi>(
       return new HttpResponse(null, { status });
     }
 
-    return HttpResponse.json(envelope(data) as DefaultBodyType, { status });
+    return HttpResponse.json(data as DefaultBodyType, { status });
   });
 }
 
-/** Handler que responde o erro padrão do NestJS na rota. */
+/** Handler que responde o erro no formato da API na rota. */
 export function mockApiErro(
   rota: RotaDaApi,
   statusCode: number,
   message: string | string[],
-  error?: string,
+  code?: string,
 ) {
   return handlerDe(rota, () =>
-    HttpResponse.json(nestError(statusCode, message, error), {
+    HttpResponse.json(apiErrorBody(statusCode, message, code), {
       status: statusCode,
     }),
   );

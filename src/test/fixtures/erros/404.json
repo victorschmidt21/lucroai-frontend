@@ -1,5 +1,7 @@
 {
+  "statusCode": 404,
+  "code": "INSUMO_NAO_ENCONTRADO",
   "message": "Insumo não encontrado",
-  "error": "Not Found",
-  "statusCode": 404
+  "path": "/insumos/99999",
+  "timestamp": "2026-11-20T16:51:57.413Z"
 }

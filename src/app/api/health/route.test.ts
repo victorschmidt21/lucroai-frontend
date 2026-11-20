@@ -4,16 +4,10 @@ import { GET } from './route';
 
 vi.mock('server-only', () => ({}));
 
-const urls = {
-  AUTH_API_URL: 'http://auth.test:3001',
-  CATALOG_API_URL: 'http://catalog.test:3002',
-  RECIPE_API_URL: 'http://recipe.test:3003',
-  OPERATIONS_API_URL: 'http://operations.test:3004',
-  SALES_API_URL: 'http://sales.test:3005',
-};
+const API_URL = 'http://api.test:3100';
 
 beforeEach(() => {
-  for (const [name, value] of Object.entries(urls)) vi.stubEnv(name, value);
+  vi.stubEnv('API_URL', API_URL);
 });
 
 afterEach(() => {
@@ -21,11 +15,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function requestedUrls(fetchMock: ReturnType<typeof vi.fn<typeof fetch>>) {
-  return fetchMock.mock.calls.map(([input]) => String(input));
-}
-
-it('informa todos os serviços no ar quando todos respondem', async () => {
+it('informa a API no ar quando ela responde', async () => {
   const fetchMock = vi
     .fn<typeof fetch>()
     .mockImplementation(async () => new Response('{}'));
@@ -36,22 +26,14 @@ it('informa todos os serviços no ar quando todos respondem', async () => {
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual({
     status: 'ok',
-    services: {
-      auth: { reachable: true },
-      catalog: { reachable: true },
-      recipe: { reachable: true },
-      operations: { reachable: true },
-      sales: { reachable: true },
-    },
+    api: { reachable: true },
   });
-  expect(requestedUrls(fetchMock).toSorted()).toEqual(
-    Object.values(urls)
-      .map((url) => `${url}/docs-json`)
-      .toSorted(),
-  );
+  expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
+    `${API_URL}/health`,
+  ]);
 });
 
-it('considera o serviço alcançado mesmo quando ele responde com erro', async () => {
+it('considera a API alcançada mesmo quando ela responde com erro', async () => {
   vi.stubGlobal(
     'fetch',
     vi
@@ -61,42 +43,13 @@ it('considera o serviço alcançado mesmo quando ele responde com erro', async (
 
   const response = await GET();
 
-  await expect(response.json()).resolves.toMatchObject({
-    services: { auth: { reachable: true }, sales: { reachable: true } },
-  });
-});
-
-it('continua respondendo 200 e marca fora do ar só os serviços que falharam', async () => {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn<typeof fetch>().mockImplementation(async (input) => {
-      const url = String(input);
-      if (
-        url.startsWith(urls.RECIPE_API_URL) ||
-        url.startsWith(urls.SALES_API_URL)
-      ) {
-        throw new TypeError('fetch failed');
-      }
-      return new Response('{}');
-    }),
-  );
-
-  const response = await GET();
-
-  expect(response.status).toBe(200);
   await expect(response.json()).resolves.toEqual({
     status: 'ok',
-    services: {
-      auth: { reachable: true },
-      catalog: { reachable: true },
-      recipe: { reachable: false },
-      operations: { reachable: true },
-      sales: { reachable: false },
-    },
+    api: { reachable: true },
   });
 });
 
-it('marca todos fora do ar quando nenhum serviço responde', async () => {
+it('continua respondendo 200 e marca a API fora do ar quando ela não responde', async () => {
   vi.stubGlobal(
     'fetch',
     vi
@@ -107,10 +60,8 @@ it('marca todos fora do ar quando nenhum serviço responde', async () => {
   const response = await GET();
 
   expect(response.status).toBe(200);
-  const body = (await response.json()) as {
-    services: Record<string, { reachable: boolean }>;
-  };
-  expect(Object.values(body.services)).toEqual(
-    Array.from({ length: 5 }, () => ({ reachable: false })),
-  );
+  await expect(response.json()).resolves.toEqual({
+    status: 'ok',
+    api: { reachable: false },
+  });
 });

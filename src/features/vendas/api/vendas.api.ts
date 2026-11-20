@@ -15,7 +15,7 @@ export async function listVendas(
   filtros: ListVendasQuery = {},
   signal?: AbortSignal,
 ) {
-  const corpo = await apiFetch('sales', '/vendas', {
+  const corpo = await apiFetch('/vendas', {
     query: {
       status: filtros.status,
       dataInicio: filtros.dataInicio,
@@ -27,13 +27,13 @@ export async function listVendas(
 }
 
 export async function getVenda(id: number, signal?: AbortSignal) {
-  const corpo = await apiFetch('sales', `/vendas/${id}`, { signal });
+  const corpo = await apiFetch(`/vendas/${id}`, { signal });
   return unwrap(corpo, vendaSchema);
 }
 
 /** Cria a venda como `PENDENTE`, com o `total` e o custo de cada item gravados pelo backend. */
 export async function createVenda(body: CreateVendaBody) {
-  const corpo = await apiFetch('sales', '/vendas', { method: 'POST', body });
+  const corpo = await apiFetch('/vendas', { method: 'POST', body });
   return unwrap(corpo, vendaSchema);
 }
 
@@ -45,7 +45,7 @@ export async function updateVendaStatus(
   id: number,
   body: UpdateVendaStatusBody,
 ) {
-  const corpo = await apiFetch('sales', `/vendas/${id}/status`, {
+  const corpo = await apiFetch(`/vendas/${id}/status`, {
     method: 'PATCH',
     body,
   });

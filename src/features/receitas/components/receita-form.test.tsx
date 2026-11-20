@@ -25,8 +25,8 @@ function renderPagina({
   gastos = [],
 }: { receitaId?: number; gastos?: GastoIndireto[] } = {}) {
   server.use(
-    mockApi('GET catalog /insumos', INSUMOS),
-    mockApi('GET catalog /gastos-indiretos', gastos),
+    mockApi('GET /insumos', INSUMOS),
+    mockApi('GET /gastos-indiretos', gastos),
   );
   return renderWithQuery(
     <ToastProvider>
@@ -143,7 +143,7 @@ describe('nova receita', OPCOES, () => {
   it('salva com o corpo do contrato e volta para a lista', async () => {
     const corpos: unknown[] = [];
     server.use(
-      mockApi('POST recipe /receitas', async ({ request }) => {
+      mockApi('POST /receitas', async ({ request }) => {
         corpos.push(await request.json());
         return makeReceita({ id: 9, nome: 'Bolo' });
       }),
@@ -189,9 +189,7 @@ describe('nova receita', OPCOES, () => {
   });
 
   it('mostra as mensagens de validação e o erro do backend', async () => {
-    server.use(
-      mockApiErro('POST recipe /receitas', 404, 'Insumo não encontrado'),
-    );
+    server.use(mockApiErro('POST /receitas', 404, 'Insumo não encontrado'));
     renderPagina();
 
     await userEvent.click(
@@ -247,8 +245,8 @@ describe('editar receita', OPCOES, () => {
     });
     const corpos: unknown[] = [];
     server.use(
-      mockApi('GET recipe /receitas/:id', receita),
-      mockApi('PUT recipe /receitas/:id', async ({ request }) => {
+      mockApi('GET /receitas/:id', receita),
+      mockApi('PUT /receitas/:id', async ({ request }) => {
         corpos.push(await request.json());
         return receita;
       }),

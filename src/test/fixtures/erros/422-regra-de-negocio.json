@@ -1,0 +1,7 @@
+{
+  "statusCode": 422,
+  "code": "VENDA_FINALIZADA",
+  "message": "Venda já finalizada não pode ser alterada",
+  "path": "/vendas/27/status",
+  "timestamp": "2026-11-20T16:51:57.270Z"
+}

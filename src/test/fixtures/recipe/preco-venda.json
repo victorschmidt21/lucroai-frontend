@@ -1,29 +1,5 @@
 {
-  "data": {
-    "custo_total_unitario": 45.07,
-    "preco_sugerido": 72.11200000000001,
-    "lucro_por_unidade": 27.04200000000001
-  },
-  "links": {
-    "getAll": {
-      "href": "/receitas",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/receitas",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/receitas/9",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/receitas/9",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/receitas/9",
-      "method": "DELETE"
-    }
-  }
+  "custo_total_unitario": 168.77,
+  "preco_sugerido": 270.03,
+  "lucro_por_unidade": 101.26
 }

@@ -1,7 +1,6 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
-import { urlDoServico } from '@/shared/api/client.server';
-import { isServico } from '@/shared/api/servicos';
+import { urlDaApi } from '@/shared/api/client.server';
 import {
   erroBff,
   isOrigemPermitida,
@@ -15,15 +14,15 @@ import { apagarSessao, lerToken } from './session.server';
 // cadastro de empresa não é usado pela web. O login passa por /api/auth/login.
 const CAMINHOS_BLOQUEADOS = new Set(['auth/login', 'auth/empresa']);
 
-// Só estes headers do navegador seguem para o serviço; `Cookie` nunca.
+// Só estes headers do navegador seguem para a API; `Cookie` nunca.
 const HEADERS_REPASSADOS = ['accept', 'content-type'];
 
 const STATUS_SEM_CORPO = new Set([101, 204, 205, 304]);
 
 const RECUSAS = {
-  400: ['Caminho inválido.', 'Bad Request'],
-  403: ['Rota não permitida.', 'Forbidden'],
-  404: ['Recurso não encontrado.', 'Not Found'],
+  400: ['Caminho inválido.', 'DADOS_INVALIDOS'],
+  403: ['Rota não permitida.', 'ROTA_NAO_PERMITIDA'],
+  404: ['Recurso não encontrado.', 'RECURSO_NAO_ENCONTRADO'],
 } as const;
 
 type StatusRecusa = keyof typeof RECUSAS;
@@ -32,7 +31,8 @@ type Validacao =
   { ok: true; caminho: string } | { ok: false; status: StatusRecusa };
 
 /**
- * Confere os segmentos já decodificados pelo Next. `internal` é comparado sem
+ * Confere os segmentos já decodificados pelo Next. `internal` continua
+ * bloqueado, por segurança, mesmo sem existir no monolito; é comparado sem
  * diferenciar maiúsculas, porque o Express do NestJS também não diferencia.
  */
 export function validarSegmentos(segmentos: readonly string[]): Validacao {
@@ -63,20 +63,20 @@ export function validarSegmentos(segmentos: readonly string[]): Validacao {
 }
 
 function recusar(status: StatusRecusa) {
-  const [message, error] = RECUSAS[status];
+  const [message, code] = RECUSAS[status];
 
-  return erroBff(status, message, error);
+  return erroBff(status, message, code);
 }
 
-/** Mesmo corpo do 401 do backend, e o cookie apagado. */
+/** Mesmo corpo do 401 da API sem token, e o cookie apagado. */
 function semSessao() {
-  const response = erroBff(401, 'Unauthorized');
+  const response = erroBff(401, 'Autenticação necessária', 'NAO_AUTENTICADO');
   apagarSessao(response);
 
   return response;
 }
 
-function headersDoServico(request: NextRequest, token: string) {
+function headersDaApi(request: NextRequest, token: string) {
   const headers = new Headers();
 
   for (const nome of HEADERS_REPASSADOS) {
@@ -96,32 +96,25 @@ async function lerCorpo(request: NextRequest) {
   return corpo.byteLength > 0 ? corpo : undefined;
 }
 
-/** A URL vem só da variável de ambiente do serviço, nunca da requisição (SSRF). */
-function urlDeDestino(
-  servico: Parameters<typeof urlDoServico>[0],
-  caminho: string,
-  search: string,
-) {
-  const base = urlDoServico(servico).replace(/\/+$/, '');
+/** A URL vem só da variável de ambiente `API_URL`, nunca da requisição (SSRF). */
+function urlDeDestino(caminho: string, search: string) {
   // Cada segmento é codificado de novo, para não escapar do caminho.
   const segmentos = caminho.split('/').map(encodeURIComponent).join('/');
 
-  return new URL(`${base}/${segmentos}${search}`);
+  return new URL(`${urlDaApi()}/${segmentos}${search}`);
 }
 
 /**
- * Proxy BFF (docs/security.md#proxy-bff): repassa a chamada do navegador ao
- * serviço, com o token do cookie. Não altera o corpo nem o status da resposta,
+ * Proxy BFF (docs/security.md#proxy-bff): repassa a chamada do navegador à
+ * API, com o token do cookie. Não altera o corpo nem o status da resposta,
  * e em 401 apaga o cookie, para o cliente levar ao login. Não registra nada em
  * log (corpo, headers, query ou token).
  */
 export async function proxyParaBackend(
   request: NextRequest,
-  servico: string,
   segmentos: readonly string[],
 ) {
   if (!isOrigemPermitida(request)) return origemInvalida();
-  if (!isServico(servico)) return recusar(404);
 
   const validacao = validarSegmentos(segmentos);
 
@@ -129,7 +122,7 @@ export async function proxyParaBackend(
 
   const token = lerToken(request);
 
-  // Sem token, ou com ele vencido, o serviço responderia 401: nem chama.
+  // Sem token, ou com ele vencido, a API responderia 401: nem chama.
   if (!token || !lerSessao(token)) return semSessao();
 
   let upstream: Response;
@@ -137,10 +130,10 @@ export async function proxyParaBackend(
 
   try {
     upstream = await fetch(
-      urlDeDestino(servico, validacao.caminho, request.nextUrl.search),
+      urlDeDestino(validacao.caminho, request.nextUrl.search),
       {
         method: request.method,
-        headers: headersDoServico(request, token),
+        headers: headersDaApi(request, token),
         body: await lerCorpo(request),
         cache: 'no-store',
         redirect: 'manual',

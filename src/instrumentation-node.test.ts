@@ -3,11 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { validateEnvOrExit } from './instrumentation-node';
 
 const validEnv = {
-  AUTH_API_URL: 'http://localhost:3001',
-  CATALOG_API_URL: 'http://localhost:3002',
-  RECIPE_API_URL: 'http://localhost:3003',
-  OPERATIONS_API_URL: 'http://localhost:3004',
-  SALES_API_URL: 'http://localhost:3005',
+  API_URL: 'http://localhost:3100',
   NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
 };
 
@@ -31,7 +27,7 @@ it('não encerra o processo quando o ambiente é válido', () => {
 
 it('encerra o processo nomeando a variável que falta', () => {
   stubValidEnv();
-  vi.stubEnv('SALES_API_URL', undefined);
+  vi.stubEnv('API_URL', undefined);
   const exit = vi.spyOn(process, 'exit').mockReturnValue(undefined as never);
   const log = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -39,6 +35,6 @@ it('encerra o processo nomeando a variável que falta', () => {
 
   expect(exit).toHaveBeenCalledWith(1);
   expect(log).toHaveBeenCalledWith(
-    expect.stringMatching(/SALES_API_URL é obrigatória/),
+    expect.stringMatching(/API_URL é obrigatória/),
   );
 });

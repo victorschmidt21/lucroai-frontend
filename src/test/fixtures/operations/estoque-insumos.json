@@ -1,0 +1,86 @@
+[
+  {
+    "id": 50,
+    "insumoId": 50,
+    "quantidadeDisponivel": 6.5,
+    "quantidadeMinima": 2,
+    "dataAlteracao": "2026-11-20T16:42:11.061Z"
+  },
+  {
+    "id": 51,
+    "insumoId": 51,
+    "quantidadeDisponivel": 3.3,
+    "quantidadeMinima": 1,
+    "dataAlteracao": "2026-11-20T16:42:11.064Z"
+  },
+  {
+    "id": 52,
+    "insumoId": 52,
+    "quantidadeDisponivel": 760,
+    "quantidadeMinima": 250,
+    "dataAlteracao": "2026-11-20T16:42:11.067Z"
+  },
+  {
+    "id": 53,
+    "insumoId": 53,
+    "quantidadeDisponivel": 48,
+    "quantidadeMinima": 12,
+    "dataAlteracao": "2026-11-20T16:42:11.070Z"
+  },
+  {
+    "id": 54,
+    "insumoId": 54,
+    "quantidadeDisponivel": 0.4,
+    "quantidadeMinima": 0.5,
+    "dataAlteracao": "2026-11-20T16:42:11.073Z"
+  },
+  {
+    "id": 55,
+    "insumoId": 55,
+    "quantidadeDisponivel": 935,
+    "quantidadeMinima": 100,
+    "dataAlteracao": "2026-11-20T16:42:11.075Z"
+  },
+  {
+    "id": 56,
+    "insumoId": 56,
+    "quantidadeDisponivel": 400,
+    "quantidadeMinima": 100,
+    "dataAlteracao": "2026-11-20T16:42:11.077Z"
+  },
+  {
+    "id": 57,
+    "insumoId": 57,
+    "quantidadeDisponivel": 1.94,
+    "quantidadeMinima": 0.25,
+    "dataAlteracao": "2026-11-20T16:42:11.080Z"
+  },
+  {
+    "id": 58,
+    "insumoId": 58,
+    "quantidadeDisponivel": 500,
+    "quantidadeMinima": 200,
+    "dataAlteracao": "2026-11-20T16:42:11.083Z"
+  },
+  {
+    "id": 59,
+    "insumoId": 59,
+    "quantidadeDisponivel": 0.3,
+    "quantidadeMinima": 0.5,
+    "dataAlteracao": "2026-11-20T16:42:11.084Z"
+  },
+  {
+    "id": 60,
+    "insumoId": 60,
+    "quantidadeDisponivel": 20,
+    "quantidadeMinima": 50,
+    "dataAlteracao": "2026-11-20T16:42:11.087Z"
+  },
+  {
+    "id": 61,
+    "insumoId": 61,
+    "quantidadeDisponivel": 250,
+    "quantidadeMinima": 50,
+    "dataAlteracao": "2026-11-20T16:42:11.088Z"
+  }
+]

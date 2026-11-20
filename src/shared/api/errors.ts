@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { normalizarTexto } from './filtros';
-import type { Servico } from './servicos';
 
 /** `statusCode` de falha sem resposta HTTP (rede ou timeout). */
 export const STATUS_ERRO_DE_REDE = 0;
@@ -17,11 +16,10 @@ export const MENSAGEM_GENERICA =
 
 type ApiErrorOptions = {
   statusCode: number;
-  servico: Servico;
   /** Texto pronto para a tela; sem ele, vem de `mensagemPorStatus`. */
   message?: string;
   mensagens?: readonly string[];
-  error?: string;
+  code?: string;
 };
 
 /** Único formato de erro da API que chega às telas. O `message` é sempre exibível. */
@@ -30,22 +28,17 @@ export class ApiError extends Error {
   readonly statusCode: number;
   /** Mensagens originais do backend, sempre como lista (podem estar em inglês). */
   readonly mensagens: readonly string[];
-  /** Nome do status no NestJS ("Bad Request", "Not Found"); falta em 401 e 500. */
-  readonly error?: string;
-  readonly servico: Servico;
+  /**
+   * Código estável do erro (`ESTOQUE_INSUFICIENTE`, `INSUMO_EM_USO`...), do
+   * `AllExceptionsFilter` da API. Falta em rede, timeout e corpo fora do formato.
+   */
+  readonly code?: string;
 
-  constructor({
-    statusCode,
-    servico,
-    message,
-    mensagens = [],
-    error,
-  }: ApiErrorOptions) {
-    super(message ?? mensagemPorStatus(statusCode, mensagens, error));
+  constructor({ statusCode, message, mensagens = [], code }: ApiErrorOptions) {
+    super(message ?? mensagemPorStatus(statusCode, mensagens));
     this.statusCode = statusCode;
-    this.servico = servico;
     this.mensagens = mensagens;
-    this.error = error;
+    this.code = code;
   }
 }
 
@@ -57,18 +50,8 @@ export class ApiNetworkError extends ApiError {
   override readonly name = 'ApiNetworkError';
   readonly isTimeout: boolean;
 
-  constructor({
-    servico,
-    isTimeout = false,
-  }: {
-    servico: Servico;
-    isTimeout?: boolean;
-  }) {
-    super({
-      statusCode: STATUS_ERRO_DE_REDE,
-      servico,
-      message: MENSAGEM_SEM_CONEXAO,
-    });
+  constructor({ isTimeout = false }: { isTimeout?: boolean } = {}) {
+    super({ statusCode: STATUS_ERRO_DE_REDE, message: MENSAGEM_SEM_CONEXAO });
     this.isTimeout = isTimeout;
   }
 }
@@ -108,28 +91,20 @@ export class ContratoInvalidoError extends Error {
   }
 }
 
-// Mensagens que o próprio NestJS gera, em inglês, quando o código só lança a
-// exceção sem texto ("Not Found"), a rota não existe ("Cannot GET /x") ou há
-// erro interno. As mensagens de negócio do backend já vêm em português.
+// Mensagens padrão do NestJS, em inglês. A API não as repassa (traduz para o
+// `code` e uma mensagem em português), mas um intermediário ainda pode
+// devolvê-las; elas nunca chegam à tela.
 const MENSAGEM_PADRAO_DO_NEST =
   /^(Cannot (GET|POST|PUT|PATCH|DELETE) .*|Internal server error|Forbidden resource|Unauthorized|Bad Request|Not Found|Conflict|Forbidden)$/;
 
-function isMensagemDoBackend(mensagem: string, error?: string) {
+function isMensagemDoBackend(mensagem: string) {
   const texto = mensagem.trim();
 
-  return (
-    texto.length > 0 && texto !== error && !MENSAGEM_PADRAO_DO_NEST.test(texto)
-  );
+  return texto.length > 0 && !MENSAGEM_PADRAO_DO_NEST.test(texto);
 }
 
-function mensagemPorStatus(
-  statusCode: number,
-  mensagens: readonly string[],
-  error?: string,
-) {
-  const doBackend = mensagens.filter((mensagem) =>
-    isMensagemDoBackend(mensagem, error),
-  );
+function mensagemPorStatus(statusCode: number, mensagens: readonly string[]) {
+  const doBackend = mensagens.filter(isMensagemDoBackend);
 
   if (statusCode === STATUS_ERRO_DE_REDE) return MENSAGEM_SEM_CONEXAO;
   if (statusCode === 401) return MENSAGEM_SESSAO_EXPIRADA;
@@ -140,33 +115,38 @@ function mensagemPorStatus(
   return MENSAGEM_GENERICA;
 }
 
+/**
+ * Formato de erro da API (`AllExceptionsFilter`): `{ statusCode, code, message,
+ * details?, path, timestamp }`. `message` também é aceito como lista, e `code`
+ * como ausente, para corpos de outro intermediário.
+ */
 const corpoDeErroSchema = z.object({
   statusCode: z.number().optional(),
+  code: z.string().optional(),
   message: z.union([z.string(), z.array(z.string())]).optional(),
-  error: z.string().optional(),
 });
 
 /**
- * Converte a resposta de erro do NestJS (`{ statusCode, message, error? }`, com
- * `message` string ou lista) num `ApiError`. Corpo fora desse formato (HTML de
- * um intermediário, vazio) vira o texto genérico do status.
+ * Converte a resposta de erro da API num `ApiError`. Corpo fora desse formato
+ * (HTML de um intermediário, vazio) vira o texto genérico do status.
  */
-export function apiErrorFromResponse(
-  servico: Servico,
-  statusCode: number,
-  corpo: unknown,
-) {
+export function apiErrorFromResponse(statusCode: number, corpo: unknown) {
   const resultado = corpoDeErroSchema.safeParse(corpo);
 
   if (!resultado.success) {
-    return new ApiError({ statusCode, servico });
+    return new ApiError({ statusCode });
   }
 
-  const { message, error } = resultado.data;
+  const { message, code } = resultado.data;
   const mensagens =
     message === undefined ? [] : Array.isArray(message) ? message : [message];
 
-  return new ApiError({ statusCode, servico, mensagens, error });
+  return new ApiError({ statusCode, mensagens, code });
+}
+
+/** O erro é um `ApiError` com este `code` estável da API. */
+export function temCodigo(error: unknown, code: string) {
+  return error instanceof ApiError && error.code === code;
 }
 
 /** Texto seguro para a tela: nunca expõe mensagem de exceção do JavaScript. */
@@ -186,11 +166,13 @@ const TERMOS_DE_FALTA = [
 ];
 
 /**
- * Reproduz `_isStockError` de `lib/features/vendas/presentation/pages/vendas_page.dart`:
- * a mensagem fala de "estoque" e de falta, sem diferenciar acentos nem maiúsculas.
- * É o único caso em que a tela decide pelo texto (docs/business-rules.md).
+ * Falta de estoque: pelo `code` `ESTOQUE_INSUFICIENTE` da API e, sem ele, pelo
+ * texto, como `_isStockError` de `lib/features/vendas/presentation/pages/vendas_page.dart`
+ * (a mensagem fala de "estoque" e de falta, sem diferenciar acentos nem maiúsculas).
  */
 export function isEstoqueInsuficiente(error: unknown) {
+  if (temCodigo(error, 'ESTOQUE_INSUFICIENTE')) return true;
+
   const textos =
     error instanceof ApiError
       ? [error.message, ...error.mensagens]

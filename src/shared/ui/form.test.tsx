@@ -226,7 +226,7 @@ describe('FormDialog', () => {
   it('mostra o erro da API no topo e mantém os valores', async () => {
     renderDialog(() =>
       Promise.reject(
-        apiErrorFromResponse('catalog', 400, {
+        apiErrorFromResponse(400, {
           statusCode: 400,
           message: 'Já existe um insumo com esse nome.',
           error: 'Bad Request',

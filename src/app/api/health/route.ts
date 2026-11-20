@@ -1,35 +1,21 @@
 import { getServerEnv } from '@/shared/config/env.server';
-import type { ServerEnv } from '@/shared/config/env.schema';
 
-const SERVICE_TIMEOUT_MS = 2000;
+const API_TIMEOUT_MS = 2000;
 
-/**
- * Os serviços do backend não têm rota de health; o JSON do Swagger existe em
- * todos e não exige autenticação.
- */
-const PROBE_PATH = '/docs-json';
-
-const SERVICES = {
-  auth: 'AUTH_API_URL',
-  catalog: 'CATALOG_API_URL',
-  recipe: 'RECIPE_API_URL',
-  operations: 'OPERATIONS_API_URL',
-  sales: 'SALES_API_URL',
-} as const satisfies Record<string, keyof ServerEnv>;
-
-type ServiceName = keyof typeof SERVICES;
+/** `GET /health` da API é pública e responde `{ status, database }`. */
+const PROBE_PATH = '/health';
 
 export type HealthResponse = {
   status: 'ok';
-  services: Record<ServiceName, { reachable: boolean }>;
+  api: { reachable: boolean };
 };
 
-/** Qualquer resposta HTTP conta: um 404 ou 503 ainda prova que o serviço foi alcançado. */
+/** Qualquer resposta HTTP conta: um 404 ou 503 ainda prova que a API foi alcançada. */
 async function isReachable(baseUrl: string) {
   try {
     await fetch(new URL(PROBE_PATH, baseUrl), {
       cache: 'no-store',
-      signal: AbortSignal.timeout(SERVICE_TIMEOUT_MS),
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
     });
     return true;
   } catch {
@@ -37,19 +23,12 @@ async function isReachable(baseUrl: string) {
   }
 }
 
-/** Responde 200 mesmo com serviços fora do ar: o front está no ar e informa o estado de cada um. */
+/** Responde 200 mesmo com a API fora do ar: o front está no ar e informa o estado dela. */
 export async function GET() {
-  const env = getServerEnv();
-  const names = Object.keys(SERVICES) as ServiceName[];
-  const results = await Promise.all(
-    names.map((name) => isReachable(env[SERVICES[name]])),
-  );
-
+  const { API_URL } = getServerEnv();
   const body: HealthResponse = {
     status: 'ok',
-    services: Object.fromEntries(
-      names.map((name, index) => [name, { reachable: results[index] }]),
-    ) as HealthResponse['services'],
+    api: { reachable: await isReachable(API_URL) },
   };
 
   return Response.json(body);

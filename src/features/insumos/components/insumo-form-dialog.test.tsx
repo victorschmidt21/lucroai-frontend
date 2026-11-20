@@ -75,7 +75,7 @@ describe('criação', OPCOES, () => {
   it('envia o corpo com os nomes do contrato e a quantidade inicial', async () => {
     const corpos: unknown[] = [];
     server.use(
-      mockApi('POST catalog /insumos', async ({ request }) => {
+      mockApi('POST /insumos', async ({ request }) => {
         corpos.push(await request.json());
         return makeInsumo({ id: 40, nome: 'Polvilho Doce' });
       }),
@@ -112,7 +112,7 @@ describe('criação', OPCOES, () => {
   it('mantém o diálogo aberto com a mensagem do backend', async () => {
     server.use(
       mockApiErro(
-        'POST catalog /insumos',
+        'POST /insumos',
         400,
         ['nome must be a string'],
         'Bad Request',
@@ -166,7 +166,7 @@ describe('edição', OPCOES, () => {
   it('envia o PATCH sem a quantidade inicial e avisa', async () => {
     const chamadas: unknown[] = [];
     server.use(
-      mockApi('PATCH catalog /insumos/:id', async ({ request, params }) => {
+      mockApi('PATCH /insumos/:id', async ({ request, params }) => {
         chamadas.push([params.id, await request.json()]);
         return makeInsumo({ valorPago: 18, custoUnitario: 3.6 });
       }),

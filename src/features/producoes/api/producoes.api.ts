@@ -14,7 +14,7 @@ export async function listProducoes(
   filtros: ListProducoesQuery = {},
   signal?: AbortSignal,
 ) {
-  const corpo = await apiFetch('operations', '/producoes', {
+  const corpo = await apiFetch('/producoes', {
     query: { receitaId: filtros.receitaId },
     signal,
   });
@@ -22,13 +22,13 @@ export async function listProducoes(
 }
 
 export async function getProducao(id: number, signal?: AbortSignal) {
-  const corpo = await apiFetch('operations', `/producoes/${id}`, { signal });
+  const corpo = await apiFetch(`/producoes/${id}`, { signal });
   return unwrap(corpo, producaoSchema);
 }
 
 /** Baixa os insumos e credita o produto acabado. Devolve a produção com os rateios. */
 export async function createProducao(body: CreateProducaoBody) {
-  const corpo = await apiFetch('operations', '/producoes', {
+  const corpo = await apiFetch('/producoes', {
     method: 'POST',
     body,
   });

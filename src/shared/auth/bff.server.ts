@@ -5,22 +5,26 @@ import { parseEnv, publicEnvSchema } from '@/shared/config/env.schema';
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /**
- * Erro no formato do NestJS (`{ statusCode, message, error }`), para o
- * navegador tratar a resposta do BFF como as do backend (`ApiError`).
+ * Erro no formato da API (`{ statusCode, code, message }`), para o navegador
+ * tratar a resposta do BFF como as do backend (`ApiError`).
  */
-export function erroBff(statusCode: number, message: string, error?: string) {
+export function erroBff(statusCode: number, message: string, code?: string) {
   return NextResponse.json(
-    { statusCode, message, ...(error ? { error } : {}) },
+    { statusCode, ...(code ? { code } : {}), message },
     { status: statusCode, headers: { 'Cache-Control': 'no-store' } },
   );
 }
 
 export function servicoIndisponivel() {
-  return erroBff(502, 'Serviço indisponível no momento.', 'Bad Gateway');
+  return erroBff(
+    502,
+    'Serviço indisponível no momento.',
+    'SERVICO_INDISPONIVEL',
+  );
 }
 
 export function origemInvalida() {
-  return erroBff(403, 'Origem não permitida.', 'Forbidden');
+  return erroBff(403, 'Origem não permitida.', 'ORIGEM_NAO_PERMITIDA');
 }
 
 /**

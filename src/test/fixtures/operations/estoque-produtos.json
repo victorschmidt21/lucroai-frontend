@@ -1,0 +1,22 @@
+[
+  {
+    "receitaId": 25,
+    "quantidadeDisponivel": 10,
+    "dataAlteracao": "2026-11-20T16:42:11.092Z"
+  },
+  {
+    "receitaId": 26,
+    "quantidadeDisponivel": 2,
+    "dataAlteracao": "2026-11-20T16:42:11.092Z"
+  },
+  {
+    "receitaId": 27,
+    "quantidadeDisponivel": 5,
+    "dataAlteracao": "2026-11-20T16:42:11.092Z"
+  },
+  {
+    "receitaId": 28,
+    "quantidadeDisponivel": 0,
+    "dataAlteracao": "2026-11-20T16:42:11.092Z"
+  }
+]

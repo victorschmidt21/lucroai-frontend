@@ -1,39 +1,32 @@
 {
-  "data": {
-    "id": 3,
-    "receitaId": 9,
-    "empresaId": 3,
-    "quantidade": 2,
-    "custoTotal": 5406.62,
-    "custoUnitario": 54.07,
-    "dataProducao": "2026-11-17T20:31:11.208Z",
-    "rateios": [
-      {
-        "gastoIndiretoId": 9,
-        "valorRateado": 900
-      }
-    ]
-  },
-  "links": {
-    "getAll": {
-      "href": "/producoes",
-      "method": "GET"
+  "id": 28,
+  "receitaId": 28,
+  "empresaId": 30,
+  "quantidade": 1,
+  "totalUnidades": 12,
+  "custoTotal": 7760.8,
+  "custoUnitario": 646.73,
+  "dataProducao": "2026-05-29T16:42:10.418Z",
+  "rateios": [
+    {
+      "gastoIndiretoId": 29,
+      "descricao": "Energia Elétrica",
+      "valorRateado": 450
     },
-    "create": {
-      "href": "/producoes",
-      "method": "POST"
+    {
+      "gastoIndiretoId": 30,
+      "descricao": "Aluguel do Espaço",
+      "valorRateado": 1800
     },
-    "getById": {
-      "href": "/producoes/3",
-      "method": "GET"
+    {
+      "gastoIndiretoId": 31,
+      "descricao": "Gás de Cozinha (P45)",
+      "valorRateado": 185
     },
-    "update": {
-      "href": "/producoes/3",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/producoes/3",
-      "method": "DELETE"
+    {
+      "gastoIndiretoId": 32,
+      "descricao": "Material de Embalagem",
+      "valorRateado": 1440
     }
-  }
+  ]
 }

@@ -4,7 +4,6 @@ import {
   apiErrorFromResponse,
   ContratoInvalidoError,
 } from './errors';
-import type { Servico } from './servicos';
 
 /** O mesmo tempo do `Dio` no mobile (`lib/core/network/api_client.dart`). */
 export const TIMEOUT_MS = 10_000;
@@ -22,7 +21,6 @@ export type ApiFetchOptions = {
 
 /** Assinatura comum às duas variantes (`client.ts` e `client.server.ts`). */
 export type ApiFetch = (
-  servico: Servico,
   caminho: string,
   opcoes?: ApiFetchOptions,
 ) => Promise<unknown>;
@@ -58,7 +56,6 @@ function isAbort(cause: unknown) {
 }
 
 type RequisitarOptions = ApiFetchOptions & {
-  servico: Servico;
   url: URL;
   headers?: Record<string, string>;
   timeoutMs?: number;
@@ -71,7 +68,6 @@ type RequisitarOptions = ApiFetchOptions & {
  * pelo `signal` de quem chamou continua como `AbortError`.
  */
 export async function requisitar({
-  servico,
   url,
   method = 'GET',
   body,
@@ -114,13 +110,13 @@ export async function requisitar({
       if (!isTimeout && (signal?.aborted || isAbort(cause))) {
         throw cause;
       }
-      throw new ApiNetworkError({ servico, isTimeout });
+      throw new ApiNetworkError({ isTimeout });
     }
 
     const corpo = lerJson(texto);
 
     if (!response.ok) {
-      throw apiErrorFromResponse(servico, response.status, corpo.valor);
+      throw apiErrorFromResponse(response.status, corpo.valor);
     }
     if (!corpo.ok) {
       throw corpo.erro;
@@ -151,27 +147,16 @@ function lerJson(texto: string): LeituraJson {
   }
 }
 
-function isEnvelope(corpo: unknown): corpo is { data: unknown } {
-  return (
-    typeof corpo === 'object' &&
-    corpo !== null &&
-    !Array.isArray(corpo) &&
-    'data' in corpo &&
-    'links' in corpo
-  );
-}
-
 /**
- * Desembrulha o envelope HATEOAS `{ data, links }` e valida `data` com o
- * schema do contrato. Um corpo sem envelope é validado como está, e um corpo
- * vazio chega como `undefined`. Rejeita com `ContratoInvalidoError`.
+ * Valida o corpo com o schema do contrato. A API responde JSON puro, sem
+ * envelope; um corpo vazio chega como `undefined`. Rejeita com
+ * `ContratoInvalidoError`.
  */
 export function unwrap<S extends z.ZodType>(
   corpo: unknown,
   schema: S,
 ): z.output<S> {
-  const data = isEnvelope(corpo) ? corpo.data : corpo;
-  const resultado = schema.safeParse(data);
+  const resultado = schema.safeParse(corpo);
 
   if (!resultado.success) {
     throw new ContratoInvalidoError(resultado.error);

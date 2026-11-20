@@ -16,16 +16,12 @@ concurrency:
   cancel-in-progress: true
 
 # Valores fictícios: o CI não sobe o backend. NEXT_PUBLIC_* é incorporada ao
-# bundle, então o build exige o valor; as URLs dos serviços só são lidas pelo
-# servidor. Nos e2e, o playwright.config.ts as aponta para a API falsa.
+# bundle, então o build exige o valor; a URL da API só é lida pelo servidor.
+# Nos e2e, o playwright.config.ts a aponta para a API falsa.
 env:
   NEXT_TELEMETRY_DISABLED: 1
   NEXT_PUBLIC_APP_URL: http://localhost:3000
-  AUTH_API_URL: http://127.0.0.1:3999
-  CATALOG_API_URL: http://127.0.0.1:3999
-  RECIPE_API_URL: http://127.0.0.1:3999
-  OPERATIONS_API_URL: http://127.0.0.1:3999
-  SALES_API_URL: http://127.0.0.1:3999
+  API_URL: http://127.0.0.1:3999
 
 jobs:
   verificacao:

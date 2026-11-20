@@ -2,7 +2,7 @@
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SESSION_COOKIE } from '@/shared/auth/session-paths';
-import { envelope, nestError } from '@/test/api';
+import { apiErrorBody } from '@/test/api';
 import { makeNextRequest, stubAmbienteDoBff } from '@/test/bff';
 import { makeJwt } from '@/test/factories/auth.factory';
 import { server } from '@/test/server';
@@ -50,9 +50,9 @@ describe('POST /api/auth/login', () => {
     const token = makeJwt();
     const recebidos: unknown[] = [];
     server.use(
-      http.post('http://auth.test/auth/login', async ({ request }) => {
+      http.post('http://api.test/auth/login', async ({ request }) => {
         recebidos.push(await request.json());
-        return HttpResponse.json(envelope({ access_token: token }));
+        return HttpResponse.json({ access_token: token });
       }),
     );
 
@@ -74,8 +74,8 @@ describe('POST /api/auth/login', () => {
   it('dispensa o Secure só em desenvolvimento', async () => {
     vi.stubEnv('NODE_ENV', 'development');
     server.use(
-      http.post('http://auth.test/auth/login', () =>
-        HttpResponse.json(envelope({ access_token: makeJwt() })),
+      http.post('http://api.test/auth/login', () =>
+        HttpResponse.json({ access_token: makeJwt() }),
       ),
     );
 
@@ -86,9 +86,9 @@ describe('POST /api/auth/login', () => {
 
   it('repassa o 401 de credenciais inválidas sem gravar cookie', async () => {
     server.use(
-      http.post('http://auth.test/auth/login', () =>
+      http.post('http://api.test/auth/login', () =>
         HttpResponse.json(
-          nestError(401, 'Credenciais inválidas', 'Unauthorized'),
+          apiErrorBody(401, 'Credenciais inválidas', 'CREDENCIAIS_INVALIDAS'),
           { status: 401 },
         ),
       ),
@@ -97,17 +97,23 @@ describe('POST /api/auth/login', () => {
     const response = await postLogin({ ...CREDENCIAIS, senha: 'errada' });
 
     expect(response.status).toBe(401);
-    expect(await response.json()).toEqual(
-      nestError(401, 'Credenciais inválidas', 'Unauthorized'),
-    );
+    expect(await response.json()).toEqual({
+      statusCode: 401,
+      code: 'CREDENCIAIS_INVALIDAS',
+      message: 'Credenciais inválidas',
+    });
     expect(cookieDaSessao(response)).toBeUndefined();
   });
 
   it('repassa o 400 de validação do backend', async () => {
     server.use(
-      http.post('http://auth.test/auth/login', () =>
+      http.post('http://api.test/auth/login', () =>
         HttpResponse.json(
-          nestError(400, ['email must be an email'], 'Bad Request'),
+          apiErrorBody(
+            400,
+            'Os dados enviados são inválidos',
+            'DADOS_INVALIDOS',
+          ),
           { status: 400 },
         ),
       ),
@@ -122,11 +128,11 @@ describe('POST /api/auth/login', () => {
     ['fora do ar', () => HttpResponse.error()],
     [
       'sem token legível',
-      () => HttpResponse.json(envelope({ access_token: 'nao-e-jwt' })),
+      () => HttpResponse.json({ access_token: 'nao-e-jwt' }),
     ],
-    ['fora do contrato', () => HttpResponse.json(envelope({ token: 'x' }))],
+    ['fora do contrato', () => HttpResponse.json({ token: 'x' })],
   ])('responde 502 com o auth-service %s', async (_caso, responder) => {
-    server.use(http.post('http://auth.test/auth/login', responder));
+    server.use(http.post('http://api.test/auth/login', responder));
 
     const response = await postLogin(CREDENCIAIS);
 

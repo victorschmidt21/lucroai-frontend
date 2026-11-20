@@ -38,8 +38,7 @@ it('leva ao login com a rota atual quando uma query recebe 401', async () => {
   await getQueryClient()
     .fetchQuery({
       queryKey: ['teste-401'],
-      queryFn: () =>
-        Promise.reject(new ApiError({ statusCode: 401, servico: 'catalog' })),
+      queryFn: () => Promise.reject(new ApiError({ statusCode: 401 })),
     })
     .catch(() => undefined);
 

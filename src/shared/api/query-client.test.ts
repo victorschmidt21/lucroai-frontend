@@ -15,7 +15,7 @@ import {
 } from './query-client';
 
 function erroHttp(status: number) {
-  return apiErrorFromResponse('catalog', status, {
+  return apiErrorFromResponse(status, {
     statusCode: status,
     message: 'x',
   });
@@ -23,15 +23,10 @@ function erroHttp(status: number) {
 
 describe('shouldRetryQuery', () => {
   it('tenta de novo em erro de rede e timeout', () => {
-    expect(shouldRetryQuery(0, new ApiNetworkError({ servico: 'sales' }))).toBe(
+    expect(shouldRetryQuery(0, new ApiNetworkError())).toBe(true);
+    expect(shouldRetryQuery(0, new ApiNetworkError({ isTimeout: true }))).toBe(
       true,
     );
-    expect(
-      shouldRetryQuery(
-        0,
-        new ApiNetworkError({ servico: 'sales', isTimeout: true }),
-      ),
-    ).toBe(true);
   });
 
   it.each([500, 502, 503])('tenta de novo em %i', (status) => {

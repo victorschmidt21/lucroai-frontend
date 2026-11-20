@@ -1,4 +1,7 @@
 {
-  "message": "Unauthorized",
-  "statusCode": 401
+  "statusCode": 401,
+  "code": "NAO_AUTENTICADO",
+  "message": "Autenticação necessária",
+  "path": "/insumos",
+  "timestamp": "2026-11-20T16:51:49.696Z"
 }

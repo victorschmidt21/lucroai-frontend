@@ -36,12 +36,12 @@ function nomes() {
 function apiComEstado(inicial: Insumo[]) {
   let insumos = [...inicial];
   server.use(
-    mockApi('GET catalog /insumos', () => insumos),
-    mockApi('DELETE catalog /insumos/:id', ({ params }) => {
+    mockApi('GET /insumos', () => insumos),
+    mockApi('DELETE /insumos/:id', ({ params }) => {
       insumos = insumos.filter(({ id }) => String(id) !== params.id);
       return undefined;
     }),
-    mockApi('PATCH catalog /insumos/:id', async ({ request, params }) => {
+    mockApi('PATCH /insumos/:id', async ({ request, params }) => {
       const body = (await request.json()) as Partial<Insumo>;
       insumos = insumos.map((insumo) => {
         if (String(insumo.id) !== params.id) return insumo;
@@ -62,7 +62,7 @@ beforeEach(() => {
 describe('estados', OPCOES, () => {
   it('mostra o esqueleto enquanto carrega', async () => {
     server.use(
-      http.get(apiUrl('catalog', '/insumos'), async () => {
+      http.get(apiUrl('/insumos'), async () => {
         await delay('infinite');
         return HttpResponse.json({});
       }),
@@ -82,7 +82,7 @@ describe('estados', OPCOES, () => {
   });
 
   it('mostra o vazio com a ação de cadastrar', async () => {
-    server.use(mockApi('GET catalog /insumos', []));
+    server.use(mockApi('GET /insumos', []));
 
     renderLista();
 
@@ -97,14 +97,14 @@ describe('estados', OPCOES, () => {
   it('mostra o erro e tenta de novo', async () => {
     let tentativas = 0;
     server.use(
-      http.get(apiUrl('catalog', '/insumos'), () => {
+      http.get(apiUrl('/insumos'), () => {
         tentativas += 1;
         return tentativas === 1
           ? HttpResponse.json(
               { statusCode: 500, message: 'Internal server error' },
               { status: 500 },
             )
-          : HttpResponse.json({ data: [makeInsumo()], links: {} });
+          : HttpResponse.json([makeInsumo()]);
       }),
     );
 
@@ -125,7 +125,7 @@ describe('estados', OPCOES, () => {
 
 describe('lista', OPCOES, () => {
   it('ordena por nome e mostra quantidade, valor e custo de 4 casas', async () => {
-    server.use(mockApi('GET catalog /insumos', makeInsumosDoSeed()));
+    server.use(mockApi('GET /insumos', makeInsumosDoSeed()));
 
     renderLista();
 
@@ -147,7 +147,7 @@ describe('lista', OPCOES, () => {
 describe('busca', OPCOES, () => {
   it('busca sem diferenciar acentos nem maiúsculas a partir da URL', async () => {
     setTestUrl('/insumos?q=ACUCAR');
-    server.use(mockApi('GET catalog /insumos', makeInsumosDoSeed()));
+    server.use(mockApi('GET /insumos', makeInsumosDoSeed()));
 
     renderLista();
 
@@ -156,7 +156,7 @@ describe('busca', OPCOES, () => {
   });
 
   it('grava q na URL ao digitar e mostra o vazio da busca', async () => {
-    server.use(mockApi('GET catalog /insumos', makeInsumosDoSeed()));
+    server.use(mockApi('GET /insumos', makeInsumosDoSeed()));
     renderLista();
     await screen.findByText('12 insumos');
 
@@ -235,9 +235,9 @@ describe('mutações', OPCOES, () => {
 
   it('mostra a mensagem do backend quando a exclusão é recusada', async () => {
     server.use(
-      mockApi('GET catalog /insumos', [makeInsumo()]),
+      mockApi('GET /insumos', [makeInsumo()]),
       mockApiErro(
-        'DELETE catalog /insumos/:id',
+        'DELETE /insumos/:id',
         400,
         'Insumo usado em receita',
         'Bad Request',
@@ -261,7 +261,7 @@ describe('mutações', OPCOES, () => {
   });
 
   it('cancela a exclusão sem chamar a API', async () => {
-    server.use(mockApi('GET catalog /insumos', [makeInsumo()]));
+    server.use(mockApi('GET /insumos', [makeInsumo()]));
     renderLista();
     await screen.findByText('1 insumo');
 
@@ -282,7 +282,7 @@ describe('mutações', OPCOES, () => {
 describe('novo=1', OPCOES, () => {
   it('abre o cadastro e tira o parâmetro da URL ao fechar', async () => {
     setTestUrl('/insumos?q=sal&novo=1');
-    server.use(mockApi('GET catalog /insumos', []));
+    server.use(mockApi('GET /insumos', []));
 
     renderLista({ abrirNovo: true });
 
@@ -295,7 +295,7 @@ describe('novo=1', OPCOES, () => {
   });
 
   it('abre o cadastro pelo botão do cabeçalho', async () => {
-    server.use(mockApi('GET catalog /insumos', [makeInsumo()]));
+    server.use(mockApi('GET /insumos', [makeInsumo()]));
     renderLista();
     await screen.findByText('1 insumo');
 

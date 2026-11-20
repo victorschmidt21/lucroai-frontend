@@ -1,4 +1,7 @@
 {
   "statusCode": 500,
-  "message": "Internal server error"
+  "code": "ERRO_INTERNO",
+  "message": "Erro interno do servidor",
+  "path": "/insumos",
+  "timestamp": "2026-11-20T16:51:57.413Z"
 }

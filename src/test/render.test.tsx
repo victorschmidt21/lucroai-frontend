@@ -11,9 +11,9 @@ function NomeDoInsumo() {
     queryKey: ['teste'],
     queryFn: async () => {
       const resposta = await fetch(
-        new URL('/api/backend/catalog/insumos/1', window.location.origin),
+        new URL('/api/backend/insumos/1', window.location.origin),
       );
-      return ((await resposta.json()) as { data: { nome: string } }).data;
+      return (await resposta.json()) as { nome: string };
     },
   });
 
@@ -21,7 +21,7 @@ function NomeDoInsumo() {
 }
 
 it('renderiza com um QueryClient próprio e atende pelo MSW', async () => {
-  server.use(mockApi('GET catalog /insumos/:id', makeInsumo()));
+  server.use(mockApi('GET /insumos/:id', makeInsumo()));
 
   const { queryClient } = renderWithQuery(<NomeDoInsumo />);
 

@@ -1,27 +1,3 @@
 {
-  "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsImVtYWlsIjoiam9hb0BwYWRhcmlhcGFvZmVsaXouY29tLmJyIiwibm9tZSI6Ikpvw6NvIGRhIFNpbHZhIiwiZW1wcmVzYSI6eyJpZCI6Mywibm9tZSI6IlBhZGFyaWEgUMOjbyBGZWxpeiBMdGRhIiwiY25waiI6IjQ1LjY3OC45MDEvMDAwMS0yMyIsInNlZ21lbnRvIjoiUGFuaWZpY2HDp8OjbyBlIENvbmZlaXRhcmlhIn0sImlhdCI6MTc5NDk0NzQ0NiwiZXhwIjoxNzk0OTYxODQ2fQ.assinatura-de-teste"
-  },
-  "links": {
-    "getAll": {
-      "href": "/auth",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/auth",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/auth/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/auth/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/auth/:id",
-      "method": "DELETE"
-    }
-  }
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjMsImVtYWlsIjoiam9hb0BwYWRhcmlhcGFvZmVsaXouY29tLmJyIiwibm9tZSI6Ikpvw6NvIGRhIFNpbHZhIiwiZW1wcmVzYSI6eyJpZCI6Mywibm9tZSI6IlBhZGFyaWEgUMOjbyBGZWxpeiBMdGRhIiwiY25waiI6IjQ1LjY3OC45MDEvMDAwMS0yMyIsInNlZ21lbnRvIjoiUGFuaWZpY2HDp8OjbyBlIENvbmZlaXRhcmlhIn0sImlhdCI6MTc5NDk0NzQ0NiwiZXhwIjoxNzk0OTYxODQ2fQ.assinatura-de-teste"
 }

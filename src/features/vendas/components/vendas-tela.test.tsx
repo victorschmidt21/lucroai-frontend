@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => import('@/test/next-navigation'));
 const OPCOES = { timeout: 20_000 };
 
 function renderTela() {
-  server.use(mockApi('GET recipe /receitas', makeReceitasDoSeed()));
+  server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
   return renderWithQuery(
     <ToastProvider>
       <VendasTela busca={{ aba: 'registrar' }} />
@@ -135,7 +135,7 @@ describe('registrar venda', OPCOES, () => {
     let corpo: CreateVendaBody | undefined;
     const venda = makeVenda({ id: 7, status: 'PENDENTE' });
     server.use(
-      mockApi('POST sales /vendas', async ({ request }) => {
+      mockApi('POST /vendas', async ({ request }) => {
         corpo = (await request.json()) as CreateVendaBody;
         return venda;
       }),
@@ -179,7 +179,7 @@ describe('registrar venda', OPCOES, () => {
   it('com estoque insuficiente, mantém o carrinho e leva a Produções', async () => {
     server.use(
       mockApiErro(
-        'POST sales /vendas',
+        'POST /vendas',
         400,
         'Estoque insuficiente para a receita 1',
         'Bad Request',
@@ -204,9 +204,7 @@ describe('registrar venda', OPCOES, () => {
   });
 
   it('mostra a mensagem do backend nos outros erros', async () => {
-    server.use(
-      mockApiErro('POST sales /vendas', 400, 'Receita não encontrada'),
-    );
+    server.use(mockApiErro('POST /vendas', 400, 'Receita não encontrada'));
     renderTela();
 
     await adicionar('Quindim', '2');

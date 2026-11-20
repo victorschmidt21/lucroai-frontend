@@ -1,66 +1,76 @@
-{
-  "data": [
-    {
-      "id": 10,
-      "empresaId": 3,
-      "nome": "Receita sem margem",
-      "rendimento": 10,
-      "unidadeRendimento": "UN",
-      "custoProducao": 2250,
-      "custoUnitario": 225,
-      "dataCriacao": "2026-11-17T20:31:11.042Z",
-      "itens": []
-    },
-    {
-      "id": 9,
-      "empresaId": 3,
-      "nome": "Pão Francês",
-      "rendimento": 50,
-      "unidadeRendimento": "UN",
-      "custoProducao": 2253.31,
-      "custoUnitario": 45.07,
-      "margemLucro": 0.6,
-      "precoSugerido": 72.11,
-      "dataCriacao": "2026-11-17T20:31:11.015Z",
-      "itens": [
-        {
-          "insumoId": 19,
-          "quantidade": 1,
-          "custoCalculado": 3
-        },
-        {
-          "insumoId": 20,
-          "quantidade": 0.02,
-          "custoCalculado": 0.05
-        },
-        {
-          "insumoId": 21,
-          "quantidade": 15,
-          "custoCalculado": 0.26
-        }
-      ]
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/receitas",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/receitas",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/receitas/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/receitas/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/receitas/:id",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 28,
+    "empresaId": 30,
+    "nome": "Quindim",
+    "rendimento": 12,
+    "unidadeRendimento": "UN",
+    "custoProducao": 3885.8,
+    "custoUnitario": 323.82,
+    "margemLucro": 0.55,
+    "precoSugerido": 501.92,
+    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "itens": [
+      { "insumoId": 51, "quantidade": 0.3, "custoCalculado": 1.32 },
+      { "insumoId": 53, "quantidade": 6, "custoCalculado": 4.5 },
+      { "insumoId": 60, "quantidade": 100, "custoCalculado": 4.5 },
+      { "insumoId": 52, "quantidade": 20, "custoCalculado": 0.48 }
+    ]
+  },
+  {
+    "id": 27,
+    "empresaId": 30,
+    "nome": "Brigadeiro Gourmet",
+    "rendimento": 40,
+    "unidadeRendimento": "UN",
+    "custoProducao": 7250.48,
+    "custoUnitario": 181.26,
+    "margemLucro": 0.6,
+    "precoSugerido": 290.02,
+    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "itens": [
+      { "insumoId": 59, "quantidade": 0.3, "custoCalculado": 10.5 },
+      { "insumoId": 58, "quantidade": 100, "custoCalculado": 2.75 },
+      { "insumoId": 52, "quantidade": 20, "custoCalculado": 0.48 },
+      { "insumoId": 61, "quantidade": 50, "custoCalculado": 1.75 }
+    ]
+  },
+  {
+    "id": 26,
+    "empresaId": 30,
+    "nome": "Bolo de Chocolate",
+    "rendimento": 12,
+    "unidadeRendimento": "UN",
+    "custoProducao": 3884.7,
+    "custoUnitario": 323.72,
+    "margemLucro": 0.5,
+    "precoSugerido": 485.58,
+    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "itens": [
+      { "insumoId": 50, "quantidade": 0.25, "custoCalculado": 0.75 },
+      { "insumoId": 51, "quantidade": 0.2, "custoCalculado": 0.88 },
+      { "insumoId": 52, "quantidade": 100, "custoCalculado": 2.4 },
+      { "insumoId": 53, "quantidade": 3, "custoCalculado": 2.25 },
+      { "insumoId": 54, "quantidade": 0.2, "custoCalculado": 1 },
+      { "insumoId": 56, "quantidade": 50, "custoCalculado": 2.25 },
+      { "insumoId": 55, "quantidade": 10, "custoCalculado": 0.17 }
+    ]
+  },
+  {
+    "id": 25,
+    "empresaId": 30,
+    "nome": "Pão Francês",
+    "rendimento": 50,
+    "unidadeRendimento": "UN",
+    "custoProducao": 8438.31,
+    "custoUnitario": 168.77,
+    "margemLucro": 0.6,
+    "precoSugerido": 270.03,
+    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "itens": [
+      { "insumoId": 50, "quantidade": 1, "custoCalculado": 3 },
+      { "insumoId": 57, "quantidade": 0.02, "custoCalculado": 0.05 },
+      { "insumoId": 55, "quantidade": 15, "custoCalculado": 0.26 }
+    ]
   }
-}
+]

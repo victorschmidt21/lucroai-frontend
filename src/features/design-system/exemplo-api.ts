@@ -35,6 +35,7 @@ function montarInsumo(
     empresaId: 1,
     ...body,
     quantidadeDisponivel,
+    quantidadeMinima: 0,
     custoUnitario,
     precoUnitario: custoUnitario,
     dataCriacao: '2026-11-17T10:00:00.000Z',
@@ -66,7 +67,7 @@ export function criarApiDeExemplo({ atrasoMs = 400 } = {}) {
       setTimeout(() => {
         if (falhar) {
           // A mesma mensagem que o `apiFetch` dá a um 500 do NestJS.
-          reject(new ApiError({ statusCode: 500, servico: 'catalog' }));
+          reject(new ApiError({ statusCode: 500 }));
         } else {
           try {
             resolve(resposta());
@@ -107,7 +108,7 @@ export function criarApiDeExemplo({ atrasoMs = 400 } = {}) {
         const atual = insumos.find((insumo) => insumo.id === id);
 
         if (!atual) {
-          throw new ApiError({ statusCode: 404, servico: 'catalog' });
+          throw new ApiError({ statusCode: 404 });
         }
 
         const atualizado = montarInsumo(

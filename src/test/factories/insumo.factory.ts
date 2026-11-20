@@ -8,6 +8,7 @@ export function makeInsumo(overrides: Partial<Insumo> = {}): Insumo {
     nome: 'Farinha de Trigo',
     quantidadeBaseCusto: 5,
     quantidadeDisponivel: 10,
+    quantidadeMinima: 2,
     unidade: 'KG',
     valorPago: 15,
     custoUnitario: 3,
@@ -17,7 +18,7 @@ export function makeInsumo(overrides: Partial<Insumo> = {}): Insumo {
   };
 }
 
-// `services/catalog-service/prisma/seed.ts`, na ordem de inserção (ids 1 a 12):
+// Seed do backend, na ordem de inserção (ids 1 a 12):
 // nome, quantidade base, unidade, valor pago e estoque inicial.
 const SEED: [string, number, Insumo['unidade'], number, number][] = [
   ['Farinha de Trigo', 5, 'KG', 15, 10],

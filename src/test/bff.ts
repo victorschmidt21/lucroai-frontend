@@ -5,19 +5,12 @@ import { SESSION_COOKIE } from '@/shared/auth/session-paths';
 /** Origem do front nos testes do BFF, igual a `NEXT_PUBLIC_APP_URL`. */
 export const FRONT = 'http://front.test';
 
-export const URLS_DOS_SERVICOS = {
-  AUTH_API_URL: 'http://auth.test',
-  CATALOG_API_URL: 'http://catalog.test/',
-  RECIPE_API_URL: 'http://recipe.test',
-  OPERATIONS_API_URL: 'http://operations.test',
-  SALES_API_URL: 'http://sales.test',
-};
+/** URL da API nos testes do BFF (com barra final, que o código remove). */
+export const API_URL = 'http://api.test/';
 
-/** As cinco URLs de serviço e a do front; desfaça com `vi.unstubAllEnvs()`. */
+/** A URL da API e a do front; desfaça com `vi.unstubAllEnvs()`. */
 export function stubAmbienteDoBff() {
-  for (const [nome, valor] of Object.entries(URLS_DOS_SERVICOS)) {
-    vi.stubEnv(nome, valor);
-  }
+  vi.stubEnv('API_URL', API_URL);
   vi.stubEnv('NEXT_PUBLIC_APP_URL', FRONT);
 }
 

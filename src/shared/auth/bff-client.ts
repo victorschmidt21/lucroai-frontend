@@ -11,7 +11,6 @@ export function bffFetch(
   // URL absoluta porque o `Request` do Node (testes) não aceita URL relativa.
   return requisitar({
     ...opcoes,
-    servico: 'auth',
     url: new URL(caminho, window.location.origin),
   });
 }

@@ -46,15 +46,15 @@ describe('loginFormSchema', () => {
 
 describe('getLoginErrorMessage', () => {
   it('trata 401 como credencial errada', () => {
-    expect(
-      getLoginErrorMessage(new ApiError({ statusCode: 401, servico: 'auth' })),
-    ).toBe(MENSAGEM_CREDENCIAIS_INVALIDAS);
+    expect(getLoginErrorMessage(new ApiError({ statusCode: 401 }))).toBe(
+      MENSAGEM_CREDENCIAIS_INVALIDAS,
+    );
   });
 
   it.each([
-    ['400', new ApiError({ statusCode: 400, servico: 'auth' })],
-    ['502', new ApiError({ statusCode: 502, servico: 'auth' })],
-    ['rede', new ApiNetworkError({ servico: 'auth' })],
+    ['400', new ApiError({ statusCode: 400 })],
+    ['502', new ApiError({ statusCode: 502 })],
+    ['rede', new ApiNetworkError()],
     ['erro qualquer', new Error('x')],
   ])('trata %s como falha ao entrar', (_caso, erro) => {
     expect(getLoginErrorMessage(erro)).toBe(MENSAGEM_ERRO_LOGIN);

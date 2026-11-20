@@ -18,9 +18,8 @@ import { gravarSessao } from '@/shared/auth/session.server';
 const credenciaisSchema = z.object({ email: z.string(), senha: z.string() });
 
 /**
- * `POST /api/auth/login`: autentica no auth-service, desembrulha
- * `data.access_token` e grava o token no cookie `httpOnly`. O corpo da
- * resposta nunca traz o token.
+ * `POST /api/auth/login`: autentica na API, lê o `access_token` e grava o
+ * token no cookie `httpOnly`. O corpo da resposta nunca traz o token.
  */
 export async function POST(request: NextRequest) {
   if (!isOrigemPermitida(request)) return origemInvalida();
@@ -34,7 +33,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const corpo = await apiFetch('auth', '/auth/login', {
+    const corpo = await apiFetch('/auth/login', {
       method: 'POST',
       body: credenciais.data,
     });
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     const payload = decodificarJwt(token);
 
     // Um token que não dá para ler não serve para exibir o usuário nem para
-    // saber quando vence: é falha do serviço, não do usuário.
+    // saber quando vence: é falha da API, não do usuário.
     if (!payload) return servicoIndisponivel();
 
     const response = new NextResponse(null, {
@@ -54,8 +53,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     if (error instanceof ApiError && error.statusCode !== STATUS_ERRO_DE_REDE) {
-      // Repassa o status e as mensagens do backend; o formulário decide o texto.
-      return erroBff(error.statusCode, error.mensagens.join('; '), error.error);
+      // Repassa o status, o code e as mensagens da API; o formulário decide o texto.
+      return erroBff(error.statusCode, error.mensagens.join('; '), error.code);
     }
 
     return servicoIndisponivel();

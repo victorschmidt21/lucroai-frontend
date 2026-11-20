@@ -1,44 +1,32 @@
-{
-  "data": [
-    {
-      "id": 12,
-      "insumoId": 19,
-      "tipo": "SAIDA",
-      "origem": "PRODUCAO",
-      "quantidade": 2,
-      "referenciaId": 3,
-      "dataMovimentacao": "2026-11-17T20:31:11.228Z"
-    },
-    {
-      "id": 11,
-      "insumoId": 19,
-      "tipo": "ENTRADA",
-      "origem": "COMPRA",
-      "quantidade": 5,
-      "referenciaId": null,
-      "dataMovimentacao": "2026-11-17T20:31:11.166Z"
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/estoque",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/estoque",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/estoque/19",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/estoque/19",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/estoque/19",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 112,
+    "insumoId": 50,
+    "tipo": "SAIDA",
+    "origem": "PRODUCAO",
+    "quantidade": 0.5,
+    "referenciaId": 26,
+    "observacao": null,
+    "dataMovimentacao": "2026-05-27T16:42:10.418Z"
+  },
+  {
+    "id": 109,
+    "insumoId": 50,
+    "tipo": "SAIDA",
+    "origem": "PRODUCAO",
+    "quantidade": 3,
+    "referenciaId": 25,
+    "observacao": null,
+    "dataMovimentacao": "2026-05-26T16:42:10.418Z"
+  },
+  {
+    "id": 97,
+    "insumoId": 50,
+    "tipo": "ENTRADA",
+    "origem": "COMPRA",
+    "quantidade": 10,
+    "referenciaId": null,
+    "observacao": "Estoque inicial",
+    "dataMovimentacao": "2026-05-24T16:42:10.418Z"
   }
-}
+]

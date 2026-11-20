@@ -1,32 +1,8 @@
 {
-  "data": {
-    "custoUnitario": 45.07,
-    "precoVenda": 0.5,
-    "volume": 100,
-    "lucroEstimado": -4457,
-    "margemProjetada": -89.14,
-    "breakEven": 9014
-  },
-  "links": {
-    "getAll": {
-      "href": "/receitas",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/receitas",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/receitas/9",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/receitas/9",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/receitas/9",
-      "method": "DELETE"
-    }
-  }
+  "custoUnitario": 168.77,
+  "precoVenda": 0.5,
+  "volume": 100,
+  "lucroEstimado": -16827,
+  "margemProjetada": -336.54,
+  "breakEven": 33754
 }

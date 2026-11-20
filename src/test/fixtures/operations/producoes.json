@@ -1,41 +1,130 @@
-{
-  "data": [
-    {
-      "id": 3,
-      "receitaId": 9,
-      "empresaId": 3,
-      "quantidade": 2,
-      "custoTotal": 5406.62,
-      "custoUnitario": 54.07,
-      "dataProducao": "2026-11-17T20:31:11.208Z",
-      "rateios": [
-        {
-          "gastoIndiretoId": 9,
-          "valorRateado": 900
-        }
-      ]
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/producoes",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/producoes",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/producoes/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/producoes/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/producoes/:id",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 28,
+    "receitaId": 28,
+    "empresaId": 30,
+    "quantidade": 1,
+    "totalUnidades": 12,
+    "custoTotal": 7760.8,
+    "custoUnitario": 646.73,
+    "dataProducao": "2026-05-29T16:42:10.418Z",
+    "rateios": [
+      {
+        "gastoIndiretoId": 29,
+        "descricao": "Energia Elétrica",
+        "valorRateado": 450
+      },
+      {
+        "gastoIndiretoId": 30,
+        "descricao": "Aluguel do Espaço",
+        "valorRateado": 1800
+      },
+      {
+        "gastoIndiretoId": 31,
+        "descricao": "Gás de Cozinha (P45)",
+        "valorRateado": 185
+      },
+      {
+        "gastoIndiretoId": 32,
+        "descricao": "Material de Embalagem",
+        "valorRateado": 1440
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "receitaId": 27,
+    "empresaId": 30,
+    "quantidade": 1,
+    "totalUnidades": 40,
+    "custoTotal": 14485.48,
+    "custoUnitario": 362.14,
+    "dataProducao": "2026-05-28T16:42:10.418Z",
+    "rateios": [
+      {
+        "gastoIndiretoId": 29,
+        "descricao": "Energia Elétrica",
+        "valorRateado": 450
+      },
+      {
+        "gastoIndiretoId": 30,
+        "descricao": "Aluguel do Espaço",
+        "valorRateado": 1800
+      },
+      {
+        "gastoIndiretoId": 31,
+        "descricao": "Gás de Cozinha (P45)",
+        "valorRateado": 185
+      },
+      {
+        "gastoIndiretoId": 32,
+        "descricao": "Material de Embalagem",
+        "valorRateado": 4800
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "receitaId": 26,
+    "empresaId": 30,
+    "quantidade": 2,
+    "totalUnidades": 24,
+    "custoTotal": 13719.4,
+    "custoUnitario": 571.64,
+    "dataProducao": "2026-05-27T16:42:10.418Z",
+    "rateios": [
+      {
+        "gastoIndiretoId": 29,
+        "descricao": "Energia Elétrica",
+        "valorRateado": 900
+      },
+      {
+        "gastoIndiretoId": 30,
+        "descricao": "Aluguel do Espaço",
+        "valorRateado": 1800
+      },
+      {
+        "gastoIndiretoId": 31,
+        "descricao": "Gás de Cozinha (P45)",
+        "valorRateado": 370
+      },
+      {
+        "gastoIndiretoId": 32,
+        "descricao": "Material de Embalagem",
+        "valorRateado": 2880
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "receitaId": 25,
+    "empresaId": 30,
+    "quantidade": 3,
+    "totalUnidades": 150,
+    "custoTotal": 47019.93,
+    "custoUnitario": 313.47,
+    "dataProducao": "2026-05-26T16:42:10.418Z",
+    "rateios": [
+      {
+        "gastoIndiretoId": 29,
+        "descricao": "Energia Elétrica",
+        "valorRateado": 1350
+      },
+      {
+        "gastoIndiretoId": 30,
+        "descricao": "Aluguel do Espaço",
+        "valorRateado": 1800
+      },
+      {
+        "gastoIndiretoId": 31,
+        "descricao": "Gás de Cozinha (P45)",
+        "valorRateado": 555
+      },
+      {
+        "gastoIndiretoId": 32,
+        "descricao": "Material de Embalagem",
+        "valorRateado": 18000
+      }
+    ]
   }
-}
+]

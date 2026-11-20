@@ -1,62 +1,158 @@
-{
-  "data": [
-    {
-      "id": 19,
-      "empresaId": 3,
-      "nome": "Farinha de Trigo",
-      "quantidadeBaseCusto": 5,
-      "quantidadeDisponivel": 13,
-      "unidade": "KG",
-      "valorPago": 15,
-      "custoUnitario": 3,
-      "precoUnitario": 3,
-      "dataCriacao": "2026-11-17T20:31:08.639Z"
-    },
-    {
-      "id": 20,
-      "empresaId": 3,
-      "nome": "Sal",
-      "quantidadeBaseCusto": 1,
-      "quantidadeDisponivel": -0.04,
-      "unidade": "KG",
-      "valorPago": 2.5,
-      "custoUnitario": 2.5,
-      "precoUnitario": 2.5,
-      "dataCriacao": "2026-11-17T20:31:08.668Z"
-    },
-    {
-      "id": 21,
-      "empresaId": 3,
-      "nome": "Fermento Biológico Seco",
-      "quantidadeBaseCusto": 500,
-      "quantidadeDisponivel": -30,
-      "unidade": "G",
-      "valorPago": 8.5,
-      "custoUnitario": 0.017,
-      "precoUnitario": 0.017,
-      "dataCriacao": "2026-11-17T20:31:08.709Z"
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/insumos",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/insumos",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/insumos/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/insumos/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/insumos/:id",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 51,
+    "empresaId": 30,
+    "nome": "Açúcar Cristal",
+    "quantidadeBaseCusto": 2,
+    "quantidadeDisponivel": 3.3,
+    "quantidadeMinima": 1,
+    "unidade": "KG",
+    "valorPago": 8.8,
+    "custoUnitario": 4.4,
+    "precoUnitario": 4.4,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 56,
+    "empresaId": 30,
+    "nome": "Cacau em Pó 100%",
+    "quantidadeBaseCusto": 200,
+    "quantidadeDisponivel": 400,
+    "quantidadeMinima": 100,
+    "unidade": "G",
+    "valorPago": 9,
+    "custoUnitario": 0.045,
+    "precoUnitario": 0.045,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 59,
+    "empresaId": 30,
+    "nome": "Chocolate ao Leite Gotas",
+    "quantidadeBaseCusto": 1,
+    "quantidadeDisponivel": 0.3,
+    "quantidadeMinima": 0.5,
+    "unidade": "KG",
+    "valorPago": 35,
+    "custoUnitario": 35,
+    "precoUnitario": 35,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 60,
+    "empresaId": 30,
+    "nome": "Coco Ralado",
+    "quantidadeBaseCusto": 100,
+    "quantidadeDisponivel": 20,
+    "quantidadeMinima": 50,
+    "unidade": "G",
+    "valorPago": 4.5,
+    "custoUnitario": 0.045,
+    "precoUnitario": 0.045,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 58,
+    "empresaId": 30,
+    "nome": "Creme de Leite",
+    "quantidadeBaseCusto": 200,
+    "quantidadeDisponivel": 500,
+    "quantidadeMinima": 200,
+    "unidade": "ML",
+    "valorPago": 5.5,
+    "custoUnitario": 0.0275,
+    "precoUnitario": 0.0275,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 50,
+    "empresaId": 30,
+    "nome": "Farinha de Trigo",
+    "quantidadeBaseCusto": 5,
+    "quantidadeDisponivel": 6.5,
+    "quantidadeMinima": 2,
+    "unidade": "KG",
+    "valorPago": 15,
+    "custoUnitario": 3,
+    "precoUnitario": 3,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 55,
+    "empresaId": 30,
+    "nome": "Fermento Biológico Seco",
+    "quantidadeBaseCusto": 500,
+    "quantidadeDisponivel": 935,
+    "quantidadeMinima": 100,
+    "unidade": "G",
+    "valorPago": 8.5,
+    "custoUnitario": 0.017,
+    "precoUnitario": 0.017,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 61,
+    "empresaId": 30,
+    "nome": "Granulado de Chocolate",
+    "quantidadeBaseCusto": 100,
+    "quantidadeDisponivel": 250,
+    "quantidadeMinima": 50,
+    "unidade": "G",
+    "valorPago": 3.5,
+    "custoUnitario": 0.035,
+    "precoUnitario": 0.035,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 54,
+    "empresaId": 30,
+    "nome": "Leite Integral",
+    "quantidadeBaseCusto": 1,
+    "quantidadeDisponivel": 0.4,
+    "quantidadeMinima": 0.5,
+    "unidade": "L",
+    "valorPago": 5,
+    "custoUnitario": 5,
+    "precoUnitario": 5,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 52,
+    "empresaId": 30,
+    "nome": "Manteiga sem Sal",
+    "quantidadeBaseCusto": 500,
+    "quantidadeDisponivel": 760,
+    "quantidadeMinima": 250,
+    "unidade": "G",
+    "valorPago": 12,
+    "custoUnitario": 0.024,
+    "precoUnitario": 0.024,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 53,
+    "empresaId": 30,
+    "nome": "Ovos",
+    "quantidadeBaseCusto": 12,
+    "quantidadeDisponivel": 48,
+    "quantidadeMinima": 12,
+    "unidade": "UN",
+    "valorPago": 9,
+    "custoUnitario": 0.75,
+    "precoUnitario": 0.75,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
+  },
+  {
+    "id": 57,
+    "empresaId": 30,
+    "nome": "Sal",
+    "quantidadeBaseCusto": 1,
+    "quantidadeDisponivel": 1.94,
+    "quantidadeMinima": 0.25,
+    "unidade": "KG",
+    "valorPago": 2.5,
+    "custoUnitario": 2.5,
+    "precoUnitario": 2.5,
+    "dataCriacao": "2026-05-24T16:42:10.418Z"
   }
-}
+]

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import erro400Regra from '@/test/fixtures/erros/400-regra-de-negocio.json';
 import erro400 from '@/test/fixtures/erros/400-validacao.json';
 import erro401 from '@/test/fixtures/erros/401.json';
 import erro404 from '@/test/fixtures/erros/404.json';
+import erro422 from '@/test/fixtures/erros/422-regra-de-negocio.json';
 import erro500 from '@/test/fixtures/erros/500.json';
 import {
   ApiError,
@@ -12,31 +12,41 @@ import {
   ContratoInvalidoError,
   getErrorMessage,
   isEstoqueInsuficiente,
+  temCodigo,
 } from './errors';
 
 describe('apiErrorFromResponse', () => {
-  it('400 com lista: junta as mensagens de validação', () => {
-    const erro = apiErrorFromResponse('catalog', 400, erro400);
+  it('400 de validação: a mensagem em português e o code', () => {
+    const erro = apiErrorFromResponse(400, erro400);
 
     expect(erro).toBeInstanceOf(ApiError);
     expect(erro.statusCode).toBe(400);
-    expect(erro.servico).toBe('catalog');
-    expect(erro.error).toBe('Bad Request');
-    expect(erro.mensagens).toHaveLength(7);
-    expect(erro.message).toBe(erro400.message.join('; '));
+    expect(erro.code).toBe('DADOS_INVALIDOS');
+    expect(erro.message).toBe('Os dados enviados são inválidos');
   });
 
-  it('400 de regra de negócio: mostra a mensagem do backend', () => {
-    const erro = apiErrorFromResponse('sales', 400, erro400Regra);
+  it('422 de regra de negócio: mostra a mensagem do backend', () => {
+    const erro = apiErrorFromResponse(422, erro422);
 
+    expect(erro.code).toBe('VENDA_FINALIZADA');
     expect(erro.message).toBe('Venda já finalizada não pode ser alterada');
     expect(erro.mensagens).toEqual([
       'Venda já finalizada não pode ser alterada',
     ]);
   });
 
+  it('aceita message em lista e sem code (corpo de outro intermediário)', () => {
+    const erro = apiErrorFromResponse(400, {
+      statusCode: 400,
+      message: ['Primeira', 'Segunda'],
+    });
+
+    expect(erro.code).toBeUndefined();
+    expect(erro.message).toBe('Primeira; Segunda');
+  });
+
   it('400 sem mensagem própria usa o texto genérico', () => {
-    const erro = apiErrorFromResponse('sales', 400, {
+    const erro = apiErrorFromResponse(400, {
       statusCode: 400,
       message: 'Bad Request',
     });
@@ -47,35 +57,34 @@ describe('apiErrorFromResponse', () => {
   });
 
   it('401: sessão expirada, mesmo com outra mensagem do backend', () => {
-    expect(apiErrorFromResponse('catalog', 401, erro401).message).toBe(
+    expect(apiErrorFromResponse(401, erro401).message).toBe(
       'Sessão expirada. Faça login novamente.',
     );
     expect(
-      apiErrorFromResponse('catalog', 401, {
+      apiErrorFromResponse(401, {
         statusCode: 401,
+        code: 'CREDENCIAIS_INVALIDAS',
         message: 'Credenciais inválidas',
-        error: 'Unauthorized',
       }).message,
     ).toBe('Sessão expirada. Faça login novamente.');
   });
 
   it('404 com mensagem em português: usa a do backend', () => {
-    const erro = apiErrorFromResponse('catalog', 404, erro404);
+    const erro = apiErrorFromResponse(404, erro404);
 
     expect(erro.message).toBe('Insumo não encontrado');
-    expect(erro.error).toBe('Not Found');
+    expect(erro.code).toBe('INSUMO_NAO_ENCONTRADO');
   });
 
   it('404 com a mensagem padrão do NestJS: "Registro não encontrado."', () => {
     expect(
-      apiErrorFromResponse('catalog', 404, {
+      apiErrorFromResponse(404, {
         statusCode: 404,
         message: 'Cannot GET /naoexiste',
-        error: 'Not Found',
       }).message,
     ).toBe('Registro não encontrado.');
     expect(
-      apiErrorFromResponse('catalog', 404, {
+      apiErrorFromResponse(404, {
         statusCode: 404,
         message: 'Not Found',
       }).message,
@@ -83,38 +92,54 @@ describe('apiErrorFromResponse', () => {
   });
 
   it('409: mostra a mensagem do backend', () => {
-    const erro = apiErrorFromResponse('auth', 409, {
+    const erro = apiErrorFromResponse(409, {
       statusCode: 409,
-      message: 'CNPJ já cadastrado',
-      error: 'Conflict',
+      code: 'INSUMO_EM_USO',
+      message: 'Insumo em uso em receitas',
     });
 
-    expect(erro.message).toBe('CNPJ já cadastrado');
+    expect(erro.message).toBe('Insumo em uso em receitas');
+    expect(temCodigo(erro, 'INSUMO_EM_USO')).toBe(true);
   });
 
   it.each([500, 502, 503])('%i: erro no servidor', (status) => {
-    expect(apiErrorFromResponse('recipe', status, erro500).message).toBe(
+    expect(apiErrorFromResponse(status, erro500).message).toBe(
       'Erro no servidor. Tente novamente.',
     );
   });
 
-  it('corpo fora do formato do NestJS usa o texto do status', () => {
-    const erro = apiErrorFromResponse('sales', 502, '<html>Bad Gateway</html>');
+  it('corpo fora do formato da API usa o texto do status', () => {
+    const erro = apiErrorFromResponse(502, '<html>Bad Gateway</html>');
 
     expect(erro.message).toBe('Erro no servidor. Tente novamente.');
     expect(erro.mensagens).toEqual([]);
+    expect(erro.code).toBeUndefined();
   });
 
   it('corpo vazio num 403 usa o texto genérico', () => {
-    expect(apiErrorFromResponse('sales', 403, undefined).message).toBe(
+    expect(apiErrorFromResponse(403, undefined).message).toBe(
       'Não foi possível concluir a ação. Tente novamente.',
     );
   });
 });
 
+describe('temCodigo', () => {
+  it('confere o code só em ApiError', () => {
+    expect(
+      temCodigo(apiErrorFromResponse(404, erro404), 'INSUMO_NAO_ENCONTRADO'),
+    ).toBe(true);
+    expect(
+      temCodigo(apiErrorFromResponse(404, erro404), 'RECEITA_NAO_ENCONTRADA'),
+    ).toBe(false);
+    expect(
+      temCodigo(new Error('INSUMO_NAO_ENCONTRADO'), 'INSUMO_NAO_ENCONTRADO'),
+    ).toBe(false);
+  });
+});
+
 describe('ApiNetworkError', () => {
   it('é um ApiError com status 0 e a mensagem de sem conexão', () => {
-    const erro = new ApiNetworkError({ servico: 'sales' });
+    const erro = new ApiNetworkError();
 
     expect(erro).toBeInstanceOf(ApiError);
     expect(erro.statusCode).toBe(0);
@@ -123,15 +148,13 @@ describe('ApiNetworkError', () => {
   });
 
   it('marca o timeout', () => {
-    expect(
-      new ApiNetworkError({ servico: 'sales', isTimeout: true }).isTimeout,
-    ).toBe(true);
+    expect(new ApiNetworkError({ isTimeout: true }).isTimeout).toBe(true);
   });
 });
 
 describe('getErrorMessage', () => {
   it('usa a mensagem do ApiError', () => {
-    expect(getErrorMessage(apiErrorFromResponse('catalog', 404, erro404))).toBe(
+    expect(getErrorMessage(apiErrorFromResponse(404, erro404))).toBe(
       'Insumo não encontrado',
     );
   });
@@ -156,12 +179,33 @@ describe('getErrorMessage', () => {
 
 describe('isEstoqueInsuficiente', () => {
   function erroDeVenda(message: string | string[]) {
-    return apiErrorFromResponse('sales', 400, {
-      statusCode: 400,
-      message,
-      error: 'Bad Request',
-    });
+    return apiErrorFromResponse(400, { statusCode: 400, message });
   }
+
+  it('reconhece pelo code ESTOQUE_INSUFICIENTE, qualquer que seja o texto', () => {
+    expect(
+      isEstoqueInsuficiente(
+        apiErrorFromResponse(422, {
+          statusCode: 422,
+          code: 'ESTOQUE_INSUFICIENTE',
+          message: 'Saldo de produto acabado acabou',
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('reconhece a mensagem real da API', () => {
+    expect(
+      isEstoqueInsuficiente(
+        apiErrorFromResponse(422, {
+          statusCode: 422,
+          code: 'ESTOQUE_INSUFICIENTE',
+          message:
+            'Estoque insuficiente para a receita 25: disponível 10, solicitado 20',
+        }),
+      ),
+    ).toBe(true);
+  });
 
   it.each([
     'Estoque insuficiente para a receita 1',

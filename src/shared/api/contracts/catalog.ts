@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { metodoRateioSchema, unidadeMedidaSchema } from './enums';
 
-// catalog-service. Origem: `services/catalog-service/src/modules/`.
+// Insumos e gastos indiretos. Origem: `lucroai-backend` (monolito),
+// `src/modules/insumos/` e `src/modules/gastos-indiretos/`.
 
 /** `insumos/application/dto/insumo.dto.ts` */
 export const insumoSchema = z.object({
@@ -9,8 +10,10 @@ export const insumoSchema = z.object({
   empresaId: z.number().int(),
   nome: z.string(),
   quantidadeBaseCusto: z.number(),
-  /** Espelho do estoque, atualizado por evento (pode ficar negativo). */
+  /** Saldo do estoque (pode ficar negativo). */
   quantidadeDisponivel: z.number(),
+  /** Estoque mínimo (lacuna 5, resolvida). */
+  quantidadeMinima: z.number(),
   unidade: unidadeMedidaSchema,
   valorPago: z.number(),
   /** `valorPago / quantidadeBaseCusto`, sem arredondamento. */

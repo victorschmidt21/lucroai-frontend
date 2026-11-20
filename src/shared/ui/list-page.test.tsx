@@ -134,7 +134,7 @@ describe('ListPage', () => {
           tentativas += 1;
           return tentativas === 1
             ? Promise.reject(
-                apiErrorFromResponse('catalog', 500, {
+                apiErrorFromResponse(500, {
                   statusCode: 500,
                   message: 'Internal server error',
                 }),

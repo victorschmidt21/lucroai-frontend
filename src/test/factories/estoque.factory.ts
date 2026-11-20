@@ -1,5 +1,6 @@
 import type {
   Estoque,
+  EstoqueProduto,
   MovimentacaoEstoque,
 } from '@/shared/api/contracts/operations';
 
@@ -26,7 +27,20 @@ export function makeMovimentacaoEstoque(
     origem: 'COMPRA',
     quantidade: 10,
     referenciaId: null,
+    observacao: null,
     dataMovimentacao: '2026-06-01T09:00:00.000Z',
+    ...overrides,
+  };
+}
+
+/** Saldo de produto acabado do Pão Francês (3 lotes de 50 unidades). */
+export function makeEstoqueProduto(
+  overrides: Partial<EstoqueProduto> = {},
+): EstoqueProduto {
+  return {
+    receitaId: 1,
+    quantidadeDisponivel: 150,
+    dataAlteracao: '2026-06-02T10:00:00.000Z',
     ...overrides,
   };
 }
