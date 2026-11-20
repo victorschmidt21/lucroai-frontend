@@ -26,7 +26,7 @@ Ferramentas: **Vitest** com **Testing Library** em testes unitários e de compon
 
 Os testes rodam no fuso `America/Sao_Paulo` (`test.env.TZ` no `vitest.config.ts`), para os testes de data darem o mesmo resultado em qualquer máquina e no CI.
 
-Route Handlers e o proxy BFF são testados no ambiente `node` com `makeNextRequest()` (com cookie de sessão e `Origin`) e `stubAmbienteDoBff()` (as cinco URLs e `NEXT_PUBLIC_APP_URL`), de `src/test/bff.ts`; o JWT de teste vem de `makeJwt()` (`src/test/factories/auth.factory.ts`). Componentes que navegam com `navigateTo` mockam `@/shared/auth/navigation`.
+Route Handlers e o proxy BFF são testados no ambiente `node` com `makeNextRequest()` (com cookie de sessão e `Origin`) e `stubAmbienteDoBff()` (`API_URL` e `NEXT_PUBLIC_APP_URL`), de `src/test/bff.ts`; o JWT de teste vem de `makeJwt()` (`src/test/factories/auth.factory.ts`). Componentes que navegam com `navigateTo` mockam `@/shared/auth/navigation`.
 
 O Vitest roda **sem** `globals`: importe `describe`, `it`, `expect` e `vi` de `vitest` em cada arquivo. O ambiente padrão é `jsdom`; para Route Handlers e código de servidor, comece o arquivo com `// @vitest-environment node`. O jsdom não implementa as APIs de layout que o Radix chama; os substitutos ficam em `vitest.setup.ts`.
 
@@ -34,11 +34,12 @@ Antes do primeiro e2e, instale o navegador: `npx playwright install chromium`.
 
 O Playwright sobe sozinho a API falsa e o Next. Variáveis que mudam isso:
 
-| Variável                 | Efeito                                                                                                                            |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `E2E_USAR_BUILD=true`    | serve o build de produção (`e2e/support/servir-build.mjs`) em vez do `next dev`; rode `npm run build` antes. O CI usa             |
-| `E2E_API_REAL=true`      | não sobe a API falsa e aponta as cinco URLs para o backend local (`localhost:3001` a `3005`), com o seed                          |
-| `E2E_REUSE_SERVERS=true` | reaproveita servidores já abertos nas portas 3000 e 3999 (fora do CI). Sem ela, uma porta ocupada faz o Playwright parar com erro |
+| Variável                 | Efeito                                                                                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `E2E_USAR_BUILD=true`    | serve o build de produção (`e2e/support/servir-build.mjs`) em vez do `next dev`; rode `npm run build` antes. O CI usa                                                           |
+| `E2E_API_REAL=true`      | não sobe a API falsa e aponta `API_URL` para o monolito local (`localhost:3100`), com o seed                                                                                    |
+| `E2E_BASE_URL`           | URL do front nos e2e (padrão `http://localhost:3000`), para rodar com um `npm run dev` aberto na 3000; com `E2E_USAR_BUILD`, faça o build com `NEXT_PUBLIC_APP_URL` igual a ela |
+| `E2E_REUSE_SERVERS=true` | reaproveita servidores já abertos nas portas 3000 e 3999 (fora do CI). Sem ela, uma porta ocupada faz o Playwright parar com erro                                               |
 
 ## O que testar em cada nível
 
@@ -52,11 +53,11 @@ Sem navegador real e sem rede. Rápido e determinístico.
 | Schemas Zod de formulário                           | entrada válida, cada regra violada com a mensagem em português, e a função `to...Body` (nomes do contrato, margem em fração, campos vazios omitidos)                                                    |
 | Schemas de search params                            | valor válido, ausente e inválido (o `.catch()` não derruba a tela)                                                                                                                                      |
 | Contratos (`shared/api/contracts/`)                 | aceita a resposta real do seed (fixture) e rejeita uma inválida                                                                                                                                         |
-| Funções de `api/`                                   | com MSW: caminho e método corretos, corpo enviado, envelope desembrulhado, resposta fora do contrato vira erro                                                                                          |
+| Funções de `api/`                                   | com MSW: caminho e método corretos, corpo enviado, resposta validada, resposta fora do contrato vira erro                                                                                               |
 | Hooks de mutação                                    | as queries invalidadas, inclusive as de outras funcionalidades                                                                                                                                          |
 | Formatadores e `parseNumeroBR`                      | todos os ramos: vírgula, ponto, milhar, vazio, negativo, letras; datas sem deslocar o fuso                                                                                                              |
-| `apiFetch`, `unwrap`, `ApiError`                    | envelope, sem envelope, corpo vazio; 400 com lista, 401, 404, 409, 500, rede e timeout                                                                                                                  |
-| Route Handlers                                      | status, corpo e falhas de dependência (ex.: `/api/health` com serviço fora do ar)                                                                                                                       |
+| `apiFetch`, `unwrap`, `ApiError`                    | JSON puro, corpo vazio; `code` e `message`; 400, 401, 404, 409, 422, 500, rede e timeout                                                                                                                |
+| Route Handlers                                      | status, corpo e falhas de dependência (ex.: `/api/health` com a API fora do ar)                                                                                                                         |
 
 ### Componente (`*.test.tsx`, ao lado do componente)
 
@@ -91,11 +92,11 @@ Abre o navegador e percorre o sistema como o usuário. **Pela [política atual](
 4. Estado na URL que sobrevive a recarregar (busca, filtro "Baixo", período de vendas).
 5. Celular (360px e 390px) e desktop (1280px), sem rolagem horizontal. Os dois menus (lateral e barra inferior) ficam no DOM e só um aparece por vez: para escolher um deles, use `getByRole('navigation', { name: 'Menu principal', includeHidden: true })` com `.first()` (lateral) ou `.last()` (barra), como em `e2e/navegacao.spec.ts`.
 
-O CI não sobe os cinco microsserviços. Os e2e rodam contra uma **API falsa**, um servidor Node em `e2e/support/fake-api.mjs` (porta 3999) que o Playwright sobe junto com o Next. Como cada serviço tem rotas com raízes diferentes (`/auth`, `/insumos`, `/gastos-indiretos`, `/receitas`, `/estoque`, `/producoes`, `/vendas`), um único servidor pode atender as cinco URLs: o `playwright.config.ts` aponta `AUTH_API_URL`, `CATALOG_API_URL` etc. para ele. A API falsa implementa o contrato de [api-integration.md](api-integration.md#rotas-usadas-pela-web), com o envelope `{ data, links }`, um JWT de teste e os dados do seed. Localmente, os mesmos testes podem rodar contra o backend real com o seed, com `E2E_API_REAL=true`.
+O CI não sobe o monolito. Os e2e rodam contra uma **API falsa**, um servidor Node em `e2e/support/fake-api.mjs` (porta 3999) que o Playwright sobe junto com o Next; o `playwright.config.ts` aponta `API_URL` para ela. A API falsa implementa o contrato de [api-integration.md](api-integration.md#rotas-usadas-pela-web), com JSON puro, erros `{ statusCode, code, message }`, um JWT de teste e os dados do seed. Localmente, os mesmos testes podem rodar contra o backend real com o seed, com `E2E_API_REAL=true`.
 
 Hoje a API falsa responde `GET /health` (para o Playwright saber que ela subiu), `GET /docs-json` (sondado pelo `/api/health`), `POST /auth/login` (FE-07: o usuário do seed recebe um JWT de 4 h com assinatura falsa; outra senha, `401 "Credenciais inválidas"`) e, desde a FE-23, as rotas do spec de fumaça: `GET`/`POST /insumos`, `GET /insumos/:id`, `GET /gastos-indiretos` (sempre vazio), `GET`/`POST /receitas`, `GET /receitas/:id`, `GET /estoque/insumos/:id` (e `/movimentacoes`, vazio), `GET`/`POST /producoes`, `GET /producoes/:id`, `GET`/`POST /vendas` (com `status`, `dataInicio` e `dataFim`), `GET /vendas/:id` e `PATCH /vendas/:id/status`. Todas exigem um Bearer emitido por ela e dentro do `exp` (senão, `401`), guardam o estado **em memória** (começa vazio a cada subida; com `E2E_REUSE_SERVERS=true` ele sobrevive entre execuções, por isso o spec usa nomes com sufixo) e repetem os cálculos do backend sem gastos indiretos (custo da receita, preço sugerido, custo da produção, baixa dos insumos, snapshot do custo na venda). As rotas de simulação e custo da receita (`/receitas/:id/custo`, `/simular`, `/preco-venda`), a entrada de estoque e as mutações de gastos não existem; o resto devolve `404` no formato do NestJS. **Sessão nos e2e.** Toda tela, exceto `/login` e `/design-system`, exige sessão desde a FE-07: comece o teste com `entrar(page)` (`e2e/support/sessao.ts`), que usa o usuário do seed e funciona com a API falsa e com `E2E_API_REAL=true`. Ele espera o botão "Sair" do menu lateral (até 30 s, porque o `next dev` compila o layout na primeira visita), então entre com a largura de desktop e só depois mude para a do celular (`page.setViewportSize`). O layout não chama a API (a sessão vem do cookie), por isso a FE-08 não acrescentou rotas à API falsa. `tokenFalso(exp)` e `definirCookie()` simulam um cookie vencido ou recusado pelo backend.
 
-As issues de tela **não** acrescentam rotas à API falsa; a **FE-23** acrescentou só as que o spec de fumaça usa, com o envelope `{ data, links }` e os contratos de `src/shared/api/contracts/`. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
+As issues de tela **não** acrescentam rotas à API falsa; a **FE-23** acrescentou só as que o spec de fumaça usa, com JSON puro e os contratos de `src/shared/api/contracts/`. O MSW fica nos testes de componente: no e2e, quem chama a API é o servidor do Next, num processo à parte, e um servidor HTTP de verdade é o jeito mais simples de atendê-lo.
 
 ## Uso do MSW
 
@@ -120,48 +121,47 @@ afterAll(() => server.close());
 
 No MSW 3, a opção se chama `onUnhandledFrame` (no MSW 2 era `onUnhandledRequest`).
 
-Cada teste declara as respostas de que precisa com `server.use(...)`. Os ajudantes de `src/test/api.ts` montam a URL do proxy e o envelope, para os handlers seguirem o contrato. Prefira `mockApi`, tipado pela rota: o `data` da resposta tem o tipo do contrato (`RotasDaApi`), e o status padrão é o do NestJS (201 no `POST`, 204 no `DELETE` com `undefined`):
+Cada teste declara as respostas de que precisa com `server.use(...)`. Os ajudantes de `src/test/api.ts` montam a URL do proxy e o corpo, para os handlers seguirem o contrato. Prefira `mockApi`, tipado pela rota: o `data` da resposta tem o tipo do contrato (`RotasDaApi`), e o status padrão é o da API (201 no `POST`, 204 no `DELETE` com `undefined`):
 
 ```ts
 server.use(
-  mockApi('GET catalog /insumos', [makeInsumo()]),
-  mockApi('POST catalog /insumos', async ({ request }) => {
+  mockApi('GET /insumos', [makeInsumo()]),
+  mockApi('POST /insumos', async ({ request }) => {
     corpos.push(await request.json());
     return makeInsumo();
   }),
   mockApiErro(
-    'DELETE catalog /insumos/:id',
-    404,
-    'Insumo não encontrado',
-    'Not Found',
+    'DELETE /insumos/:id',
+    409,
+    'Insumo em uso em receitas',
+    'INSUMO_EM_USO',
   ),
-  mockApiSemConexao('GET sales /vendas'),
+  mockApiSemConexao('GET /vendas'),
 );
 ```
 
-Para casos fora do contrato (corpo inválido, HTML, atraso), use o `http` do MSW com `apiUrl`, `envelope` e `nestError`:
+Para casos fora do contrato (corpo inválido, HTML, atraso), use o `http` do MSW com `apiUrl` e `apiErrorBody`:
 
 ```ts
 // src/test/api.ts (trecho)
-import type { Servico } from '@/shared/api/servicos';
-
-/** URL do proxy BFF, sem depender da origem: `*\/api/backend/catalog/insumos`. */
-export function apiUrl(servico: Servico, caminho: string) {
-  return `*/api/backend/${servico}${caminho}`;
+/** URL do proxy BFF, sem depender da origem: `*\/api/backend/insumos`. */
+export function apiUrl(caminho: string) {
+  return `*/api/backend${caminho}`;
 }
 
-/** Corpo como o HateoasInterceptor devolve. */
-export function envelope<T>(data: T) {
-  return { data, links: {} };
-}
-
-/** Erro no formato padrão do NestJS. */
-export function nestError(
+/** Erro no formato da API (`AllExceptionsFilter`). */
+export function apiErrorBody(
   statusCode: number,
   message: string | string[],
-  error?: string,
+  code?: string,
 ) {
-  return { statusCode, message, ...(error ? { error } : {}) };
+  return {
+    statusCode,
+    ...(code ? { code } : {}),
+    message,
+    path: '/',
+    timestamp: '...',
+  };
 }
 ```
 
@@ -199,10 +199,10 @@ O `user-event` trava com os timers falsos do Vitest: nesses testes (debounce da 
 
 ## Dados de teste
 
-Os dados de teste são baseados no seed **"Padaria Pão Feliz"** do backend (`services/*/prisma/seed.ts`), que é fictício. Assim, os números dos testes podem ser conferidos no app Flutter e no backend rodando.
+Os dados de teste são baseados no seed **"Padaria Pão Feliz"** do backend (`prisma/seed.ts` do monolito), que é fictício. Assim, os números dos testes podem ser conferidos no app Flutter e no backend rodando.
 
 - Login: `joao@padariapaofeliz.com.br`, senha `123456` (empresa Padaria Pão Feliz Ltda, CNPJ fictício `45.678.901/0001-23`).
-- O seed precisa rodar num banco **novo**: os seeds de catalog, recipe, operations e sales gravam com `empresaId = 1` fixo. Se o banco do auth já teve outras empresas, o usuário do seed entra e vê listas vazias (ver [lacunas](api-integration.md#lacunas-do-backend)).
+- O seed do monolito é idempotente: recria os dados da empresa do seed, achada pelo CNPJ (a lacuna 17 foi resolvida).
 - Nunca use dados reais de clientes nem de empresas, nem para um teste "rápido".
 
 | Recurso          | Do seed (valores para factories e fixtures)                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -212,7 +212,7 @@ Os dados de teste são baseados no seed **"Padaria Pão Feliz"** do backend (`se
 | Receitas         | Pão Francês (50 un, margem 60%, custo de produção 3,31, unitário 0,07, preço 0,11); Bolo de Chocolate (12 un, 50%, 9,70, 0,81, 1,22); Brigadeiro Gourmet (40 un, 60%, 15,48, 0,39, 0,62); Quindim (12 un, 55%, 10,80, 0,90, 1,40)                                                                                                                                                                                                            |
 | Vendas           | três `CONCLUIDA`, uma `PENDENTE` e uma `CANCELADA`, com `margemRealizada` de 0,28 a 0,86                                                                                                                                                                                                                                                                                                                                                     |
 
-Fixtures de respostas reais ficam em `src/test/fixtures/<servico>/<recurso>.json`, com o envelope, e são usadas nos testes de contrato (`src/shared/api/contracts/contracts.test.ts`); as respostas de erro do NestJS ficam em `src/test/fixtures/erros/`. As da FE-05 foram capturadas do backend em execução em 17/11/2026, com dados criados pela API na empresa do usuário do seed (empresa 3, porque o banco já tinha outras empresas; ver a lacuna 17), a partir dos valores do seed. O `access_token` de `auth/login.json` tem a assinatura trocada e não vale em servidor nenhum. Ao recapturar, faça o mesmo. Factories ficam em `src/test/factories/<entidade>.factory.ts`, com valores do seed e sobrescritas, tipadas pelo contrato: `makeInsumo` e `makeInsumosDoSeed`, `makeGastoIndireto` e `makeGastosDoSeed`, `makeReceita`, `makeReceitasDoSeed`, `makeReceitaCusto`, `makeSimulacaoCenario`, `makePrecoVenda`, `makeEstoque`, `makeMovimentacaoEstoque`, `makeProducao`, `makeVenda`, `makeItemVenda`, `makeJwtPayload` e `makeLoginResponse`. O teste de contrato confere que toda factory segue o schema:
+Fixtures de respostas reais ficam em `src/test/fixtures/<grupo>/<recurso>.json` (JSON puro, sem envelope) e são usadas nos testes de contrato (`src/shared/api/contracts/contracts.test.ts`); as respostas de erro da API (`{ statusCode, code, message, path, timestamp }`) ficam em `src/test/fixtures/erros/`. Desde a FE-39, elas são capturadas do monolito em execução com o seed (`localhost:3100`). O `access_token` de `auth/login.json` tem a assinatura trocada e não vale em servidor nenhum. Ao recapturar, faça o mesmo. Factories ficam em `src/test/factories/<entidade>.factory.ts`, com valores do seed e sobrescritas, tipadas pelo contrato: `makeInsumo` e `makeInsumosDoSeed`, `makeGastoIndireto` e `makeGastosDoSeed`, `makeReceita`, `makeReceitasDoSeed`, `makeReceitaCusto`, `makeSimulacaoCenario`, `makePrecoVenda`, `makeEstoque`, `makeMovimentacaoEstoque`, `makeEstoqueProduto`, `makeProducao`, `makeVenda`, `makeItemVenda`, `makeJwtPayload` e `makeLoginResponse`. O teste de contrato confere que toda factory segue o schema:
 
 ```ts
 // src/test/factories/insumo.factory.ts
@@ -315,16 +315,14 @@ it('não envia a quantidade inicial vazia nem na edição', () => {
 // src/features/insumos/api/insumos.api.test.ts
 import { http, HttpResponse } from 'msw';
 import { expect, it } from 'vitest';
-import { apiUrl, envelope } from '@/test/api';
+import { apiUrl } from '@/test/api';
 import { makeInsumo } from '@/test/factories/insumo.factory';
 import { server } from '@/test/server';
 import { listInsumos } from './insumos.api';
 
-it('desembrulha o envelope da listagem', async () => {
+it('valida a listagem com o contrato', async () => {
   server.use(
-    http.get(apiUrl('catalog', '/insumos'), () =>
-      HttpResponse.json(envelope([makeInsumo()])),
-    ),
+    http.get(apiUrl('/insumos'), () => HttpResponse.json([makeInsumo()])),
   );
 
   await expect(listInsumos()).resolves.toEqual([makeInsumo()]);
@@ -332,8 +330,8 @@ it('desembrulha o envelope da listagem', async () => {
 
 it('rejeita uma resposta fora do contrato', async () => {
   server.use(
-    http.get(apiUrl('catalog', '/insumos'), () =>
-      HttpResponse.json(envelope([{ ...makeInsumo(), custoUnitario: '3' }])),
+    http.get(apiUrl('/insumos'), () =>
+      HttpResponse.json([{ ...makeInsumo(), custoUnitario: '3' }]),
     ),
   );
 
@@ -348,7 +346,7 @@ it('rejeita uma resposta fora do contrato', async () => {
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, it, vi } from 'vitest';
-import { apiUrl, envelope, nestError } from '@/test/api';
+import { apiErrorBody, apiUrl } from '@/test/api';
 import { makeInsumo } from '@/test/factories/insumo.factory';
 import { setTestUrl } from '@/test/next-navigation';
 import { renderWithQuery } from '@/test/render';
@@ -359,16 +357,14 @@ vi.mock('next/navigation', () => import('@/test/next-navigation'));
 
 it('lista os insumos com o custo unitário de 4 casas', async () => {
   server.use(
-    http.get(apiUrl('catalog', '/insumos'), () =>
-      HttpResponse.json(
-        envelope([
-          makeInsumo({
-            nome: 'Manteiga sem Sal',
-            unidade: 'G',
-            custoUnitario: 0.024,
-          }),
-        ]),
-      ),
+    http.get(apiUrl('/insumos'), () =>
+      HttpResponse.json([
+        makeInsumo({
+          nome: 'Manteiga sem Sal',
+          unidade: 'G',
+          custoUnitario: 0.024,
+        }),
+      ]),
     ),
   );
 
@@ -381,13 +377,11 @@ it('lista os insumos com o custo unitário de 4 casas', async () => {
 it('busca sem diferenciar acentos', async () => {
   setTestUrl('/insumos?q=acucar');
   server.use(
-    http.get(apiUrl('catalog', '/insumos'), () =>
-      HttpResponse.json(
-        envelope([
-          makeInsumo({ id: 1, nome: 'Açúcar Cristal' }),
-          makeInsumo({ id: 2, nome: 'Sal' }),
-        ]),
-      ),
+    http.get(apiUrl('/insumos'), () =>
+      HttpResponse.json([
+        makeInsumo({ id: 1, nome: 'Açúcar Cristal' }),
+        makeInsumo({ id: 2, nome: 'Sal' }),
+      ]),
     ),
   );
 
@@ -399,10 +393,13 @@ it('busca sem diferenciar acentos', async () => {
 
 it('mostra o erro com "Tentar novamente"', async () => {
   server.use(
-    http.get(apiUrl('catalog', '/insumos'), () =>
-      HttpResponse.json(nestError(500, 'Internal server error'), {
-        status: 500,
-      }),
+    http.get(apiUrl('/insumos'), () =>
+      HttpResponse.json(
+        apiErrorBody(500, 'Erro interno do servidor', 'ERRO_INTERNO'),
+        {
+          status: 500,
+        },
+      ),
     ),
   );
 
@@ -424,7 +421,7 @@ it('mostra o erro com "Tentar novamente"', async () => {
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { expect, it, vi } from 'vitest';
-import { apiUrl, envelope } from '@/test/api';
+import { apiUrl } from '@/test/api';
 import { makeInsumo } from '@/test/factories/insumo.factory';
 import { renderWithQuery } from '@/test/render';
 import { server } from '@/test/server';
@@ -451,9 +448,9 @@ it('mostra a prévia do custo unitário enquanto digita', () => {
 it('envia o corpo com os nomes do contrato', async () => {
   const corpos: unknown[] = [];
   server.use(
-    http.post(apiUrl('catalog', '/insumos'), async ({ request }) => {
+    http.post(apiUrl('/insumos'), async ({ request }) => {
       corpos.push(await request.json());
-      return HttpResponse.json(envelope(makeInsumo()), { status: 201 });
+      return HttpResponse.json(makeInsumo(), { status: 201 });
     }),
   );
   const onOpenChange = vi.fn();
@@ -538,7 +535,7 @@ on:
 - **O gatilho `pull_request` não filtra a branch de base.** Os PRs deste repositório são **empilhados**: o PR de uma issue aponta para a branch da issue que a bloqueia (ex.: o da FE-02 aponta para `chore/fe-01-inicializacao-nextjs`), não para a `main`. Com `pull_request: { branches: [main] }`, esses PRs ficariam sem CI. Não acrescente esse filtro.
 - O `push` fica restrito à `main`, para não rodar duas vezes em cada push de branch com PR aberto.
 - Um novo push no mesmo PR cancela a execução anterior (`concurrency`).
-- O build e os testes usam variáveis de ambiente fictícias, declaradas no `env` do workflow (nunca segredos reais): `NEXT_PUBLIC_APP_URL=http://localhost:3000` e as cinco URLs de serviço apontando para a API falsa. Variável nova no schema de `src/shared/config/` entra também ali.
+- O build e os testes usam variáveis de ambiente fictícias, declaradas no `env` do workflow (nunca segredos reais): `NEXT_PUBLIC_APP_URL=http://localhost:3000` e `API_URL` apontando para a API falsa. Variável nova no schema de `src/shared/config/` entra também ali.
 - O limite do e2e cobre o build, a instalação do navegador com o cache frio e a suíte com os retries do CI. A Urbizzi estourou os 10 minutos quando a suíte cresceu ([grupo7-biopark/urbizzi-frontend#71](https://github.com/grupo7-biopark/urbizzi-frontend/issues/71)); se acontecer aqui, aumente o `timeout-minutes` do job e2e sem mexer nos testes.
 - O cache do Playwright guarda só os navegadores; com ele, o job instala apenas as bibliotecas do sistema (`playwright install-deps`).
 

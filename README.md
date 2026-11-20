@@ -10,33 +10,20 @@ Interface web do LucroAI, que substitui o app Flutter [`lucroai_mobile`](https:/
 
 ## Subindo o ambiente do zero
 
-O front e o back ficam em repositórios separados, cada um com o seu compose. O front alcança os cinco microsserviços pelas portas que o backend publica no host (3001 a 3005), então a ordem de subida não importa. O front usa a porta **3000**.
+O front e o back ficam em repositórios separados, cada um com o seu compose. O front alcança a API (o monolito) pela porta que o backend publica no host (**3100**), então a ordem de subida não importa. O front usa a porta **3000**.
 
 ### 1. Backend
 
-No repositório [`lucroai-backend`](https://github.com/GrupoDoisENG/lucroai-backend), em outro terminal:
+No repositório [`lucroai-backend`](https://github.com/victorschmidt21/lucroai-backend) (o monolito modular), em outro terminal:
 
 ```bash
-git clone https://github.com/GrupoDoisENG/lucroai-backend.git
+git clone https://github.com/victorschmidt21/lucroai-backend.git
 cd lucroai-backend
-cp .env.example .env
-docker compose up -d
+docker compose up --build
+docker compose exec api npm run db:seed   # dados de exemplo
 ```
 
-As migrations rodam sozinhas na subida de cada serviço. Confira se os cinco estão no ar abrindo o Swagger de um deles, por exemplo [localhost:3001/docs](http://localhost:3001/docs).
-
-**Dados de exemplo (seed).** O seed roda no host, não no container, e grava no banco dos serviços publicado na porta 5433. Cada serviço precisa das próprias dependências e do próprio `.env`:
-
-```bash
-for s in auth catalog recipe operations sales; do
-  cp services/$s-service/.env.example services/$s-service/.env
-  npm install --prefix services/$s-service
-  npm run db:generate --prefix services/$s-service
-done
-npm run seed:all
-```
-
-Rode o seed uma vez, num banco vazio: ele cria registros, não os atualiza. Depois dele, entre com `joao@padariapaofeliz.com.br` e senha `123456` (empresa Padaria Pão Feliz).
+As migrations rodam sozinhas na subida. Confira se a API está no ar em [localhost:3100/health](http://localhost:3100/health) ou no Swagger, [localhost:3100/docs](http://localhost:3100/docs). O seed é idempotente: recria os dados da Padaria Pão Feliz. Depois dele, entre com `joao@padariapaofeliz.com.br` e senha `123456`.
 
 ### 2. Frontend
 
@@ -55,28 +42,15 @@ docker compose up --build
 | --------------- | -------------------------------------------------------------------------------------------------------------- |
 | Aplicação       | [localhost:3000](http://localhost:3000) (leva ao `/login`; entre com `joao@padariapaofeliz.com.br` / `123456`) |
 | Health do front | [localhost:3000/api/health](http://localhost:3000/api/health)                                                  |
-| auth-service    | [localhost:3001/docs](http://localhost:3001/docs)                                                              |
-| catalog-service | [localhost:3002/docs](http://localhost:3002/docs)                                                              |
-| recipe-service  | [localhost:3003/docs](http://localhost:3003/docs)                                                              |
-| operations      | [localhost:3004/docs](http://localhost:3004/docs)                                                              |
-| sales-service   | [localhost:3005/docs](http://localhost:3005/docs)                                                              |
+| API (Swagger)   | [localhost:3100/docs](http://localhost:3100/docs)                                                              |
 
 Com tudo no ar, o health responde:
 
 ```json
-{
-  "status": "ok",
-  "services": {
-    "auth": { "reachable": true },
-    "catalog": { "reachable": true },
-    "recipe": { "reachable": true },
-    "operations": { "reachable": true },
-    "sales": { "reachable": true }
-  }
-}
+{ "status": "ok", "api": { "reachable": true } }
 ```
 
-`reachable: false` indica que o front está no ar, mas não alcançou aquele serviço. Confira, no backend, `docker compose ps` e `docker compose logs <serviço>` (por exemplo `docker compose logs sales-service`). Como o backend não tem rota de health, o front consulta o `/docs-json` (Swagger) de cada serviço, e qualquer resposta HTTP conta como alcançado.
+`reachable: false` indica que o front está no ar, mas não alcançou a API. Confira, no backend, `docker compose ps` e `docker compose logs api`. O front consulta o `GET /health` da API, e qualquer resposta HTTP conta como alcançada.
 
 Alterações em `src/` e `public/` recarregam sozinhas, por polling (`WATCH_POLL_INTERVAL_MS`), porque eventos de arquivo não atravessam bind mounts no Docker Desktop. O polling consome mais CPU e I/O; se pesar, rode o front [fora do Docker](#desenvolvimento-local-fora-do-docker). Depois de mudar dependências ou arquivos de configuração da raiz, suba de novo com `docker compose up --build`.
 
@@ -88,26 +62,18 @@ Todas estão documentadas em [`.env.example`](.env.example) e são validadas com
 
 ```text
 Variáveis de ambiente inválidas. Confira o .env.example.
-✖ SALES_API_URL é obrigatória e deve ser uma URL http(s) válida
-  → at SALES_API_URL
+✖ API_URL é obrigatória e deve ser uma URL http(s) válida
+  → at API_URL
 ```
 
-| Variável                    | Obrigatória | Padrão no compose                    | Descrição                                            |
-| --------------------------- | ----------- | ------------------------------------ | ---------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL`       | sim         | `http://localhost:3000`              | URL pública do front; incorporada ao bundle no build |
-| `AUTH_API_URL`              | sim         | valor de `DOCKER_AUTH_API_URL`       | auth-service: empresas, usuários e login             |
-| `CATALOG_API_URL`           | sim         | valor de `DOCKER_CATALOG_API_URL`    | catalog-service: insumos e gastos indiretos          |
-| `RECIPE_API_URL`            | sim         | valor de `DOCKER_RECIPE_API_URL`     | recipe-service: receitas, custos e simulação         |
-| `OPERATIONS_API_URL`        | sim         | valor de `DOCKER_OPERATIONS_API_URL` | operations-service: estoque e produções              |
-| `SALES_API_URL`             | sim         | valor de `DOCKER_SALES_API_URL`      | sales-service: vendas                                |
-| `DOCKER_AUTH_API_URL`       | compose     | `http://host.docker.internal:3001`   | auth-service visto de dentro do container            |
-| `DOCKER_CATALOG_API_URL`    | compose     | `http://host.docker.internal:3002`   | catalog-service visto de dentro do container         |
-| `DOCKER_RECIPE_API_URL`     | compose     | `http://host.docker.internal:3003`   | recipe-service visto de dentro do container          |
-| `DOCKER_OPERATIONS_API_URL` | compose     | `http://host.docker.internal:3004`   | operations-service visto de dentro do container      |
-| `DOCKER_SALES_API_URL`      | compose     | `http://host.docker.internal:3005`   | sales-service visto de dentro do container           |
-| `WEB_PORT`                  | compose     | `3000`                               | Porta do front no host                               |
+| Variável              | Obrigatória | Padrão no compose                  | Descrição                                            |
+| --------------------- | ----------- | ---------------------------------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL` | sim         | `http://localhost:3000`            | URL pública do front; incorporada ao bundle no build |
+| `API_URL`             | sim         | valor de `DOCKER_API_URL`          | URL base da API (o monolito `lucroai-backend`)       |
+| `DOCKER_API_URL`      | compose     | `http://host.docker.internal:3100` | a API vista de dentro do container                   |
+| `WEB_PORT`            | compose     | `3000`                             | Porta do front no host                               |
 
-As URLs dos serviços são usadas só no servidor, sem prefixo de versão (o backend não usa `/v1`). Dentro do compose, cada `*_API_URL` recebe o valor do `DOCKER_*_API_URL` correspondente, porque `localhost` no container é o próprio container. Os `*_API_URL` do `.env` valem para o `npm run dev` fora do Docker.
+A URL da API é usada só no servidor, sem prefixo de versão (o backend não usa `/v1`). Dentro do compose, `API_URL` recebe o valor de `DOCKER_API_URL`, porque `localhost` no container é o próprio container. O `API_URL` do `.env` vale para o `npm run dev` fora do Docker. As cinco variáveis antigas (`AUTH_API_URL` e as outras) não são mais lidas.
 
 Variáveis de servidor são lidas com `getServerEnv()` (`env.server.ts`), que não pode ser importado por código do navegador. Variáveis públicas vêm de `publicEnv` (`env.public.ts`).
 
@@ -150,16 +116,12 @@ e2e/              testes do Playwright
 
 ## Imagem de produção
 
-O `Dockerfile` é multi-stage. O target `development` é usado pelo compose; o target `production` gera uma imagem só com o servidor [`standalone`](https://nextjs.org/docs/app/api-reference/config/next-config-js/output). Como `NEXT_PUBLIC_APP_URL` é incorporada no build, ela é um argumento da imagem, enquanto as URLs dos serviços são informadas ao executar:
+O `Dockerfile` é multi-stage. O target `development` é usado pelo compose; o target `production` gera uma imagem só com o servidor [`standalone`](https://nextjs.org/docs/app/api-reference/config/next-config-js/output). Como `NEXT_PUBLIC_APP_URL` é incorporada no build, ela é um argumento da imagem, enquanto a URL da API é informada ao executar:
 
 ```bash
 docker build --target production --build-arg NEXT_PUBLIC_APP_URL=https://app.exemplo.com -t lucroai-frontend .
 docker run -p 3000:3000 \
-  -e AUTH_API_URL=https://auth.exemplo.com \
-  -e CATALOG_API_URL=https://catalogo.exemplo.com \
-  -e RECIPE_API_URL=https://receitas.exemplo.com \
-  -e OPERATIONS_API_URL=https://operacoes.exemplo.com \
-  -e SALES_API_URL=https://vendas.exemplo.com \
+  -e API_URL=https://api.exemplo.com \
   lucroai-frontend
 ```
 
@@ -176,6 +138,6 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-**Porta 3000 ocupada.** Defina outra em `WEB_PORT` e ajuste `NEXT_PUBLIC_APP_URL` no `.env`. Não use 3001 a 3005, que são dos serviços do backend.
+**Porta 3000 ocupada.** Defina outra em `WEB_PORT` e ajuste `NEXT_PUBLIC_APP_URL` no `.env`. Não use a 3100, que é da API.
 
-**Health com todos os serviços `reachable: false` no Docker.** Confira se o backend está no ar (`curl http://localhost:3001/docs` no host). No Linux, o `host.docker.internal` depende do `extra_hosts` do compose, já configurado.
+**Health com `reachable: false` no Docker.** Confira se a API está no ar (`curl http://localhost:3100/health` no host). No Linux, o `host.docker.internal` depende do `extra_hosts` do compose, já configurado.

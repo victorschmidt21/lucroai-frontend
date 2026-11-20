@@ -155,13 +155,13 @@ Exemplo do seed: farinha, 5 kg por R$ 15,00 → `R$ 3,0000/kg`; manteiga, 500 g 
 
 ### Validações do formulário
 
-| Campo (contrato)              | Regra                                                 | Mensagem                                       | Origem                                                                                                             |
-| ----------------------------- | ----------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `nome`                        | obrigatório, até 80 caracteres                        | "Informe o nome" / "Use até 80 caracteres"     | mobile; o limite vem da coluna do banco (o DTO não o valida, ver [lacunas](api-integration.md#lacunas-do-backend)) |
-| `quantidadeBaseCusto`         | número > 0                                            | "Informe uma quantidade maior que zero"        | mobile; backend `@Min(0.000001)`                                                                                   |
-| `unidade`                     | `G`, `KG`, `ML`, `L` ou `UN`                          | —                                              | Select com valor padrão `G` (g), como o mobile (`InsumoUnidadeMedida.gramas`)                                      |
-| `valorPago`                   | número > 0                                            | "Informe um valor maior que zero"              | mobile; o backend aceita 0                                                                                         |
-| `quantidadeDisponivelInicial` | número ≥ 0, só na criação, padrão vazio = não enviado | "Informe uma quantidade maior ou igual a zero" | FE-09; backend `@Min(0)`, opcional                                                                                 |
+| Campo (contrato)              | Regra                                                 | Mensagem                                       | Origem                                                                        |
+| ----------------------------- | ----------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------- |
+| `nome`                        | obrigatório, até 80 caracteres                        | "Informe o nome" / "Use até 80 caracteres"     | mobile; o backend também limita a 80 (lacuna 12, resolvida)                   |
+| `quantidadeBaseCusto`         | número > 0                                            | "Informe uma quantidade maior que zero"        | mobile; backend `@Min(0.000001)`                                              |
+| `unidade`                     | `G`, `KG`, `ML`, `L` ou `UN`                          | —                                              | Select com valor padrão `G` (g), como o mobile (`InsumoUnidadeMedida.gramas`) |
+| `valorPago`                   | número > 0                                            | "Informe um valor maior que zero"              | mobile; o backend aceita 0                                                    |
+| `quantidadeDisponivelInicial` | número ≥ 0, só na criação, padrão vazio = não enviado | "Informe uma quantidade maior ou igual a zero" | FE-09; backend `@Min(0)`, opcional                                            |
 
 ### Textos
 
@@ -300,7 +300,7 @@ FE-13. Origem: `lib/features/estoques/domain/entities/estoque_com_insumo.dart`, 
 
 ### Composição dos dados
 
-Não há endpoint de listagem de estoque. O mobile lista `GET /insumos` (catalog) e, para cada insumo, `GET /estoque/insumos/:id` (operations), em sequência. A resposta de `GET /insumos` já traz `quantidadeDisponivel` (espelho atualizado por evento), mas **não** traz `quantidadeMinima`. Por isso, a web continua fazendo uma chamada por insumo, em paralelo (`useQueries`), e usa `quantidadeDisponivel` e `quantidadeMinima` do operations-service, que é a fonte de verdade (ver [lacunas](api-integration.md#lacunas-do-backend)).
+O mobile lista `GET /insumos` e, para cada insumo, `GET /estoque/insumos/:id`, em sequência. Desde a FE-39, a web faz duas chamadas para a lista inteira: `GET /insumos` (nome e unidade) e `GET /estoque/insumos` (saldo, mínimo e data de alteração), juntadas pelo `insumoId` em `useEstoques` (lacuna 5, resolvida). Um insumo sem registro de estoque (não acontece no monolito) mostra "Não foi possível carregar o estoque deste insumo." no cartão.
 
 ### Fórmulas
 
@@ -312,7 +312,7 @@ barra          = clamp(percentual / 100, 0, 1)
 ```
 
 - Como `Baixo` exige `percentual < 50`, e isso já implica `quantidadeDisponivel < quantidadeMinima`, o status **Baixo nunca aparece** com a regra atual do mobile: tudo abaixo do mínimo é Crítico. A web reproduz a regra como está (critério da FE-13: "confere com o mobile") e mantém o ramo, que fica testado.
-- Mínimo 0 (todo insumo criado pela API nasce com `quantidadeMinima = 0`) dá percentual 100 e status Adequado.
+- Mínimo 0 (todo insumo criado pela API nasce com `quantidadeMinima = 0`) dá percentual 100 e status Adequado. O mínimo é definido no cartão, em "Definir mínimo" (FE-39, abaixo).
 - O percentual é exibido sem casas (`toStringAsFixed(0)`): `86%`.
 - `isBaixoEstoque` também é usado pelo painel (FE-22): as fórmulas ficam em `src/shared/domain/estoque.ts`. Como o ramo Baixo é inalcançável com números reais, ele é testado por `classificarStatusEstoque(baixoEstoque, percentual)`.
 
@@ -334,9 +334,9 @@ barra          = clamp(percentual / 100, 0, 1)
 | Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | igual; `baixo=1` na URL                                                                                                          |
 | Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | igual, com link para `/insumos`                                                                                                  |
 | Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                                                                 |
-| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão, com "Tentar novamente"                                    |
+| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)      |
 
-O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item cujo saldo ainda está carregando ou falhou continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
+O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item sem saldo continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
 
 - Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum insumo está abaixo do estoque mínimo.", com "Limpar filtro".
 - A ação do vazio é o link "Novo insumo" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
@@ -347,11 +347,12 @@ O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item cujo sald
 
 FE-14. Origem: `lib/features/estoques/presentation/widgets/registrar_entrada_modal.dart`, `lib/features/estoques/presentation/cubit/estoques_cubit.dart`, `movimentacao_estoque.dart`. Backend: `services/operations-service/src/modules/estoque/application/dto/registrar-entrada-estoque.dto.ts`.
 
-- Corpo: `{ quantidade }`, com `quantidade > 0`. O DTO **não** tem `observacao` e o backend rejeita campos extras (`forbidNonWhitelisted`), então a web **não** envia nem mostra o campo "Observação" pedido na FE-14 (ex.: "Compra de reposição, NF 4521") (ver [divergências](api-integration.md#divergências-entre-as-issues-e-o-backend)).
+- Corpo: `{ quantidade, observacao? }`, com `quantidade > 0` e a observação opcional, aparada e com até 200 caracteres ("Use até 200 caracteres"); vazia não é enviada (`toRegistrarEntradaBody`). O campo "Observação" (dica "Ex.: Compra de reposição, NF 4521") existe desde a FE-39 (lacuna 22, resolvida), e o histórico mostra a observação abaixo da data.
 - Prévia do saldo: `saldoAposEntrada(quantidadeDisponivel, quantidade)` = `quantidadeDisponivel + quantidade`, arredondado a 6 casas para tirar o ruído de ponto flutuante (`entrada-estoque.schema.ts`). Com o campo vazio ou inválido, a prévia mostra o saldo atual.
-- Depois da entrada, a web invalida `estoque` (saldo, status, histórico e painel) e `insumos`, e revalida `insumos` de novo 2 s depois, porque o catalog atualiza `quantidadeDisponivel` por evento.
+- Depois da entrada, a web invalida `estoque` (saldo, status, histórico e painel) e `insumos`. A API grava tudo na mesma transação, então não há mais a segunda revalidação 2 s depois.
 - Histórico: gaveta "Histórico" (o mobile busca as movimentações, mas não tem tela), com `GET /estoque/insumos/:id/movimentacoes`, já ordenado da mais recente para a mais antiga. Cada item: ícone de seta (para baixo em Entrada, verde; para cima em Saída, vermelha), tipo, origem, data `dd/mm/aaaa` e quantidade com sinal e unidade: `+` em Entrada, `−` em Saída. Referência: em `PRODUCAO`, "Produção #<referenciaId>" (ex.: "Produção #12"); em `COMPRA`, sem referência.
-- Não existe endpoint para alterar a quantidade mínima nem para corrigir o saldo (`atualizarEstoque` lança `UnsupportedError` no mobile). Não crie essas ações.
+- **Definir mínimo** (FE-39, só na web; lacuna 14, resolvida): botão "Definir mínimo" no cartão (com o saldo carregado), que abre "Definir Estoque Mínimo" com o nome do insumo, o disponível, o campo "Estoque mínimo" (começa com o mínimo atual, aceita 0; dica "Abaixo deste valor, o insumo aparece como Crítico."; erro "Digite uma quantidade válida") e "Salvar". Envia `PATCH /estoque/insumos/:id/minimo` com `{ quantidadeMinima }` (`estoque-minimo.schema.ts`), mostra "Estoque mínimo atualizado com sucesso." e invalida `estoque` e `insumos`.
+- Não existe endpoint para corrigir o saldo (`atualizarEstoque` lança `UnsupportedError` no mobile). Não crie essa ação.
 
 | Onde            | Mobile                                                         | Web                                                    |
 | --------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
@@ -415,7 +416,7 @@ Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _
 
 Chips de gastos (web): escolher um gasto desmarca "Todos" e fica só com os gastos escolhidos; marcar "Todos" limpa a seleção. O formulário já vem com a receita do filtro da lista.
 
-Detalhe (web): "Total de unidades", "Custo total", "Custo unitário" e "Rateio dos gastos indiretos" (descrição do gasto ou "Gasto #<id>"; sem rateio, "Nenhum gasto rateado."). O total de unidades usa o rendimento **atual** da receita, porque a produção não grava o rendimento nem o total de unidades (lacuna 23).
+Detalhe (web): "Total de unidades", "Custo total", "Custo unitário" e "Rateio dos gastos indiretos" (descrição gravada do gasto; sem rateio, "Nenhum gasto rateado."). O total de unidades e a descrição de cada rateio são os gravados pela API na produção (`totalUnidades` e `rateios[].descricao`; lacuna 23, resolvida na FE-39).
 
 O backend **não** bloqueia produção com estoque de insumo insuficiente: o saldo fica negativo (ver [lacunas](api-integration.md#lacunas-do-backend)). Mesmo assim, a tela mostra no formulário qualquer erro devolvido.
 
@@ -473,42 +474,33 @@ FE-17. Origem: `vendas_page.dart` (`_ConfirmacaoSheet`, `_concluirComValidacao`,
 ### Ciclo de vida
 
 ```text
-PENDENTE ──► CONCLUIDA   (publica venda_concluida; o operations-service baixa o produto acabado)
+PENDENTE ──► CONCLUIDA   (baixa o produto acabado na mesma transação; sem saldo, 422 e continua PENDENTE)
          └─► CANCELADA   (sem efeito no estoque)
 ```
 
 - `PATCH /vendas/:id/status` com `{ status: 'CONCLUIDA' | 'CANCELADA' }`.
-- Só `PENDENTE` muda de status. Fora disso, o backend responde 400 "Venda já finalizada não pode ser alterada".
-- A baixa do produto acabado é **assíncrona**. Se faltar estoque, o consumidor do operations-service falha, mas a venda **continua `CONCLUIDA`** no sales-service: não há compensação (ver [lacunas](api-integration.md#lacunas-do-backend)). Por isso, a validação no cliente, abaixo, é a barreira que de fato impede vender o que não foi produzido.
+- Só `PENDENTE` muda de status. Fora disso, o backend responde 422 `VENDA_FINALIZADA` "Venda já finalizada não pode ser alterada".
+- Desde o monolito, a conclusão baixa o produto acabado **na mesma transação**: sem saldo, a API responde `422` `ESTOQUE_INSUFICIENTE` ("Estoque insuficiente para a receita <id>: disponível X, solicitado Y") e a venda continua `PENDENTE` (lacuna 9, resolvida). A web abre o mesmo diálogo "Estoque insuficiente" com essa mensagem seguida de ". Registre uma produção antes de concluir.".
 - Cancelar não verifica estoque.
 
 ### Validação de estoque antes de concluir
 
-`calcularEstoqueDisponivel(receitaId, producoes, receitas, vendas)` em `features/vendas/`, função pura:
-
-```text
-rendimento  = receita.rendimento (ou 1, se a receita não estiver na lista)
-produzido   = Σ producao.quantidade × rendimento        // produções da receita: GET /producoes?receitaId=
-vendido     = Σ item.quantidade                          // itens da receita em vendas CONCLUIDA
-disponivel  = produzido − vendido
-```
+O saldo de produto acabado vem da API, `GET /estoque/produtos` (lacuna 6, resolvida na FE-39), e `estoqueDisponivelDaReceita(receitaId, estoques)` em `features/vendas/vendas.calculos.ts` lê o da receita (receita que nunca teve produção não está na lista e vale 0).
 
 Para cada receita da venda, se `disponivel < quantidade solicitada`, **não conclui** e mostra o diálogo "Estoque insuficiente":
 
 > Estoque insuficiente para "<receita>": disponível X, solicitado Y. Registre uma produção antes de concluir.
 
-X e Y são inteiros (`toStringAsFixed(0)` no mobile). O nome usa `Receita #<id>` quando a receita não está na lista. Botões: "Entendido" e o link "Ir para Produções".
+X e Y com `formatNumero`. O nome usa `Receita #<id>` quando a receita não está na lista. Botões: "Entendido" e o link "Ir para Produções".
 
-Se a consulta de produções ou de vendas falhar, a tela segue com a conclusão e deixa o backend validar (o mobile ignora o erro em `catch (_)`).
+Se a consulta de receitas ou de estoque falhar, a tela segue com a conclusão e deixa a API validar: o `422` `ESTOQUE_INSUFICIENTE` abre o mesmo diálogo.
 
 Diferenças em relação ao mobile, registradas como decisão:
 
-1. **Vendas consideradas.** O mobile soma só as vendas concluídas do período carregado no histórico (o mês atual), o que superestima o disponível. A web busca `GET /vendas?status=CONCLUIDA` sem período, porque as produções também não têm período.
+1. **Fonte do saldo.** O mobile calcula produções − vendas concluídas; a web usa o saldo da API (FE-39), que é o mesmo que a conclusão confere.
 2. **Mesma receita em duas linhas.** O mobile confere cada item isoladamente. A web soma as quantidades da mesma receita antes de comparar.
-3. **Rendimento.** O estoque real usa o rendimento da receita no momento da produção; a produção não guarda esse valor, então o cálculo usa o rendimento atual (limitação também do mobile).
-4. **Falha na consulta.** O mobile ignora a falha item a item; a web consulta juntas as receitas, as vendas concluídas e as produções de cada receita e, se qualquer uma falhar, segue com a conclusão sem conferir nenhum item.
-5. **Depois de concluir ou cancelar, o diálogo continua aberto**, com o status devolvido (Badge "Concluída" ou "Cancelada") e só o botão "Fechar"; o mobile fecha a folha. Assim a tela mostra o status real, consultado de novo.
-6. **Disponível negativo** (vendas concluídas acima do produzido) aparece como está na mensagem ("disponível -20"), como no mobile.
+3. **Falha na consulta.** A web segue com a conclusão, e a API valida.
+4. **Depois de concluir ou cancelar, o diálogo continua aberto**, com o status devolvido pela API (Badge "Concluída" ou "Cancelada") e só o botão "Fechar"; o mobile fecha a folha.
 
 ### Textos
 
@@ -847,9 +839,9 @@ Resumo do que a web faz diferente, de propósito. Cada item está detalhado na s
 | Insumos              | custo unitário com 4 casas fixas                                                                                                                                                          | FE-05                                            |
 | Receitas             | rendimento só inteiro                                                                                                                                                                     | backend `@IsInt`                                 |
 | Estoque              | mostra a data da última alteração; erro isolado por cartão                                                                                                                                | FE-13                                            |
-| Entrada de estoque   | sem o campo "Observação"; prévia do saldo; gaveta "Histórico"                                                                                                                             | o backend rejeita o campo                        |
+| Entrada de estoque   | prévia do saldo; gaveta "Histórico"; "Definir mínimo" (FE-39)                                                                                                                             | só na web                                        |
 | Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                                                                                        | backend `@IsInt` e `maxDecimalPlaces: 2`         |
-| Confirmação de venda | vendido considera todas as vendas concluídas e soma itens da mesma receita                                                                                                                | correção do cálculo                              |
+| Confirmação de venda | saldo de produto acabado da API e soma de itens da mesma receita                                                                                                                          | correção do cálculo (FE-39)                      |
 | Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                                                                  | lacuna do backend com `dataFim`                  |
 | Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                                                                                            | FE-19                                            |
 | Simulação            | cenário do meio chamado "Base"; sempre três cenários; receita num `Select`; cada controle tem um campo para digitar; faixa de preço nunca com `max < min`                                 | FE-21                                            |
