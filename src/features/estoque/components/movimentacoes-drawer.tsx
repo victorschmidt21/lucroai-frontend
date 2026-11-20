@@ -119,6 +119,11 @@ function ItemMovimentacao({
           {formatData(movimentacao.dataMovimentacao)}
           {referencia ? ` · ${referencia}` : null}
         </p>
+        {movimentacao.observacao ? (
+          <p className="text-small wrap-anywhere text-ink-muted">
+            {movimentacao.observacao}
+          </p>
+        ) : null}
       </div>
       <span
         className={cn(

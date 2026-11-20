@@ -1,14 +1,14 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { Producao } from '@/shared/api/contracts/operations';
+import type { EstoqueProduto } from '@/shared/api/contracts/operations';
 import type {
   UpdateVendaStatusBody,
   Venda,
 } from '@/shared/api/contracts/sales';
 import { ToastProvider } from '@/shared/ui/toast';
 import { mockApi, mockApiErro } from '@/test/api';
-import { makeProducao } from '@/test/factories/producao.factory';
+import { makeEstoqueProduto } from '@/test/factories/estoque.factory';
 import { makeReceitasDoSeed } from '@/test/factories/receita.factory';
 import { makeVenda } from '@/test/factories/venda.factory';
 import { renderWithQuery } from '@/test/render';
@@ -20,32 +20,22 @@ vi.mock('next/navigation', () => import('@/test/next-navigation'));
 // Venda pendente com 50 Pães Franceses (receita 1) e 20 Brigadeiros (receita 3).
 const pendente = makeVenda({ id: 7, status: 'PENDENTE' });
 
-/**
- * Seed: 3 lotes de pão (× 50 = 150) e 1 de brigadeiro (× 40 = 40), com a primeira
- * venda concluída (50 pães e 20 brigadeiros): disponível 100 pães e 20 brigadeiros.
- */
+/** Saldo de produto acabado da API: 100 pães e 20 brigadeiros. */
 function mockEstoque(
-  producoesBrigadeiro: Producao[] = [
-    makeProducao({ id: 2, receitaId: 3, quantidade: 1 }),
+  estoques: EstoqueProduto[] = [
+    makeEstoqueProduto({ receitaId: 1, quantidadeDisponivel: 100 }),
+    makeEstoqueProduto({ receitaId: 3, quantidadeDisponivel: 20 }),
   ],
 ) {
   server.use(
-    mockApi('GET recipe /receitas', makeReceitasDoSeed()),
-    mockApi('GET sales /vendas', ({ request }) => {
-      expect(new URL(request.url).searchParams.get('status')).toBe('CONCLUIDA');
-      return [makeVenda({ id: 1 })];
-    }),
-    mockApi('GET operations /producoes', ({ request }) =>
-      new URL(request.url).searchParams.get('receitaId') === '1'
-        ? [makeProducao()]
-        : producoesBrigadeiro,
-    ),
+    mockApi('GET /receitas', makeReceitasDoSeed()),
+    mockApi('GET /estoque/produtos', estoques),
   );
 }
 
 function mockPatch(corpos: UpdateVendaStatusBody[]) {
   server.use(
-    mockApi('PATCH sales /vendas/:id/status', async ({ request, params }) => {
+    mockApi('PATCH /vendas/:id/status', async ({ request, params }) => {
       expect(params.id).toBe('7');
       const corpo = (await request.json()) as UpdateVendaStatusBody;
       corpos.push(corpo);
@@ -67,7 +57,7 @@ function renderConfirmacao(venda: Venda = pendente) {
 
 describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
   it('mostra os itens, a margem realizada e o total', async () => {
-    server.use(mockApi('GET recipe /receitas', makeReceitasDoSeed()));
+    server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
     const { dialogo } = renderConfirmacao();
 
     const itens = within(dialogo).getByRole('list', {
@@ -80,17 +70,10 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     expect(within(dialogo).getByText('R$ 45,00')).toBeInTheDocument();
   });
 
-  it('conclui com estoque e mostra o status consultado de novo', async () => {
+  it('conclui com estoque e mostra o status devolvido pela API', async () => {
     const corpos: UpdateVendaStatusBody[] = [];
-    let consultas = 0;
     mockEstoque();
     mockPatch(corpos);
-    server.use(
-      mockApi('GET sales /vendas/:id', () => {
-        consultas += 1;
-        return { ...pendente, status: 'CONCLUIDA' };
-      }),
-    );
     const { dialogo } = renderConfirmacao();
 
     await userEvent.click(
@@ -101,7 +84,6 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
       await screen.findByText('Venda concluída com sucesso.'),
     ).toBeInTheDocument();
     expect(corpos).toEqual([{ status: 'CONCLUIDA' }]);
-    await waitFor(() => expect(consultas).toBe(1));
     expect(await within(dialogo).findByText('Concluída')).toBeInTheDocument();
     expect(
       within(dialogo).queryByRole('button', { name: 'Concluir venda' }),
@@ -110,7 +92,10 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
 
   it('bloqueia a conclusão quando falta produto acabado', async () => {
     const corpos: UpdateVendaStatusBody[] = [];
-    mockEstoque([]);
+    // Brigadeiro nunca produzido: fora da lista, vale 0.
+    mockEstoque([
+      makeEstoqueProduto({ receitaId: 1, quantidadeDisponivel: 100 }),
+    ]);
     mockPatch(corpos);
     const { dialogo } = renderConfirmacao();
 
@@ -121,9 +106,8 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     const aviso = await screen.findByRole('dialog', {
       name: 'Estoque insuficiente',
     });
-    // Sem produção de brigadeiro e 20 já vendidos: disponível −20.
     expect(aviso).toHaveTextContent(
-      'Estoque insuficiente para "Brigadeiro Gourmet": disponível -20, solicitado 20. Registre uma produção antes de concluir.',
+      'Estoque insuficiente para "Brigadeiro Gourmet": disponível 0, solicitado 20. Registre uma produção antes de concluir.',
     );
     expect(
       within(aviso).getByRole('link', { name: 'Ir para Produções' }),
@@ -145,8 +129,7 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     const corpos: UpdateVendaStatusBody[] = [];
     mockEstoque();
     server.use(
-      mockApiErro('GET operations /producoes', 500, 'Internal server error'),
-      mockApi('GET sales /vendas/:id', { ...pendente, status: 'CONCLUIDA' }),
+      mockApiErro('GET /estoque/produtos', 500, 'Erro interno do servidor'),
     );
     mockPatch(corpos);
     const { dialogo } = renderConfirmacao();
@@ -161,10 +144,35 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     expect(corpos).toEqual([{ status: 'CONCLUIDA' }]);
   });
 
+  it('mostra o diálogo de estoque quando a API recusa com ESTOQUE_INSUFICIENTE', async () => {
+    mockEstoque();
+    server.use(
+      mockApiErro(
+        'PATCH /vendas/:id/status',
+        422,
+        'Estoque insuficiente para a receita 3: disponível 5, solicitado 20',
+        'ESTOQUE_INSUFICIENTE',
+      ),
+    );
+    const { dialogo } = renderConfirmacao();
+
+    await userEvent.click(
+      within(dialogo).getByRole('button', { name: 'Concluir venda' }),
+    );
+
+    const aviso = await screen.findByRole('dialog', {
+      name: 'Estoque insuficiente',
+    });
+    expect(aviso).toHaveTextContent(
+      'Estoque insuficiente para a receita 3: disponível 5, solicitado 20. Registre uma produção antes de concluir.',
+    );
+    expect(within(dialogo).getByText('Pendente')).toBeInTheDocument();
+  });
+
   it('cancela sem verificar o estoque', async () => {
-    // Sem handler de produções nem de vendas: qualquer consulta falharia o teste.
+    // Sem handler de estoque: qualquer consulta falharia o teste.
     const corpos: UpdateVendaStatusBody[] = [];
-    server.use(mockApi('GET recipe /receitas', makeReceitasDoSeed()));
+    server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
     mockPatch(corpos);
     const { dialogo } = renderConfirmacao();
 
@@ -178,7 +186,7 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
   });
 
   it('"Fechar" mantém a venda pendente', async () => {
-    server.use(mockApi('GET recipe /receitas', makeReceitasDoSeed()));
+    server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
     const { dialogo, onFechar } = renderConfirmacao();
 
     // O ícone "Fechar" do cabeçalho e o botão do rodapé fazem o mesmo.

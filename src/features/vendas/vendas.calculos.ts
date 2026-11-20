@@ -24,41 +24,17 @@ export function totalCarrinho(itens: readonly ItemParaTotal[]) {
 }
 
 /*
- * Estoque disponível de produto acabado (docs/business-rules.md#validação-de-estoque-antes-de-concluir).
- * Origem: `verificarEstoqueParaVenda` de vendas_cubit.dart. O backend não expõe
- * esse estoque (lacuna 6), então ele é calculado das produções e das vendas.
+ * Estoque disponível de produto acabado (docs/business-rules.md#validação-de-estoque-antes-de-concluir):
+ * vem de `GET /estoque/produtos` (lacuna 6, resolvida). Receita que nunca teve
+ * produção não aparece na lista e vale 0, como na API.
  */
-
-type ProducaoParaEstoque = { receitaId: number; quantidade: number };
-type ReceitaParaEstoque = { id: number; nome: string; rendimento: number };
-type VendaParaEstoque = {
-  status: string;
-  itens: readonly { receitaId: number; quantidade: number }[];
-};
-
-/**
- * `Σ producao.quantidade × rendimento − Σ itens vendidos em vendas CONCLUIDA`,
- * só da receita. Sem a receita na lista, o rendimento é 1 (como o mobile).
- */
-export function calcularEstoqueDisponivel(
+export function estoqueDisponivelDaReceita(
   receitaId: number,
-  producoes: readonly ProducaoParaEstoque[],
-  receitas: readonly ReceitaParaEstoque[],
-  vendas: readonly VendaParaEstoque[],
+  estoques: readonly { receitaId: number; quantidadeDisponivel: number }[],
 ) {
-  const rendimento = receitas.find((r) => r.id === receitaId)?.rendimento ?? 1;
-
-  const produzido = producoes
-    .filter((p) => p.receitaId === receitaId)
-    .reduce((soma, p) => soma + p.quantidade * rendimento, 0);
-
-  const vendido = vendas
-    .filter((v) => v.status === 'CONCLUIDA')
-    .flatMap((v) => v.itens)
-    .filter((i) => i.receitaId === receitaId)
-    .reduce((soma, i) => soma + i.quantidade, 0);
-
-  return produzido - vendido;
+  return (
+    estoques.find((e) => e.receitaId === receitaId)?.quantidadeDisponivel ?? 0
+  );
 }
 
 /** Quantidade pedida por receita: a mesma receita em duas linhas é somada. */

@@ -1,22 +1,23 @@
 import { queryOptions } from '@tanstack/react-query';
-import { getEstoqueDoInsumo, listMovimentacoes } from './estoque.api';
+import {
+  listEstoqueInsumos,
+  listEstoqueProdutos,
+  listMovimentacoes,
+} from './estoque.api';
 
 export const estoqueKeys = {
   all: ['estoque'] as const,
-  insumo: (insumoId: number) =>
-    [...estoqueKeys.all, 'insumo', insumoId] as const,
+  insumos: () => [...estoqueKeys.all, 'insumos'] as const,
   movimentacoes: (insumoId: number) =>
     [...estoqueKeys.all, 'movimentacoes', insumoId] as const,
+  produtos: () => [...estoqueKeys.all, 'produtos'] as const,
 };
 
-/**
- * Saldo de um insumo. A listagem combina `insumosListOptions()` com esta query
- * para cada insumo, em paralelo (`useQueries`); o painel (FE-22) faz o mesmo.
- */
-export function estoqueDoInsumoOptions(insumoId: number) {
+/** Saldo e mínimo de todos os insumos (`GET /estoque/insumos`); o painel (FE-22) também usa. */
+export function estoqueInsumosOptions() {
   return queryOptions({
-    queryKey: estoqueKeys.insumo(insumoId),
-    queryFn: ({ signal }) => getEstoqueDoInsumo(insumoId, signal),
+    queryKey: estoqueKeys.insumos(),
+    queryFn: ({ signal }) => listEstoqueInsumos(signal),
   });
 }
 
@@ -25,5 +26,13 @@ export function movimentacoesOptions(insumoId: number) {
   return queryOptions({
     queryKey: estoqueKeys.movimentacoes(insumoId),
     queryFn: ({ signal }) => listMovimentacoes(insumoId, signal),
+  });
+}
+
+/** Saldo de produto acabado por receita (`GET /estoque/produtos`), usado ao concluir a venda (FE-17). */
+export function estoqueProdutosOptions() {
+  return queryOptions({
+    queryKey: estoqueKeys.produtos(),
+    queryFn: ({ signal }) => listEstoqueProdutos(signal),
   });
 }
