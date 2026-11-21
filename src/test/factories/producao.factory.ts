@@ -7,14 +7,23 @@ export function makeProducao(overrides: Partial<Producao> = {}): Producao {
     receitaId: 1,
     empresaId: 1,
     quantidade: 3,
+    totalUnidades: 150,
     custoTotal: 28.28,
     custoUnitario: 0.19,
     dataProducao: '2026-06-02T10:00:00.000Z',
     rateios: [
-      { gastoIndiretoId: 1, valorRateado: 4.5 },
-      { gastoIndiretoId: 2, valorRateado: 9 },
-      { gastoIndiretoId: 3, valorRateado: 1.85 },
-      { gastoIndiretoId: 4, valorRateado: 3 },
+      { gastoIndiretoId: 1, descricao: 'Energia Elétrica', valorRateado: 4.5 },
+      { gastoIndiretoId: 2, descricao: 'Aluguel do Espaço', valorRateado: 9 },
+      {
+        gastoIndiretoId: 3,
+        descricao: 'Gás de Cozinha (P45)',
+        valorRateado: 1.85,
+      },
+      {
+        gastoIndiretoId: 4,
+        descricao: 'Material de Embalagem',
+        valorRateado: 3,
+      },
     ],
     ...overrides,
   };

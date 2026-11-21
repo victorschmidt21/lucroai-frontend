@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { gastosIndiretosListOptions } from '@/features/gastos-indiretos/api/gastos-indiretos.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import type { Producao } from '@/shared/api/contracts/operations';
 import { hrefComFiltros } from '@/shared/api/filtros';
@@ -27,7 +26,6 @@ type Props = {
 export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
   const query = useQuery(producoesListOptions({ receitaId }));
   const receitas = useQuery(receitasListOptions());
-  const gastos = useQuery(gastosIndiretosListOptions());
   const [formularioAberto, setFormularioAberto] = useState(abrirNovo);
   const [detalhe, setDetalhe] = useState<Producao | null>(null);
   const router = useRouter();
@@ -150,7 +148,6 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
           }}
           producao={detalhe}
           receita={receitas.data?.find((r) => r.id === detalhe.receitaId)}
-          gastos={gastos.data ?? []}
         />
       ) : null}
     </>

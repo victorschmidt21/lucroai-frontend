@@ -6,6 +6,7 @@ import {
 } from '@/test/factories/auth.factory';
 import {
   makeEstoque,
+  makeEstoqueProduto,
   makeMovimentacaoEstoque,
 } from '@/test/factories/estoque.factory';
 import {
@@ -27,6 +28,8 @@ import login from '@/test/fixtures/auth/login.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
 import insumos from '@/test/fixtures/catalog/insumos.json';
+import estoqueInsumos from '@/test/fixtures/operations/estoque-insumos.json';
+import estoqueProdutos from '@/test/fixtures/operations/estoque-produtos.json';
 import estoque from '@/test/fixtures/operations/estoque.json';
 import movimentacoes from '@/test/fixtures/operations/movimentacoes.json';
 import producao from '@/test/fixtures/operations/producao.json';
@@ -43,6 +46,7 @@ import { unwrap } from '../request';
 import { jwtPayloadSchema, loginResponseSchema } from './auth';
 import { gastoIndiretoSchema, insumoSchema } from './catalog';
 import {
+  estoqueProdutoSchema,
   estoqueSchema,
   movimentacaoEstoqueSchema,
   producaoSchema,
@@ -58,7 +62,7 @@ import { vendaSchema } from './sales';
 type Caso = {
   nome: string;
   schema: z.ZodType;
-  /** Resposta real do backend com o seed (no envelope, menos o payload do JWT). */
+  /** Resposta real do monolito com o seed (JSON puro). */
   fixture: unknown;
   /** Dados da factory, que precisam seguir o mesmo contrato. */
   factory: unknown;
@@ -158,6 +162,20 @@ const CASOS: Caso[] = [
     invalida: { ...makeEstoque(), dataAlteracao: 'ontem' },
   },
   {
+    nome: 'lista de estoque dos insumos',
+    schema: z.array(estoqueSchema),
+    fixture: estoqueInsumos,
+    factory: [makeEstoque(), makeEstoque({ id: 2, insumoId: 2 })],
+    invalida: [{ ...makeEstoque(), quantidadeMinima: undefined }],
+  },
+  {
+    nome: 'estoque de produto acabado',
+    schema: z.array(estoqueProdutoSchema),
+    fixture: estoqueProdutos,
+    factory: [makeEstoqueProduto()],
+    invalida: [{ ...makeEstoqueProduto(), receitaId: '1' }],
+  },
+  {
     nome: 'movimentações de estoque',
     schema: z.array(movimentacaoEstoqueSchema),
     fixture: movimentacoes,
@@ -172,7 +190,7 @@ const CASOS: Caso[] = [
       makeProducao(),
       makeProducao({ custoTotal: null, custoUnitario: null }),
     ],
-    invalida: [{ ...makeProducao(), rateios: undefined }],
+    invalida: [{ ...makeProducao(), totalUnidades: undefined }],
   },
   {
     nome: 'produção',
@@ -219,10 +237,19 @@ describe.each(CASOS)(
 
 describe('campos sem valor', () => {
   it('receita sem margem omite margem e preço sugerido', () => {
-    const [semMargem] = unwrap(receitas, z.array(receitaSchema));
+    const semMargem = unwrap(
+      { ...makeReceita(), margemLucro: undefined, precoSugerido: undefined },
+      receitaSchema,
+    );
 
     expect(semMargem.margemLucro).toBeUndefined();
     expect(semMargem.precoSugerido).toBeUndefined();
+  });
+
+  it('movimentação de produção vem com observacao null', () => {
+    const lista = unwrap(movimentacoes, z.array(movimentacaoEstoqueSchema));
+
+    expect(lista.find((m) => m.origem === 'PRODUCAO')?.observacao).toBeNull();
   });
 
   it('movimentação de compra vem com referenciaId null', () => {

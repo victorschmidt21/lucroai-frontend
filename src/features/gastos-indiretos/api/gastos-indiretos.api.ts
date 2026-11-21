@@ -10,12 +10,12 @@ import { unwrap } from '@/shared/api/request';
 // catalog-service: `services/catalog-service/src/modules/gastos-indiretos/infra/controllers/gastos-indiretos.controller.ts`.
 
 export async function listGastosIndiretos(signal?: AbortSignal) {
-  const corpo = await apiFetch('catalog', '/gastos-indiretos', { signal });
+  const corpo = await apiFetch('/gastos-indiretos', { signal });
   return unwrap(corpo, z.array(gastoIndiretoSchema));
 }
 
 export async function createGastoIndireto(body: CreateGastoIndiretoBody) {
-  const corpo = await apiFetch('catalog', '/gastos-indiretos', {
+  const corpo = await apiFetch('/gastos-indiretos', {
     method: 'POST',
     body,
   });
@@ -29,7 +29,7 @@ export async function updateGastoIndireto({
   id: number;
   body: UpdateGastoIndiretoBody;
 }) {
-  const corpo = await apiFetch('catalog', `/gastos-indiretos/${id}`, {
+  const corpo = await apiFetch(`/gastos-indiretos/${id}`, {
     method: 'PUT',
     body,
   });
@@ -38,5 +38,5 @@ export async function updateGastoIndireto({
 
 /** Responde 204 sem corpo: não há o que desembrulhar. */
 export async function deleteGastoIndireto(id: number) {
-  await apiFetch('catalog', `/gastos-indiretos/${id}`, { method: 'DELETE' });
+  await apiFetch(`/gastos-indiretos/${id}`, { method: 'DELETE' });
 }

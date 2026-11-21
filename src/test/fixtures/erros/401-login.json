@@ -1,5 +1,7 @@
 {
+  "statusCode": 401,
+  "code": "CREDENCIAIS_INVALIDAS",
   "message": "Credenciais inválidas",
-  "error": "Unauthorized",
-  "statusCode": 401
+  "path": "/auth/login",
+  "timestamp": "2026-11-20T16:51:57.370Z"
 }

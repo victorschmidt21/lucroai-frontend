@@ -29,7 +29,7 @@ const INSUMOS_ESTOQUE_RECEITAS = [['insumos'], ['estoque'], ['receitas']];
 
 describe('invalidação após as mutações de insumo', () => {
   it('criar invalida insumos, estoque e receitas', async () => {
-    server.use(mockApi('POST catalog /insumos', makeInsumo()));
+    server.use(mockApi('POST /insumos', makeInsumo()));
     const { wrapper, raizes } = preparar();
     const { result } = renderHook(() => useCreateInsumo(), { wrapper });
 
@@ -46,7 +46,7 @@ describe('invalidação após as mutações de insumo', () => {
   });
 
   it('editar invalida insumos, estoque e receitas', async () => {
-    server.use(mockApi('PATCH catalog /insumos/:id', makeInsumo()));
+    server.use(mockApi('PATCH /insumos/:id', makeInsumo()));
     const { wrapper, raizes } = preparar();
     const { result } = renderHook(() => useUpdateInsumo(), { wrapper });
 
@@ -58,7 +58,7 @@ describe('invalidação após as mutações de insumo', () => {
   });
 
   it('excluir invalida insumos, estoque e receitas', async () => {
-    server.use(mockApi('DELETE catalog /insumos/:id', undefined));
+    server.use(mockApi('DELETE /insumos/:id', undefined));
     const { wrapper, raizes } = preparar();
     const { result } = renderHook(() => useDeleteInsumo(), { wrapper });
 
@@ -72,7 +72,7 @@ describe('erros', () => {
   it('recarrega a lista quando o insumo já não existe (404)', async () => {
     server.use(
       mockApiErro(
-        'DELETE catalog /insumos/:id',
+        'DELETE /insumos/:id',
         404,
         'Insumo não encontrado',
         'Not Found',
@@ -88,12 +88,7 @@ describe('erros', () => {
 
   it('não invalida nada em outros erros', async () => {
     server.use(
-      mockApiErro(
-        'PATCH catalog /insumos/:id',
-        400,
-        'Regra de negócio',
-        'Bad Request',
-      ),
+      mockApiErro('PATCH /insumos/:id', 400, 'Regra de negócio', 'Bad Request'),
     );
     const { wrapper, raizes } = preparar();
     const { result } = renderHook(() => useUpdateInsumo(), { wrapper });

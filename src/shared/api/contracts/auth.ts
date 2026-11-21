@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// auth-service. Origem: `services/auth-service/src/modules/auth/`.
+// Login. Origem: `lucroai-backend` (monolito), `src/modules/auth/`.
 
 /** `login.dto.ts` */
 export type LoginBody = {

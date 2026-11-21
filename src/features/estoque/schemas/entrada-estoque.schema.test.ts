@@ -7,7 +7,7 @@ import {
 } from './entrada-estoque.schema';
 
 function mensagens(quantidade: string) {
-  const result = entradaEstoqueSchema.safeParse({ quantidade });
+  const result = entradaEstoqueSchema.safeParse({ quantidade, observacao: '' });
   return (result.error?.issues ?? []).map((issue) => [
     issue.path.join('.'),
     issue.message,
@@ -16,7 +16,7 @@ function mensagens(quantidade: string) {
 
 describe('entradaEstoqueSchema', () => {
   it('começa vazio', () => {
-    expect(entradaEstoqueVazia).toEqual({ quantidade: '' });
+    expect(entradaEstoqueVazia).toEqual({ quantidade: '', observacao: '' });
   });
 
   it.each([
@@ -26,9 +26,9 @@ describe('entradaEstoqueSchema', () => {
     ['0,001', 0.001],
     ['1.234,5', 1234.5],
   ])('aceita "%s" como %d', (quantidade, esperado) => {
-    expect(entradaEstoqueSchema.parse({ quantidade }).quantidade).toBe(
-      esperado,
-    );
+    expect(
+      entradaEstoqueSchema.parse({ quantidade, observacao: '' }).quantidade,
+    ).toBe(esperado);
   });
 
   it.each(['', '   ', '0', '0,0', '-1', 'abc', '1,2,3'])(
@@ -41,10 +41,45 @@ describe('entradaEstoqueSchema', () => {
   );
 });
 
-describe('corpo da API', () => {
-  it('envia só a quantidade, sem observação', () => {
+describe('observação', () => {
+  it('aceita até 200 caracteres', () => {
     expect(
-      toRegistrarEntradaBody(entradaEstoqueSchema.parse({ quantidade: '2,5' })),
+      entradaEstoqueSchema.safeParse({
+        quantidade: '1',
+        observacao: 'x'.repeat(200),
+      }).success,
+    ).toBe(true);
+  });
+
+  it('recusa mais de 200 caracteres', () => {
+    const result = entradaEstoqueSchema.safeParse({
+      quantidade: '1',
+      observacao: 'x'.repeat(201),
+    });
+
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      'Use até 200 caracteres',
+    ]);
+  });
+});
+
+describe('corpo da API', () => {
+  it('envia a observação aparada', () => {
+    expect(
+      toRegistrarEntradaBody(
+        entradaEstoqueSchema.parse({
+          quantidade: '2,5',
+          observacao: '  Compra de reposição, NF 4521 ',
+        }),
+      ),
+    ).toEqual({ quantidade: 2.5, observacao: 'Compra de reposição, NF 4521' });
+  });
+
+  it('não envia a observação vazia', () => {
+    expect(
+      toRegistrarEntradaBody(
+        entradaEstoqueSchema.parse({ quantidade: '2,5', observacao: '   ' }),
+      ),
     ).toEqual({ quantidade: 2.5 });
   });
 });

@@ -8,7 +8,7 @@ vi.mock('./navigation', () => ({
   isNavegando: vi.fn<() => boolean>(() => false),
 }));
 
-const ERRO_401 = new ApiError({ statusCode: 401, servico: 'catalog' });
+const ERRO_401 = new ApiError({ statusCode: 401 });
 
 afterEach(() => {
   vi.mocked(navigateTo).mockClear();

@@ -1,40 +1,30 @@
-{
-  "data": [
-    {
-      "id": 10,
-      "empresaId": 3,
-      "descricao": "Aluguel do Espaço",
-      "valor": 1800,
-      "metodoRateio": "FIXO"
-    },
-    {
-      "id": 9,
-      "empresaId": 3,
-      "descricao": "Energia Elétrica",
-      "valor": 450,
-      "metodoRateio": "PROPORCIONAL"
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/gastos-indiretos",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/gastos-indiretos",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/gastos-indiretos/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/gastos-indiretos/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/gastos-indiretos/:id",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 32,
+    "empresaId": 30,
+    "descricao": "Material de Embalagem",
+    "valor": 120,
+    "metodoRateio": "POR_UNIDADE"
+  },
+  {
+    "id": 31,
+    "empresaId": 30,
+    "descricao": "Gás de Cozinha (P45)",
+    "valor": 185,
+    "metodoRateio": "PROPORCIONAL"
+  },
+  {
+    "id": 30,
+    "empresaId": 30,
+    "descricao": "Aluguel do Espaço",
+    "valor": 1800,
+    "metodoRateio": "FIXO"
+  },
+  {
+    "id": 29,
+    "empresaId": 30,
+    "descricao": "Energia Elétrica",
+    "valor": 450,
+    "metodoRateio": "PROPORCIONAL"
   }
-}
+]

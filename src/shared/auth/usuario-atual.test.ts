@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { ApiError, ContratoInvalidoError } from '@/shared/api/errors';
-import { nestError } from '@/test/api';
+import { apiErrorBody } from '@/test/api';
 import { makeJwtPayload } from '@/test/factories/auth.factory';
 import { server } from '@/test/server';
 import { toUsuarioAtual, usuarioAtualSchema } from './usuario-atual';
@@ -37,7 +37,7 @@ describe('getSessao', () => {
   it('rejeita com ApiError 401 sem sessão', async () => {
     server.use(
       http.get('*/api/auth/sessao', () =>
-        HttpResponse.json(nestError(401, 'Unauthorized'), { status: 401 }),
+        HttpResponse.json(apiErrorBody(401, 'Unauthorized'), { status: 401 }),
       ),
     );
 

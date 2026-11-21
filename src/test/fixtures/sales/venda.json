@@ -1,42 +1,27 @@
 {
-  "data": {
-    "id": 13,
-    "empresaId": 3,
-    "total": 15,
-    "status": "CONCLUIDA",
-    "dataVenda": "2026-11-17T20:31:13.282Z",
-    "itens": [
-      {
-        "id": 17,
-        "vendaId": 13,
-        "receitaId": 9,
-        "quantidade": 30,
-        "precoUnitarioReal": 0.5,
-        "custoUnitario": 45.07,
-        "margemRealizada": -89.14
-      }
-    ]
-  },
-  "links": {
-    "getAll": {
-      "href": "/vendas",
-      "method": "GET"
+  "id": 28,
+  "empresaId": 30,
+  "total": 38603.8,
+  "status": "PENDENTE",
+  "dataVenda": "2026-11-20T15:42:10.418Z",
+  "itens": [
+    {
+      "id": 48,
+      "vendaId": 28,
+      "receitaId": 25,
+      "quantidade": 100,
+      "precoUnitarioReal": 270.03,
+      "custoUnitario": 168.77,
+      "margemRealizada": 0.375
     },
-    "create": {
-      "href": "/vendas",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/vendas/13",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/vendas/13",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/vendas/13",
-      "method": "DELETE"
+    {
+      "id": 49,
+      "vendaId": 28,
+      "receitaId": 27,
+      "quantidade": 40,
+      "precoUnitarioReal": 290.02,
+      "custoUnitario": 181.26,
+      "margemRealizada": 0.375
     }
-  }
+  ]
 }

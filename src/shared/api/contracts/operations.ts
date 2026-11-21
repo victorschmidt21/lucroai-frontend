@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { origemMovimentacaoSchema, tipoMovimentacaoSchema } from './enums';
 
-// operations-service. Origem: `services/operations-service/src/modules/`.
+// Estoque e produções. Origem: `lucroai-backend` (monolito),
+// `src/modules/estoque/` e `src/modules/producoes/`.
 
 /** `estoque/application/dto/estoque.dto.ts` */
 export const estoqueSchema = z.object({
-  /** 0 quando o insumo ainda não tem registro de estoque. */
   id: z.number().int(),
   insumoId: z.number().int(),
   /** Pode ficar negativo: a produção não confere o saldo (lacuna 10). */
@@ -16,10 +16,26 @@ export const estoqueSchema = z.object({
 
 export type Estoque = z.infer<typeof estoqueSchema>;
 
-/** `registrar-entrada-estoque.dto.ts`: só `quantidade` (campos extras dão 400). */
+/** `registrar-entrada-estoque.dto.ts` (campos extras dão 400). */
 export type RegistrarEntradaEstoqueBody = {
   quantidade: number;
+  /** Até 200 caracteres; vazia é gravada como `null` (lacuna 22, resolvida). */
+  observacao?: string;
 };
+
+/** `atualizar-minimo-estoque.dto.ts` (`PATCH /estoque/insumos/:id/minimo`, lacuna 14). */
+export type AtualizarMinimoEstoqueBody = {
+  quantidadeMinima: number;
+};
+
+/** `estoque/application/dto/estoque-produto.dto.ts`: um por receita que já teve produção. */
+export const estoqueProdutoSchema = z.object({
+  receitaId: z.number().int(),
+  quantidadeDisponivel: z.number(),
+  dataAlteracao: z.iso.datetime(),
+});
+
+export type EstoqueProduto = z.infer<typeof estoqueProdutoSchema>;
 
 /** `estoque/application/dto/movimentacao-estoque.dto.ts` */
 export const movimentacaoEstoqueSchema = z.object({
@@ -30,14 +46,17 @@ export const movimentacaoEstoqueSchema = z.object({
   quantidade: z.number(),
   /** Id da produção, nas saídas por produção. */
   referenciaId: z.number().int().nullable(),
+  observacao: z.string().nullable(),
   dataMovimentacao: z.iso.datetime(),
 });
 
 export type MovimentacaoEstoque = z.infer<typeof movimentacaoEstoqueSchema>;
 
-/** `producoes/domain/models/producao.entity.ts` */
+/** `producoes/application/dto/producao.dto.ts` */
 export const rateioProducaoSchema = z.object({
   gastoIndiretoId: z.number().int(),
+  /** Descrição do gasto na hora da produção. */
+  descricao: z.string(),
   valorRateado: z.number(),
 });
 
@@ -47,6 +66,8 @@ export const producaoSchema = z.object({
   empresaId: z.number().int(),
   /** Lotes. */
   quantidade: z.number().int(),
+  /** Lotes × rendimento da receita na hora da produção (lacuna 23, resolvida). */
+  totalUnidades: z.number(),
   custoTotal: z.number().nullable(),
   custoUnitario: z.number().nullable(),
   dataProducao: z.iso.datetime(),

@@ -39,19 +39,18 @@ const OPCOES_STATUS = [
   { value: 'baixo', label: 'Baixo' },
 ] satisfies { value: FiltroStatus; label: string }[];
 
-/**
- * Com o filtro "Baixo", um item ainda carregando ou com erro continua visível: sem
- * o saldo, não dá para saber se ele está abaixo do mínimo.
- */
+/** Com o filtro "Baixo", um item sem saldo continua visível: não dá para saber. */
 function passaNoFiltro({ estoque }: ItemEstoque, apenasBaixo: boolean) {
-  if (!apenasBaixo || !estoque.isSuccess) return true;
-  return isBaixoEstoque(estoque.data);
+  if (!apenasBaixo || !estoque) return true;
+  return isBaixoEstoque(estoque);
 }
 
 /** Tela de estoque. Origem: estoques_page.dart. */
 export function EstoqueLista() {
-  const { insumos, itens } = useEstoques();
+  const { insumos, estoques, itens } = useEstoques();
   const queryClient = useQueryClient();
+  const carregando = insumos.isPending || estoques.isPending;
+  const falha = insumos.error ?? estoques.error;
   const [atualizando, setAtualizando] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -157,7 +156,7 @@ export function EstoqueLista() {
         </div>
       ) : null}
 
-      {insumos.isPending ? (
+      {carregando ? (
         <output
           aria-label="Carregando estoques"
           className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
@@ -169,12 +168,12 @@ export function EstoqueLista() {
             />
           ))}
         </output>
-      ) : insumos.isError ? (
+      ) : falha ? (
         <ErrorState
           title="Erro ao carregar estoques"
-          message={getErrorMessage(insumos.error)}
-          onRetry={() => void insumos.refetch()}
-          retrying={insumos.isFetching}
+          message={getErrorMessage(falha)}
+          onRetry={() => void atualizar()}
+          retrying={atualizando}
         />
       ) : itens.length === 0 ? (
         <EmptyState

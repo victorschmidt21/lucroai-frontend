@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { unidadeMedidaSchema } from './enums';
 
-// recipe-service. Origem: `services/recipe-service/src/modules/`.
+// Receitas, custo e simulação. Origem: `lucroai-backend` (monolito), `src/modules/receitas/`.
 
 /**
  * `receitas/domain/models/receita.entity.ts`. O repositório converte `null` em

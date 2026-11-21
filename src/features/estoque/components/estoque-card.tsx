@@ -18,13 +18,13 @@ import { Button } from '@/shared/ui/button';
 import { Chip } from '@/shared/ui/chip';
 import {
   IconAdicionar,
-  IconAtualizar,
+  IconEditar,
   IconHistorico,
 } from '@/shared/ui/icons/acoes';
 import { ProgressBar } from '@/shared/ui/progress-bar';
-import { Skeleton } from '@/shared/ui/skeleton';
 import type { ItemEstoque } from '../hooks/use-estoques';
 import { EntradaEstoqueDialog } from './entrada-estoque-dialog';
+import { EstoqueMinimoDialog } from './estoque-minimo-dialog';
 import { MovimentacoesDrawer } from './movimentacoes-drawer';
 
 /** Cartão de um insumo. Origem: estoque_card.dart. */
@@ -32,6 +32,7 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
   const tituloId = useId();
   const unidade = UNIDADE_MEDIDA_ROTULOS[insumo.unidade];
   const [entradaAberta, setEntradaAberta] = useState(false);
+  const [minimoAberto, setMinimoAberto] = useState(false);
   const [historicoAberto, setHistoricoAberto] = useState(false);
 
   return (
@@ -46,41 +47,31 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
         <Chip>{unidade}</Chip>
       </div>
 
-      {estoque.isSuccess ? (
-        <Saldo
-          estoque={estoque.data}
-          nome={insumo.nome}
-          unidade={insumo.unidade}
-        />
-      ) : estoque.isError ? (
-        <div className="flex flex-col items-start gap-2">
-          <p role="alert" className="text-small text-ink-muted">
-            Não foi possível carregar o estoque deste insumo.
-          </p>
-          <Button
-            variant="secundario"
-            size="compacto"
-            loading={estoque.isFetching}
-            onClick={() => void estoque.refetch()}
-          >
-            {estoque.isFetching ? null : <IconAtualizar className="size-4" />}
-            Tentar novamente
-          </Button>
-        </div>
+      {estoque ? (
+        <Saldo estoque={estoque} nome={insumo.nome} unidade={insumo.unidade} />
       ) : (
-        <Skeleton
-          aria-label={`Carregando o estoque de ${insumo.nome}`}
-          className="h-20"
-        />
+        <p role="alert" className="text-small text-ink-muted">
+          Não foi possível carregar o estoque deste insumo.
+        </p>
       )}
 
-      {/* "Registrar entrada" precisa do saldo atual; o histórico, não. */}
+      {/* "Registrar entrada" e "Definir mínimo" precisam do saldo atual; o histórico, não. */}
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
-        {estoque.isSuccess ? (
-          <Button size="compacto" onClick={() => setEntradaAberta(true)}>
-            <IconAdicionar className="size-4" />
-            Registrar entrada
-          </Button>
+        {estoque ? (
+          <>
+            <Button size="compacto" onClick={() => setEntradaAberta(true)}>
+              <IconAdicionar className="size-4" />
+              Registrar entrada
+            </Button>
+            <Button
+              variant="secundario"
+              size="compacto"
+              onClick={() => setMinimoAberto(true)}
+            >
+              <IconEditar className="size-4" />
+              Definir mínimo
+            </Button>
+          </>
         ) : null}
         <Button
           variant="secundario"
@@ -92,12 +83,21 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
         </Button>
       </div>
 
-      {estoque.isSuccess ? (
+      {estoque ? (
         <EntradaEstoqueDialog
           open={entradaAberta}
           onOpenChange={setEntradaAberta}
           insumo={insumo}
-          estoque={estoque.data}
+          estoque={estoque}
+        />
+      ) : null}
+      {/* Montado só aberto, para o campo começar com o mínimo atual. */}
+      {estoque && minimoAberto ? (
+        <EstoqueMinimoDialog
+          open
+          onOpenChange={setMinimoAberto}
+          insumo={insumo}
+          estoque={estoque}
         />
       ) : null}
       <MovimentacoesDrawer

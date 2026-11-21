@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { ApiError, ContratoInvalidoError } from '@/shared/api/errors';
-import { apiUrl, envelope, mockApi, mockApiErro } from '@/test/api';
+import { apiUrl, mockApi, mockApiErro } from '@/test/api';
 import { makeInsumo } from '@/test/factories/insumo.factory';
 import insumoReal from '@/test/fixtures/catalog/insumo.json';
 import insumosReais from '@/test/fixtures/catalog/insumos.json';
@@ -22,20 +22,18 @@ import {
 } from './insumos.queries';
 
 describe('listInsumos', () => {
-  it('desembrulha a resposta real do backend', async () => {
+  it('valida a resposta real do backend', async () => {
     server.use(
-      http.get(apiUrl('catalog', '/insumos'), () =>
-        HttpResponse.json(insumosReais),
-      ),
+      http.get(apiUrl('/insumos'), () => HttpResponse.json(insumosReais)),
     );
 
-    await expect(listInsumos()).resolves.toEqual(insumosReais.data);
+    await expect(listInsumos()).resolves.toEqual(insumosReais);
   });
 
   it('rejeita uma resposta fora do contrato', async () => {
     server.use(
-      http.get(apiUrl('catalog', '/insumos'), () =>
-        HttpResponse.json(envelope([{ ...makeInsumo(), custoUnitario: '3' }])),
+      http.get(apiUrl('/insumos'), () =>
+        HttpResponse.json([{ ...makeInsumo(), custoUnitario: '3' }]),
       ),
     );
 
@@ -46,18 +44,16 @@ describe('listInsumos', () => {
 describe('getInsumo', () => {
   it('busca o insumo pelo id', async () => {
     server.use(
-      http.get(apiUrl('catalog', '/insumos/19'), () =>
-        HttpResponse.json(insumoReal),
-      ),
+      http.get(apiUrl('/insumos/19'), () => HttpResponse.json(insumoReal)),
     );
 
-    await expect(getInsumo(19)).resolves.toEqual(insumoReal.data);
+    await expect(getInsumo(19)).resolves.toEqual(insumoReal);
   });
 
   it('rejeita com o 404 do backend', async () => {
     server.use(
       mockApiErro(
-        'GET catalog /insumos/:id',
+        'GET /insumos/:id',
         404,
         'Insumo não encontrado',
         'Not Found',
@@ -75,7 +71,7 @@ describe('mutações', () => {
   it('cria com POST e o corpo em camelCase', async () => {
     const corpos: unknown[] = [];
     server.use(
-      mockApi('POST catalog /insumos', async ({ request }) => {
+      mockApi('POST /insumos', async ({ request }) => {
         corpos.push(await request.json());
         return makeInsumo({ id: 30 });
       }),
@@ -95,7 +91,7 @@ describe('mutações', () => {
   it('edita com PATCH no id', async () => {
     const chamadas: unknown[] = [];
     server.use(
-      mockApi('PATCH catalog /insumos/:id', async ({ request, params }) => {
+      mockApi('PATCH /insumos/:id', async ({ request, params }) => {
         chamadas.push([params.id, await request.json()]);
         return makeInsumo({ valorPago: 18, custoUnitario: 3.6 });
       }),
@@ -110,7 +106,7 @@ describe('mutações', () => {
   it('exclui com DELETE e aceita o 204 sem corpo', async () => {
     const ids: unknown[] = [];
     server.use(
-      mockApi('DELETE catalog /insumos/:id', ({ params }) => {
+      mockApi('DELETE /insumos/:id', ({ params }) => {
         ids.push(params.id);
         return undefined;
       }),
@@ -123,7 +119,7 @@ describe('mutações', () => {
   it('rejeita a exclusão com a mensagem do backend', async () => {
     server.use(
       mockApiErro(
-        'DELETE catalog /insumos/:id',
+        'DELETE /insumos/:id',
         400,
         'Insumo usado em receita',
         'Bad Request',
@@ -155,8 +151,8 @@ describe('queries', () => {
 
   it('busca a lista e o detalhe pelas opções', async () => {
     server.use(
-      mockApi('GET catalog /insumos', [makeInsumo()]),
-      mockApi('GET catalog /insumos/:id', makeInsumo({ id: 2 })),
+      mockApi('GET /insumos', [makeInsumo()]),
+      mockApi('GET /insumos/:id', makeInsumo({ id: 2 })),
     );
     const queryClient = new QueryClient();
 

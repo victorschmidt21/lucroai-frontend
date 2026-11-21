@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { statusVendaSchema } from './enums';
 
-// sales-service. Origem: `services/sales-service/src/modules/vendas/`.
+// Vendas. Origem: `lucroai-backend` (monolito), `src/modules/vendas/`.
 
 /** `domain/models/venda.entity.ts` (`ItemVendaProps`) */
 export const itemVendaSchema = z.object({

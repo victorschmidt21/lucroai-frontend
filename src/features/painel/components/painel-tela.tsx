@@ -1,6 +1,6 @@
 'use client';
 
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { useSyncExternalStore } from 'react';
@@ -27,8 +27,7 @@ import {
 } from '@/shared/ui/icons/menu';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { StatCard } from '@/shared/ui/stat-card';
-import { estoqueDoInsumoOptions } from '@/features/estoque/api/estoque.queries';
-import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
+import { estoqueInsumosOptions } from '@/features/estoque/api/estoque.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
 import {
@@ -140,18 +139,12 @@ export function PainelTela({ empresa }: { empresa: string }) {
     enabled: inicio !== null,
   });
   const receitas = useQuery(receitasListOptions());
-  const insumos = useQuery(insumosListOptions());
-  const estoques = useQueries({
-    queries: (insumos.data ?? []).map((i) => estoqueDoInsumoOptions(i.id)),
-  });
+  const estoques = useQuery(estoqueInsumosOptions());
 
   const dados =
     hoje && vendas.data && receitas.data
       ? { hoje, vendas: vendas.data, receitas: receitas.data }
       : null;
-  const saldos = estoques.flatMap((e) => (e.data ? [e.data] : []));
-  const estoqueCarregado =
-    Boolean(insumos.data) && saldos.length === estoques.length;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -215,11 +208,11 @@ export function PainelTela({ empresa }: { empresa: string }) {
         {bloco({
           rotulo: 'Carregando estoque',
           titulo: 'Não foi possível carregar o estoque.',
-          queries: [insumos, ...estoques],
-          pronto: estoqueCarregado,
+          queries: [estoques],
+          pronto: Boolean(estoques.data),
           classe: 'col-span-2 lg:col-span-1',
           conteudo: () => {
-            const baixo = contarEstoqueBaixo(saldos);
+            const baixo = contarEstoqueBaixo(estoques.data ?? []);
             const detalhe = baixo === 1 ? 'Item crítico' : 'Itens críticos';
             return (
               <Link

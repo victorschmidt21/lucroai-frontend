@@ -1,11 +1,11 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import type { Venda } from '@/shared/api/contracts/sales';
-import { getErrorMessage } from '@/shared/api/errors';
+import { getErrorMessage, isEstoqueInsuficiente } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatMargem, formatQuantidade } from '@/shared/format/numero';
 import { Alert } from '@/shared/ui/alert';
@@ -13,7 +13,6 @@ import { StatusVendaBadge } from '@/shared/ui/badge';
 import { Button, buttonClasses } from '@/shared/ui/button';
 import { Dialog, ResponsiveDialog } from '@/shared/ui/dialog';
 import { useToast } from '@/shared/ui/toast';
-import { vendaDetailOptions } from '../api/vendas.queries';
 import { useAtualizarStatusVenda } from '../hooks/use-atualizar-status-venda';
 import { useVerificarEstoqueParaVenda } from '../hooks/use-verificar-estoque-para-venda';
 import { subtotalItem } from '../vendas.calculos';
@@ -25,7 +24,7 @@ type Props = {
 };
 
 /**
- * "Confirmar venda": concluir (com a validação de estoque de produto acabado),
+ * "Confirmar venda": concluir (com a conferência do estoque de produto acabado),
  * cancelar ou fechar, mantendo a venda pendente. Origem: `_ConfirmacaoSheet` de
  * vendas_page.dart. Drawer de baixo no celular e Dialog a partir de `md`.
  */
@@ -62,7 +61,6 @@ function Conteudo({
   onFechar: () => void;
   onOcupado: (ocupado: boolean) => void;
 }) {
-  const queryClient = useQueryClient();
   const toast = useToast();
   const receitas = useQuery(receitasListOptions());
   const atualizar = useAtualizarStatusVenda();
@@ -88,24 +86,18 @@ function Conteudo({
     mensagem: string,
   ) {
     try {
+      // A API baixa o produto acabado na mesma transação: o status devolvido é o real.
       const atualizada = await atualizar.mutateAsync({ id: venda.id, status });
       toast.success(mensagem);
       setVenda(atualizada);
-
-      // A baixa do produto acabado é assíncrona (`venda_concluida`): refaz a
-      // consulta para mostrar o status real.
-      if (status === 'CONCLUIDA') {
-        const real = await queryClient
-          .fetchQuery({
-            ...vendaDetailOptions(venda.id),
-            staleTime: 0,
-            retry: false,
-          })
-          .catch(() => atualizada);
-        setVenda(real);
+    } catch (error) {
+      // 422 `ESTOQUE_INSUFICIENTE`: a venda continua pendente e abre o mesmo
+      // diálogo da conferência. Os outros erros ficam em `atualizar.error`.
+      if (isEstoqueInsuficiente(error)) {
+        setEstoqueInsuficiente(
+          `${getErrorMessage(error)}. Registre uma produção antes de concluir.`,
+        );
       }
-    } catch {
-      // O erro fica em `atualizar.error` e aparece no diálogo.
     }
   }
 
@@ -178,7 +170,7 @@ function Conteudo({
         </span>
       </p>
 
-      {atualizar.error ? (
+      {atualizar.error && !isEstoqueInsuficiente(atualizar.error) ? (
         <Alert>{getErrorMessage(atualizar.error)}</Alert>
       ) : null}
 

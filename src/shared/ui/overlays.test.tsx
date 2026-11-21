@@ -175,7 +175,7 @@ describe('ConfirmDialog', () => {
   it('ao falhar, continua aberto e mostra a mensagem do ApiError', async () => {
     renderConfirm(() =>
       Promise.reject(
-        apiErrorFromResponse('catalog', 400, {
+        apiErrorFromResponse(400, {
           statusCode: 400,
           message: 'Gasto vinculado a uma produção.',
           error: 'Bad Request',

@@ -1,14 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { proxyParaBackend } from '@/shared/auth/backend-proxy.server';
 
-/** Proxy BFF: `/api/backend/<servico>/<caminho>` → `<SERVICO>_API_URL/<caminho>`. */
+/** Proxy BFF: `/api/backend/<caminho>` → `API_URL/<caminho>`. */
 async function handler(
   request: NextRequest,
-  context: RouteContext<'/api/backend/[servico]/[...path]'>,
+  context: RouteContext<'/api/backend/[...path]'>,
 ) {
-  const { servico, path } = await context.params;
+  const { path } = await context.params;
 
-  return proxyParaBackend(request, servico, path);
+  return proxyParaBackend(request, path);
 }
 
 export {

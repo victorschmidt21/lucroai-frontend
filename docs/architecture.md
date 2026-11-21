@@ -1,6 +1,6 @@
 # Arquitetura
 
-O frontend do LucroAI é uma aplicação Next.js com App Router, organizada **por funcionalidade**. As telas falam com os cinco microsserviços do [backend](https://github.com/GrupoDoisENG/lucroai-backend) por meio de um BFF: o navegador só conversa com o próprio Next, que guarda o token e repassa as chamadas ao serviço certo.
+O frontend do LucroAI é uma aplicação Next.js com App Router, organizada **por funcionalidade**. As telas falam com a API do [backend](https://github.com/victorschmidt21/lucroai-backend) (um monolito modular) por meio de um BFF: o navegador só conversa com o próprio Next, que guarda o token e repassa as chamadas à API.
 
 Objetivos:
 
@@ -30,7 +30,7 @@ src/
 │   └── api/
 │       ├── health/route.ts       # existe: GET /api/health
 │       ├── auth/                 # existe (FE-07): login, logout e sessao
-│       └── backend/[servico]/[...path]/  # existe (FE-07): proxy autenticado por serviço
+│       └── backend/[...path]/    # existe (FE-07; URL única desde a FE-39): proxy autenticado
 ├── features/                     # funcionalidades de negócio
 │   ├── design-system/            # existe: catálogo de /design-system (FE-04) e exemplo de listagem (FE-06)
 │   ├── auth/                     # existe (FE-07): LoginForm, UserMenu, useLogin, useLogout e os schemas do login
@@ -77,7 +77,7 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 | `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                                                    |
 | `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                                                    |
 | `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                                                    |
-| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por serviço, e os enums com rótulos                                                                                       | existe (FE-05)                                            |
+| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por grupo de recursos, e os enums com rótulos                                                                             | existe (FE-05)                                            |
 | `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | existe (FE-05)                                            |
 | `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                | existe (FE-05)                                            |
 | `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)                                            |
@@ -127,7 +127,7 @@ Cuidados:
 
 - `params` e `searchParams` são `Promise` no Next 16: use `await` no servidor. Em Client Components, use `useSearchParams()`.
 - Props passadas de Server para Client Component precisam ser serializáveis e ficam visíveis no navegador. Não passe o token nem campos que a tela não usa.
-- Código que lê o cookie de sessão ou as URLs dos serviços tem sufixo `.server.ts` e `import 'server-only'`. Assim, o build falha se ele for parar no navegador.
+- Código que lê o cookie de sessão ou a URL da API tem sufixo `.server.ts` e `import 'server-only'`. Assim, o build falha se ele for parar no navegador.
 - Providers (`QueryClientProvider`, Toast) são Client Components, e o layout de `(app)` os renderiza em volta de `children`.
 - Antes de usar uma API do Next, leia o guia da versão instalada em `node_modules/next/dist/docs/`.
 
@@ -135,7 +135,7 @@ Cuidados:
 
 | Situação                                            | Onde                                | Como                                                                   |
 | --------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------- |
-| Listagens, detalhes e tudo que muda com a interação | Client Component                    | TanStack Query, pelo proxy `/api/backend/<servico>`                    |
+| Listagens, detalhes e tudo que muda com a interação | Client Component                    | TanStack Query, pelo proxy `/api/backend/<caminho>`                    |
 | Mutações                                            | Client Component                    | `useMutation` em `hooks/`, pelo proxy, invalidando as queries afetadas |
 | Sessão e dados do usuário e da empresa              | Server Component (layout ou página) | `getUsuarioAtual()`, que decodifica o JWT do cookie (FE-07)            |
 | Cálculo local sem API (cálculo real)                | Client Component                    | estado local e funções de `<modulo>.calculos.ts`                       |
@@ -185,7 +185,7 @@ Páginas de status (FE-08, com a `StatusPage` de `shared/ui/`):
 
 Sem sessão, rota inexistente também leva ao login (o `src/proxy.ts` age antes). Erros de dados da API não chegam a essas páginas: ficam no `ErrorState` de cada bloco.
 
-O Next 16 renomeou `middleware.ts` para `proxy.ts`. Por isso, a checagem otimista de sessão fica em `src/proxy.ts` (existe desde a FE-07, ver [security.md](security.md#proteção-de-rotas)). Ele também preenche o header `x-lucroai-path`, que `getUsuarioAtual()` usa para voltar à rota atual depois do login. Não confunda com o proxy BFF `/api/backend/[servico]/[...path]`, que é um Route Handler.
+O Next 16 renomeou `middleware.ts` para `proxy.ts`. Por isso, a checagem otimista de sessão fica em `src/proxy.ts` (existe desde a FE-07, ver [security.md](security.md#proteção-de-rotas)). Ele também preenche o header `x-lucroai-path`, que `getUsuarioAtual()` usa para voltar à rota atual depois do login. Não confunda com o proxy BFF `/api/backend/[...path]`, que é um Route Handler.
 
 ## Fluxo de uma requisição
 
@@ -195,15 +195,15 @@ Listagem de insumos no navegador:
 InsumosLista (Client Component)
   → useQuery(insumosListOptions())          TanStack Query: cache e estados
   → listInsumos(signal)                     features/insumos/api
-  → apiFetch('catalog', '/insumos')         shared/api/client.ts
-  → GET /api/backend/catalog/insumos        Route Handler do Next (BFF)
-      lê o cookie, confere o serviço e o caminho, injeta Authorization
-  → GET {CATALOG_API_URL}/insumos           catalog-service
-  ← { data: Insumo[], links }               envelope HATEOAS
-  ← unwrap(corpo, z.array(insumoSchema))    desembrulha e valida o contrato
+  → apiFetch('/insumos')                    shared/api/client.ts
+  → GET /api/backend/insumos                Route Handler do Next (BFF)
+      lê o cookie, confere o caminho, injeta Authorization
+  → GET {API_URL}/insumos                   API (monolito)
+  ← Insumo[]                                JSON puro, sem envelope
+  ← unwrap(corpo, z.array(insumoSchema))    valida o contrato
 ```
 
-O inverso vale para o erro: a resposta do NestJS vira um `ApiError`, que a tela exibe com `getErrorMessage()` (ver [api-integration.md](api-integration.md#tratamento-de-erros)).
+O inverso vale para o erro: a resposta de erro da API (`{ statusCode, code, message }`) vira um `ApiError`, que a tela exibe com `getErrorMessage()` (ver [api-integration.md](api-integration.md#tratamento-de-erros)).
 
 ## Equivalência mobile → web
 
@@ -218,7 +218,7 @@ O app Flutter usa Clean Architecture com Cubit. A web troca as camadas assim:
 | `presentation/cubit` (estado de tela)                                     | TanStack Query (estado do servidor) + estado local do componente                                               |
 | `presentation/pages` e `widgets`                                          | `app/(app)/<rota>/page.tsx` + `features/<modulo>/components/`                                                  |
 | `core/auth/auth_session.dart` + `shared_preferences`                      | BFF com cookie `httpOnly` (FE-07)                                                                              |
-| `core/network/api_client.dart` (um `Dio` por serviço) e `_buildException` | `apiFetch(servico, ...)` e `ApiError` (FE-05)                                                                  |
+| `core/network/api_client.dart` (um `Dio` por serviço) e `_buildException` | `apiFetch(caminho, ...)` e `ApiError` (FE-05; URL única desde a FE-39)                                         |
 | `IndexedStack` + barra inferior                                           | layout `(app)` com menu lateral no desktop e barra inferior no celular (FE-08); cada tela monta ao entrar      |
 | `showModalBottomSheet`                                                    | `FormDialog`: Dialog no desktop, Drawer de baixo no celular (FE-06)                                            |
 | `SnackBar`                                                                | Toast (FE-04)                                                                                                  |

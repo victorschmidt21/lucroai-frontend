@@ -9,7 +9,7 @@ import {
   tokenFalso,
 } from './support/sessao';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 test('leva ao login sem sessão e, ao entrar, volta à página de destino', async ({
   page,
@@ -105,17 +105,17 @@ test('com o token vencido, leva ao login com o aviso e preserva o destino', asyn
   await expect(page).toHaveURL('/?pagina=2');
 });
 
-test('o proxy injeta o token, recusa serviço desconhecido e rotas internal', async ({
+test('o proxy injeta o token, repassa o 404 de rota inexistente e recusa rotas internal', async ({
   page,
 }) => {
   await entrar(page);
 
   const pedidos: [string, RequestInit?][] = [
-    ['/api/backend/catalog/insumos'],
-    ['/api/backend/pagamentos/x'],
-    ['/api/backend/catalog/insumos/internal/1'],
+    ['/api/backend/insumos'],
+    ['/api/backend/pagamentos'],
+    ['/api/backend/insumos/internal/1'],
     [
-      '/api/backend/auth/auth/login',
+      '/api/backend/auth/login',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,13 +142,13 @@ test('o proxy injeta o token, recusa serviço desconhecido e rotas internal', as
   });
 });
 
-test('o 401 de um serviço apaga o cookie', async ({ page, context }) => {
+test('o 401 da API apaga o cookie', async ({ page, context }) => {
   await entrar(page);
   // Um token que o front lê como válido, mas que o backend recusa.
   await definirCookie(context, BASE_URL, tokenFalso(60 * 60));
 
   const status = await page.evaluate(() =>
-    fetch('/api/backend/catalog/insumos').then((response) => response.status),
+    fetch('/api/backend/insumos').then((response) => response.status),
   );
 
   expect(status).toBe(401);

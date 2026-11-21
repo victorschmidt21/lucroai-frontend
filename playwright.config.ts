@@ -1,29 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = 'http://localhost:3000';
+// `E2E_BASE_URL` troca a porta do front (padrão 3000), para rodar os e2e com
+// um `npm run dev` já aberto na 3000. Com `E2E_USAR_BUILD`, o build precisa ter
+// sido feito com `NEXT_PUBLIC_APP_URL` igual a esta URL.
+const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 const port = new URL(baseURL).port;
 
-/** API falsa (`e2e/support/fake-api.mjs`): uma porta atende os cinco serviços. */
+/** API falsa (`e2e/support/fake-api.mjs`), no lugar do monolito. */
 const FAKE_API_URL = 'http://127.0.0.1:3999';
 
-// `E2E_API_REAL=true` roda contra o backend local com o seed (portas 3001 a
-// 3005) em vez da API falsa.
+// `E2E_API_REAL=true` roda contra o monolito local com o seed (porta 3100) em
+// vez da API falsa.
 const apiReal = process.env.E2E_API_REAL === 'true';
-const serviceUrls = apiReal
-  ? {
-      AUTH_API_URL: 'http://localhost:3001',
-      CATALOG_API_URL: 'http://localhost:3002',
-      RECIPE_API_URL: 'http://localhost:3003',
-      OPERATIONS_API_URL: 'http://localhost:3004',
-      SALES_API_URL: 'http://localhost:3005',
-    }
-  : {
-      AUTH_API_URL: FAKE_API_URL,
-      CATALOG_API_URL: FAKE_API_URL,
-      RECIPE_API_URL: FAKE_API_URL,
-      OPERATIONS_API_URL: FAKE_API_URL,
-      SALES_API_URL: FAKE_API_URL,
-    };
+const API_URL = apiReal ? 'http://localhost:3100' : FAKE_API_URL;
 
 // `E2E_USAR_BUILD=true` (o CI usa) serve o build de produção em vez do
 // `next dev`; exige `npm run build` antes.
@@ -66,7 +55,7 @@ export default defineConfig({
       url: baseURL,
       reuseExistingServer: reutilizar,
       env: {
-        ...serviceUrls,
+        API_URL,
         NEXT_PUBLIC_APP_URL: baseURL,
         PORT: port,
       },

@@ -85,7 +85,7 @@ describe('config.matcher', () => {
   );
 
   it.each([
-    '/api/backend/catalog/insumos',
+    '/api/backend/insumos',
     '/api/auth/login',
     '/_next/static/chunk.js',
     '/icon.svg',

@@ -1,30 +1,30 @@
-// API falsa dos e2e. O CI não sobe os cinco microsserviços: o
-// playwright.config.ts aponta AUTH_API_URL, CATALOG_API_URL etc. para este
-// servidor, que atende todos eles porque as rotas de cada serviço têm raízes
-// diferentes (`/auth`, `/insumos`, `/receitas`, `/estoque`, `/vendas`...).
+// API falsa dos e2e. O CI não sobe o monolito: o playwright.config.ts aponta
+// API_URL para este servidor.
 //
-// Responde o que o /api/health sonda (`/docs-json`), o login do seed (FE-07) e,
+// Responde o que o /api/health sonda (`/health`), o login do seed (FE-07) e,
 // desde a FE-23, as rotas do spec de fumaça (`e2e/fluxo-principal.spec.ts`):
 // insumos, receitas, estoque, produções e vendas, com estado em memória que
 // começa vazio e dura enquanto o processo viver. Segue o contrato de
-// docs/api-integration.md e `src/shared/api/contracts/`: envelope
-// `{ data, links }`, JWT de teste e erros no formato do NestJS. Os cálculos são
-// os do backend (docs/business-rules.md), sem gastos indiretos.
+// docs/api-integration.md e `src/shared/api/contracts/`: JSON puro, JWT de
+// teste e erros no formato da API (`{ statusCode, code, message, path,
+// timestamp }`). Os cálculos são os do backend (docs/business-rules.md), sem
+// gastos indiretos.
 import { createServer } from 'node:http';
 
 const PORT = Number(process.env.FAKE_API_PORT ?? 3999);
 
-/** Erro no formato padrão do NestJS. */
-function nestError(statusCode, message, error) {
-  return { statusCode, message, ...(error ? { error } : {}) };
+/** Erro no formato da API (`AllExceptionsFilter`). */
+function apiError(statusCode, code, message) {
+  return {
+    statusCode,
+    code,
+    message,
+    path: '/',
+    timestamp: new Date().toISOString(),
+  };
 }
 
-/** Envelope do `HateoasInterceptor` (os `links` são ignorados pela web). */
-function envelope(data) {
-  return { data, links: {} };
-}
-
-// Usuário do seed (services/auth-service/prisma/seed.ts).
+// Usuário do seed do backend.
 const USUARIO_DO_SEED = {
   email: 'joao@padariapaofeliz.com.br',
   senha: '123456',
@@ -39,7 +39,7 @@ function base64Url(valor) {
   return Buffer.from(JSON.stringify(valor)).toString('base64url');
 }
 
-/** JWT de 4 h com o payload do auth-service; a assinatura é falsa. */
+/** JWT de 4 h com o payload da API; a assinatura é falsa. */
 function emitirToken() {
   const iat = Math.floor(Date.now() / 1000);
   const payload = {
@@ -78,7 +78,10 @@ function isAutenticado(req) {
   }
 }
 
-const NAO_AUTENTICADO = [401, nestError(401, 'Unauthorized')];
+const NAO_AUTENTICADO = [
+  401,
+  apiError(401, 'NAO_AUTENTICADO', 'Autenticação necessária'),
+];
 
 function sendJson(res, status, body) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -91,29 +94,31 @@ function autenticada(handler) {
     isAutenticado(req) ? handler(req, ...resto) : NAO_AUTENTICADO;
 }
 
-const naoEncontrado = (mensagem) => [
-  404,
-  nestError(404, mensagem, 'Not Found'),
+const naoEncontrado = (code, mensagem) => [404, apiError(404, code, mensagem)];
+const invalido = () => [
+  400,
+  apiError(400, 'DADOS_INVALIDOS', 'Os dados enviados são inválidos'),
 ];
-const invalido = (mensagem) => [400, nestError(400, mensagem, 'Bad Request')];
 
 // Estado em memória da empresa do seed. Cada coleção começa vazia; não há
-// gastos indiretos, então o custo invisível e os rateios são zero.
+// gastos indiretos, então o custo invisível e os rateios são zero. `produtos`
+// é o saldo de produto acabado por receita (`GET /estoque/produtos`).
 const db = { insumos: [], receitas: [], producoes: [], vendas: [] };
+const produtos = new Map();
 let ultimoId = 0;
 const novoId = () => ++ultimoId;
 const round2 = (valor) => Math.round(valor * 100) / 100;
 const agora = () => new Date().toISOString();
 
-function buscar(colecao, id, mensagem) {
+function buscar(colecao, id, code, mensagem) {
   const item = db[colecao].find((atual) => atual.id === id);
-  return item ? [200, envelope(item)] : naoEncontrado(mensagem);
+  return item ? [200, item] : naoEncontrado(code, mensagem);
 }
 
 /** `POST /insumos`: `custoUnitario = valorPago / quantidadeBaseCusto`. */
 function criarInsumo(body) {
   if (!body?.nome || !(body.quantidadeBaseCusto > 0) || !body.unidade) {
-    return invalido(['nome, quantidadeBaseCusto e unidade são obrigatórios']);
+    return invalido();
   }
   const custoUnitario = body.valorPago / body.quantidadeBaseCusto;
   const insumo = {
@@ -122,6 +127,7 @@ function criarInsumo(body) {
     nome: body.nome,
     quantidadeBaseCusto: body.quantidadeBaseCusto,
     quantidadeDisponivel: body.quantidadeDisponivelInicial ?? 0,
+    quantidadeMinima: 0,
     unidade: body.unidade,
     valorPago: body.valorPago,
     custoUnitario,
@@ -129,13 +135,13 @@ function criarInsumo(body) {
     dataCriacao: agora(),
   };
   db.insumos.push(insumo);
-  return [201, envelope(insumo)];
+  return [201, insumo];
 }
 
 /** `POST /receitas`: custos de docs/business-rules.md, sem custo invisível. */
 function criarReceita(body) {
   if (!body?.nome || !(body.rendimento > 0) || !Array.isArray(body.insumos)) {
-    return invalido(['nome, rendimento e insumos são obrigatórios']);
+    return invalido();
   }
   const itens = body.insumos.map(({ insumo_id, quantidade }) => {
     const insumo = db.insumos.find((atual) => atual.id === insumo_id);
@@ -170,31 +176,28 @@ function criarReceita(body) {
     itens,
   };
   db.receitas.push(receita);
-  return [201, envelope(receita)];
+  return [201, receita];
 }
 
-/** `GET /estoque/insumos/:id`, com o saldo espelhado no insumo. */
-function estoqueDoInsumo(insumoId) {
-  const insumo = db.insumos.find((atual) => atual.id === insumoId);
-  if (!insumo) return naoEncontrado('Insumo não encontrado');
-  return [
-    200,
-    envelope({
-      id: insumo.id,
-      insumoId: insumo.id,
-      quantidadeDisponivel: insumo.quantidadeDisponivel,
-      quantidadeMinima: 0,
-      dataAlteracao: null,
-    }),
-  ];
+/** Registro de estoque de um insumo, com o saldo e o mínimo guardados no insumo. */
+function estoqueDe(insumo) {
+  return {
+    id: insumo.id,
+    insumoId: insumo.id,
+    quantidadeDisponivel: insumo.quantidadeDisponivel,
+    quantidadeMinima: insumo.quantidadeMinima,
+    dataAlteracao: insumo.dataCriacao,
+  };
 }
 
 /** `POST /producoes`: custo com o snapshot da receita; baixa os insumos. */
 function criarProducao(body) {
   const receita = db.receitas.find((atual) => atual.id === body?.receita_id);
-  if (!receita) return naoEncontrado('Receita não encontrada');
+  if (!receita) {
+    return naoEncontrado('RECEITA_NAO_ENCONTRADA', 'Receita não encontrada');
+  }
   if (!Number.isInteger(body.quantidade) || body.quantidade < 1) {
-    return invalido(['quantidade must not be less than 1']);
+    return invalido();
   }
   const totalUnidades = body.quantidade * receita.rendimento;
   const custoTotal = round2((receita.custoProducao ?? 0) * body.quantidade);
@@ -203,6 +206,7 @@ function criarProducao(body) {
     receitaId: receita.id,
     empresaId: EMPRESA_ID,
     quantidade: body.quantidade,
+    totalUnidades,
     custoTotal,
     custoUnitario: totalUnidades > 0 ? round2(custoTotal / totalUnidades) : 0,
     dataProducao: agora(),
@@ -214,18 +218,23 @@ function criarProducao(body) {
       insumo.quantidadeDisponivel -= item.quantidade * body.quantidade;
     }
   }
+  produtos.set(receita.id, (produtos.get(receita.id) ?? 0) + totalUnidades);
   db.producoes.push(producao);
-  return [201, envelope(producao)];
+  return [201, producao];
 }
 
 /** `POST /vendas`: nasce `PENDENTE`, com o snapshot do custo da receita. */
 function criarVenda(body) {
-  if (!Array.isArray(body?.itens)) return invalido(['itens must be an array']);
+  if (!Array.isArray(body?.itens) || body.itens.length === 0) {
+    return invalido();
+  }
   const vendaId = novoId();
   const itens = [];
   for (const item of body.itens) {
     const receita = db.receitas.find((atual) => atual.id === item.receita_id);
-    if (!receita) return naoEncontrado('Receita não encontrada');
+    if (!receita) {
+      return naoEncontrado('RECEITA_NAO_ENCONTRADA', 'Receita não encontrada');
+    }
     const custo = receita.custoUnitario ?? null;
     const preco = item.preco_unitario_real;
     itens.push({
@@ -252,7 +261,7 @@ function criarVenda(body) {
     itens,
   };
   db.vendas.push(venda);
-  return [201, envelope(venda)];
+  return [201, venda];
 }
 
 /** `GET /vendas?status=&dataInicio=&dataFim=`, da mais recente à mais antiga. */
@@ -265,18 +274,51 @@ function listarVendas(url) {
     .filter((venda) => !inicio || new Date(venda.dataVenda) >= new Date(inicio))
     .filter((venda) => !fim || new Date(venda.dataVenda) <= new Date(fim))
     .toReversed();
-  return [200, envelope(vendas)];
+  return [200, vendas];
 }
 
-/** `PATCH /vendas/:id/status`: só `PENDENTE` muda de status. */
+/**
+ * `PATCH /vendas/:id/status`: só `PENDENTE` muda de status; concluir baixa o
+ * produto acabado na mesma operação, ou responde 422 sem gravar nada.
+ */
 function mudarStatusDaVenda(id, body) {
   const venda = db.vendas.find((atual) => atual.id === id);
-  if (!venda) return naoEncontrado('Venda não encontrada');
+  if (!venda) {
+    return naoEncontrado('VENDA_NAO_ENCONTRADA', 'Venda não encontrada');
+  }
   if (venda.status !== 'PENDENTE') {
-    return invalido('Venda já finalizada não pode ser alterada');
+    return [
+      422,
+      apiError(
+        422,
+        'VENDA_FINALIZADA',
+        'Venda já finalizada não pode ser alterada',
+      ),
+    ];
+  }
+  if (body?.status === 'CONCLUIDA') {
+    for (const item of venda.itens) {
+      const disponivel = produtos.get(item.receitaId) ?? 0;
+      if (disponivel < item.quantidade) {
+        return [
+          422,
+          apiError(
+            422,
+            'ESTOQUE_INSUFICIENTE',
+            `Estoque insuficiente para a receita ${item.receitaId}: disponível ${disponivel}, solicitado ${item.quantidade}`,
+          ),
+        ];
+      }
+    }
+    for (const item of venda.itens) {
+      produtos.set(
+        item.receitaId,
+        produtos.get(item.receitaId) - item.quantidade,
+      );
+    }
   }
   venda.status = body?.status;
-  return [200, envelope(venda)];
+  return [200, venda];
 }
 
 /**
@@ -285,52 +327,58 @@ function mudarStatusDaVenda(id, body) {
  * JSON (ou `undefined`) e o id do caminho.
  */
 const routes = {
-  // Usado pelo Playwright para saber que o servidor subiu.
-  'GET /health': () => [200, { status: 'ok' }],
-  // O /api/health do front sonda o JSON do Swagger de cada serviço.
-  'GET /docs-json': () => [200, { openapi: '3.0.0', paths: {} }],
-  // auth-service: `POST /auth/login` (FE-07).
+  // Pública, como a da API: o Playwright e o /api/health do front a sondam.
+  'GET /health': () => [200, { status: 'ok', database: 'up' }],
+  // `POST /auth/login` (FE-07).
   'POST /auth/login': (_req, _url, body) =>
     body?.email === USUARIO_DO_SEED.email &&
     body?.senha === USUARIO_DO_SEED.senha
-      ? [200, envelope({ access_token: emitirToken() })]
-      : [401, nestError(401, 'Credenciais inválidas', 'Unauthorized')],
-  // catalog-service.
-  'GET /insumos': autenticada(() => [200, envelope(db.insumos)]),
+      ? [200, { access_token: emitirToken() }]
+      : [401, apiError(401, 'CREDENCIAIS_INVALIDAS', 'Credenciais inválidas')],
+  // Insumos e gastos indiretos.
+  'GET /insumos': autenticada(() => [200, db.insumos]),
   'GET /insumos/:id': autenticada((_req, _url, _body, id) =>
-    buscar('insumos', id, 'Insumo não encontrado'),
+    buscar('insumos', id, 'INSUMO_NAO_ENCONTRADO', 'Insumo não encontrado'),
   ),
   'POST /insumos': autenticada((_req, _url, body) => criarInsumo(body)),
-  'GET /gastos-indiretos': autenticada(() => [200, envelope([])]),
-  // recipe-service.
-  'GET /receitas': autenticada(() => [200, envelope(db.receitas)]),
+  'GET /gastos-indiretos': autenticada(() => [200, []]),
+  // Receitas.
+  'GET /receitas': autenticada(() => [200, db.receitas]),
   'GET /receitas/:id': autenticada((_req, _url, _body, id) =>
-    buscar('receitas', id, 'Receita não encontrada'),
+    buscar('receitas', id, 'RECEITA_NAO_ENCONTRADA', 'Receita não encontrada'),
   ),
   'POST /receitas': autenticada((_req, _url, body) => criarReceita(body)),
-  // operations-service.
-  'GET /estoque/insumos/:id': autenticada((_req, _url, _body, id) =>
-    estoqueDoInsumo(id),
-  ),
-  'GET /estoque/insumos/:id/movimentacoes': autenticada(() => [
+  // Estoque e produções.
+  'GET /estoque/insumos': autenticada(() => [200, db.insumos.map(estoqueDe)]),
+  'GET /estoque/insumos/:id/movimentacoes': autenticada(() => [200, []]),
+  'GET /estoque/produtos': autenticada(() => [
     200,
-    envelope([]),
+    [...produtos].map(([receitaId, quantidadeDisponivel]) => ({
+      receitaId,
+      quantidadeDisponivel,
+      dataAlteracao: agora(),
+    })),
   ]),
   'GET /producoes': autenticada((_req, url) => {
     const receitaId = Number(url.searchParams.get('receitaId'));
     const producoes = db.producoes.filter(
       (producao) => !receitaId || producao.receitaId === receitaId,
     );
-    return [200, envelope(producoes.toReversed())];
+    return [200, producoes.toReversed()];
   }),
   'GET /producoes/:id': autenticada((_req, _url, _body, id) =>
-    buscar('producoes', id, 'Produção não encontrada'),
+    buscar(
+      'producoes',
+      id,
+      'PRODUCAO_NAO_ENCONTRADA',
+      'Produção não encontrada',
+    ),
   ),
   'POST /producoes': autenticada((_req, _url, body) => criarProducao(body)),
-  // sales-service.
+  // Vendas.
   'GET /vendas': autenticada((_req, url) => listarVendas(url)),
   'GET /vendas/:id': autenticada((_req, _url, _body, id) =>
-    buscar('vendas', id, 'Venda não encontrada'),
+    buscar('vendas', id, 'VENDA_NAO_ENCONTRADA', 'Venda não encontrada'),
   ),
   'POST /vendas': autenticada((_req, _url, body) => criarVenda(body)),
   'PATCH /vendas/:id/status': autenticada((_req, _url, body, id) =>
@@ -359,7 +407,7 @@ const server = createServer(async (req, res) => {
     sendJson(
       res,
       404,
-      nestError(404, `Cannot ${req.method} ${url.pathname}`, 'Not Found'),
+      apiError(404, 'RECURSO_NAO_ENCONTRADO', 'Recurso não encontrado'),
     );
     return;
   }

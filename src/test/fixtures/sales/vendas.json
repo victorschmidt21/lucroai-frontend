@@ -1,80 +1,200 @@
-{
-  "data": [
-    {
-      "id": 15,
-      "empresaId": 3,
-      "total": 2.5,
-      "status": "CANCELADA",
-      "dataVenda": "2026-11-17T20:31:13.326Z",
-      "itens": [
-        {
-          "id": 19,
-          "vendaId": 15,
-          "receitaId": 9,
-          "quantidade": 5,
-          "precoUnitarioReal": 0.5,
-          "custoUnitario": 45.07,
-          "margemRealizada": -89.14
-        }
-      ]
-    },
-    {
-      "id": 14,
-      "empresaId": 3,
-      "total": 4.5,
-      "status": "PENDENTE",
-      "dataVenda": "2026-11-17T20:31:13.310Z",
-      "itens": [
-        {
-          "id": 18,
-          "vendaId": 14,
-          "receitaId": 9,
-          "quantidade": 10,
-          "precoUnitarioReal": 0.45,
-          "custoUnitario": 45.07,
-          "margemRealizada": -99.1556
-        }
-      ]
-    },
-    {
-      "id": 13,
-      "empresaId": 3,
-      "total": 15,
-      "status": "CONCLUIDA",
-      "dataVenda": "2026-11-17T20:31:13.282Z",
-      "itens": [
-        {
-          "id": 17,
-          "vendaId": 13,
-          "receitaId": 9,
-          "quantidade": 30,
-          "precoUnitarioReal": 0.5,
-          "custoUnitario": 45.07,
-          "margemRealizada": -89.14
-        }
-      ]
-    }
-  ],
-  "links": {
-    "getAll": {
-      "href": "/vendas",
-      "method": "GET"
-    },
-    "create": {
-      "href": "/vendas",
-      "method": "POST"
-    },
-    "getById": {
-      "href": "/vendas/:id",
-      "method": "GET"
-    },
-    "update": {
-      "href": "/vendas/:id",
-      "method": "PATCH"
-    },
-    "delete": {
-      "href": "/vendas/:id",
-      "method": "DELETE"
-    }
+[
+  {
+    "id": 28,
+    "empresaId": 30,
+    "total": 38603.8,
+    "status": "PENDENTE",
+    "dataVenda": "2026-11-20T15:42:10.418Z",
+    "itens": [
+      {
+        "id": 48,
+        "vendaId": 28,
+        "receitaId": 25,
+        "quantidade": 100,
+        "precoUnitarioReal": 270.03,
+        "custoUnitario": 168.77,
+        "margemRealizada": 0.375
+      },
+      {
+        "id": 49,
+        "vendaId": 28,
+        "receitaId": 27,
+        "quantidade": 40,
+        "precoUnitarioReal": 290.02,
+        "custoUnitario": 181.26,
+        "margemRealizada": 0.375
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "empresaId": 30,
+    "total": 7342.92,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-11-19T15:42:10.418Z",
+    "itens": [
+      {
+        "id": 46,
+        "vendaId": 27,
+        "receitaId": 25,
+        "quantidade": 20,
+        "precoUnitarioReal": 270.03,
+        "custoUnitario": 168.77,
+        "margemRealizada": 0.375
+      },
+      {
+        "id": 47,
+        "vendaId": 27,
+        "receitaId": 26,
+        "quantidade": 4,
+        "precoUnitarioReal": 485.58,
+        "custoUnitario": 323.72,
+        "margemRealizada": 0.3333
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "empresaId": 30,
+    "total": 12251.3,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-10-14T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 44,
+        "vendaId": 26,
+        "receitaId": 25,
+        "quantidade": 40,
+        "precoUnitarioReal": 270.03,
+        "custoUnitario": 168.77,
+        "margemRealizada": 0.375
+      },
+      {
+        "id": 45,
+        "vendaId": 26,
+        "receitaId": 27,
+        "quantidade": 5,
+        "precoUnitarioReal": 290.02,
+        "custoUnitario": 181.26,
+        "margemRealizada": 0.375
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "empresaId": 30,
+    "total": 11014.38,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-09-20T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 42,
+        "vendaId": 25,
+        "receitaId": 25,
+        "quantidade": 30,
+        "precoUnitarioReal": 270.03,
+        "custoUnitario": 168.77,
+        "margemRealizada": 0.375
+      },
+      {
+        "id": 43,
+        "vendaId": 25,
+        "receitaId": 26,
+        "quantidade": 6,
+        "precoUnitarioReal": 485.58,
+        "custoUnitario": 323.72,
+        "margemRealizada": 0.3333
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "empresaId": 30,
+    "total": 11653.92,
+    "status": "CANCELADA",
+    "dataVenda": "2026-09-15T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 41,
+        "vendaId": 24,
+        "receitaId": 26,
+        "quantidade": 24,
+        "precoUnitarioReal": 485.58,
+        "custoUnitario": 323.72,
+        "margemRealizada": 0.3333
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "empresaId": 30,
+    "total": 2900.2,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-08-08T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 40,
+        "vendaId": 23,
+        "receitaId": 27,
+        "quantidade": 10,
+        "precoUnitarioReal": 290.02,
+        "custoUnitario": 181.26,
+        "margemRealizada": 0.375
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "empresaId": 30,
+    "total": 11850,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-07-12T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 38,
+        "vendaId": 22,
+        "receitaId": 26,
+        "quantidade": 12,
+        "precoUnitarioReal": 485.58,
+        "custoUnitario": 323.72,
+        "margemRealizada": 0.3333
+      },
+      {
+        "id": 39,
+        "vendaId": 22,
+        "receitaId": 28,
+        "quantidade": 12,
+        "precoUnitarioReal": 501.92,
+        "custoUnitario": 323.82,
+        "margemRealizada": 0.3548
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "empresaId": 30,
+    "total": 19301.9,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-06-10T13:00:00.000Z",
+    "itens": [
+      {
+        "id": 36,
+        "vendaId": 21,
+        "receitaId": 25,
+        "quantidade": 50,
+        "precoUnitarioReal": 270.03,
+        "custoUnitario": 168.77,
+        "margemRealizada": 0.375
+      },
+      {
+        "id": 37,
+        "vendaId": 21,
+        "receitaId": 27,
+        "quantidade": 20,
+        "precoUnitarioReal": 290.02,
+        "custoUnitario": 181.26,
+        "margemRealizada": 0.375
+      }
+    ]
   }
-}
+]

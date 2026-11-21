@@ -8,11 +8,7 @@ import {
 } from './env.schema';
 
 const serverEnv = {
-  AUTH_API_URL: 'http://localhost:3001',
-  CATALOG_API_URL: 'http://localhost:3002',
-  RECIPE_API_URL: 'http://localhost:3003',
-  OPERATIONS_API_URL: 'http://localhost:3004',
-  SALES_API_URL: 'http://localhost:3005',
+  API_URL: 'http://localhost:3100',
 };
 
 const validEnv = {
@@ -28,24 +24,26 @@ describe('parseEnv', () => {
   });
 
   it('aceita URLs https', () => {
-    const env = { ...serverEnv, SALES_API_URL: 'https://vendas.exemplo.com' };
+    const env = { API_URL: 'https://api.exemplo.com' };
 
     expect(parseEnv(serverEnvSchema, env)).toEqual(env);
   });
 
-  it.each(serverVariables)(
-    'gera erro nomeando a variável de servidor ausente %s',
-    (name) => {
-      const env: Record<string, string | undefined> = {
-        ...serverEnv,
-        [name]: undefined,
-      };
+  it('gera erro nomeando a variável de servidor ausente', () => {
+    expect(() => parseEnv(serverEnvSchema, {})).toThrow(
+      /API_URL é obrigatória/,
+    );
+  });
 
-      expect(() => parseEnv(serverEnvSchema, env)).toThrow(
-        new RegExp(`${name} é obrigatória`),
-      );
-    },
-  );
+  it('não exige mais as cinco URLs dos microsserviços', () => {
+    expect(
+      parseEnv(serverEnvSchema, {
+        ...serverEnv,
+        AUTH_API_URL: undefined,
+        SALES_API_URL: undefined,
+      }),
+    ).toEqual(serverEnv);
+  });
 
   it('gera erro nomeando a variável pública ausente', () => {
     expect(() => parseEnv(publicEnvSchema, {})).toThrow(
@@ -70,9 +68,9 @@ describe('parseEnv', () => {
   it.each(['', 'nao-e-url', 'ftp://localhost:3001', 'localhost:3001'])(
     'rejeita o valor inválido "%s"',
     (value) => {
-      expect(() =>
-        parseEnv(serverEnvSchema, { ...serverEnv, AUTH_API_URL: value }),
-      ).toThrow(/AUTH_API_URL/);
+      expect(() => parseEnv(serverEnvSchema, { API_URL: value })).toThrow(
+        /API_URL/,
+      );
     },
   );
 
@@ -98,11 +96,8 @@ describe('https em produção', () => {
     vi.stubEnv('NODE_ENV', 'production');
 
     expect(() =>
-      parseEnv(serverEnvSchema, {
-        ...serverEnv,
-        SALES_API_URL: 'http://vendas.exemplo.com',
-      }),
-    ).toThrow(/SALES_API_URL deve usar https em produção/);
+      parseEnv(serverEnvSchema, { API_URL: 'http://api.exemplo.com' }),
+    ).toThrow(/API_URL deve usar https em produção/);
     expect(() =>
       parseEnv(publicEnvSchema, {
         NEXT_PUBLIC_APP_URL: 'http://app.exemplo.com',
@@ -112,23 +107,19 @@ describe('https em produção', () => {
 
   it('aceita https e http em localhost, 127.0.0.1 e [::1] em produção', () => {
     vi.stubEnv('NODE_ENV', 'production');
-    const env = {
-      AUTH_API_URL: 'https://auth.exemplo.com',
-      CATALOG_API_URL: 'http://localhost:3002',
-      RECIPE_API_URL: 'http://127.0.0.1:3999',
-      OPERATIONS_API_URL: 'http://[::1]:3004',
-      SALES_API_URL: 'https://vendas.exemplo.com',
-    };
-
-    expect(parseEnv(serverEnvSchema, env)).toEqual(env);
+    for (const API_URL of [
+      'https://api.exemplo.com',
+      'http://localhost:3100',
+      'http://127.0.0.1:3999',
+      'http://[::1]:3100',
+    ]) {
+      expect(parseEnv(serverEnvSchema, { API_URL })).toEqual({ API_URL });
+    }
   });
 
   it('aceita http fora de localhost em desenvolvimento', () => {
     vi.stubEnv('NODE_ENV', 'development');
-    const env = {
-      ...serverEnv,
-      AUTH_API_URL: 'http://host.docker.internal:3001',
-    };
+    const env = { API_URL: 'http://host.docker.internal:3100' };
 
     expect(parseEnv(serverEnvSchema, env)).toEqual(env);
   });
@@ -137,12 +128,12 @@ describe('https em produção', () => {
     vi.stubEnv('NODE_ENV', 'production');
     let message = '';
     try {
-      parseEnv(serverEnvSchema, { ...serverEnv, AUTH_API_URL: 'nao-e-url' });
+      parseEnv(serverEnvSchema, { API_URL: 'nao-e-url' });
     } catch (error) {
       message = error instanceof Error ? error.message : '';
     }
 
-    expect(message).toContain('AUTH_API_URL é obrigatória');
+    expect(message).toContain('API_URL é obrigatória');
     expect(message).not.toContain('https em produção');
   });
 });

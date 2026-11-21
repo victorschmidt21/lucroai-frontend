@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { navigateTo } from '@/shared/auth/navigation';
 import { expectNoA11yViolations } from '@/test/a11y';
-import { nestError } from '@/test/api';
+import { apiErrorBody } from '@/test/api';
 import { renderWithQuery } from '@/test/render';
 import { server } from '@/test/server';
 import { LoginForm } from './login-form';
@@ -102,7 +102,7 @@ describe('LoginForm', () => {
 
   it('mostra "E-mail ou senha inválidos" no 401', async () => {
     mockLogin(() =>
-      HttpResponse.json(nestError(401, 'Credenciais inválidas'), {
+      HttpResponse.json(apiErrorBody(401, 'Credenciais inválidas'), {
         status: 401,
       }),
     );

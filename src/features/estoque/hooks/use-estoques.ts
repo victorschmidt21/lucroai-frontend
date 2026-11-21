@@ -1,26 +1,28 @@
 'use client';
 
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
-import { estoqueDoInsumoOptions } from '../api/estoque.queries';
+import { estoqueInsumosOptions } from '../api/estoque.queries';
 
 /**
- * Estoque de cada insumo: `GET /insumos` (nome e unidade) e, para cada um,
- * `GET /estoque/insumos/:id`, em paralelo. Cada saldo tem a própria query, então a
- * falha de um insumo não derruba os outros. Origem: estoque_remote_datasource.dart.
+ * Estoque de cada insumo: `GET /insumos` (nome e unidade) e `GET /estoque/insumos`
+ * (saldo, mínimo e data), duas chamadas para a lista inteira. Origem:
+ * estoque_remote_datasource.dart.
  */
 export function useEstoques() {
   const insumos = useQuery(insumosListOptions());
-  const lista = insumos.data ?? [];
-  const estoques = useQueries({
-    queries: lista.map((insumo) => estoqueDoInsumoOptions(insumo.id)),
-  });
+  const estoques = useQuery(estoqueInsumosOptions());
+  const porInsumo = new Map(
+    (estoques.data ?? []).map((estoque) => [estoque.insumoId, estoque]),
+  );
 
   return {
     insumos,
-    itens: lista.map((insumo, indice) => ({
+    estoques,
+    itens: (insumos.data ?? []).map((insumo) => ({
       insumo,
-      estoque: estoques[indice],
+      /** Todo insumo nasce com o registro de estoque; falta só se a lista mudou no meio. */
+      estoque: porInsumo.get(insumo.id),
     })),
   };
 }

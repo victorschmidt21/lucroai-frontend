@@ -6,10 +6,11 @@ import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
 import type { Estoque } from '@/shared/api/contracts/operations';
 import { formatQuantidade } from '@/shared/format/numero';
 import { parseNumeroBR } from '@/shared/format/numero-br';
-import { FormDecimalInput, FormDialog } from '@/shared/ui/form';
+import { FormDecimalInput, FormDialog, FormTextarea } from '@/shared/ui/form';
 import { useToast } from '@/shared/ui/toast';
 import { useRegistrarEntrada } from '../hooks/use-registrar-entrada';
 import {
+  OBSERVACAO_MAX,
   entradaEstoqueSchema,
   entradaEstoqueVazia,
   saldoAposEntrada,
@@ -76,6 +77,13 @@ export function EntradaEstoqueDialog({
         placeholder="Ex.: 10,5"
         unidade={UNIDADE_MEDIDA_ROTULOS[insumo.unidade]}
         required
+      />
+      <FormTextarea
+        name="observacao"
+        label="Observação"
+        placeholder="Ex.: Compra de reposição, NF 4521"
+        maxLength={OBSERVACAO_MAX}
+        rows={2}
       />
       <PreviaSaldo insumo={insumo} estoque={estoque} />
     </FormDialog>

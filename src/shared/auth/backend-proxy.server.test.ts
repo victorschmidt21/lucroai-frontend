@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { envelope, nestError } from '@/test/api';
+import { apiErrorBody } from '@/test/api';
 import { makeNextRequest, stubAmbienteDoBff } from '@/test/bff';
 import { makeJwt } from '@/test/factories/auth.factory';
 import { makeInsumo } from '@/test/factories/insumo.factory';
@@ -31,10 +31,10 @@ type Recebido = {
   corpo: string;
 };
 
-/** Registra o que chegou ao serviço e responde com o que o teste pedir. */
+/** Registra o que chegou à API e responde com o que o teste pedir. */
 function espionar(
   url: string,
-  responder: () => Response = () => HttpResponse.json(envelope([])),
+  responder: () => Response = () => HttpResponse.json([]),
 ) {
   const recebidos: Recebido[] = [];
   server.use(
@@ -98,27 +98,26 @@ describe('validarSegmentos', () => {
 });
 
 describe('proxyParaBackend', () => {
-  it('monta a URL do serviço, injeta o Bearer e repassa status e corpo', async () => {
+  it('monta a URL da API, injeta o Bearer e repassa status e corpo', async () => {
     const insumos = [makeInsumo()];
-    const recebidos = espionar('http://catalog.test/insumos', () =>
-      HttpResponse.json(envelope(insumos)),
+    const recebidos = espionar('http://api.test/insumos', () =>
+      HttpResponse.json(insumos),
     );
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos', {
+      makeNextRequest('/api/backend/insumos', {
         token: TOKEN,
         headers: { 'x-outro': 'nao-repassar' },
       }),
-      'catalog',
       ['insumos'],
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(envelope(insumos));
+    expect(await response.json()).toEqual(insumos);
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(recebidos).toEqual([
       expect.objectContaining({
-        url: 'http://catalog.test/insumos',
+        url: 'http://api.test/insumos',
         method: 'GET',
         authorization: `Bearer ${TOKEN}`,
         cookie: null,
@@ -127,42 +126,35 @@ describe('proxyParaBackend', () => {
     ]);
   });
 
-  it.each([
-    ['auth', 'http://auth.test/x'],
-    ['recipe', 'http://recipe.test/x'],
-    ['operations', 'http://operations.test/x'],
-    ['sales', 'http://sales.test/x'],
-  ])('usa a variável de ambiente do serviço %s', async (servico, url) => {
-    const recebidos = espionar(url);
+  it('usa só a URL da API_URL, para qualquer módulo', async () => {
+    const recebidos = espionar('http://api.test/vendas');
 
     await proxyParaBackend(
-      makeNextRequest(`/api/backend/${servico}/x`, { token: TOKEN }),
-      servico,
-      ['x'],
+      makeNextRequest('/api/backend/vendas', { token: TOKEN }),
+      ['vendas'],
     );
 
     expect(recebidos).toHaveLength(1);
   });
 
   it('repassa método, query e corpo', async () => {
-    const recebidos = espionar('http://sales.test/vendas/7/status', () =>
-      HttpResponse.json(envelope({ id: 7 })),
+    const recebidos = espionar('http://api.test/vendas/7/status', () =>
+      HttpResponse.json({ id: 7 }),
     );
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/sales/vendas/7/status?origem=web', {
+      makeNextRequest('/api/backend/vendas/7/status?origem=web', {
         method: 'PATCH',
         token: TOKEN,
         body: JSON.stringify({ status: 'CONCLUIDA' }),
         headers: { 'content-type': 'application/json' },
       }),
-      'sales',
       ['vendas', '7', 'status'],
     );
 
     expect(response.status).toBe(200);
     expect(recebidos[0]).toMatchObject({
-      url: 'http://sales.test/vendas/7/status?origem=web',
+      url: 'http://api.test/vendas/7/status?origem=web',
       method: 'PATCH',
       contentType: 'application/json',
       corpo: JSON.stringify({ status: 'CONCLUIDA' }),
@@ -170,29 +162,27 @@ describe('proxyParaBackend', () => {
   });
 
   it('codifica os segmentos ao montar a URL', async () => {
-    const recebidos = espionar('http://catalog.test/insumos/a%3Fb');
+    const recebidos = espionar('http://api.test/insumos/a%3Fb');
 
     await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos/a%3Fb', { token: TOKEN }),
-      'catalog',
+      makeNextRequest('/api/backend/insumos/a%3Fb', { token: TOKEN }),
       ['insumos', 'a?b'],
     );
 
-    expect(recebidos[0]?.url).toBe('http://catalog.test/insumos/a%3Fb');
+    expect(recebidos[0]?.url).toBe('http://api.test/insumos/a%3Fb');
   });
 
   it('repassa o 204 sem corpo', async () => {
     espionar(
-      'http://catalog.test/insumos/1',
+      'http://api.test/insumos/1',
       () => new HttpResponse(null, { status: 204 }),
     );
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos/1', {
+      makeNextRequest('/api/backend/insumos/1', {
         method: 'DELETE',
         token: TOKEN,
       }),
-      'catalog',
       ['insumos', '1'],
     );
 
@@ -200,40 +190,47 @@ describe('proxyParaBackend', () => {
     expect(await response.text()).toBe('');
   });
 
-  it('repassa o erro do serviço sem alterar', async () => {
-    const erro = nestError(400, 'Venda já finalizada não pode ser alterada');
-    espionar('http://sales.test/vendas/1/status', () =>
-      HttpResponse.json(erro, { status: 400 }),
+  it('repassa o erro da API sem alterar', async () => {
+    const erro = apiErrorBody(
+      422,
+      'Venda já finalizada não pode ser alterada',
+      'VENDA_FINALIZADA',
+    );
+    espionar('http://api.test/vendas/1/status', () =>
+      HttpResponse.json(erro, { status: 422 }),
     );
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/sales/vendas/1/status', {
+      makeNextRequest('/api/backend/vendas/1/status', {
         method: 'PATCH',
         token: TOKEN,
         body: '{}',
       }),
-      'sales',
       ['vendas', '1', 'status'],
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(await response.json()).toEqual(erro);
     expect(cookieDaSessao(response)).toBeUndefined();
   });
 
-  it('apaga o cookie quando o serviço responde 401', async () => {
-    espionar('http://catalog.test/insumos', () =>
-      HttpResponse.json(nestError(401, 'Unauthorized'), { status: 401 }),
+  it('apaga o cookie quando a API responde 401', async () => {
+    espionar('http://api.test/insumos', () =>
+      HttpResponse.json(
+        apiErrorBody(401, 'Token inválido ou expirado', 'TOKEN_INVALIDO'),
+        { status: 401 },
+      ),
     );
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos', { token: TOKEN }),
-      'catalog',
+      makeNextRequest('/api/backend/insumos', { token: TOKEN }),
       ['insumos'],
     );
 
     expect(response.status).toBe(401);
-    expect(await response.json()).toEqual(nestError(401, 'Unauthorized'));
+    expect(await response.json()).toEqual(
+      apiErrorBody(401, 'Token inválido ou expirado', 'TOKEN_INVALIDO'),
+    );
     expect(cookieDaSessao(response)).toMatch(/Max-Age=0/);
   });
 
@@ -241,12 +238,11 @@ describe('proxyParaBackend', () => {
     ['sem cookie', undefined],
     ['com token ilegível', 'lixo'],
     ['com token vencido', makeJwt({}, Date.now() - 5 * 60 * 60 * 1000)],
-  ])('responde 401 %s, sem chamar o serviço', async (_caso, token) => {
-    const recebidos = espionar('http://catalog.test/insumos');
+  ])('responde 401 %s, sem chamar a API', async (_caso, token) => {
+    const recebidos = espionar('http://api.test/insumos');
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos', { token }),
-      'catalog',
+      makeNextRequest('/api/backend/insumos', { token }),
       ['insumos'],
     );
 
@@ -255,25 +251,13 @@ describe('proxyParaBackend', () => {
     expect(recebidos).toHaveLength(0);
   });
 
-  it('recusa serviço desconhecido com 404', async () => {
-    const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/pagamentos/x', { token: TOKEN }),
-      'pagamentos',
-      ['x'],
-    );
-
-    expect(response.status).toBe(404);
-    expect(await response.json()).toMatchObject({ statusCode: 404 });
-  });
-
-  it('recusa as rotas internal com 403, sem chamar o serviço', async () => {
-    const recebidos = espionar('http://catalog.test/insumos/internal/1');
+  it('recusa as rotas internal com 403, sem chamar a API', async () => {
+    const recebidos = espionar('http://api.test/insumos/internal/1');
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos/internal/1', {
+      makeNextRequest('/api/backend/insumos/internal/1', {
         token: TOKEN,
       }),
-      'catalog',
       ['insumos', 'internal', '1'],
     );
 
@@ -283,8 +267,7 @@ describe('proxyParaBackend', () => {
 
   it('recusa caminho malformado com 400', async () => {
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/x', { token: TOKEN }),
-      'catalog',
+      makeNextRequest('/api/backend/x', { token: TOKEN }),
       ['insumos', '..', 'x'],
     );
 
@@ -293,12 +276,11 @@ describe('proxyParaBackend', () => {
 
   it('esconde o login do backend com 404', async () => {
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/auth/auth/login', {
+      makeNextRequest('/api/backend/auth/login', {
         method: 'POST',
         token: TOKEN,
         body: '{}',
       }),
-      'auth',
       ['auth', 'login'],
     );
 
@@ -312,16 +294,15 @@ describe('proxyParaBackend', () => {
   ])(
     'recusa com 403 método que altera dados com origem %s',
     async (_c, origin) => {
-      const recebidos = espionar('http://catalog.test/insumos');
+      const recebidos = espionar('http://api.test/insumos');
 
       const response = await proxyParaBackend(
-        makeNextRequest('/api/backend/catalog/insumos', {
+        makeNextRequest('/api/backend/insumos', {
           method: 'POST',
           token: TOKEN,
           origin,
           body: '{}',
         }),
-        'catalog',
         ['insumos'],
       );
 
@@ -331,28 +312,24 @@ describe('proxyParaBackend', () => {
   );
 
   it('aceita GET sem o header Origin', async () => {
-    espionar('http://catalog.test/insumos');
+    espionar('http://api.test/insumos');
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos', {
+      makeNextRequest('/api/backend/insumos', {
         token: TOKEN,
         origin: null,
       }),
-      'catalog',
       ['insumos'],
     );
 
     expect(response.status).toBe(200);
   });
 
-  it('responde 502 quando o serviço está fora do ar', async () => {
-    server.use(
-      http.get('http://catalog.test/insumos', () => HttpResponse.error()),
-    );
+  it('responde 502 quando a API está fora do ar', async () => {
+    server.use(http.get('http://api.test/insumos', () => HttpResponse.error()));
 
     const response = await proxyParaBackend(
-      makeNextRequest('/api/backend/catalog/insumos', { token: TOKEN }),
-      'catalog',
+      makeNextRequest('/api/backend/insumos', { token: TOKEN }),
       ['insumos'],
     );
 
