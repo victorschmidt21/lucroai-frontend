@@ -11,6 +11,7 @@ import { Button, IconButton } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
   IconAdicionar,
+  IconDinheiro,
   IconEditar,
   IconExcluir,
 } from '@/shared/ui/icons/acoes';
@@ -18,6 +19,7 @@ import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { insumosListOptions } from '../api/insumos.queries';
 import { useDeleteInsumo } from '../hooks/use-delete-insumo';
+import { InsumoDetalheDrawer } from './insumo-detalhe-drawer';
 import { InsumoFormDialog } from './insumo-form-dialog';
 
 type Formulario = { aberto: boolean; insumo?: Insumo };
@@ -34,6 +36,10 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
     aberto: abrirNovo,
   });
   const [paraExcluir, setParaExcluir] = useState<Insumo | null>(null);
+  // Guarda o id: o detalhe lê o insumo da lista, que volta atualizada depois
+  // de uma compra ou de um preço novo.
+  const [detalheId, setDetalheId] = useState<number | null>(null);
+  const detalhe = query.data?.find(({ id }) => id === detalheId);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -87,7 +93,8 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
           },
           {
             id: 'custoUnitario',
-            header: 'Custo unitário',
+            // `custoUnitario` é o preço de hoje (`custoReposicao`, BE-29).
+            header: 'Preço de hoje',
             align: 'right',
             // O valor gravado pelo backend, sem recalcular na tela.
             cell: (insumo) =>
@@ -99,6 +106,12 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
             acoes: true,
             cell: (insumo) => (
               <>
+                <IconButton
+                  aria-label={`Compras e preços de ${insumo.nome}`}
+                  onClick={() => setDetalheId(insumo.id)}
+                >
+                  <IconDinheiro />
+                </IconButton>
                 <IconButton
                   aria-label={`Editar ${insumo.nome}`}
                   onClick={() => setFormulario({ aberto: true, insumo })}
@@ -124,6 +137,16 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
         onOpenChange={alternarFormulario}
         insumo={formulario.insumo}
       />
+
+      {detalhe ? (
+        <InsumoDetalheDrawer
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) setDetalheId(null);
+          }}
+          insumo={detalhe}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={paraExcluir !== null}
