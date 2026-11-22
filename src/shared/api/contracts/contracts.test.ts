@@ -30,7 +30,11 @@ import {
   makeReceitasDoSeed,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
-import { makeResumoVendas, makeVenda } from '@/test/factories/venda.factory';
+import {
+  makeItemVenda,
+  makeResumoVendas,
+  makeVenda,
+} from '@/test/factories/venda.factory';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
 import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
@@ -340,6 +344,28 @@ describe('campos sem valor', () => {
       true,
     );
     expect(lida.lucroPercentual).toBeUndefined();
+  });
+
+  it('venda antiga vem sem canal e sem lucro real', () => {
+    const lida = unwrap(
+      {
+        ...makeVenda(),
+        canalId: null,
+        itens: [makeItemVenda({ lucroReal: null, custoUnitario: null })],
+      },
+      vendaSchema,
+    );
+
+    expect(lida.canalId).toBeNull();
+    expect(lida.itens[0]?.lucroReal).toBeNull();
+  });
+
+  it('a venda do seed no iFood traz o canal e o lucro real, sem a margem legada', () => {
+    const lida = unwrap(venda, vendaSchema);
+
+    expect(lida.canalId).toBe(144);
+    expect(lida.itens[0]?.lucroReal).toBe(0.2159);
+    expect(lida.itens[0]).not.toHaveProperty('margemRealizada');
   });
 
   it('movimentação de produção vem com observacao null', () => {

@@ -10,10 +10,14 @@ export const itemVendaSchema = z.object({
   receitaId: z.number().int(),
   quantidade: z.number().int(),
   precoUnitarioReal: z.number(),
-  /** Snapshot do custo unitário da receita na criação da venda. */
+  /** Snapshot do custo unitário da receita na criação da venda (custo médio dos insumos, BE-30). */
   custoUnitario: z.number().nullable(),
-  /** Fração com 4 casas (pode ser negativa). */
-  margemRealizada: z.number().nullable(),
+  /**
+   * BE-30: `1 − percentuais do canal sem o lucro − custo ÷ preço`, fração do
+   * preço com 4 casas; pode ser negativo. `null` nas vendas antigas e sem custo.
+   * Substitui a `margemRealizada` legada, que a web não lê mais (FE-46).
+   */
+  lucroReal: z.number().nullable(),
 });
 
 export type ItemVenda = z.infer<typeof itemVendaSchema>;
@@ -25,13 +29,19 @@ export const vendaSchema = z.object({
   total: z.number().nullable(),
   status: statusVendaSchema,
   dataVenda: z.iso.datetime(),
+  /** BE-30: canal da venda; `null` nas vendas antigas e com o canal excluído. */
+  canalId: z.number().int().nullable(),
   itens: z.array(itemVendaSchema),
 });
 
 export type Venda = z.infer<typeof vendaSchema>;
 
-/** `create-venda.dto.ts`: o corpo é snake_case; o preço tem no máximo 2 casas. */
+/**
+ * `create-venda.dto.ts`: o corpo é snake_case; o preço tem no máximo 2 casas.
+ * `canal_id` (BE-30) omitido → Balcão.
+ */
 export type CreateVendaBody = {
+  canal_id?: number;
   itens: {
     receita_id: number;
     quantidade: number;

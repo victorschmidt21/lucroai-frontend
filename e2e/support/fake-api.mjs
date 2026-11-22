@@ -3,7 +3,7 @@
 //
 // Responde o que o /api/health sonda (`/health`), o login do seed (FE-07) e,
 // desde a FE-23, as rotas do spec de fumaça (`e2e/fluxo-principal.spec.ts`):
-// insumos, receitas, estoque, produções e vendas, com estado em memória que
+// insumos, receitas, estoque, produções, vendas e o canal Balcão (FE-46), com estado em memória que
 // começa vazio e dura enquanto o processo viver. Segue o contrato de
 // docs/api-integration.md e `src/shared/api/contracts/`: JSON puro, JWT de
 // teste e erros no formato da API (`{ statusCode, code, message, path,
@@ -103,6 +103,16 @@ const invalido = () => [
 // Estado em memória da empresa do seed. Cada coleção começa vazia; não há
 // gastos indiretos, então o custo invisível e os rateios são zero. `produtos`
 // é o saldo de produto acabado por receita (`GET /estoque/produtos`).
+/** Único canal da API falsa, o Balcão (o mesmo dos `precos` das receitas). */
+const CANAL_BALCAO = {
+  id: 1,
+  empresaId: EMPRESA_ID,
+  nome: 'Balcão',
+  comissaoPercentual: 0,
+  ativo: true,
+  balcao: true,
+};
+
 const db = { insumos: [], receitas: [], producoes: [], vendas: [] };
 const produtos = new Map();
 let ultimoId = 0;
@@ -297,10 +307,11 @@ function criarVenda(body) {
       quantidade: item.quantidade,
       precoUnitarioReal: preco,
       custoUnitario: custo,
-      margemRealizada:
+      // Sem imposto nem taxas na API falsa: o lucro real é `1 − custo ÷ preço`.
+      lucroReal:
         custo === null || preco === 0
           ? null
-          : Math.round(((preco - custo) / preco) * 10_000) / 10_000,
+          : Math.round((1 - custo / preco) * 10_000) / 10_000,
     });
   }
   const venda = {
@@ -311,6 +322,7 @@ function criarVenda(body) {
     ),
     status: 'PENDENTE',
     dataVenda: agora(),
+    canalId: body.canal_id ?? CANAL_BALCAO.id,
     itens,
   };
   db.vendas.push(venda);
@@ -407,6 +419,7 @@ const routes = {
       taxaMaquininha: 0,
     },
   ]),
+  'GET /canais': autenticada(() => [200, [CANAL_BALCAO]]),
   // Receitas.
   'GET /receitas': autenticada(() => [200, db.receitas]),
   'GET /receitas/:id': autenticada((_req, _url, _body, id) =>

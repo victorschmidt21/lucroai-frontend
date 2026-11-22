@@ -1,27 +1,20 @@
 {
-  "id": 28,
+  "id": 165,
   "empresaId": 30,
-  "total": 38603.8,
-  "status": "PENDENTE",
-  "dataVenda": "2026-11-20T15:42:10.418Z",
+  "total": 7.38,
+  "status": "CONCLUIDA",
+  "dataVenda": "2026-11-20T17:00:40.839Z",
+  "canalId": 144,
   "itens": [
     {
-      "id": 48,
-      "vendaId": 28,
-      "receitaId": 25,
-      "quantidade": 100,
-      "precoUnitarioReal": 270.03,
-      "custoUnitario": 168.77,
-      "margemRealizada": 0.375
-    },
-    {
-      "id": 49,
-      "vendaId": 28,
-      "receitaId": 27,
-      "quantidade": 40,
-      "precoUnitarioReal": 290.02,
-      "custoUnitario": 181.26,
-      "margemRealizada": 0.375
+      "id": 281,
+      "vendaId": 165,
+      "receitaId": 97,
+      "quantidade": 2,
+      "precoUnitarioReal": 3.69,
+      "custoUnitario": 2.3326,
+      "margemRealizada": 0.3679,
+      "lucroReal": 0.2159
     }
   ]
 }
