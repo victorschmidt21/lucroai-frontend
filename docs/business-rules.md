@@ -186,6 +186,23 @@ A lista vem do backend sem ordem garantida; a web ordena por nome (`localeCompar
 
 A busca é por nome, no cliente, com debounce (350 ms no mobile, `insumos_cubit.dart`). O mobile só ignora maiúsculas; a web ignora também acentos ("acucar" encontra "Açúcar"), com `filtrarPorTexto` (FE-05).
 
+### Compras, custo médio e preço de hoje
+
+FE-43, só na web. Backend: BE-29 (`src/modules/insumos/`, [Compras de insumo](https://github.com/victorschmidt21/lucroai-backend/blob/main/docs/business-rules.md#compras-de-insumo)). Os três custos vêm gravados pelo backend, por unidade do insumo, e a tela não os recalcula:
+
+| Número (contrato)                  | Texto na tela                                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| "Custo médio" (`custoMedio`)       | "Quanto você pagou, em média, pelo que tem guardado."                                                          |
+| "Última compra" (`ultimoCusto`)    | "Quanto custou na compra mais recente."                                                                        |
+| "Preço de hoje" (`custoReposicao`) | "Usado para calcular o preço de venda." + "É o da última compra." ou "Você informou este preço em dd/mm/aaaa." |
+
+- O detalhe abre pelo botão "Compras e preços de &lt;nome&gt;" da lista e mostra também "Em estoque" e a lista "Compras" (`GET /insumos/:id/compras`, a mais recente primeiro: "&lt;quantidade&gt; por R$ X", data, observação e o custo por unidade). Vazio: "Nenhuma compra registrada.".
+- A coluna "Custo unitário" da lista passa a se chamar "Preço de hoje": o `custoUnitario` é o custo de reposição desde a BE-29.
+- **"Registrar compra"** (`POST /insumos/:id/compras`): "Quantidade comprada" (> 0, na unidade do insumo), "Valor pago" (> 0) e "Observação" (opcional, até 200, vazia não vai). Prévia "Custo desta compra: R$ X/un" (`calcularCustoUnitario`). A data é a do registro (o backend não aceita outra). Toast "Compra registrada com sucesso.". Dá entrada no estoque, recalcula o custo médio e faz o preço de hoje ser o da compra.
+- **"Já sei que o preço mudou"** (`PATCH /insumos/:id` só com `precoMercado`): "Quanto custa hoje" (> 0) "Por quanto" (> 0, começa com a quantidade do último preço). Envia `precoMercado = valor ÷ quantidade`; a prévia é "Novo preço de hoje: R$ X/un". O custo médio e o estoque não mudam. Toast "Preço de hoje atualizado.".
+- Com preço informado, **"Voltar ao preço da última compra"** pede confirmação ("O preço de hoje volta a ser R$ X/un.", botão "Voltar ao preço") e envia `precoMercado: null`.
+- O cadastro continua pedindo o valor pago, com a dica "Conta como a primeira compra." (o backend cria a compra inicial). Na edição, a dica é "Mudar o valor ou a quantidade muda o preço de hoje, sem mexer no custo médio." (o backend trata a mudança como preço de mercado).
+
 ## Gastos indiretos
 
 FE-10. Origem: `lib/features/gastos_indiretos/presentation/pages/gastos_indiretos_page.dart`, `lib/features/gastos_indiretos/presentation/cubit/gastos_indiretos_state.dart`. Backend: `services/catalog-service/src/modules/gastos-indiretos/`.
