@@ -62,3 +62,14 @@ export const ORIGEM_MOVIMENTACAO_ROTULOS: Record<OrigemMovimentacao, string> = {
   COMPRA: 'Compra',
   PRODUCAO: 'Produção',
 };
+
+/** `BaseRateio` do `schema.prisma` do monolito (BE-24): o que a capacidade mensal conta. */
+export const BASES_RATEIO = ['FORNADAS', 'MINUTOS'] as const;
+export const baseRateioSchema = z.enum(BASES_RATEIO);
+export type BaseRateio = z.infer<typeof baseRateioSchema>;
+
+/** Rótulos sem jargão, da tela de configurações de custo (FE-41). */
+export const BASE_RATEIO_ROTULOS: Record<BaseRateio, string> = {
+  FORNADAS: 'Por fornadas',
+  MINUTOS: 'Por minutos de forno',
+};

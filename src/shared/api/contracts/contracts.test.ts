@@ -16,6 +16,10 @@ import {
 import { makeInsumo, makeInsumosDoSeed } from '@/test/factories/insumo.factory';
 import { makeProducao } from '@/test/factories/producao.factory';
 import {
+  makeCanaisDoSeed,
+  makeConfiguracaoCustos,
+} from '@/test/factories/pricing.factory';
+import {
   makePrecoVenda,
   makeReceita,
   makeReceitaCusto,
@@ -34,6 +38,8 @@ import estoque from '@/test/fixtures/operations/estoque.json';
 import movimentacoes from '@/test/fixtures/operations/movimentacoes.json';
 import producao from '@/test/fixtures/operations/producao.json';
 import producoes from '@/test/fixtures/operations/producoes.json';
+import canais from '@/test/fixtures/pricing/canais.json';
+import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
 import precoVenda from '@/test/fixtures/recipe/preco-venda.json';
 import receitaCustoSimulada from '@/test/fixtures/recipe/receita-custo-simulada.json';
 import receitaCusto from '@/test/fixtures/recipe/receita-custo.json';
@@ -51,6 +57,7 @@ import {
   movimentacaoEstoqueSchema,
   producaoSchema,
 } from './operations';
+import { canalVendaSchema, configuracaoCustosSchema } from './pricing';
 import {
   precoVendaSchema,
   receitaCustoSchema,
@@ -215,6 +222,20 @@ const CASOS: Caso[] = [
     fixture: venda,
     factory: makeVenda(),
     invalida: { ...makeVenda(), itens: [{ receitaId: 1 }] },
+  },
+  {
+    nome: 'configuração de custos',
+    schema: configuracaoCustosSchema,
+    fixture: configuracaoCustos,
+    factory: makeConfiguracaoCustos(),
+    invalida: { ...makeConfiguracaoCustos(), baseRateio: 'HORAS' },
+  },
+  {
+    nome: 'lista de canais de venda',
+    schema: z.array(canalVendaSchema),
+    fixture: canais,
+    factory: makeCanaisDoSeed(),
+    invalida: [{ ...makeCanaisDoSeed()[0], ativo: 'sim' }],
   },
 ];
 
