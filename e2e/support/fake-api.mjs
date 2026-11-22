@@ -108,6 +108,7 @@ const produtos = new Map();
 let ultimoId = 0;
 const novoId = () => ++ultimoId;
 const round2 = (valor) => Math.round(valor * 100) / 100;
+const round4 = (valor) => Math.round(valor * 10000) / 10000;
 const agora = () => new Date().toISOString();
 
 function buscar(colecao, id, code, mensagem) {
@@ -147,7 +148,11 @@ function criarInsumo(body) {
   return [201, insumo];
 }
 
-/** `POST /receitas`: custos de docs/business-rules.md, sem custo invisível. */
+/**
+ * `POST /receitas`: custo só dos ingredientes (sem gastos, embalagem nem
+ * perda) e um preço só no Balcão, sem imposto nem maquininha:
+ * `custo ÷ (1 − lucro)`, com o lucro padrão de 15% quando vem `null`.
+ */
 function criarReceita(body) {
   if (!body?.nome || !(body.rendimento > 0) || !Array.isArray(body.insumos)) {
     return invalido();
@@ -162,27 +167,67 @@ function criarReceita(body) {
         : {}),
     };
   });
-  const custoProducao = round2(
-    itens.reduce((soma, item) => soma + (item.custoCalculado ?? 0), 0),
+  const custoLote = itens.reduce(
+    (soma, item) => soma + (item.custoCalculado ?? 0),
+    0,
   );
-  const custoUnitario = round2(custoProducao / body.rendimento);
+  const custoUnitario = round4(custoLote / body.rendimento);
+  const lucro = body.lucro_percentual ?? 0.15;
+  const preco = round4(custoUnitario / (1 - lucro));
+  const parte = (valor) => ({
+    valor: round4(valor),
+    fracao: round4(preco > 0 ? valor / preco : 0),
+  });
+  const zero = { valor: 0, fracao: 0 };
   const receita = {
     id: novoId(),
     empresaId: EMPRESA_ID,
     nome: body.nome,
     rendimento: body.rendimento,
     unidadeRendimento: body.unidadeRendimento,
-    custoProducao,
-    custoUnitario,
-    // Sem margem, o backend omite a margem e o preço sugerido.
-    ...(body.margem_lucro === undefined
+    usoPorLote: body.uso_por_lote ?? 1,
+    embalagemPorUnidade: body.embalagem_por_unidade ?? 0,
+    perdaPercentual: body.perda_percentual ?? 0,
+    ...(body.lucro_percentual == null
       ? {}
-      : {
-          margemLucro: body.margem_lucro,
-          precoSugerido: round2(custoUnitario * (1 + body.margem_lucro)),
-        }),
+      : { lucroPercentual: body.lucro_percentual }),
+    custoProducao: round2(custoLote),
+    custoUnitario,
+    margemLucro: round4(lucro / (1 - lucro)),
+    precoSugerido: preco,
     dataCriacao: agora(),
     itens,
+    custo: {
+      ingredientesLote: round2(custoLote),
+      gastosMensaisLote: 0,
+      ingredientes: custoUnitario,
+      gastosMensais: 0,
+      gastosPorUnidade: 0,
+      embalagem: 0,
+      perdas: 0,
+      unitario: custoUnitario,
+    },
+    precos: [
+      {
+        canalId: 1,
+        canal: 'Balcão',
+        balcao: true,
+        percentuais: lucro,
+        preco,
+        motivo: null,
+        composicao: {
+          ingredientes: parte(custoUnitario),
+          gastosMensais: zero,
+          gastosPorUnidade: zero,
+          embalagem: zero,
+          perdas: zero,
+          imposto: zero,
+          taxaCanal: zero,
+          gastosPercentuais: zero,
+          lucro: { valor: round4(preco * lucro), fracao: lucro },
+        },
+      },
+    ],
   };
   db.receitas.push(receita);
   return [201, receita];
