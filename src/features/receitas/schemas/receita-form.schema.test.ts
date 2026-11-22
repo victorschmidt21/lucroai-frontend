@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { makeReceita } from '@/test/factories/receita.factory';
 import {
-  margemParaCampo,
   novoInsumoSchema,
+  PERCENTUAL_INVALIDO,
   receitaFormSchema,
   receitaFormVazio,
   toCreateReceitaBody,
@@ -16,7 +16,10 @@ const valido: ReceitaFormInput = {
   nome: 'Bolo de Chocolate',
   rendimento: '12',
   unidadeRendimento: 'UN',
-  margem_lucro: '50',
+  uso_por_lote: '0,5',
+  embalagem_por_unidade: '0,15',
+  perda_percentual: '5',
+  lucro_percentual: '20',
   insumos: [
     { insumo_id: 1, quantidade: '0,25' },
     { insumo_id: 3, quantidade: '100' },
@@ -37,13 +40,15 @@ describe('receitaFormSchema', () => {
       receitaFormSchema.parse({
         ...valido,
         nome: '  Bolo  ',
-        margem_lucro: '',
       }),
     ).toEqual({
       nome: 'Bolo',
       rendimento: 12,
       unidadeRendimento: 'UN',
-      margem_lucro: undefined,
+      uso_por_lote: 0.5,
+      embalagem_por_unidade: 0.15,
+      perda_percentual: 5,
+      lucro_percentual: 20,
       insumos: [
         { insumo_id: 1, quantidade: 0.25 },
         { insumo_id: 3, quantidade: 100 },
@@ -67,12 +72,38 @@ describe('receitaFormSchema', () => {
     }
   });
 
-  it('margem é opcional, maior ou igual a zero', () => {
-    expect(mensagens({ margem_lucro: '0' })).toEqual([]);
-    expect(mensagens({ margem_lucro: '12,5' })).toEqual([]);
-    expect(mensagens({ margem_lucro: 'abc' })).toEqual([
-      ['margem_lucro', 'Valor inválido'],
+  it('fornadas (ou minutos) por lote são obrigatórias e maiores que zero', () => {
+    expect(mensagens({ uso_por_lote: '1' })).toEqual([]);
+    expect(mensagens({ uso_por_lote: '0,25' })).toEqual([]);
+    for (const uso_por_lote of ['', '0', '-1', 'abc']) {
+      expect(mensagens({ uso_por_lote })).toEqual([
+        ['uso_por_lote', 'Informe um valor maior que zero'],
+      ]);
+    }
+  });
+
+  it('embalagem é opcional, em reais, maior ou igual a zero', () => {
+    expect(mensagens({ embalagem_por_unidade: '' })).toEqual([]);
+    expect(mensagens({ embalagem_por_unidade: '0' })).toEqual([]);
+    expect(mensagens({ embalagem_por_unidade: '-1' })).toEqual([
+      ['embalagem_por_unidade', 'Valor inválido'],
     ]);
+    expect(mensagens({ embalagem_por_unidade: 'abc' })).toEqual([
+      ['embalagem_por_unidade', 'Valor inválido'],
+    ]);
+  });
+
+  it('perda e lucro são opcionais, de 0 até menos de 100%', () => {
+    for (const campo of ['perda_percentual', 'lucro_percentual'] as const) {
+      for (const valor of ['', '0', '12,5', '99,9']) {
+        expect(mensagens({ [campo]: valor })).toEqual([]);
+      }
+      for (const valor of ['100', '150', '-1', 'abc']) {
+        expect(mensagens({ [campo]: valor })).toEqual([
+          [campo, PERCENTUAL_INVALIDO],
+        ]);
+      }
+    }
   });
 
   it('a quantidade aceita vírgula e precisa ser maior que zero', () => {
@@ -102,14 +133,16 @@ describe('receitaFormSchema', () => {
   });
 });
 
-describe('conversão da margem', () => {
-  it('envia a margem em fração e omite a vazia', () => {
-    const body = toCreateReceitaBody(receitaFormSchema.parse(valido));
-    expect(body).toEqual({
+describe('toCreateReceitaBody', () => {
+  it('envia a ficha técnica com os percentuais em fração', () => {
+    expect(toCreateReceitaBody(receitaFormSchema.parse(valido))).toEqual({
       nome: 'Bolo de Chocolate',
       rendimento: 12,
       unidadeRendimento: 'UN',
-      margem_lucro: 0.5,
+      uso_por_lote: 0.5,
+      embalagem_por_unidade: 0.15,
+      perda_percentual: 0.05,
+      lucro_percentual: 0.2,
       insumos: [
         { insumo_id: 1, quantidade: 0.25 },
         { insumo_id: 3, quantidade: 100 },
@@ -117,32 +150,55 @@ describe('conversão da margem', () => {
     });
     expect(
       toCreateReceitaBody(
-        receitaFormSchema.parse({ ...valido, margem_lucro: '7' }),
-      ).margem_lucro,
+        receitaFormSchema.parse({ ...valido, lucro_percentual: '7' }),
+      ).lucro_percentual,
     ).toBe(0.07);
-    expect(
-      toUpdateReceitaBody(
-        receitaFormSchema.parse({ ...valido, margem_lucro: '' }),
-      ),
-    ).not.toHaveProperty('margem_lucro');
   });
 
-  it('na edição, margem ausente ou ≤ 0 fica vazia', () => {
-    expect(margemParaCampo(0.6)).toBe('60');
-    expect(margemParaCampo(0.075)).toBe('7,5');
-    expect(margemParaCampo(undefined)).toBe('');
-    expect(margemParaCampo(0)).toBe('');
-    expect(margemParaCampo(-0.1)).toBe('');
+  it('vazio: embalagem e perda vão 0, e o lucro vai null (usa o padrão)', () => {
+    const vazio = {
+      ...valido,
+      embalagem_por_unidade: '',
+      perda_percentual: '',
+      lucro_percentual: '',
+    };
+    expect(toCreateReceitaBody(receitaFormSchema.parse(vazio))).toMatchObject({
+      embalagem_por_unidade: 0,
+      perda_percentual: 0,
+      lucro_percentual: null,
+    });
+    // No PUT, o null também volta ao lucro padrão da empresa.
+    expect(
+      toUpdateReceitaBody(receitaFormSchema.parse(vazio)).lucro_percentual,
+    ).toBeNull();
+  });
+
+  it('não envia a margem antiga (markup)', () => {
+    expect(
+      toCreateReceitaBody(receitaFormSchema.parse(valido)),
+    ).not.toHaveProperty('margem_lucro');
   });
 });
 
 describe('toReceitaFormInput', () => {
   it('preenche o formulário com os valores salvos', () => {
-    expect(toReceitaFormInput(makeReceita())).toEqual({
+    expect(
+      toReceitaFormInput(
+        makeReceita({
+          usoPorLote: 0.2,
+          embalagemPorUnidade: 0.15,
+          perdaPercentual: 0.05,
+          lucroPercentual: 0.25,
+        }),
+      ),
+    ).toEqual({
       nome: 'Pão Francês',
       rendimento: '50',
       unidadeRendimento: 'UN',
-      margem_lucro: '60',
+      uso_por_lote: '0,2',
+      embalagem_por_unidade: '0,15',
+      perda_percentual: '5',
+      lucro_percentual: '25',
       insumos: [
         { insumo_id: 1, quantidade: '1' },
         { insumo_id: 8, quantidade: '0,02' },
@@ -151,9 +207,20 @@ describe('toReceitaFormInput', () => {
     });
   });
 
+  it('lucro omitido (padrão da empresa) e zeros ficam vazios', () => {
+    expect(toReceitaFormInput(makeReceita())).toMatchObject({
+      uso_por_lote: '1',
+      embalagem_por_unidade: '',
+      perda_percentual: '',
+      lucro_percentual: '',
+    });
+  });
+
   it('o formulário vazio começa em unidades e sem insumos', () => {
     expect(receitaFormVazio).toMatchObject({
       unidadeRendimento: 'UN',
+      uso_por_lote: '1',
+      lucro_percentual: '',
       insumos: [],
     });
   });

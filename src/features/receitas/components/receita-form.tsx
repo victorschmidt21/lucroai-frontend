@@ -4,15 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useFieldArray, useWatch } from 'react-hook-form';
-import { gastosIndiretosListOptions } from '@/features/gastos-indiretos/api/gastos-indiretos.queries';
+import { configuracaoCustosOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
-import type { GastoIndireto, Insumo } from '@/shared/api/contracts/catalog';
+import type { Insumo } from '@/shared/api/contracts/catalog';
 import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
+import type { ConfiguracaoCustos } from '@/shared/api/contracts/pricing';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { percentualParaFracao } from '@/shared/format/numero';
-import { parseInteiroBR, parseNumeroBR } from '@/shared/format/numero-br';
+import { formatMargem } from '@/shared/format/numero';
+import { parseNumeroBR } from '@/shared/format/numero-br';
 import { Button, IconButton } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { ErrorState } from '@/shared/ui/error-state';
@@ -21,6 +22,7 @@ import {
   FormDecimalInput,
   FormInput,
   FormIntegerInput,
+  FormMoneyInput,
   FormPercentInput,
   FormUnidadeSelect,
 } from '@/shared/ui/form';
@@ -31,7 +33,7 @@ import { useToast } from '@/shared/ui/toast';
 import { receitaDetailOptions } from '../api/receitas.queries';
 import { useCreateReceita } from '../hooks/use-create-receita';
 import { useUpdateReceita } from '../hooks/use-update-receita';
-import { calcularCustoItem, calcularPreviaReceita } from '../receitas.calculos';
+import { calcularCustoItem } from '../receitas.calculos';
 import {
   NOME_MAX,
   receitaFormSchema,
@@ -61,8 +63,10 @@ export function ReceitaFormPagina({ receitaId }: Props) {
     enabled: edicao,
   });
   const insumos = useQuery(insumosListOptions());
-  const gastos = useQuery(gastosIndiretosListOptions());
-  const queries = edicao ? [receita, insumos, gastos] : [insumos, gastos];
+  const configuracao = useQuery(configuracaoCustosOptions());
+  const queries = edicao
+    ? [receita, insumos, configuracao]
+    : [insumos, configuracao];
   const comErro = queries.filter((query) => query.isError);
 
   let conteudo;
@@ -81,7 +85,7 @@ export function ReceitaFormPagina({ receitaId }: Props) {
         }}
       />
     );
-  } else if (!insumos.data || !gastos.data || (edicao && !receita.data)) {
+  } else if (!insumos.data || !configuracao.data || (edicao && !receita.data)) {
     conteudo = (
       <div className="flex flex-col gap-4">
         <Skeleton aria-label="Carregando receita" className="h-12" />
@@ -93,7 +97,7 @@ export function ReceitaFormPagina({ receitaId }: Props) {
       <ReceitaForm
         receita={receita.data}
         insumos={insumos.data}
-        gastos={gastos.data}
+        configuracao={configuracao.data}
       />
     );
   }
@@ -109,11 +113,11 @@ export function ReceitaFormPagina({ receitaId }: Props) {
 function ReceitaForm({
   receita,
   insumos,
-  gastos,
+  configuracao,
 }: {
   receita?: Receita;
   insumos: Insumo[];
-  gastos: GastoIndireto[];
+  configuracao: ConfiguracaoCustos;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -127,33 +131,62 @@ function ReceitaForm({
       submitLabel={receita ? 'Atualizar' : 'Salvar'}
       cancelHref="/receitas"
       // Rejeitar com o ApiError mantém o formulário preenchido, com o erro no topo.
+      // Depois de salvar, o detalhe mostra o custo e os preços calculados pela API.
       onSubmit={async (values) => {
+        let salva: Receita;
         if (receita) {
-          await update.mutateAsync({
+          salva = await update.mutateAsync({
             id: receita.id,
             body: toUpdateReceitaBody(values),
           });
           toast.success('Receita atualizada com sucesso.');
         } else {
-          await create.mutateAsync(toCreateReceitaBody(values));
+          salva = await create.mutateAsync(toCreateReceitaBody(values));
           toast.success('Receita criada com sucesso.');
         }
-        router.push('/receitas');
+        router.push(`/receitas/${salva.id}`);
       }}
     >
       <FormInput name="nome" label="Nome" maxLength={NOME_MAX} required />
       <div className="grid grid-cols-2 gap-3">
-        <FormIntegerInput name="rendimento" label="Rendimento" required />
+        <FormIntegerInput
+          name="rendimento"
+          label="Rende quantas unidades boas?"
+          hint="Por lote, sem contar as que sobram ou estragam."
+          required
+        />
         <FormUnidadeSelect name="unidadeRendimento" label="Unidade" required />
       </div>
-      <FormPercentInput name="margem_lucro" label="Margem de lucro (%)" />
       <InsumosDaReceita insumos={insumos} />
-      <PreviaDeCustos
-        insumos={insumos}
-        gastos={gastos}
-        margemSalva={receita?.margemLucro}
-      />
-      {receita ? <ValoresSalvos receita={receita} /> : null}
+      <Card title="Custos e lucro">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <FormDecimalInput
+            name="uso_por_lote"
+            label={
+              configuracao.baseRateio === 'MINUTOS'
+                ? 'Quantos minutos de forno um lote ocupa?'
+                : 'Quantas fornadas um lote ocupa?'
+            }
+            hint="Divide as contas do mês entre as receitas. Padrão: 1."
+            required
+          />
+          <FormMoneyInput
+            name="embalagem_por_unidade"
+            label="Embalagem por unidade"
+            hint="Caixa, pote ou saquinho de cada unidade."
+          />
+          <FormPercentInput
+            name="perda_percentual"
+            label="Quanto costuma sobrar ou estragar?"
+            hint="Das unidades de cada lote. Vazio é 0%."
+          />
+          <FormPercentInput
+            name="lucro_percentual"
+            label="Lucro desta receita"
+            hint={`De cada R$ 1,00 vendido. Vazio usa o padrão (${formatMargem(configuracao.lucroPadrao)}).`}
+          />
+        </div>
+      </Card>
       <AvisoDeSaida />
     </Form>
   );
@@ -242,121 +275,6 @@ function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
         disponiveis={disponiveis}
         onAdicionar={(item) => append(item)}
       />
-    </Card>
-  );
-}
-
-function Linha({
-  rotulo,
-  valor,
-  destaque = false,
-}: {
-  rotulo: string;
-  valor: string;
-  destaque?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="text-body text-ink-muted">{rotulo}</dt>
-      <dd
-        className={
-          destaque
-            ? 'text-body font-semibold text-ink tabular-nums'
-            : 'text-body text-ink tabular-nums'
-        }
-      >
-        {valor}
-      </dd>
-    </div>
-  );
-}
-
-/**
- * Prévia calculada no cliente com as fórmulas do backend, incluindo o custo
- * invisível (lacuna 18). Margem vazia na edição não é enviada, e o backend
- * mantém a salva: a prévia usa a salva nesse caso (lacuna 21).
- */
-function PreviaDeCustos({
-  insumos,
-  gastos,
-  margemSalva,
-}: {
-  insumos: Insumo[];
-  gastos: GastoIndireto[];
-  margemSalva: number | undefined;
-}) {
-  const [rendimento, margemDigitada, itens] = useWatch<
-    ReceitaFormInput,
-    ['rendimento', 'margem_lucro', 'insumos']
-  >({ name: ['rendimento', 'margem_lucro', 'insumos'] });
-  const porId = new Map(insumos.map((insumo) => [insumo.id, insumo]));
-  const margemEmPontos = parseNumeroBR(margemDigitada);
-  const margem =
-    margemEmPontos === null
-      ? margemDigitada?.trim()
-        ? undefined
-        : margemSalva
-      : percentualParaFracao(margemEmPontos);
-
-  const previa = calcularPreviaReceita({
-    itens: (itens ?? []).map((item) => ({
-      quantidade: parseNumeroBR(item.quantidade),
-      custoUnitario: porId.get(item.insumo_id)?.custoUnitario ?? null,
-    })),
-    rendimento: parseInteiroBR(rendimento),
-    margem,
-    gastos,
-  });
-
-  return (
-    <Card title="Prévia dos custos">
-      <dl aria-live="polite" className="flex flex-col gap-2">
-        <Linha rotulo="Insumos" valor={formatMoeda(previa.custoInsumos)} />
-        <Linha
-          rotulo="Gastos indiretos (1 lote)"
-          valor={formatMoeda(previa.custoInvisivel)}
-        />
-        <Linha
-          rotulo="Custo produção"
-          valor={formatMoeda(previa.custoProducao)}
-          destaque
-        />
-        <Linha
-          rotulo="Custo unitário"
-          valor={formatMoeda(previa.custoUnitario)}
-          destaque
-        />
-        <Linha
-          rotulo="Preço sugerido"
-          valor={formatMoeda(previa.precoSugerido)}
-          destaque
-        />
-      </dl>
-      <p className="text-small text-ink-muted">
-        Estimativa enquanto você edita. O valor gravado é o calculado pelo
-        servidor ao salvar.
-      </p>
-    </Card>
-  );
-}
-
-function ValoresSalvos({ receita }: { receita: Receita }) {
-  return (
-    <Card title="Valores salvos">
-      <dl className="flex flex-col gap-2">
-        <Linha
-          rotulo="Custo produção"
-          valor={formatMoeda(receita.custoProducao)}
-        />
-        <Linha
-          rotulo="Custo unitário"
-          valor={formatMoeda(receita.custoUnitario)}
-        />
-        <Linha
-          rotulo="Preço sugerido"
-          valor={formatMoeda(receita.precoSugerido)}
-        />
-      </dl>
     </Card>
   );
 }

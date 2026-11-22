@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatMargem, formatQuantidade } from '@/shared/format/numero';
+import { formatQuantidade } from '@/shared/format/numero';
 import { buttonClasses, IconButton } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
@@ -23,8 +23,8 @@ const ACAO_DE_LINHA = buttonClasses('fantasma', undefined, 'icone');
 
 /**
  * Tela de receitas. Origem: receitas_page.dart, receita_card.dart e
- * receitas_search_bar.dart. Criar e editar abrem o formulário da FE-12;
- * simular, a tela da FE-20.
+ * receitas_search_bar.dart. O nome abre o detalhe com os preços por canal
+ * (FE-44); criar e editar abrem o formulário da FE-12; simular, a tela da FE-20.
  */
 export function ReceitasLista() {
   const query = useQuery(receitasListOptions());
@@ -43,7 +43,7 @@ export function ReceitasLista() {
     <>
       <ListPage
         title="Receitas"
-        subtitle="Gerencie insumos, rendimento, margem e custo automático"
+        subtitle="Gerencie insumos, rendimento, custo e preço automáticos"
         actions={novaReceita}
         label="Receitas"
         query={query}
@@ -56,7 +56,18 @@ export function ReceitasLista() {
         getRowKey={(receita) => receita.id}
         // Os valores gravados pelo backend, sem recalcular; ausentes viram "—".
         columns={[
-          { id: 'nome', header: 'Nome', cell: (receita) => receita.nome },
+          {
+            id: 'nome',
+            header: 'Nome',
+            cell: (receita) => (
+              <Link
+                href={`/receitas/${receita.id}`}
+                className="text-accent underline-offset-2 hover:underline"
+              >
+                {receita.nome}
+              </Link>
+            ),
+          },
           {
             id: 'rendimento',
             header: 'Rendimento',
@@ -77,14 +88,8 @@ export function ReceitasLista() {
             cell: (receita) => formatMoeda(receita.custoUnitario),
           },
           {
-            id: 'margemLucro',
-            header: 'Margem',
-            align: 'right',
-            cell: (receita) => formatMargem(receita.margemLucro),
-          },
-          {
             id: 'precoSugerido',
-            header: 'Preço sugerido',
+            header: 'Preço no Balcão',
             align: 'right',
             cell: (receita) => formatMoeda(receita.precoSugerido),
           },

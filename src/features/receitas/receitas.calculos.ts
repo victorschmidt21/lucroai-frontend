@@ -1,12 +1,14 @@
-import type { TipoGasto } from '@/shared/api/contracts/enums';
+import type {
+  ComposicaoPreco,
+  PrecoCanal,
+} from '@/shared/api/contracts/recipe';
 import { arredondarCentavos } from '@/shared/format/moeda';
 
 /*
- * Prévia dos custos da receita, com as fórmulas e os arredondamentos do backend
- * (docs/business-rules.md#receitas-formulário-e-custo). Origem:
- * `custos/application/services/custo.service.ts` (`calcularReceita`) e
- * `custos/infra/providers/default-custo-invisivel-result.provider.ts`. O valor
- * exibido depois de salvar é sempre o que o backend devolve.
+ * Desde a FE-44 o custo e o preço da receita vêm sempre da API (`custo` e
+ * `precos` de `GET /receitas/:id`, BE-28): aqui só fica a prévia do custo de
+ * cada item no formulário e a montagem da barra a partir da resposta
+ * (docs/business-rules.md#receitas-formulário-e-custo).
  */
 
 /** `custoCalculado` do item: `round2(quantidade × insumo.custoUnitario)`. */
@@ -14,97 +16,77 @@ export function calcularCustoItem(quantidade: number, custoUnitario: number) {
   return arredondarCentavos(quantidade * custoUnitario);
 }
 
-type GastoParaRateio = { valor: number; tipo: TipoGasto };
+export type ParteDaBarraId =
+  | 'ingredientes'
+  | 'contasDoMes'
+  | 'embalagemEPerdas'
+  | 'imposto'
+  | 'taxaCanal'
+  | 'percentuaisDaVenda'
+  | 'lucro';
 
-/**
- * Custo invisível de 1 lote: o rateio de **todos** os gastos indiretos da
- * empresa, cada um com `round2`, e o total com `round2` (lacuna 18).
- * Desde a FE-42 lê o `tipo` com a equivalência legada do backend (`MENSAL`
- * como o antigo `FIXO`; `PERCENTUAL_VENDA` não é custo). A FE-44 troca esta
- * prévia pelo custo calculado pela API.
- */
-export function calcularCustoInvisivel(
-  gastos: readonly GastoParaRateio[],
-  rendimento: number,
-) {
-  const lotes = 1;
-  const total = gastos.reduce((soma, gasto) => {
-    switch (gasto.tipo) {
-      case 'POR_UNIDADE':
-        return soma + arredondarCentavos(gasto.valor * rendimento * lotes);
-      case 'MENSAL':
-        return soma + arredondarCentavos(gasto.valor);
-      case 'PERCENTUAL_VENDA':
-        return soma;
-    }
-  }, 0);
+export type ParteDaBarra = {
+  id: ParteDaBarraId;
+  rotulo: string;
+  /** Fração do preço: quanto de cada R$ 1,00 vendido vai para esta parte. */
+  fracao: number;
+  /** Reais por unidade. */
+  valor: number;
+};
 
-  return arredondarCentavos(total);
+const round4 = (valor: number) => Math.round(valor * 10_000) / 10_000;
+
+/** Soma partes da API (4 casas) sem o ruído do ponto flutuante. */
+function somar(...partes: { valor: number; fracao: number }[]) {
+  return {
+    valor: round4(partes.reduce((soma, parte) => soma + parte.valor, 0)),
+    fracao: round4(partes.reduce((soma, parte) => soma + parte.fracao, 0)),
+  };
 }
 
-export type PreviaReceitaEntrada = {
-  /** `custoUnitario` `null` quando o insumo não está mais no catálogo. */
-  itens: readonly { quantidade: number | null; custoUnitario: number | null }[];
-  /** `null` quando o rendimento digitado é inválido. */
-  rendimento: number | null;
-  /** Fração (`0.6`); `undefined` sem margem. */
-  margem: number | undefined;
-  gastos: readonly GastoParaRateio[];
-};
-
-export type PreviaReceita = {
-  custoInsumos: number | null;
-  custoInvisivel: number | null;
-  custoProducao: number | null;
-  custoUnitario: number | null;
-  precoSugerido: number | null;
-};
-
 /**
- * `custoProducao = round2(round2(Σ custoItem) + custoInvisivel)`,
- * `custoUnitario = round2(custoProducao / rendimento)` e
- * `precoSugerido = round2(custoUnitario × (1 + margem))`, só com margem.
- * Valor que não dá para calcular (quantidade ou rendimento inválido, insumo
- * fora do catálogo) é `null` e aparece como "—".
+ * "Para onde vai cada R$ 1,00" do preço de um canal, a partir da `composicao`
+ * da API, sem recalcular nada: os gastos por unidade (saquinho, etiqueta)
+ * entram em "Embalagem e perdas". Partes com zero ficam de fora, menos o
+ * lucro, que sempre aparece. A ordem é a da barra.
  */
-export function calcularPreviaReceita({
-  itens,
-  rendimento,
-  margem,
-  gastos,
-}: PreviaReceitaEntrada): PreviaReceita {
-  const custos = itens.map(({ quantidade, custoUnitario }) =>
-    quantidade === null || custoUnitario === null
-      ? null
-      : calcularCustoItem(quantidade, custoUnitario),
-  );
-  const custoInsumos = custos.includes(null)
-    ? null
-    : arredondarCentavos(
-        custos.reduce<number>((soma, custo) => soma + (custo ?? 0), 0),
-      );
-  const rendimentoValido = rendimento !== null && rendimento > 0;
-  const custoInvisivel = rendimentoValido
-    ? calcularCustoInvisivel(gastos, rendimento)
-    : null;
-  const custoProducao =
-    custoInsumos === null || custoInvisivel === null
-      ? null
-      : arredondarCentavos(custoInsumos + custoInvisivel);
-  const custoUnitario =
-    custoProducao === null || !rendimentoValido
-      ? null
-      : arredondarCentavos(custoProducao / rendimento);
-  const precoSugerido =
-    custoUnitario === null || margem === undefined
-      ? null
-      : arredondarCentavos(custoUnitario * (1 + margem));
+export function montarBarraDoPreco(
+  composicao: ComposicaoPreco,
+  canal: Pick<PrecoCanal, 'canal' | 'balcao'>,
+): ParteDaBarra[] {
+  const partes: ParteDaBarra[] = [
+    {
+      id: 'ingredientes',
+      rotulo: 'Ingredientes',
+      ...somar(composicao.ingredientes),
+    },
+    {
+      id: 'contasDoMes',
+      rotulo: 'Contas do mês',
+      ...somar(composicao.gastosMensais),
+    },
+    {
+      id: 'embalagemEPerdas',
+      rotulo: 'Embalagem e perdas',
+      ...somar(
+        composicao.embalagem,
+        composicao.gastosPorUnidade,
+        composicao.perdas,
+      ),
+    },
+    { id: 'imposto', rotulo: 'Imposto', ...somar(composicao.imposto) },
+    {
+      id: 'taxaCanal',
+      rotulo: canal.balcao ? 'Taxa da maquininha' : `Taxa do ${canal.canal}`,
+      ...somar(composicao.taxaCanal),
+    },
+    {
+      id: 'percentuaisDaVenda',
+      rotulo: 'Gastos em % da venda',
+      ...somar(composicao.gastosPercentuais),
+    },
+    { id: 'lucro', rotulo: 'Lucro', ...somar(composicao.lucro) },
+  ];
 
-  return {
-    custoInsumos,
-    custoInvisivel,
-    custoProducao,
-    custoUnitario,
-    precoSugerido,
-  };
+  return partes.filter((parte) => parte.id === 'lucro' || parte.fracao > 0);
 }
