@@ -633,61 +633,70 @@ No mobile, os registros ficam numa lista estática em memória e somem ao fechar
 
 ## Simulação de cenário da receita
 
-FE-20. Origem: `lib/features/receitas/presentation/pages/simulacao_page.dart`, `lib/features/receitas/presentation/cubit/simulacao_cubit.dart`, `lib/features/receitas/domain/entities/simulacao_result.dart`. Backend: `services/recipe-service/src/modules/custos/application/services/simulacao.service.ts`, DTOs `simular-cenario.dto.ts`, `simulacao-cenario-resultado.dto.ts`, `simular-receita-custo.dto.ts` e `receitas/application/dto/preco-venda.dto.ts`.
+FE-20, refeita na FE-45 (épico E8). Origem: `lib/features/receitas/presentation/pages/simulacao_page.dart`. Backend: `src/modules/receitas/` do monolito (`simular-cenario.dto.ts`, `receitas.calculos.ts`, `simularCenario`), regras em "Simulação e ponto de equilíbrio" do `docs/business-rules.md` de lá (BE-31). Rota `/receitas/[receitaId]/simular`.
+
+A pergunta da tela é "quanto eu lucro se cobrar X?". A pessoa informa o preço que cobra, onde vende e quantas unidades vende por mês; tudo o que aparece no resultado vem da API.
 
 ### Cálculo (feito pelo backend; a tela não recalcula)
 
 ```text
-custoUnitario   = novoCusto ?? receita.custoUnitario      // sem nenhum dos dois: 400
-precoVenda      = novoPreco ?? receita.precoSugerido      // sem nenhum dos dois: 400
-volume          = volume ?? receita.rendimento
-lucroEstimado   = round2((precoVenda − custoUnitario) × volume)
-margemProjetada = round2((precoVenda − custoUnitario) / precoVenda)    // fração
-breakEven       = ceil(custoUnitario × volume / precoVenda)
+canal                 = canalId ?? Balcão
+preco                 = novoPreco ?? preço sugerido no canal
+volume                = volume ?? receita.rendimento                  // unidades por mês
+lucroPorUnidade       = preco − custoUnitario − (imposto + taxa do canal + gastos % da venda) × preco
+lucroReal             = lucroPorUnidade ÷ preco                       // fração do preço
+lucroMes              = lucroPorUnidade × volume
+margemContribuicao    = preco − custoSemGastosMensais − percentuais × preco
+pontoEquilibrio       = margemContribuicao ≤ 0 ? { unidades: null, motivo: MARGEM_NEGATIVA }
+                                               : ceil(gastosMensais ÷ margemContribuicao)
 ```
+
+Pelo preço sugerido do canal, o `lucroReal` é o lucro configurado (critério da BE-31 e da FE-45).
 
 ### Parâmetros
 
-| Campo                  | Valor inicial                      | Envio                     |
-| ---------------------- | ---------------------------------- | ------------------------- |
-| Custo por unidade (R$) | `custoUnitario` da receita, se > 0 | `novoCusto`, número > 0   |
-| Preço de venda (R$)    | `precoSugerido`, se > 0            | `novoPreco`, número > 0   |
-| Quantidade (unidades)  | `rendimento`                       | `volume`, **inteiro** > 0 |
+| Campo                     | Valor inicial                              | Envio                     |
+| ------------------------- | ------------------------------------------ | ------------------------- |
+| Preço que você cobra (R$) | preço sugerido do canal (`precos[].preco`) | `novoPreco`, número > 0   |
+| Onde vende                | Balcão (ou o primeiro canal de `precos`)   | `canalId`, sempre enviado |
+| Unidades vendidas por mês | `rendimento`                               | `volume`, **inteiro** > 0 |
 
-Campo vazio não é enviado (o backend usa o valor da receita). Dicas: "Ex.: 2,50", "Ex.: 5,00", "Ex.: 12". O mobile não valida os campos; a web segue o DTO: valor inválido ou ≤ 0, "Informe um valor maior que zero"; quantidade não inteira ou ≤ 0, "Informe uma quantidade inteira maior que zero".
+Trocar "Onde vende" põe no campo de preço o sugerido daquele canal (vazio se o canal não tem preço possível). Os canais são os de `receita.precos` (os ativos). Campo vazio não é enviado (o backend usa o sugerido no canal e o rendimento). O preço igual ao sugerido do canal arredondado a centavos também não é enviado: o campo tem 2 casas e a API, 4, e sem isso o iFood a R$ 0,55 (sugerido 0,5513) daria 14,8% em vez dos 15% configurados. Dicas: "Ex.: 5,00" e "Ex.: 300". Mensagens: "Informe um valor maior que zero", "Escolha onde vende" e "Informe uma quantidade inteira maior que zero".
 
 ### Resultado e textos
 
-| Onde                | Mobile                                                                 | Web                                                                                           |
-| ------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Título e subtítulo  | "Simulacao de cenario" / "Ajuste os valores e veja o impacto no lucro" | "Simulação de cenário" / "Ajuste os valores e veja o impacto no lucro", com o nome da receita |
-| Blocos              | "Parametros", "Resultado"                                              | "Parâmetros", "Resultado"                                                                     |
-| Botão               | "Simular"                                                              | igual                                                                                         |
-| Lucro               | "Lucro estimado": verde se ≥ 0, vermelho se < 0, com sinal             | igual (`success` / `danger`)                                                                  |
-| Margem              | "Margem projetada": `margemProjetada × 100`, 1 casa                    | igual                                                                                         |
-| Demais              | "Custo/unidade", "Preco de venda", "Volume simulado" (`N un.`)         | "Custo/unidade", "Preço de venda", "Volume simulado"                                          |
-| Ponto de equilíbrio | "Venda pelo menos N unidades para nao ter prejuizo."                   | "Venda pelo menos N unidades para não ter prejuízo."                                          |
-| Erro                | mensagem do backend ou "Erro ao simular."                              | igual                                                                                         |
+Funções puras em `features/receitas/receitas.calculos.ts` (`formatarResultadoDaSimulacao`).
 
-Mensagens de erro do backend (400): "Receita sem custo calculado. Informe novoCusto para simular." e "Receita sem preço sugerido definido. Informe novoPreco para simular.". Antes de exibi-las, troque o nome do campo pelo rótulo: "Informe o custo por unidade para simular." e "Informe o preço de venda para simular.".
+| Onde                | Texto                                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Título e subtítulo  | "Simulação de cenário" / "Quanto você lucra cobrando este preço?", com o nome da receita                                                                                                                     |
+| Blocos e botão      | "Parâmetros", "Resultado"; "Simular"                                                                                                                                                                         |
+| Destaque            | "Lucro no mês" (`lucroMes`), verde se o lucro por unidade ≥ 0, vermelho se < 0                                                                                                                               |
+| Demais              | "Lucro por unidade", "Lucro real (do preço)" (`lucroReal × 100`, 1 casa), "Preço (<canal>)", "Custo por unidade", "Unidades por mês" (`N un.`), "Contas do mês" (`gastosMensais`)                            |
+| Ponto de equilíbrio | "Para pagar as contas do mês, você precisa vender N unidades." ("1 unidade" no singular); com 0 (sem gastos `MENSAL`): "Você não tem contas do mês cadastradas em Gastos: qualquer venda já ajuda no lucro." |
+| Aviso (vermelho)    | com `lucroPorUnidade < 0`: "Este preço não cobre o custo: você perde R$ X em cada unidade vendida."                                                                                                          |
+| Erro                | mensagem do backend ou "Erro ao simular."                                                                                                                                                                    |
 
-### Blocos auxiliares (sem equivalente no mobile)
+Com o aviso, o ponto de equilíbrio **não** aparece, mesmo quando a API devolve unidades (preço entre o custo sem as contas do mês e o custo inteiro): critério da FE-45, "preço abaixo do custo mostra o aviso e nenhum ponto de equilíbrio". Com `MARGEM_NEGATIVA` o lucro por unidade também é negativo, então só o aviso aparece.
 
-| Bloco                        | Endpoint                           | Corpo                               | Resposta (nomes como vêm da API)                                                                 |
-| ---------------------------- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
-| "Preço para margem desejada" | `POST /receitas/:id/preco-venda`   | `{ margem_lucro }` (fração ≥ 0)     | `{ custo_total_unitario, preco_sugerido, lucro_por_unidade }`, sem arredondamento                |
-| "Custo para N lotes"         | `POST /receitas/:id/custo/simular` | `{ quantidadeLotes }` (inteiro > 0) | `{ quantidade_lotes, total_unidades, custo_invisivel, custo_total_producao, custo_por_unidade }` |
-| Custo atual de 1 lote        | `GET /receitas/:id/custo`          | —                                   | mesmo formato do anterior                                                                        |
+Mensagem de erro do backend (400 `RECEITA_SEM_PRECO`): "Receita sem preço sugerido definido. Informe novoPreco para simular."; antes de exibi-la, troque "Informe novoPreco" por "Informe o preço que você cobra".
 
-Na web (FE-20), os dois blocos ficam lado a lado sob o resultado. "Preço para margem desejada": campo "Margem de lucro" em %, começando pela margem salva (≥ 0: "Informe uma margem válida"), botão "Calcular preço", resultado "Preço sugerido", "Custo/unidade" e "Lucro por unidade". "Custo para N lotes": "Quantidade de lotes" começando em 1 ("Informe a quantidade de lotes"), botão "Calcular custo"; mostra o custo de 1 lote ao abrir e, depois, o simulado: "Custo total (N lote(s))", "Custo/unidade", "Custos invisíveis" e "Total de unidades".
+### Custo para N lotes
 
-`preco_sugerido = custoUnitario × (1 + margem_lucro)` e `lucro_por_unidade = preco_sugerido − custoUnitario`. "Receita sem custo calculado" (400) quando a receita não tem `custoUnitario`.
+| Bloco                 | Endpoint                           | Corpo                               | Resposta (nomes como vêm da API)                                                                 |
+| --------------------- | ---------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| "Custo para N lotes"  | `POST /receitas/:id/custo/simular` | `{ quantidadeLotes }` (inteiro > 0) | `{ quantidade_lotes, total_unidades, custo_invisivel, custo_total_producao, custo_por_unidade }` |
+| Custo atual de 1 lote | `GET /receitas/:id/custo`          | —                                   | mesmo formato do anterior                                                                        |
+
+"Quantidade de lotes" começa em 1 ("Informe a quantidade de lotes"), botão "Calcular custo"; mostra o custo de 1 lote ao abrir e, depois, o simulado: "Custo total (N lote(s))", "Custo/unidade", "Custos invisíveis" e "Total de unidades".
+
+O bloco "Preço para margem desejada" (`POST /receitas/:id/preco-venda`, markup sobre o custo) saiu na FE-45: a margem dele não é o lucro do preço do E8, e os preços sugeridos por canal já estão no detalhe da receita (FE-44).
 
 A simulação não grava nada: mutação sem invalidação.
 
 ## Simulação interativa
 
-FE-21. Origem: `lib/features/simulacao/presentation/pages/simulacao_page.dart` (`_ScenarioBase.fromReceita`, `_priceRangeFor`, `_volumeRangeFor`, `_buildSimulationContent`, `_ProjectionChartCard`, `_VolumePreviewCard`). Funções puras em `features/simulacao/simulacao.calculos.ts`.
+FE-21. Origem: `lib/features/simulacao/presentation/pages/simulacao_page.dart` (`_ScenarioBase.fromReceita`, `_priceRangeFor`, `_volumeRangeFor`, `_buildSimulationContent`, `_ProjectionChartCard`, `_VolumePreviewCard`). Funções puras em `features/simulacao/simulacao.calculos.ts`. **Desde a FE-45** o lucro vem de `POST /receitas/:id/simular` (no Balcão, com o imposto, a maquininha e os gastos % da venda): as fórmulas locais de lucro e margem saíram.
 
 Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas carregadas no histórico, que por padrão é o mês atual). Sem receitas: "Cadastre uma receita para simular cenários.". A receita selecionada fica em `receitaId` na URL; sem ela, usa a primeira da lista.
 
@@ -695,25 +704,21 @@ Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas car
 
 ```text
 custo          = receita.custoUnitario ?? 0
-precoSugerido  = receita.precoSugerido > 0 ? receita.precoSugerido : custo × (1 + (receita.margemLucro ?? 0))
+precoBase      = receita.precoSugerido > 0 ? receita.precoSugerido : custo     // FE-45: sem o markup margemLucro
 // vendas CONCLUIDA, itens desta receita:
 quantidade     = Σ item.quantidade
 receitaVendas  = Σ item.quantidade × item.precoUnitarioReal
-precoAtual     = quantidade > 0 ? receitaVendas / quantidade : precoSugerido
-volumePadrao   = max(1, receita.rendimento)
-receitaAtual   = quantidade > 0 ? receitaVendas : precoAtual × volumePadrao
-volumeAtual    = quantidade > 0 ? quantidade : volumePadrao
-lucroAtual     = receitaAtual − custo × volumeAtual
-margemAtual    = receitaAtual == 0 ? 0 : lucroAtual / receitaAtual × 100
+precoAtual     = quantidade > 0 ? receitaVendas / quantidade : precoBase
+volumeAtual    = quantidade > 0 ? quantidade : max(1, receita.rendimento)
 ```
 
-Sem vendas, a base usa o preço sugerido e o rendimento: não há divisão por zero.
+O lucro atual é o `lucroMes` (e a margem, o `lucroReal`) da API simulada com `{ novoPreco: precoAtual, volume: volumeAtual }`; com `precoAtual = 0` não há chamada e o atual fica em 0.
 
 ### Faixas dos controles
 
 ```text
 // preço
-precoBase = receita.precoSugerido > 0 ? receita.precoSugerido : custo × (1 + margemLucro)
+precoBase = receita.precoSugerido > 0 ? receita.precoSugerido : custo
 base      = max(precoBase, custo × 1,25)
 min       = max(0,01, min(custo × 0,75, base))
 max       = max(base × 2,2, custo × 3)
@@ -734,21 +739,24 @@ Sem custo nem preço, a fórmula do mobile dá `max = 0 < min = 0,01` (o Slider 
 ### Resultado
 
 ```text
-custoProjetado         = custo × (1 + variacao / 100)
-lucroPorUnidade        = preco − custoProjetado
-lucroProjetado         = lucroPorUnidade × volume
-receitaProjetada       = preco × volume
-margemProjetada        = receitaProjetada == 0 ? 0 : lucroProjetado / receitaProjetada × 100
-diferenca              = lucroProjetado − lucroAtual
+custoProjetado  = custo × (1 + variacao / 100)          // custoComVariacao, vai como novoCusto (só com variação ≠ 0)
+corpo           = { novoPreco: preco, volume: max(1, round(volume)), novoCusto? }
+                  // POST /receitas/:id/simular, 300 ms depois do último ajuste
+lucroPorUnidade = resposta.lucroPorUnidade
+lucroProjetado  = resposta.lucroMes
+margemProjetada = resposta.lucroReal × 100
+diferenca       = lucroProjetado − lucroAtual
 ```
 
-Cenários de volume, com o preço e o custo projetados:
+Enquanto a primeira resposta não chega, o bloco do preço mostra um Skeleton; nos ajustes seguintes fica o resultado anterior até chegar o novo. Erro: "Não foi possível simular." com "Tentar novamente".
 
-| Cenário     | Volume                        | Receita     | Lucro                          |
-| ----------- | ----------------------------- | ----------- | ------------------------------ |
-| Conservador | `max(1, round(volume × 0,5))` | `preco × v` | `(preco − custoProjetado) × v` |
-| Base        | `max(1, round(volume))`       | idem        | idem                           |
-| Otimista    | `max(1, round(volume × 1,5))` | idem        | idem                           |
+Cenários de volume, com o preço e o lucro por unidade da API:
+
+| Cenário     | Volume                        | Receita     | Lucro                 |
+| ----------- | ----------------------------- | ----------- | --------------------- |
+| Conservador | `max(1, round(volume × 0,5))` | `preco × v` | `lucroPorUnidade × v` |
+| Base        | `max(1, round(volume))`       | idem        | idem                  |
+| Otimista    | `max(1, round(volume × 1,5))` | idem        | idem                  |
 
 O mobile chama o cenário do meio de "Simulado" e, como usa os volumes como chave de um mapa, junta cenários com o mesmo volume (com volume 1, aparecem só dois). A web usa "Base", como pede a FE-21, e mostra sempre os três.
 
@@ -759,7 +767,7 @@ O mobile chama o cenário do meio de "Simulado" e, como usa os volumes como chav
 | Título e subtítulo | "Simulacao" / "Projete preco, custo e volume antes de agir"                                                                                           | "Simulação" / "Projete preço, custo e volume antes de agir"                              |
 | Produto            | "Produto"; "Custo unitario", "Preco atual", "Volume atual no periodo" (`N unidades`)                                                                  | "Produto"; "Custo unitário", "Preço atual", "Volume atual no período"                    |
 | Controles          | "Preco de venda" ("Atual: R$ X"); "Variacao de custo" ("Custo projetado: R$ X", "-50%", "+100%"); "Volume projetado" (`N un.`, "Volume atual: N un.") | "Preço de venda"; "Variação de custo"; "Volume projetado", com os mesmos textos de apoio |
-| Resultado          | "PRECO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                                                                              | "PREÇO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                 |
+| Resultado          | "PRECO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                                                                              | "PREÇO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Lucro real" (FE-45)     |
 | Gráfico            | "Lucro projetado vs atual"; diferença com sinal; "Atual" / "Projetado", `X% margem`                                                                   | igual, com "Diferença: +R$ X" e tabela equivalente para leitor de tela                   |
 | Cenários           | "Simulacao de volume"; `N unidades`; receita; "Lucro: R$ X"                                                                                           | "Simulação de volume"; mesmos textos                                                     |
 | Ação               | —                                                                                                                                                     | "Restaurar"                                                                              |
@@ -772,7 +780,7 @@ FE-22. Origem: `lib/features/dashboard/presentation/pages/dashboard_page.dart` (
 
 Critério da FE-22: com o seed "Padaria Pão Feliz", os indicadores batem com o cálculo manual (vendas `PENDENTE` e `CANCELADA` ficam fora).
 
-Não há endpoint de painel: o mobile chama `/vendas/dashboard` (`lib/core/network/api_constants.dart`), que não existe no backend. O painel é composto no cliente a partir de `GET /vendas` (dos últimos 6 meses, a partir do dia 1 de cinco meses atrás), `GET /receitas` e da query de estoque (FE-13).
+Não há endpoint de painel: o mobile chama `/vendas/dashboard` (`lib/core/network/api_constants.dart`), que não existe no backend. O painel é composto no cliente a partir de `GET /vendas` (dos últimos 6 meses, a partir do dia 1 de cinco meses atrás), `GET /receitas`, da query de estoque (FE-13) e, desde a FE-45, de `GET /vendas/resumo` (ponto de equilíbrio da empresa).
 
 ### Indicadores (só vendas `CONCLUIDA`)
 
@@ -814,8 +822,20 @@ Título "Evolução mensal", subtítulo "Receita dos últimos 6 meses". A tendê
 Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
 
 - **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - margem X%`. O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
-- **Sem vendas:** usa as receitas com `lucro = precoSugerido − custoUnitario > 0` (ausente conta como 0); `margem = preco == 0 ? margemLucro × 100 : lucro / preco × 100`. Linha: `sem vendas no período - margem X%` (o `unitsLabel` do mobile sem vendas).
+- **Sem vendas:** desde a FE-45, usa o lucro por unidade do preço do Balcão calculado pela API (`precos[balcao].composicao.lucro`): `lucro = lucro.valor`, `margem = lucro.fracao × 100`, só as receitas com `lucro > 0` (sem preço possível, a receita fica fora). Linha: `sem vendas no período - margem X%` (o `unitsLabel` do mobile sem vendas).
 - **Vazio:** "Cadastre receitas e registre vendas para ver rentabilidade.".
+
+### Contas do mês (ponto de equilíbrio da empresa)
+
+FE-45. `GET /vendas/resumo` (BE-31): o faturamento por mês que paga os gastos `MENSAL`, com o mix das vendas `CONCLUIDA` dos últimos 30 dias, calculado pelo backend. Seção "Contas do mês", com um card "Para pagar as contas" (`pontoEquilibrioDoPainel`):
+
+| Resposta                                   | Valor                | Detalhe                                   |
+| ------------------------------------------ | -------------------- | ----------------------------------------- |
+| `pontoEquilibrio.valor` presente           | `formatMoeda(valor)` | "em vendas por mês"                       |
+| `valor: null`, `motivo: "SEM_VENDAS"`      | "—"                  | "sem vendas nos últimos 30 dias"          |
+| `valor: null`, `motivo: "MARGEM_NEGATIVA"` | "—"                  | "as vendas não cobrem o custo" (vermelho) |
+
+A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e custos, e é buscado de novo cada vez que o painel abre, em vez de ser invalidado por cada mutação desses módulos. Erro do bloco: "Não foi possível carregar quanto vender para pagar as contas.".
 
 ### Cabeçalho e ações rápidas
 
