@@ -64,7 +64,8 @@ function formatadorEditavel(casas: number | undefined) {
 }
 
 /**
- * Valor que volta para dentro de um campo: `1234.56` vira `1.234,56`. Sem valor,
+ * Valor que volta para dentro de um campo: `1234.56` vira `1.234,56` e `3000`
+ * vira `3000` (sem milhar, que o ponto sem vírgula é decimal). Sem valor,
  * devolve `''` (campo vazio, e não `—`). `casas` fixa as decimais (2 no dinheiro).
  */
 export function formatNumeroEditavel(
@@ -75,7 +76,11 @@ export function formatNumeroEditavel(
     return '';
   }
 
-  return normalizarEspacos(formatadorEditavel(casas).format(valor + 0));
+  const texto = normalizarEspacos(formatadorEditavel(casas).format(valor + 0));
+
+  // Sem vírgula, `parseNumeroBR` lê o ponto como decimal (`1.000` seria 1):
+  // inteiros saem sem o separador de milhar, para o campo devolver o mesmo número.
+  return texto.includes(',') ? texto : texto.replaceAll('.', '');
 }
 
 type SchemaNumerico = z.ZodType<unknown, number>;
