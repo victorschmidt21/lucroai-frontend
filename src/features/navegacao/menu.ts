@@ -1,5 +1,6 @@
 import type { IconComponent } from '@/shared/ui/icons/icone';
 import {
+  IconConfiguracoes,
   IconCustos,
   IconEstoque,
   IconGastos,
@@ -32,6 +33,22 @@ export const ITENS_MENU: readonly ItemMenu[] = [
   { label: 'Gastos', href: '/gastos-indiretos', icone: IconGastos },
 ];
 
+/**
+ * Configurações de custo (FE-41): só no menu lateral e na gaveta "Conta" do
+ * celular, porque a barra inferior só tem espaço para os oito destinos.
+ */
+export const ITEM_CONFIGURACOES: ItemMenu = {
+  label: 'Configurações de custo',
+  href: '/configuracoes',
+  icone: IconConfiguracoes,
+};
+
+/** Itens do menu lateral: os oito destinos e as configurações. */
+export const ITENS_MENU_LATERAL: readonly ItemMenu[] = [
+  ...ITENS_MENU,
+  ITEM_CONFIGURACOES,
+];
+
 function contemRota(href: string, pathname: string) {
   return href === '/'
     ? pathname === '/'
@@ -43,5 +60,5 @@ function contemRota(href: string, pathname: string) {
  * menu (`/simulacao`, aberta pelo painel) não marcam nenhum.
  */
 export function getItemAtivo(pathname: string) {
-  return ITENS_MENU.find((item) => contemRota(item.href, pathname));
+  return ITENS_MENU_LATERAL.find((item) => contemRota(item.href, pathname));
 }

@@ -48,6 +48,10 @@ describe.each(['lateral', 'inferior'] as const)(
         [ROTULOS[5], '/estoque'],
         [ROTULOS[6], '/producoes'],
         [ROTULOS[7], '/gastos-indiretos'],
+        // As configurações de custo (FE-41) só cabem no menu lateral.
+        ...(variante === 'lateral'
+          ? [['Configurações de custo', '/configuracoes']]
+          : []),
       ]);
       await expectNoA11yViolations(container);
     });

@@ -27,6 +27,7 @@ describe('getItemAtivo', () => {
     ['/estoque', 'Estoque'],
     ['/producoes', 'Produção'],
     ['/gastos-indiretos', 'Gastos'],
+    ['/configuracoes', 'Configurações de custo'],
   ])('em %s, é %s', (pathname, label) => {
     expect(getItemAtivo(pathname)?.label).toBe(label);
   });

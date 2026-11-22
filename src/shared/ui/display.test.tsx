@@ -260,8 +260,9 @@ describe('PageHeader e Logo', () => {
 describe('ícones', () => {
   const icones = Object.entries({ ...menu, ...acoes });
 
-  it('tem os oito ícones do menu do mobile', () => {
+  it('tem os oito ícones do menu do mobile e o das configurações', () => {
     expect(Object.keys(menu).toSorted()).toEqual([
+      'IconConfiguracoes',
       'IconCustos',
       'IconEstoque',
       'IconGastos',
