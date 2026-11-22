@@ -6,7 +6,7 @@ Fonte única das regras, fórmulas, validações e textos das telas do LucroAI, 
 
 Como ler:
 
-- **Quem decide é o backend.** Quando o backend calcula e grava um valor (custo da receita, preço sugerido, rateio, total da venda, margem realizada), a tela mostra o valor devolvido. O cálculo no cliente serve só para **prévia** enquanto o usuário digita, e precisa repetir as fórmulas e os arredondamentos do backend descritos aqui.
+- **Quem decide é o backend.** Quando o backend calcula e grava um valor (custo da receita, preço sugerido, rateio, total da venda, lucro real da venda), a tela mostra o valor devolvido. O cálculo no cliente serve só para **prévia** enquanto o usuário digita, e precisa repetir as fórmulas e os arredondamentos do backend descritos aqui.
 - **Quando o backend não tem o dado**, o cliente calcula (painel, estoque, simulação interativa, cálculo real). Essas fórmulas viram **funções puras** testadas à parte (ver [architecture.md](architecture.md#regras-de-negócio-no-cliente)).
 - **Textos.** A coluna "Web" é o texto a usar. O mobile escreve muitos textos sem acento ("Descricao", "Calculo Real"); a web corrige a acentuação, e só ela. Mudanças de sentido estão em [Diferenças intencionais](#diferenças-intencionais-em-relação-ao-mobile).
 - Fórmulas usam a notação do código: `Σ` é soma, `round2(x)` é o arredondamento do backend descrito em [Arredondamento](#arredondamento).
@@ -24,7 +24,7 @@ Como ler:
 | [Estoque de insumos](#estoque-de-insumos)                                             | FE-13        |
 | [Entrada de estoque e histórico](#entrada-de-estoque-e-histórico)                     | FE-14        |
 | [Produções e rateio](#produções-e-rateio)                                             | FE-15        |
-| [Vendas: carrinho](#vendas-carrinho)                                                  | FE-16        |
+| [Vendas: carrinho](#vendas-carrinho)                                                  | FE-16, FE-46 |
 | [Vendas: confirmação e ciclo de vida](#vendas-confirmação-e-ciclo-de-vida)            | FE-17        |
 | [Vendas: histórico e resumo](#vendas-histórico-e-resumo)                              | FE-18        |
 | [Custos: cálculo real](#custos-cálculo-real)                                          | FE-19        |
@@ -68,7 +68,7 @@ O backend arredonda dinheiro com `Number(valor.toFixed(2))` em cada etapa (ex.: 
 | `custoProducao`, `custoUnitario`, `precoSugerido` da receita | 2 casas, em cada etapa                          | `custo.service.ts` (`calcularReceita`)                                                       |
 | `valorRateado`, `custoTotal`, `custoUnitario` da produção    | 2 casas                                         | `services/operations-service/src/modules/producoes/application/services/producao.service.ts` |
 | `total` da venda                                             | 2 casas                                         | `services/sales-service/src/modules/vendas/application/services/venda.service.ts`            |
-| `margemRealizada` do item da venda                           | 4 casas (fração)                                | `venda.service.ts`                                                                           |
+| `lucroReal` do item da venda (FE-46)                         | 4 casas (fração)                                | `venda.service.ts`                                                                           |
 | resultado de `POST /receitas/:id/simular`                    | 2 casas; `margemProjetada` é fração com 2 casas | `services/recipe-service/src/modules/custos/application/services/simulacao.service.ts`       |
 | resultado de `POST /receitas/:id/preco-venda`                | **nenhum**                                      | `services/recipe-service/src/modules/receitas/application/services/receita.service.ts`       |
 
@@ -463,8 +463,8 @@ subtotal = quantidade × precoUnitario
 total    = Σ subtotal                       // o backend grava round2(Σ quantidade × preco_unitario_real)
 ```
 
-- Ao escolher a receita, o preço é preenchido com `precoSugerido` quando ele for > 0; senão, o campo fica vazio (`_onReceitaChanged`). O usuário pode alterar.
-- Corpo: `{ itens: [{ receita_id, quantidade, preco_unitario_real }] }`. `quantidade` é **inteira** (`@IsInt`) e `preco_unitario_real` tem no máximo 2 casas (`@IsNumber({ maxDecimalPlaces: 2 })`): arredonde com `arredondarCentavos` antes de enviar.
+- Ao escolher a receita, o preço é preenchido com o preço sugerido **no canal da venda** (FE-46, `receita.precos[].preco` do canal; antes, o `precoSugerido`) quando ele for > 0; senão, o campo fica vazio (`_onReceitaChanged`). O usuário pode alterar.
+- Corpo: `{ canal_id?, itens: [{ receita_id, quantidade, preco_unitario_real }] }`. `quantidade` é **inteira** (`@IsInt`) e `preco_unitario_real` tem no máximo 2 casas (`@IsNumber({ maxDecimalPlaces: 2 })`): arredonde com `arredondarCentavos` antes de enviar.
 - O carrinho vive só no estado do componente. Recarregar a página o descarta.
 - Adicionar a mesma receita de novo cria outra linha, como no mobile.
 - A venda nasce `PENDENTE`. Depois de criar, a tela limpa o carrinho e abre a confirmação (FE-17) com a venda devolvida.
@@ -494,6 +494,15 @@ Na web (FE-16):
 - O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
 - Depois de registrar, a tela abre a confirmação (FE-17); o Toast provisório "Venda #<id> registrada como pendente." saiu.
 - A aba "Histórico" é a da FE-18 ([histórico e resumo](#vendas-histórico-e-resumo)).
+
+### Canal da venda ("Onde vendeu?", FE-46)
+
+Sem equivalente no mobile. Backend: `POST /vendas` com `canal_id` (BE-30); omitido, o backend grava o Balcão.
+
+- "Onde vendeu?" fica no cartão "Adicionar produto" e vale para a venda inteira. Opções: só os canais **ativos** de `GET /canais`, na ordem da API; padrão, o Balcão (sem Balcão ativo, o primeiro ativo). Na web: `canaisParaVenda`, `canalPadrao`, `canalDaVendaSchema` e `precoSugeridoNoCanal` (`item-venda.schema.ts`) e `toCreateVendaBody(itens, canalId)`.
+- Com itens no carrinho, o canal fica travado ("Para trocar o canal, esvazie o carrinho."): os preços sugeridos são do canal escolhido. Depois de registrar, volta ao Balcão.
+- Se os canais não carregarem: "Não foi possível carregar os canais. A venda será registrada no Balcão."; a venda vai sem `canal_id`, e o preço sugerido é o do Balcão.
+- Canal sem preço possível (`preco: null`) deixa o campo de preço vazio.
 
 ### Detector de estoque insuficiente
 
@@ -536,13 +545,13 @@ Diferenças em relação ao mobile, registradas como decisão:
 
 ### Textos
 
-| Onde   | Mobile                                                                                                        | Web                                                             |
-| ------ | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Título | "Confirmar venda" / "Revise os itens antes de concluir"                                                       | igual                                                           |
-| Item   | nome ou "Produto #<id>"; `qtd × R$ preço`; subtotal; `X% margem` (`margemRealizada × 100`, 1 casa, se houver) | igual                                                           |
-| Total  | "Total"                                                                                                       | igual                                                           |
-| Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente) |
-| Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | igual                                                           |
+| Onde   | Mobile                                                                                                        | Web                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Título | "Confirmar venda" / "Revise os itens antes de concluir"                                                       | igual                                                                                     |
+| Item   | nome ou "Produto #<id>"; `qtd × R$ preço`; subtotal; `X% margem` (`margemRealizada × 100`, 1 casa, se houver) | "Lucro real X%" (`lucroReal × 100`, 1 casa, se houver; FE-46) e "Onde vendeu" com o canal |
+| Total  | "Total"                                                                                                       | igual                                                                                     |
+| Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente)                           |
+| Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | igual                                                                                     |
 
 Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido. Na web: `ConfirmacaoVenda`, `useVerificarEstoqueParaVenda` e `useAtualizarStatusVenda` (`features/vendas/`); o histórico (FE-18) abre o mesmo componente com a venda `PENDENTE`.
 
@@ -576,13 +585,18 @@ ticketMedio    = quantidade > 0 ? totalVendido / quantidade : 0
 - Produto(s): nomes das receitas dos itens, separados por vírgula (`_resolveProdutoNome`); "Produto vendido" se nenhum nome for encontrado.
 - Quantidade: soma das quantidades dos itens. Linha: `N un - dd/mm/aaaa`, total e Badge do status.
 - Venda `PENDENTE` tem a ação "Confirmar", que abre a FE-17.
-- Detalhe: por item, preço real, custo unitário (snapshot `custoUnitario`) e margem realizada.
+- Detalhe: por item, preço real, custo unitário (snapshot `custoUnitario`) e lucro real (FE-46; a margem realizada antiga saiu).
+
+### Canal e lucro real (FE-46)
 
 ```text
-margemRealizada = (precoUnitarioReal − custoUnitario) / precoUnitarioReal     // calculada e gravada pelo backend
+lucroReal = 1 − percentuais do canal sem o lucro − custoUnitario / precoUnitarioReal   // fração do preço, calculada e gravada pelo backend (BE-30)
 ```
 
-Exemplo do OVERVIEW: pão a R$ 0,50 com custo R$ 0,07 → `86,0%`.
+- A lista ("Canal" e "Lucro real"), o detalhe ("Onde vendeu" e "Lucro real") e a confirmação mostram o canal e o lucro real de cada item, em % do preço com 1 casa (`descreverLucroReal`). Com mais de um item, a coluna "Lucro real" da lista traz `<produto>: X%` por linha.
+- Lucro real negativo (a venda não pagou o custo e as taxas): cor `danger` **e** o texto "(prejuízo)", como "-5,0% (prejuízo)".
+- Sem `lucroReal` (vendas antigas): `—`. Sem `canalId` (vendas antigas ou canal excluído): "Não informado"; canal fora da lista: "Canal #<id>" (`nomeDoCanal`).
+- Exemplo do seed: Quindim no iFood a R$ 3,69 com custo R$ 2,3326 → `21,6%`, já descontada a comissão de 15,2%.
 
 | Onde   | Mobile                                    | Web                                                                    |
 | ------ | ----------------------------------------- | ---------------------------------------------------------------------- |
@@ -597,7 +611,7 @@ Na web (FE-18):
 - Com a data inicial depois da final (ou uma data apagada), a busca anterior continua na tela e o erro aparece no campo; nada vai para a URL.
 - O resumo usa as vendas devolvidas pelo filtro (com status "Pendente" ou "Cancelada", ele fica zerado).
 - Venda sem `total` usa `round2(Σ quantidade × precoUnitarioReal)`, como o `VendaModel.fromJson` do mobile.
-- Cada linha tem "Confirmar" (só `PENDENTE`) e "Ver detalhes", que abre a gaveta "Venda #<id>" com a data, o status, os itens (nome ou "Produto #<id>", `qtd × preço`, "Custo unitário", "Margem realizada", subtotal) e o total. O detalhe não existe no mobile.
+- Cada linha tem "Confirmar" (só `PENDENTE`) e "Ver detalhes", que abre a gaveta "Venda #<id>" com a data, o status, o canal ("Onde vendeu"), os itens (nome ou "Produto #<id>", `qtd × preço`, "Custo unitário", "Lucro real", subtotal) e o total. O detalhe não existe no mobile.
 
 ## Custos: cálculo real
 
