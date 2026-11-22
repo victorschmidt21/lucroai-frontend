@@ -396,6 +396,18 @@ const routes = {
   ),
   'POST /insumos': autenticada((_req, _url, body) => criarInsumo(body)),
   'GET /gastos-indiretos': autenticada(() => [200, []]),
+  // Configuração do seed (FE-44: o formulário de receita lê a base de rateio e o lucro padrão).
+  'GET /configuracao-custos': autenticada(() => [
+    200,
+    {
+      empresaId: EMPRESA_ID,
+      baseRateio: 'FORNADAS',
+      capacidadeMensal: 100,
+      lucroPadrao: 0.15,
+      impostoPercentual: 0,
+      taxaMaquininha: 0,
+    },
+  ]),
   // Receitas.
   'GET /receitas': autenticada(() => [200, db.receitas]),
   'GET /receitas/:id': autenticada((_req, _url, _body, id) =>
