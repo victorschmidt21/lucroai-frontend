@@ -13,25 +13,26 @@ Como ler:
 
 ## Sumário
 
-| Seção                                                                      | Issue        |
-| -------------------------------------------------------------------------- | ------------ |
-| [Convenções de número, moeda e data](#convenções-de-número-moeda-e-data)   | FE-05, FE-06 |
-| [Enumerações e rótulos](#enumerações-e-rótulos)                            | FE-05        |
-| [Insumos](#insumos)                                                        | FE-09        |
-| [Gastos indiretos](#gastos-indiretos)                                      | FE-10        |
-| [Receitas: listagem](#receitas-listagem)                                   | FE-11        |
-| [Receitas: formulário e custo](#receitas-formulário-e-custo)               | FE-12        |
-| [Estoque de insumos](#estoque-de-insumos)                                  | FE-13        |
-| [Entrada de estoque e histórico](#entrada-de-estoque-e-histórico)          | FE-14        |
-| [Produções e rateio](#produções-e-rateio)                                  | FE-15        |
-| [Vendas: carrinho](#vendas-carrinho)                                       | FE-16        |
-| [Vendas: confirmação e ciclo de vida](#vendas-confirmação-e-ciclo-de-vida) | FE-17        |
-| [Vendas: histórico e resumo](#vendas-histórico-e-resumo)                   | FE-18        |
-| [Custos: cálculo real](#custos-cálculo-real)                               | FE-19        |
-| [Simulação de cenário da receita](#simulação-de-cenário-da-receita)        | FE-20        |
-| [Simulação interativa](#simulação-interativa)                              | FE-21        |
-| [Painel](#painel)                                                          | FE-22        |
-| [Login e mensagens de erro gerais](#login-e-mensagens-de-erro-gerais)      | FE-05, FE-07 |
+| Seção                                                                                 | Issue        |
+| ------------------------------------------------------------------------------------- | ------------ |
+| [Convenções de número, moeda e data](#convenções-de-número-moeda-e-data)              | FE-05, FE-06 |
+| [Enumerações e rótulos](#enumerações-e-rótulos)                                       | FE-05        |
+| [Insumos](#insumos)                                                                   | FE-09        |
+| [Gastos indiretos](#gastos-indiretos)                                                 | FE-10        |
+| [Receitas: listagem](#receitas-listagem)                                              | FE-11        |
+| [Receitas: formulário e custo](#receitas-formulário-e-custo)                          | FE-12        |
+| [Estoque de insumos](#estoque-de-insumos)                                             | FE-13        |
+| [Entrada de estoque e histórico](#entrada-de-estoque-e-histórico)                     | FE-14        |
+| [Produções e rateio](#produções-e-rateio)                                             | FE-15        |
+| [Vendas: carrinho](#vendas-carrinho)                                                  | FE-16        |
+| [Vendas: confirmação e ciclo de vida](#vendas-confirmação-e-ciclo-de-vida)            | FE-17        |
+| [Vendas: histórico e resumo](#vendas-histórico-e-resumo)                              | FE-18        |
+| [Custos: cálculo real](#custos-cálculo-real)                                          | FE-19        |
+| [Simulação de cenário da receita](#simulação-de-cenário-da-receita)                   | FE-20        |
+| [Simulação interativa](#simulação-interativa)                                         | FE-21        |
+| [Painel](#painel)                                                                     | FE-22        |
+| [Configurações de custo e formas de venda](#configurações-de-custo-e-formas-de-venda) | FE-41        |
+| [Login e mensagens de erro gerais](#login-e-mensagens-de-erro-gerais)                 | FE-05, FE-07 |
 
 ## Convenções de número, moeda e data
 
@@ -797,6 +798,54 @@ Cabeçalho "LucroAI", "Seu painel financeiro", nome da empresa (do JWT) e atalho
 | Gastos       | `/gastos-indiretos?novo=1` |
 
 `?novo=1` abre o formulário de criação ao carregar a listagem.
+
+## Configurações de custo e formas de venda
+
+FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, no menu lateral e na gaveta "Conta" do celular (a barra inferior só tem os oito destinos do mobile).
+
+A interface não usa termos técnicos (markup, rateio, custo fixo ou variável, margem de contribuição): fala em "contas do mês", "fornadas", "lucro em cada venda" e "formas de venda".
+
+### Percentual da tela e fração da API
+
+```text
+fração da API = percentual digitado ÷ 100     (percentualDaTela, 1,36 → 0.0136)
+texto do campo = fração × 100, sem arredondar (percentualDaApi, 0.0136 → "1,36")
+```
+
+Vale para `lucroPadrao`, `impostoPercentual`, `taxaMaquininha` e `comissaoPercentual`, todas frações do **preço de venda** (0 a 1). O ruído de ponto flutuante é cortado em 10 casas (`percentualParaFracao`, `fracaoParaPercentual`). A comissão na lista aparece com até 3 casas, sem zeros à direita (`15,2%`, `0%`).
+
+### Validações
+
+Os limites são os de `validarConfiguracaoCustos` e do `CreateCanalVendaDto`; a web confere antes de enviar e mostra o erro no campo.
+
+| Campo (contrato)                                            | Regra                           | Mensagem                                    |
+| ----------------------------------------------------------- | ------------------------------- | ------------------------------------------- |
+| `capacidadeMensal`                                          | número > 0                      | "Informe um número maior que zero"          |
+| `lucroPadrao`, `impostoPercentual`, `taxaMaquininha` (em %) | de 0 a 100, inclusive           | "Informe um percentual de 0 a 100"          |
+| `nome` do canal                                             | obrigatório, até 100 caracteres | "Informe o nome" / "Use até 100 caracteres" |
+| `comissaoPercentual` (em %)                                 | de 0 a 100, inclusive           | "Informe um percentual de 0 a 100"          |
+
+A soma dos percentuais não é barrada: o backend devolve o canal sem preço (`PERCENTUAIS_ACIMA_DE_100`). O `PUT /configuracao-custos` envia os cinco campos. Ativar e desativar é `PUT /canais/:id` com `{ ativo }`; a edição envia `nome` e `comissaoPercentual`, sem o `ativo`. O Balcão não tem "Excluir" (o backend responde 422 `CANAL_BALCAO_NAO_EXCLUIVEL`), mas pode ser desativado e editado, como o backend permite.
+
+### Textos
+
+| Onde                 | Web                                                                                                                                                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Menu, título e aba   | "Configurações de custo"                                                                                                                                                                                                                                       |
+| Subtítulo            | "Conte como o seu negócio funciona: o preço sugerido das receitas usa estas respostas."                                                                                                                                                                        |
+| Cartão do formulário | "Como o seu negócio funciona"                                                                                                                                                                                                                                  |
+| Base (`baseRateio`)  | "Como você quer dividir as contas do mês?": "Por fornadas" (`FORNADAS`, padrão) / "Por minutos de forno" (`MINUTOS`), com o apoio "Aluguel, luz, gás e as outras contas do mês são divididos pelas fornadas (ou pelos minutos de forno) que cada receita usa." |
+| Capacidade           | "Quantas fornadas você faz por mês?" (sufixo "fornadas") ou "Quantos minutos de forno você usa por mês?" (sufixo "min"); apoio "Uma estimativa já serve; dá para ajustar depois."                                                                              |
+| Lucro                | "Quanto você quer de lucro em cada venda?"; apoio "De cada R$ 1,00 vendido, quanto fica para você. Ex.: 15% são R$ 0,15."                                                                                                                                      |
+| Imposto              | "Você paga imposto sobre as vendas?"; apoio "Se é informal ou MEI, deixe 0."                                                                                                                                                                                   |
+| Maquininha           | "Taxa da maquininha"; apoio "Quanto a maquininha de cartão cobra nas vendas do balcão."                                                                                                                                                                        |
+| Toast                | "Configurações salvas."                                                                                                                                                                                                                                        |
+| Cartão dos canais    | "Onde você vende"; "Cada forma de venda ativa ganha um preço sugerido nas receitas, já com a comissão dela."                                                                                                                                                   |
+| Linha do canal       | nome, status "Ativo" / "Desativado", "Comissão: 15,2%"; no Balcão, "A taxa da maquininha entra no preço do balcão."; ações "Ativar"/"Desativar", "Editar", "Excluir"                                                                                           |
+| Ação e formulário    | "Nova forma de venda" / "Editar forma de venda"; apoio "A comissão é a parte de cada venda que fica com o aplicativo ou o parceiro."; "Nome" (exemplo "Ex.: Rappi, encomendas, feira") e "Comissão" ("Se não paga comissão, deixe 0.")                         |
+| Toasts dos canais    | "Forma de venda criada.", "Forma de venda atualizada.", "Forma de venda excluída."                                                                                                                                                                             |
+| Confirmação          | "Excluir forma de venda" / `Deseja excluir "<nome>"? As vendas já feitas nela continuam no histórico.`                                                                                                                                                         |
+| Erros                | "Não foi possível carregar as configurações." / "Não foi possível carregar as formas de venda."                                                                                                                                                                |
 
 ## Login e mensagens de erro gerais
 
