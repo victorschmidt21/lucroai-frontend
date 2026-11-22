@@ -10,6 +10,7 @@ import {
   useFormState,
 } from 'react-hook-form';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
+import type { CanalVenda } from '@/shared/api/contracts/pricing';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatNumeroEditavel } from '@/shared/format/numero-br';
@@ -19,7 +20,10 @@ import { FormIntegerInput, FormMoneyInput } from '@/shared/ui/form';
 import { IconAdicionar } from '@/shared/ui/icons/acoes';
 import { Select } from '@/shared/ui/select';
 import {
+  canaisParaVenda,
+  canalDaVendaSchema,
   itemVendaFormSchema,
+  precoSugeridoNoCanal,
   itemVendaFormVazio,
   type ItemVendaFormInput,
   type ItemVendaFormValues,
@@ -29,10 +33,21 @@ type Props = {
   onAdicionar: (item: ItemVendaFormValues, receita: Receita) => void;
   /** Durante o registro da venda, não se adiciona item. */
   bloqueado: boolean;
+  /** "Onde vendeu?" (FE-46): o canal da venda inteira, que fica na tela. */
+  canal: {
+    id: number | null;
+    canais: readonly CanalVenda[];
+    carregando: boolean;
+    /** Falha ao carregar os canais. */
+    erro: boolean;
+    /** Com itens no carrinho, o canal não muda: os preços são dele. */
+    travado: boolean;
+    onChange: (canalId: number | null) => void;
+  };
 };
 
 /** "Adicionar produto". Origem: `_buildAddItemForm` de vendas_page.dart. */
-export function AdicionarProdutoCard({ onAdicionar, bloqueado }: Props) {
+export function AdicionarProdutoCard({ onAdicionar, bloqueado, canal }: Props) {
   const receitas = useQuery(receitasListOptions());
   const form = useForm<ItemVendaFormInput, unknown, ItemVendaFormValues>({
     resolver: zodResolver(itemVendaFormSchema),
@@ -58,7 +73,9 @@ export function AdicionarProdutoCard({ onAdicionar, bloqueado }: Props) {
           onSubmit={(event) => void adicionar(event)}
           className="flex flex-col gap-4"
         >
+          <CampoCanal {...canal} />
           <CampoReceita
+            canalId={canal.id}
             receitas={receitas.data ?? []}
             carregando={receitas.isPending}
             erro={receitas.isError ? getErrorMessage(receitas.error) : null}
@@ -93,14 +110,57 @@ function textoInicial(carregando: boolean, vazio: boolean) {
 }
 
 /**
- * Ao escolher a receita, o preço recebe o `precoSugerido` quando ele for > 0; senão,
- * fica vazio (`_onReceitaChanged`). O usuário pode alterá-lo depois.
+ * "Onde vendeu?": canais ativos, Balcão por padrão. Sem a lista (carregando ou
+ * com erro), a venda vai sem canal, e o backend usa o Balcão.
+ */
+function CampoCanal({
+  id,
+  canais,
+  carregando,
+  erro,
+  travado,
+  onChange,
+}: Props['canal']) {
+  const ativos = canaisParaVenda(canais);
+  let dica: string | undefined;
+  if (erro) {
+    dica =
+      'Não foi possível carregar os canais. A venda será registrada no Balcão.';
+  } else if (travado) dica = 'Para trocar o canal, esvazie o carrinho.';
+
+  return (
+    <Select
+      label="Onde vendeu?"
+      value={id === null ? '' : String(id)}
+      onChange={(event) =>
+        onChange(canalDaVendaSchema.parse(event.target.value))
+      }
+      disabled={carregando || travado || ativos.length === 0}
+      hint={dica}
+    >
+      {ativos.length === 0 ? (
+        <option value="">{carregando ? 'Carregando canais…' : 'Balcão'}</option>
+      ) : null}
+      {ativos.map((c) => (
+        <option key={c.id} value={String(c.id)}>
+          {c.nome}
+        </option>
+      ))}
+    </Select>
+  );
+}
+
+/**
+ * Ao escolher a receita, o preço recebe o preço sugerido **no canal da venda**
+ * (FE-46, `receita.precos`); sem preço possível, fica vazio. O usuário pode alterá-lo.
  */
 function CampoReceita({
+  canalId,
   receitas,
   carregando,
   erro,
 }: {
+  canalId: number | null;
   receitas: readonly Receita[];
   carregando: boolean;
   erro: string | null;
@@ -114,16 +174,14 @@ function CampoReceita({
       required
       {...register('receitaId', {
         onChange: (event: ChangeEvent<HTMLSelectElement>) => {
-          const sugerido = receitas.find(
-            (receita) => String(receita.id) === event.target.value,
-          )?.precoSugerido;
-
-          setValue(
-            'precoUnitario',
-            sugerido !== undefined && sugerido > 0
-              ? formatNumeroEditavel(sugerido, 2)
-              : '',
+          const receita = receitas.find(
+            (r) => String(r.id) === event.target.value,
           );
+          const sugerido = receita
+            ? precoSugeridoNoCanal(receita, canalId)
+            : null;
+
+          setValue('precoUnitario', formatNumeroEditavel(sugerido, 2));
         },
       })}
       disabled={carregando}

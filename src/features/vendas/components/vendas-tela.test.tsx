@@ -4,7 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CreateVendaBody } from '@/shared/api/contracts/sales';
 import { ToastProvider } from '@/shared/ui/toast';
 import { mockApi, mockApiErro } from '@/test/api';
-import { makeReceitasDoSeed } from '@/test/factories/receita.factory';
+import { makeCanaisDoSeed } from '@/test/factories/pricing.factory';
+import {
+  makePrecoCanal,
+  makeReceitasDoSeed,
+} from '@/test/factories/receita.factory';
 import { makeVenda } from '@/test/factories/venda.factory';
 import { setTestUrl } from '@/test/next-navigation';
 import { renderWithQuery } from '@/test/render';
@@ -16,8 +20,31 @@ vi.mock('next/navigation', () => import('@/test/next-navigation'));
 // Os testes digitam bastante: com a suíte inteira, passam dos 5 s padrão.
 const OPCOES = { timeout: 20_000 };
 
+/** O Quindim com preço no Balcão (1,40) e no iFood (1,65). */
+function receitas() {
+  return makeReceitasDoSeed().map((receita) =>
+    receita.nome === 'Quindim'
+      ? {
+          ...receita,
+          precos: [
+            makePrecoCanal({ preco: 1.4 }),
+            makePrecoCanal({
+              canalId: 2,
+              canal: 'iFood',
+              balcao: false,
+              preco: 1.65,
+            }),
+          ],
+        }
+      : receita,
+  );
+}
+
 function renderTela() {
-  server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
+  server.use(
+    mockApi('GET /receitas', receitas()),
+    mockApi('GET /canais', makeCanaisDoSeed()),
+  );
   return renderWithQuery(
     <ToastProvider>
       <VendasTela busca={{ aba: 'registrar' }} />
@@ -76,6 +103,44 @@ describe('registrar venda', OPCOES, () => {
     await userEvent.clear(preco);
     await userEvent.type(preco, '2');
     expect(preco).toHaveValue('2');
+  });
+
+  it('no iFood, sugere o preço do iFood, envia o canal e trava a troca com itens', async () => {
+    let corpo: CreateVendaBody | undefined;
+    server.use(
+      mockApi('POST /vendas', async ({ request }) => {
+        corpo = (await request.json()) as CreateVendaBody;
+        return makeVenda({ id: 8, status: 'PENDENTE', canalId: 2 });
+      }),
+    );
+    renderTela();
+
+    const canal = await screen.findByRole('combobox', { name: 'Onde vendeu?' });
+    await waitFor(() => expect(canal).toHaveValue('1'));
+    // Só os canais ativos: "iFood com entrega" está desativado.
+    expect(
+      within(canal)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Balcão', 'iFood']);
+
+    await userEvent.selectOptions(canal, 'iFood');
+    await escolherReceita('Quindim');
+    expect(
+      formulario().getByRole('textbox', { name: 'Preço unitário real' }),
+    ).toHaveValue('1,65');
+
+    await adicionar('Quindim', '2');
+    expect(canal).toBeDisabled();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Registrar Venda' }),
+    );
+    await screen.findByRole('dialog', { name: 'Confirmar venda' });
+    expect(corpo).toEqual({
+      canal_id: 2,
+      itens: [{ receita_id: 4, quantidade: 2, preco_unitario_real: 1.65 }],
+    });
   });
 
   it('valida os campos antes de adicionar', async () => {
@@ -157,6 +222,7 @@ describe('registrar venda', OPCOES, () => {
     expect(within(confirmacao).getByText('Venda #7')).toBeInTheDocument();
     expect(within(confirmacao).getByText('Pendente')).toBeInTheDocument();
     expect(corpo).toEqual({
+      canal_id: 1,
       itens: [
         { receita_id: 1, quantidade: 50, preco_unitario_real: 0.5 },
         { receita_id: 3, quantidade: 20, preco_unitario_real: 1 },
@@ -200,7 +266,7 @@ describe('registrar venda', OPCOES, () => {
       within(alerta).getByRole('link', { name: 'Ir para Produções' }),
     ).toHaveAttribute('href', '/producoes');
     expect(carrinho().getByText('1 item')).toBeInTheDocument();
-    expect(carrinho().getByText('50 × R$ 0,11')).toBeInTheDocument();
+    expect(carrinho().getByText('50 × R$ 0,46')).toBeInTheDocument();
   });
 
   it('mostra a mensagem do backend nos outros erros', async () => {

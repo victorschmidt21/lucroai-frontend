@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EstoqueProduto } from '@/shared/api/contracts/operations';
 import type {
   UpdateVendaStatusBody,
@@ -9,6 +9,7 @@ import type {
 import { ToastProvider } from '@/shared/ui/toast';
 import { mockApi, mockApiErro } from '@/test/api';
 import { makeEstoqueProduto } from '@/test/factories/estoque.factory';
+import { makeCanaisDoSeed } from '@/test/factories/pricing.factory';
 import { makeReceitasDoSeed } from '@/test/factories/receita.factory';
 import { makeVenda } from '@/test/factories/venda.factory';
 import { renderWithQuery } from '@/test/render';
@@ -55,17 +56,31 @@ function renderConfirmacao(venda: Venda = pendente) {
   return { onFechar, dialogo };
 }
 
+beforeEach(() => {
+  server.use(mockApi('GET /canais', makeCanaisDoSeed()));
+});
+
 describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
-  it('mostra os itens, a margem realizada e o total', async () => {
+  it('mostra o canal, os itens, o lucro real e o total', async () => {
     server.use(mockApi('GET /receitas', makeReceitasDoSeed()));
-    const { dialogo } = renderConfirmacao();
+    const { dialogo } = renderConfirmacao({
+      ...pendente,
+      canalId: 2,
+      itens: [pendente.itens[0]!, { ...pendente.itens[1]!, lucroReal: -0.05 }],
+    });
+
+    expect(await within(dialogo).findByText('iFood')).toBeInTheDocument();
 
     const itens = within(dialogo).getByRole('list', {
       name: 'Itens da venda',
     });
     expect(await within(itens).findByText('Pão Francês')).toBeInTheDocument();
     expect(within(itens).getByText('50 × R$ 0,50')).toBeInTheDocument();
-    expect(within(itens).getByText('86,0% margem')).toBeInTheDocument();
+    expect(within(itens).getByText('Lucro real 86,0%')).toBeInTheDocument();
+    // Venda abaixo do custo e das taxas: destacada, com o texto.
+    expect(
+      within(itens).getByText(/Lucro real .5,0% \(prejuízo\)/),
+    ).toHaveClass('text-danger');
     expect(within(itens).getByText('R$ 25,00')).toBeInTheDocument();
     expect(within(dialogo).getByText('R$ 45,00')).toBeInTheDocument();
   });

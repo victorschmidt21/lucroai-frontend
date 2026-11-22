@@ -2,6 +2,7 @@ import type { StatusVenda } from '@/shared/api/contracts/enums';
 import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
 import { toDataSemHora } from '@/shared/format/data';
 import { arredondarCentavos } from '@/shared/format/moeda';
+import { formatMargem } from '@/shared/format/numero';
 
 /*
  * Carrinho de venda (docs/business-rules.md#vendas-carrinho). Origem:
@@ -106,5 +107,36 @@ export function periodoPadrao(hoje: Date) {
   return {
     inicio: toDataSemHora(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
     fim: toDataSemHora(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)),
+  };
+}
+
+/*
+ * Canal e lucro real da venda (FE-46, docs/business-rules.md#vendas-canal-e-lucro-real).
+ * O `lucroReal` é gravado pelo backend (BE-30) e só é exibido, nunca recalculado.
+ */
+
+/** Nome do canal da venda; "Não informado" nas vendas antigas e com o canal excluído. */
+export function nomeDoCanal(
+  canalId: number | null,
+  canais: readonly { id: number; nome: string }[],
+) {
+  if (canalId === null) return 'Não informado';
+  return (
+    canais.find((canal) => canal.id === canalId)?.nome ?? `Canal #${canalId}`
+  );
+}
+
+/**
+ * Lucro real do item em % do preço, com o aviso quando é negativo (a venda não
+ * pagou o custo e as taxas): a cor nunca vem sozinha.
+ */
+export function descreverLucroReal(lucroReal: number | null) {
+  if (lucroReal === null) return { texto: formatMargem(null), prejuizo: false };
+  const prejuizo = lucroReal < 0;
+  return {
+    texto: prejuizo
+      ? `${formatMargem(lucroReal)} (prejuízo)`
+      : formatMargem(lucroReal),
+    prejuizo,
   };
 }

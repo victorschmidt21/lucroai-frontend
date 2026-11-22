@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { CanalVenda } from '@/shared/api/contracts/pricing';
+import type { Receita } from '@/shared/api/contracts/recipe';
 import type { CreateVendaBody } from '@/shared/api/contracts/sales';
 import { arredondarCentavos } from '@/shared/format/moeda';
 import { inteiroBR, numeroBR } from '@/shared/format/numero-br';
@@ -43,10 +45,50 @@ export type ItemCarrinho = ItemVendaFormValues & {
   nome: string;
 };
 
+/**
+ * "Onde vendeu?" (FE-46): o valor do `<select>` é o id do canal em texto;
+ * vazio (canais ainda carregando ou com erro) vira `null`, e a venda vai sem
+ * `canal_id`, que o backend lê como Balcão.
+ */
+export const canalDaVendaSchema = z
+  .string()
+  .trim()
+  .transform((valor) => (valor === '' ? null : Number(valor)))
+  .pipe(z.number().int().positive().nullable())
+  .catch(null);
+
+/** Canais que aparecem em "Onde vendeu?": só os ativos, na ordem da API (Balcão primeiro). */
+export function canaisParaVenda(canais: readonly CanalVenda[]) {
+  return canais.filter((canal) => canal.ativo);
+}
+
+/** O canal padrão do formulário: o Balcão ativo; sem ele, o primeiro ativo. */
+export function canalPadrao(canais: readonly CanalVenda[]) {
+  const ativos = canaisParaVenda(canais);
+  return (ativos.find((canal) => canal.balcao) ?? ativos[0])?.id ?? null;
+}
+
+/**
+ * Preço sugerido da receita no canal da venda, de `receita.precos` (BE-28);
+ * sem canal, o do Balcão. `null` quando o canal não tem preço possível
+ * (o campo fica vazio, e a pessoa digita o preço).
+ */
+export function precoSugeridoNoCanal(
+  receita: Pick<Receita, 'precos'>,
+  canalId: number | null,
+) {
+  const preco = receita.precos.find((p) =>
+    canalId === null ? p.balcao : p.canalId === canalId,
+  )?.preco;
+  return preco !== undefined && preco !== null && preco > 0 ? preco : null;
+}
+
 export function toCreateVendaBody(
   itens: readonly ItemVendaFormValues[],
+  canalId: number | null = null,
 ): CreateVendaBody {
   return {
+    ...(canalId === null ? {} : { canal_id: canalId }),
     itens: itens.map((item) => ({
       receita_id: item.receitaId,
       quantidade: item.quantidade,

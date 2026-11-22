@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useSyncExternalStore } from 'react';
+import { canaisOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import {
   STATUS_VENDA,
@@ -37,6 +38,8 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { vendasListOptions } from '../api/vendas.queries';
 import type { VendasSearch } from '../schemas/vendas-search.schema';
 import {
+  descreverLucroReal,
+  nomeDoCanal,
   periodoPadrao,
   quantidadeDaVenda,
   resumirVendas,
@@ -171,6 +174,7 @@ function ListaDeVendas({
     }),
   );
   const receitas = useQuery(receitasListOptions());
+  const canais = useQuery(canaisOptions());
   const [detalhe, setDetalhe] = useState<Venda | null>(null);
 
   const nomes = new Map((receitas.data ?? []).map((r) => [r.id, r.nome]));
@@ -236,6 +240,24 @@ function ListaDeVendas({
               ),
             },
             {
+              id: 'canal',
+              header: 'Canal',
+              cell: (venda) => nomeDoCanal(venda.canalId, canais.data ?? []),
+            },
+            {
+              id: 'lucroReal',
+              header: 'Lucro real',
+              align: 'right',
+              cell: (venda) => (
+                <LucroRealDosItens
+                  venda={venda}
+                  nomeDoItem={(receitaId) =>
+                    nomes.get(receitaId) ?? `Produto #${receitaId}`
+                  }
+                />
+              ),
+            },
+            {
               id: 'data',
               header: 'Data',
               cell: (venda) => formatData(venda.dataVenda),
@@ -295,6 +317,7 @@ function ListaDeVendas({
           nomeDoItem={(receitaId) =>
             nomes.get(receitaId) ?? `Produto #${receitaId}`
           }
+          canal={nomeDoCanal(detalhe.canalId, canais.data ?? [])}
           onFechar={() => setDetalhe(null)}
         />
       ) : null}
@@ -310,5 +333,36 @@ function Metrica({ rotulo, valor }: { rotulo: string; valor: string }) {
         {valor}
       </dd>
     </div>
+  );
+}
+
+/**
+ * Lucro real de cada item (FE-46), em % do preço: com mais de um item, cada
+ * linha traz o nome. Negativo em cor de alerta e com "(prejuízo)".
+ */
+function LucroRealDosItens({
+  venda,
+  nomeDoItem,
+}: {
+  venda: Venda;
+  nomeDoItem: (receitaId: number) => string;
+}) {
+  const varios = venda.itens.length > 1;
+  return (
+    <ul className="flex flex-col items-end gap-0.5">
+      {venda.itens.map((item) => {
+        const { texto, prejuizo } = descreverLucroReal(item.lucroReal);
+        return (
+          <li
+            key={item.id}
+            className={
+              prejuizo ? 'font-semibold text-danger' : 'text-ink-muted'
+            }
+          >
+            {varios ? `${nomeDoItem(item.receitaId)}: ${texto}` : texto}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

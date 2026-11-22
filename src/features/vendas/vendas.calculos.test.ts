@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  descreverLucroReal,
   estoqueDisponivelDaReceita,
+  nomeDoCanal,
   periodoPadrao,
   quantidadeDaVenda,
   resumirVendas,
@@ -131,5 +133,45 @@ describe('periodoPadrao', () => {
       inicio: '2026-12-01',
       fim: '2026-12-31',
     });
+  });
+});
+
+describe('nomeDoCanal', () => {
+  const canais = [
+    { id: 1, nome: 'Balcão' },
+    { id: 2, nome: 'iFood' },
+  ];
+
+  it('usa o nome do canal da venda', () => {
+    expect(nomeDoCanal(2, canais)).toBe('iFood');
+  });
+
+  it('venda antiga (sem canal) é "Não informado"', () => {
+    expect(nomeDoCanal(null, canais)).toBe('Não informado');
+  });
+
+  it('canal fora da lista (ou lista com erro) usa o id', () => {
+    expect(nomeDoCanal(9, canais)).toBe('Canal #9');
+    expect(nomeDoCanal(1, [])).toBe('Canal #1');
+  });
+});
+
+describe('descreverLucroReal', () => {
+  it('lucro positivo em % do preço, sem aviso', () => {
+    expect(descreverLucroReal(0.2159)).toEqual({
+      texto: '21,6%',
+      prejuizo: false,
+    });
+    expect(descreverLucroReal(0)).toEqual({ texto: '0,0%', prejuizo: false });
+  });
+
+  it('lucro negativo vem com "(prejuízo)"', () => {
+    const { texto, prejuizo } = descreverLucroReal(-0.05);
+    expect(prejuizo).toBe(true);
+    expect(texto).toMatch(/^[-−]5,0% \(prejuízo\)$/);
+  });
+
+  it('sem lucro real (venda antiga) mostra o traço', () => {
+    expect(descreverLucroReal(null)).toEqual({ texto: '—', prejuizo: false });
   });
 });
