@@ -1,0 +1,20 @@
+[
+  {
+    "id": 62,
+    "insumoId": 257,
+    "quantidade": 5,
+    "valorTotal": 23,
+    "custoUnitario": 4.6,
+    "observacao": "Atacadão, nota 1532",
+    "dataCompra": "2026-06-05T18:00:40.839Z"
+  },
+  {
+    "id": 50,
+    "insumoId": 257,
+    "quantidade": 4,
+    "valorTotal": 17.6,
+    "custoUnitario": 4.4,
+    "observacao": "Cadastro do insumo",
+    "dataCompra": "2026-05-26T18:00:40.839Z"
+  }
+]

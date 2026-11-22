@@ -1,4 +1,4 @@
-import type { Insumo } from '@/shared/api/contracts/catalog';
+import type { CompraInsumo, Insumo } from '@/shared/api/contracts/catalog';
 
 /** Farinha de Trigo do seed "Padaria Pão Feliz" (5 kg por R$ 15,00, custo 3/kg). */
 export function makeInsumo(overrides: Partial<Insumo> = {}): Insumo {
@@ -9,10 +9,16 @@ export function makeInsumo(overrides: Partial<Insumo> = {}): Insumo {
     quantidadeBaseCusto: 5,
     quantidadeDisponivel: 10,
     quantidadeMinima: 2,
+    estoqueNegativo: false,
     unidade: 'KG',
     valorPago: 15,
     custoUnitario: 3,
     precoUnitario: 3,
+    custoMedio: 3,
+    ultimoCusto: 3,
+    custoReposicao: 3,
+    precoMercado: null,
+    precoMercadoData: null,
     dataCriacao: '2026-06-01T10:00:00.000Z',
     ...overrides,
   };
@@ -50,7 +56,26 @@ export function makeInsumosDoSeed(): Insumo[] {
         quantidadeDisponivel: disponivel,
         custoUnitario,
         precoUnitario: custoUnitario,
+        custoMedio: custoUnitario,
+        ultimoCusto: custoUnitario,
+        custoReposicao: custoUnitario,
       });
     },
   );
+}
+
+/** Compra da farinha: 5 kg por R$ 15,00 (custo 3/kg). */
+export function makeCompraInsumo(
+  overrides: Partial<CompraInsumo> = {},
+): CompraInsumo {
+  return {
+    id: 1,
+    insumoId: 1,
+    quantidade: 5,
+    valorTotal: 15,
+    custoUnitario: 3,
+    observacao: null,
+    dataCompra: '2026-06-01T10:00:00.000Z',
+    ...overrides,
+  };
 }

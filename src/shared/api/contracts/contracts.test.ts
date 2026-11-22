@@ -13,7 +13,11 @@ import {
   makeGastoIndireto,
   makeGastosDoSeed,
 } from '@/test/factories/gasto-indireto.factory';
-import { makeInsumo, makeInsumosDoSeed } from '@/test/factories/insumo.factory';
+import {
+  makeCompraInsumo,
+  makeInsumo,
+  makeInsumosDoSeed,
+} from '@/test/factories/insumo.factory';
 import { makeProducao } from '@/test/factories/producao.factory';
 import {
   makeCanaisDoSeed,
@@ -29,6 +33,7 @@ import {
 import { makeVenda } from '@/test/factories/venda.factory';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
+import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
 import insumos from '@/test/fixtures/catalog/insumos.json';
@@ -50,7 +55,11 @@ import venda from '@/test/fixtures/sales/venda.json';
 import vendas from '@/test/fixtures/sales/vendas.json';
 import { unwrap } from '../request';
 import { jwtPayloadSchema, loginResponseSchema } from './auth';
-import { gastoIndiretoSchema, insumoSchema } from './catalog';
+import {
+  compraInsumoSchema,
+  gastoIndiretoSchema,
+  insumoSchema,
+} from './catalog';
 import {
   estoqueProdutoSchema,
   estoqueSchema,
@@ -105,6 +114,13 @@ const CASOS: Caso[] = [
     fixture: insumo,
     factory: makeInsumo(),
     invalida: { ...makeInsumo(), custoUnitario: '3' },
+  },
+  {
+    nome: 'compras de insumo',
+    schema: z.array(compraInsumoSchema),
+    fixture: comprasInsumo,
+    factory: [makeCompraInsumo(), makeCompraInsumo({ id: 2 })],
+    invalida: [{ ...makeCompraInsumo(), observacao: undefined }],
   },
   {
     nome: 'lista de gastos indiretos',

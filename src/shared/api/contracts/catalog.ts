@@ -14,12 +14,24 @@ export const insumoSchema = z.object({
   quantidadeDisponivel: z.number(),
   /** Estoque mínimo (lacuna 5, resolvida). */
   quantidadeMinima: z.number(),
+  /** `quantidadeDisponivel < 0` (BE-32). */
+  estoqueNegativo: z.boolean(),
   unidade: unidadeMedidaSchema,
+  /** Valor do último preço de referência (cadastro, compra ou `PATCH`, BE-29). */
   valorPago: z.number(),
-  /** `valorPago / quantidadeBaseCusto`, sem arredondamento. */
+  /** O custo de reposição (`precoMercado ?? ultimoCusto`), com 6 casas (BE-29). */
   custoUnitario: z.number(),
   /** Alias de `custoUnitario`. */
   precoUnitario: z.number(),
+  /** Custo médio por unidade do que está guardado, com 6 casas (BE-29). */
+  custoMedio: z.number(),
+  /** Custo por unidade da última compra, com 6 casas (BE-29). */
+  ultimoCusto: z.number(),
+  /** "Preço de hoje": `precoMercado ?? ultimoCusto`, com 6 casas (BE-29). */
+  custoReposicao: z.number(),
+  /** Preço de mercado por unidade, informado sem compra; `null` sem preço. */
+  precoMercado: z.number().nullable(),
+  precoMercadoData: z.iso.datetime().nullable(),
   dataCriacao: z.iso.datetime(),
 });
 
@@ -34,10 +46,34 @@ export type CreateInsumoBody = {
   quantidadeDisponivelInicial?: number;
 };
 
-/** `update-insumo.dto.ts`: não aceita `quantidadeDisponivelInicial`. */
+/**
+ * `update-insumo.dto.ts`: não aceita `quantidadeDisponivelInicial`.
+ * `precoMercado` é por unidade do insumo; `null` volta ao último custo (BE-29).
+ */
 export type UpdateInsumoBody = Partial<
   Omit<CreateInsumoBody, 'quantidadeDisponivelInicial'>
->;
+> & { precoMercado?: number | null };
+
+/** `compra-insumo.dto.ts` (BE-29): a compra é imutável; a data é a do registro. */
+export const compraInsumoSchema = z.object({
+  id: z.number().int(),
+  insumoId: z.number().int(),
+  /** Na unidade do insumo. */
+  quantidade: z.number(),
+  valorTotal: z.number(),
+  /** `valorTotal / quantidade`, com 6 casas. */
+  custoUnitario: z.number(),
+  observacao: z.string().nullable(),
+  dataCompra: z.iso.datetime(),
+});
+export type CompraInsumo = z.infer<typeof compraInsumoSchema>;
+
+/** `create-compra-insumo.dto.ts`: `observacao` vazia não é enviada. */
+export type CreateCompraInsumoBody = {
+  quantidade: number;
+  valorTotal: number;
+  observacao?: string;
+};
 
 /**
  * `gastos-indiretos/application/dto/gasto-indireto.dto.ts`. O `metodoRateio`

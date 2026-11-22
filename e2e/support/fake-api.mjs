@@ -115,7 +115,10 @@ function buscar(colecao, id, code, mensagem) {
   return item ? [200, item] : naoEncontrado(code, mensagem);
 }
 
-/** `POST /insumos`: `custoUnitario = valorPago / quantidadeBaseCusto`. */
+/**
+ * `POST /insumos`: `custoUnitario = valorPago / quantidadeBaseCusto`, que é
+ * também o custo médio, o último custo e o preço de hoje (compra inicial, BE-29).
+ */
 function criarInsumo(body) {
   if (!body?.nome || !(body.quantidadeBaseCusto > 0) || !body.unidade) {
     return invalido();
@@ -128,10 +131,16 @@ function criarInsumo(body) {
     quantidadeBaseCusto: body.quantidadeBaseCusto,
     quantidadeDisponivel: body.quantidadeDisponivelInicial ?? 0,
     quantidadeMinima: 0,
+    estoqueNegativo: false,
     unidade: body.unidade,
     valorPago: body.valorPago,
     custoUnitario,
     precoUnitario: custoUnitario,
+    custoMedio: custoUnitario,
+    ultimoCusto: custoUnitario,
+    custoReposicao: custoUnitario,
+    precoMercado: null,
+    precoMercadoData: null,
     dataCriacao: agora(),
   };
   db.insumos.push(insumo);
