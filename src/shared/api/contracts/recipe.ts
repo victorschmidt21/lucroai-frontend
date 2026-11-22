@@ -21,6 +21,8 @@ export const receitaSchema = z.object({
   nome: z.string(),
   rendimento: z.number().int(),
   unidadeRendimento: unidadeMedidaSchema,
+  /** Fornadas (ou minutos de forno) de 1 lote (BE-27). Opcional até a FE-44 trazer o campo ao formulário; a prévia da produção usa 1 sem ele. */
+  usoPorLote: z.number().optional(),
   custoProducao: z.number().optional(),
   custoUnitario: z.number().optional(),
   /** Fração (`0.6` = 60%). */

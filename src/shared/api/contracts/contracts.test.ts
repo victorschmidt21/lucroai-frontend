@@ -114,8 +114,8 @@ const CASOS: Caso[] = [
     invalida: [
       {
         ...makeGastoIndireto(),
-        metodo_rateio: 'FIXO',
-        metodoRateio: undefined,
+        metodoRateio: 'FIXO',
+        tipo: undefined,
       },
     ],
   },

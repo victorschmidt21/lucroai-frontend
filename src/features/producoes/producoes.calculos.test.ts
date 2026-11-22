@@ -6,6 +6,8 @@ import {
   calcularValorRateado,
 } from './producoes.calculos';
 
+const uso = { usoPorLote: 1, capacidadeMensal: 100 };
+
 describe('calcularTotalUnidades', () => {
   it('multiplica os lotes pelo rendimento', () => {
     expect(calcularTotalUnidades(3, 50)).toBe(150);
@@ -13,68 +15,67 @@ describe('calcularTotalUnidades', () => {
 });
 
 describe('calcularValorRateado', () => {
-  it('PROPORCIONAL: valor × lotes', () => {
+  it('MENSAL: valor × usoPorLote × lotes ÷ capacidade do mês', () => {
     expect(
-      calcularValorRateado(
-        { valor: 450, metodoRateio: 'PROPORCIONAL' },
-        2,
-        100,
-      ),
-    ).toBe(900);
+      calcularValorRateado({ valor: 1800, tipo: 'MENSAL' }, 2, {
+        usoPorLote: 0.5,
+        capacidadeMensal: 100,
+      }),
+    ).toBe(18);
   });
 
-  it('POR_UNIDADE: valor × total de unidades', () => {
+  it('POR_UNIDADE e PERCENTUAL_VENDA não entram na produção', () => {
     expect(
-      calcularValorRateado({ valor: 120, metodoRateio: 'POR_UNIDADE' }, 1, 50),
-    ).toBe(6000);
+      calcularValorRateado({ valor: 0.05, tipo: 'POR_UNIDADE' }, 3, uso),
+    ).toBe(0);
+    expect(
+      calcularValorRateado({ valor: 0.12, tipo: 'PERCENTUAL_VENDA' }, 3, uso),
+    ).toBe(0);
   });
 
-  it('FIXO: o valor integral, independente do volume', () => {
+  it('arredonda a centavos como a resposta do backend', () => {
     expect(
-      calcularValorRateado({ valor: 1800, metodoRateio: 'FIXO' }, 5, 250),
-    ).toBe(1800);
-  });
-
-  it('arredonda a centavos como o backend', () => {
-    expect(
-      calcularValorRateado(
-        { valor: 0.333, metodoRateio: 'POR_UNIDADE' },
-        1,
-        10,
-      ),
-    ).toBe(3.33);
+      calcularValorRateado({ valor: 450, tipo: 'MENSAL' }, 1, {
+        usoPorLote: 0.2,
+        capacidadeMensal: 70,
+      }),
+    ).toBe(1.29);
   });
 });
 
 describe('calcularPreviaProducao', () => {
-  it('soma o rateio estimado dos gastos (exemplo do OVERVIEW do catalog)', () => {
-    const energia = makeGastoIndireto({
-      id: 1,
-      valor: 450,
-      metodoRateio: 'PROPORCIONAL',
-    });
-    const aluguel = makeGastoIndireto({
-      id: 2,
-      valor: 1800,
-      metodoRateio: 'FIXO',
-    });
-    const embalagem = makeGastoIndireto({
+  it('soma só as contas do mês (seed: capacidade de 100 fornadas)', () => {
+    const energia = makeGastoIndireto({ id: 1, valor: 450 });
+    const aluguel = makeGastoIndireto({ id: 2, valor: 1800 });
+    const saquinho = makeGastoIndireto({
       id: 3,
-      valor: 120,
-      metodoRateio: 'POR_UNIDADE',
+      valor: 0.05,
+      tipo: 'POR_UNIDADE',
     });
 
-    const previa = calcularPreviaProducao([energia, aluguel, embalagem], 1, 50);
+    const previa = calcularPreviaProducao(
+      [energia, aluguel, saquinho],
+      2,
+      50,
+      uso,
+    );
 
-    expect(previa.totalUnidades).toBe(50);
-    expect(previa.rateios.map((r) => r.valorRateado)).toEqual([
-      450, 1800, 6000,
+    expect(previa.totalUnidades).toBe(100);
+    expect(previa.rateios.map((r) => [r.gasto.id, r.valorRateado])).toEqual([
+      [1, 9],
+      [2, 36],
     ]);
-    expect(previa.totalRateio).toBe(8250);
+    expect(previa.totalRateio).toBe(45);
+  });
+
+  it('sem a configuração de custos, não estima as contas', () => {
+    expect(
+      calcularPreviaProducao([makeGastoIndireto()], 2, 10, undefined),
+    ).toEqual({ totalUnidades: 20, rateios: [], totalRateio: 0 });
   });
 
   it('sem gastos, não há rateio', () => {
-    expect(calcularPreviaProducao([], 2, 10)).toEqual({
+    expect(calcularPreviaProducao([], 2, 10, uso)).toEqual({
       totalUnidades: 20,
       rateios: [],
       totalRateio: 0,

@@ -16,12 +16,11 @@ const energia = makeGastoIndireto();
 const aluguel = makeGastoIndireto({
   id: 2,
   valor: 1800,
-  metodoRateio: 'FIXO',
 });
 const embalagem = makeGastoIndireto({
   id: 4,
   valor: 0.125,
-  metodoRateio: 'POR_UNIDADE',
+  tipo: 'POR_UNIDADE',
 });
 
 describe('calcularCustoItem', () => {
@@ -38,8 +37,8 @@ describe('calcularCustoInvisivel', () => {
     expect(calcularCustoInvisivel([], 12)).toBe(0);
   });
 
-  it('soma o rateio de 1 lote de cada método', () => {
-    // FIXO: valor; PROPORCIONAL: valor × 1 lote; POR_UNIDADE: valor × rendimento.
+  it('soma o rateio de 1 lote de cada tipo', () => {
+    // MENSAL: valor (como o antigo FIXO); POR_UNIDADE: valor × rendimento.
     expect(calcularCustoInvisivel([aluguel], 50)).toBe(1800);
     expect(calcularCustoInvisivel([energia], 50)).toBe(450);
     expect(calcularCustoInvisivel([embalagem], 50)).toBe(6.25);
@@ -48,8 +47,16 @@ describe('calcularCustoInvisivel', () => {
     );
   });
 
+  it('o percentual da venda não é custo', () => {
+    const comissao = makeGastoIndireto({
+      valor: 0.1,
+      tipo: 'PERCENTUAL_VENDA',
+    });
+    expect(calcularCustoInvisivel([comissao, aluguel], 50)).toBe(1800);
+  });
+
   it('arredonda cada rateio a centavos, como o backend', () => {
-    const gasto = makeGastoIndireto({ valor: 0.333, metodoRateio: 'FIXO' });
+    const gasto = makeGastoIndireto({ valor: 0.333 });
     expect(calcularCustoInvisivel([gasto, gasto, gasto], 1)).toBe(0.99);
   });
 });

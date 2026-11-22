@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  METODO_RATEIO_DESCRICOES,
-  METODO_RATEIO_ROTULOS,
-  METODOS_RATEIO,
-  metodoRateioSchema,
   ORIGEM_MOVIMENTACAO_ROTULOS,
   STATUS_VENDA,
   STATUS_VENDA_ROTULOS,
   statusVendaSchema,
+  TIPO_GASTO_DESCRICOES,
+  TIPO_GASTO_ROTULOS,
   TIPO_MOVIMENTACAO_ROTULOS,
+  TIPOS_GASTO,
+  tipoGastoSchema,
   UNIDADE_MEDIDA_ROTULOS,
   UNIDADES_MEDIDA,
   unidadeMedidaSchema,
@@ -27,11 +27,15 @@ describe('enums do contrato', () => {
     expect(unidadeMedidaSchema.safeParse('kg').success).toBe(false);
   });
 
-  it('MetodoRateio tem rótulo e descrição para cada valor', () => {
-    expect(METODOS_RATEIO).toEqual(['PROPORCIONAL', 'POR_UNIDADE', 'FIXO']);
-    expect(METODO_RATEIO_ROTULOS.FIXO).toBe('Valor fixo por produção');
-    expect(Object.keys(METODO_RATEIO_DESCRICOES)).toEqual([...METODOS_RATEIO]);
-    expect(metodoRateioSchema.safeParse('OUTRO').success).toBe(false);
+  it('TipoGasto tem rótulo e descrição sem jargão para cada valor', () => {
+    expect(TIPOS_GASTO).toEqual(['MENSAL', 'POR_UNIDADE', 'PERCENTUAL_VENDA']);
+    expect(TIPO_GASTO_ROTULOS).toEqual({
+      MENSAL: 'Conta do mês',
+      POR_UNIDADE: 'Por unidade vendida',
+      PERCENTUAL_VENDA: '% da venda',
+    });
+    expect(Object.keys(TIPO_GASTO_DESCRICOES)).toEqual([...TIPOS_GASTO]);
+    expect(tipoGastoSchema.safeParse('FIXO').success).toBe(false);
   });
 
   it('StatusVenda tem os rótulos com acento', () => {

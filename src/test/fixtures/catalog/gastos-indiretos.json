@@ -1,30 +1,42 @@
 [
   {
-    "id": 32,
+    "id": 106,
     "empresaId": 30,
-    "descricao": "Material de Embalagem",
-    "valor": 120,
+    "descricao": "Saquinho de Papel",
+    "valor": 0.05,
+    "tipo": "POR_UNIDADE",
     "metodoRateio": "POR_UNIDADE"
   },
   {
-    "id": 31,
+    "id": 105,
     "empresaId": 30,
-    "descricao": "Gás de Cozinha (P45)",
-    "valor": 185,
-    "metodoRateio": "PROPORCIONAL"
-  },
-  {
-    "id": 30,
-    "empresaId": 30,
-    "descricao": "Aluguel do Espaço",
-    "valor": 1800,
+    "descricao": "DAS do MEI",
+    "valor": 80,
+    "tipo": "MENSAL",
     "metodoRateio": "FIXO"
   },
   {
-    "id": 29,
+    "id": 104,
+    "empresaId": 30,
+    "descricao": "Gás de Cozinha (P45)",
+    "valor": 185,
+    "tipo": "MENSAL",
+    "metodoRateio": "FIXO"
+  },
+  {
+    "id": 103,
+    "empresaId": 30,
+    "descricao": "Aluguel do Espaço",
+    "valor": 1800,
+    "tipo": "MENSAL",
+    "metodoRateio": "FIXO"
+  },
+  {
+    "id": 102,
     "empresaId": 30,
     "descricao": "Energia Elétrica",
     "valor": 450,
-    "metodoRateio": "PROPORCIONAL"
+    "tipo": "MENSAL",
+    "metodoRateio": "FIXO"
   }
 ]

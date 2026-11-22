@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { metodoRateioSchema, unidadeMedidaSchema } from './enums';
+import { tipoGastoSchema, unidadeMedidaSchema } from './enums';
 
 // Insumos e gastos indiretos. Origem: `lucroai-backend` (monolito),
 // `src/modules/insumos/` e `src/modules/gastos-indiretos/`.
@@ -39,22 +39,26 @@ export type UpdateInsumoBody = Partial<
   Omit<CreateInsumoBody, 'quantidadeDisponivelInicial'>
 >;
 
-/** `gastos-indiretos/domain/models/gasto-indireto.entity.ts` */
+/**
+ * `gastos-indiretos/application/dto/gasto-indireto.dto.ts`. O `metodoRateio`
+ * legado, que a API ainda devolve, é descartado (FE-42).
+ */
 export const gastoIndiretoSchema = z.object({
   id: z.number().int(),
   empresaId: z.number().int(),
   descricao: z.string(),
+  /** `MENSAL`: reais por mês; `POR_UNIDADE`: reais por unidade; `PERCENTUAL_VENDA`: fração do preço (0 a 1). */
   valor: z.number(),
-  metodoRateio: metodoRateioSchema,
+  tipo: tipoGastoSchema,
 });
 
 export type GastoIndireto = z.infer<typeof gastoIndiretoSchema>;
 
-/** `create-gasto-indireto.dto.ts`: o corpo é snake_case. */
+/** `create-gasto-indireto.dto.ts`: só o `tipo`, sem o `metodo_rateio` legado. */
 export type CreateGastoIndiretoBody = {
   descricao: string;
   valor: number;
-  metodo_rateio: GastoIndireto['metodoRateio'];
+  tipo: GastoIndireto['tipo'];
 };
 
 /** `update-gasto-indireto.dto.ts` (`PUT`, com todos os campos opcionais). */

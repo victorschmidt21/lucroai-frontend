@@ -1,4 +1,4 @@
-import type { MetodoRateio } from '@/shared/api/contracts/enums';
+import type { TipoGasto } from '@/shared/api/contracts/enums';
 import { arredondarCentavos } from '@/shared/format/moeda';
 
 /*
@@ -14,11 +14,14 @@ export function calcularCustoItem(quantidade: number, custoUnitario: number) {
   return arredondarCentavos(quantidade * custoUnitario);
 }
 
-type GastoParaRateio = { valor: number; metodoRateio: MetodoRateio };
+type GastoParaRateio = { valor: number; tipo: TipoGasto };
 
 /**
  * Custo invisível de 1 lote: o rateio de **todos** os gastos indiretos da
  * empresa, cada um com `round2`, e o total com `round2` (lacuna 18).
+ * Desde a FE-42 lê o `tipo` com a equivalência legada do backend (`MENSAL`
+ * como o antigo `FIXO`; `PERCENTUAL_VENDA` não é custo). A FE-44 troca esta
+ * prévia pelo custo calculado pela API.
  */
 export function calcularCustoInvisivel(
   gastos: readonly GastoParaRateio[],
@@ -26,13 +29,13 @@ export function calcularCustoInvisivel(
 ) {
   const lotes = 1;
   const total = gastos.reduce((soma, gasto) => {
-    switch (gasto.metodoRateio) {
+    switch (gasto.tipo) {
       case 'POR_UNIDADE':
         return soma + arredondarCentavos(gasto.valor * rendimento * lotes);
-      case 'PROPORCIONAL':
-        return soma + arredondarCentavos(gasto.valor * lotes);
-      case 'FIXO':
+      case 'MENSAL':
         return soma + arredondarCentavos(gasto.valor);
+      case 'PERCENTUAL_VENDA':
+        return soma;
     }
   }, 0);
 

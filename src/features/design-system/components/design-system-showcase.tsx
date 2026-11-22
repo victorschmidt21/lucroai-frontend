@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { Alert } from '@/shared/ui/alert';
 import {
   Badge,
-  MetodoRateioBadge,
+  TipoGastoBadge,
   StatusEstoqueBadge,
   StatusVendaBadge,
 } from '@/shared/ui/badge';
@@ -479,7 +479,7 @@ export function DesignSystemShowcase() {
             <StatusVendaBadge status="PENDENTE" />
             <StatusVendaBadge status="CONCLUIDA" />
             <StatusVendaBadge status="CANCELADA" />
-            <MetodoRateioBadge metodo="PROPORCIONAL" />
+            <TipoGastoBadge tipo="MENSAL" />
             <Badge tone="destaque">Destaque</Badge>
           </div>
           <div className="flex max-w-md flex-col gap-3">
