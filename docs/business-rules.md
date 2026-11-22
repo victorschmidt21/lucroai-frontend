@@ -20,7 +20,7 @@ Como ler:
 | [Insumos](#insumos)                                                                   | FE-09        |
 | [Gastos indiretos](#gastos-indiretos)                                                 | FE-10        |
 | [Receitas: listagem](#receitas-listagem)                                              | FE-11        |
-| [Receitas: formulário e custo](#receitas-formulário-e-custo)                          | FE-12        |
+| [Receitas: formulário e custo](#receitas-formulário-e-custo)                          | FE-12, FE-44 |
 | [Estoque de insumos](#estoque-de-insumos)                                             | FE-13        |
 | [Entrada de estoque e histórico](#entrada-de-estoque-e-histórico)                     | FE-14        |
 | [Produções e rateio](#produções-e-rateio)                                             | FE-15        |
@@ -253,13 +253,13 @@ O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `perc
 FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `lib/features/receitas/presentation/widgets/receita_card.dart`. Backend: `services/recipe-service/src/modules/receitas/`.
 
 - Linha: nome; `<rendimento> <unidade> - custo <custoProducao>`; preço sugerido; margem (`margemLucro × 100`, 1 casa); custo unitário.
-- Web: colunas Nome, Rendimento (`formatQuantidade`), Custo do lote (`custoProducao`, 1 lote), Custo unitário, Margem (`formatMargem`: `0.6` → `60,0%`) e Preço sugerido (`formatMoeda`), na ordem do backend (`dataCriacao` decrescente). "Nova receita" leva a `/receitas/nova` (FE-12).
-- `custoProducao`, `custoUnitario`, `margemLucro` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`): exiba `—`.
+- Web: colunas Nome (link para o detalhe `/receitas/[receitaId]`, FE-44), Rendimento (`formatQuantidade`), Custo do lote (`custoProducao`, 1 lote), Custo unitário e Preço no Balcão (`precoSugerido`, `formatMoeda`), na ordem do backend (`dataCriacao` decrescente). A coluna Margem (markup) saiu na FE-44. "Nova receita" leva a `/receitas/nova` (FE-12).
+- `custoProducao`, `custoUnitario` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`; sem preço possível no Balcão, não há `precoSugerido`): exiba `—`.
 - Ações: Editar (`/receitas/[receitaId]/editar`), Simular (`/receitas/[receitaId]/simular`, FE-20) e Excluir.
 
 | Onde               | Mobile                                                                 | Web                                                                    |
 | ------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Gerencie insumos, rendimento, margem e custo automático" |
+| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Gerencie insumos, rendimento, custo e preço automáticos" |
 | Ação primária      | —                                                                      | "Nova receita"                                                         |
 | Busca              | "Buscar receita..."                                                    | "Buscar receita"                                                       |
 | Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                                  |
@@ -269,57 +269,64 @@ FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `l
 
 ## Receitas: formulário e custo
 
-FE-12. Origem: `receitas_page.dart` (`_openReceitaForm` e o diálogo de adicionar insumo). Backend: `services/recipe-service/src/modules/custos/application/services/custo.service.ts`, `services/recipe-service/src/modules/receitas/application/dto/create-receita.dto.ts` e `update-receita.dto.ts`.
+FE-12, refeita na FE-44 (ficha técnica e preço por canal). Origem: `receitas_page.dart` (`_openReceitaForm` e o diálogo de adicionar insumo). Backend: `src/modules/receitas/application/dto/create-receita.dto.ts`, `receita.dto.ts` e `domain/receitas.calculos.ts` do monolito (BE-27 e BE-28).
 
-### Fórmulas (iguais às do backend, para a prévia)
+### Custo e preço: sempre da API
+
+Desde a BE-27 o backend não grava custo: `custoUnitario`, `custoProducao`, `precoSugerido`, `custo` e `precos` são calculados na leitura, com os custos atuais. A web **não recalcula** nada disso e não tem mais prévia do custo da receita (a do "custo invisível" saiu na FE-44). Depois de salvar, o formulário leva ao detalhe da receita, que mostra os valores da API. Só fica no cliente o custo de cada item na linha do insumo (`calcularCustoItem`, `round2(quantidade × insumo.custoUnitario)`, o mesmo `custoCalculado` do backend).
+
+As fórmulas do backend, para referência (não repetir na tela):
 
 ```text
-custoItem      = round2(quantidade × insumo.custoUnitario)
-custoProducao  = round2(round2(Σ custoItem) + custoInvisivel)
-custoInvisivel = round2(Σ rateio de TODOS os gastos indiretos da empresa, para 1 lote)
-custoUnitario  = round2(custoProducao / rendimento)
-precoSugerido  = margem informada ? round2(custoUnitario × (1 + margem)) : sem preço sugerido
+custoUnitario = ((ingredientesLote + gastosMensaisLote) ÷ rendimento + embalagem + gastosPorUnidade) ÷ (1 − perda)
+gastosMensaisLote = Σ gastos MENSAL × usoPorLote ÷ capacidadeMensal
+preço no canal = custoUnitario ÷ (1 − imposto − taxa do canal − gastos % da venda − lucro)
 ```
 
-- `insumo.custoUnitario` é o valor atual do catálogo, sem arredondamento.
-- `custoInvisivel` **não é zero**: o `DefaultCustoInvisivelResultProvider` (`services/recipe-service/src/modules/custos/infra/providers/`) soma o rateio de todos os gastos indiretos da empresa (`PROPORCIONAL`: `valor × lotes`; `POR_UNIDADE`: `valor × lotes × rendimento`; `FIXO`: `valor`), cada um com `round2`, para 1 lote. Conferido na API na FE-05: com Energia Elétrica (R$ 450, proporcional) e Aluguel (R$ 1.800, fixo), o Pão Francês ficou com `custoProducao = 3,31 + 2.250 = 2.253,31`. A prévia da FE-12 precisa da lista de gastos para bater com o backend (ver [lacuna 18](api-integration.md#lacunas-do-backend)).
-- Sem margem, o backend não calcula `precoSugerido` (o campo não vem na resposta).
-- A quantidade do item está **na unidade do insumo** (ex.: manteiga em `g`, farinha em `kg`).
-- Exemplo do seed (Bolo de Chocolate, rendimento 12, margem 50%; o seed grava os valores sem o custo invisível): `custoProducao = 9,70`, `custoUnitario = round2(9,70 / 12) = 0,81`, `precoSugerido = round2(0,81 × 1,5) = 1,22`.
-- Critério da FE-12: a prévia bate com o retorno do backend com tolerância de R$ 0,01. O valor exibido depois de salvar é sempre o do backend.
+Com percentuais ≥ 100% não há preço possível no canal (`preco: null`, `motivo: 'PERCENTUAIS_ACIMA_DE_100'`). O lucro é fração do **preço**: o lucro da barra é exatamente o configurado (o da receita ou o `lucroPadrao` da empresa).
 
 ### Validações
 
-| Campo (contrato)       | Regra                                                            | Mensagem                                        | Origem                                                      |
-| ---------------------- | ---------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
-| `nome`                 | obrigatório, até 80 caracteres                                   | "Informe o nome" / "Use até 80 caracteres"      | mobile; backend `@MaxLength(80)`                            |
-| `rendimento`           | **inteiro** > 0                                                  | "Obrigatório"                                   | backend `@IsInt @IsPositive`; o mobile aceitava decimal     |
-| `unidadeRendimento`    | `UnidadeMedida`                                                  | —                                               |                                                             |
-| `margem_lucro`         | opcional; se preenchida, ≥ 0; digitada em %, enviada como fração | "Valor inválido"                                | mobile; backend `@Min(0)`                                   |
-| `insumos[].insumo_id`  | insumo do catálogo, sem repetir                                  | —                                               | o diálogo só oferece insumos que ainda não estão na receita |
-| `insumos[].quantidade` | número > 0 (mínimo do backend: 0,001)                            | no diálogo: "Obrigatório"; na linha: "Inválido" | mobile; backend `@Min(0.001)`                               |
+| Campo (contrato)        | Regra                                                                       | Mensagem                                        | Origem                                                         |
+| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| `nome`                  | obrigatório, até 80 caracteres                                              | "Informe o nome" / "Use até 80 caracteres"      | mobile; backend `@MaxLength(80)`                               |
+| `rendimento`            | **inteiro** > 0 (unidades boas por lote)                                    | "Obrigatório"                                   | backend `@IsInt @IsPositive`; o mobile aceitava decimal        |
+| `unidadeRendimento`     | `UnidadeMedida`                                                             | —                                               |                                                                |
+| `uso_por_lote`          | número > 0; começa em 1                                                     | "Informe um valor maior que zero"               | backend `@IsPositive` (BE-27)                                  |
+| `embalagem_por_unidade` | opcional, ≥ 0, em reais; vazio envia 0                                      | "Valor inválido"                                | backend `@Min(0)`                                              |
+| `perda_percentual`      | opcional, de 0 até menos de 100%; digitada em %, enviada em fração; vazio 0 | "Informe um percentual de 0 a 99"               | backend `validarFichaTecnica`                                  |
+| `lucro_percentual`      | opcional, de 0 até menos de 100%; vazio envia `null` (lucro padrão)         | "Informe um percentual de 0 a 99"               | backend `validarFichaTecnica`; `null` no `PUT` volta ao padrão |
+| `insumos[].insumo_id`   | insumo do catálogo, sem repetir                                             | —                                               | o diálogo só oferece insumos que ainda não estão na receita    |
+| `insumos[].quantidade`  | número > 0 (mínimo do backend: 0,001)                                       | no diálogo: "Obrigatório"; na linha: "Inválido" | mobile; backend `@Min(0.001)`                                  |
 
-Na edição, margem `null`, ausente ou ≤ 0 aparece vazia (mobile: `(margemLucro ?? 0) <= 0 ? ''`). Campo de margem vazio não é enviado, e o `PUT` mantém a margem salva ([lacuna 21](api-integration.md#lacunas-do-backend)); por isso, na edição com o campo vazio, a prévia usa a margem salva.
+A web não envia o `margem_lucro` legado (markup): o campo "Margem de lucro (%)" saiu na FE-44. Na edição, `lucroPercentual` omitido (receita no lucro padrão) e embalagem ou perda iguais a 0 aparecem vazios.
 
-A prévia (`calcularPreviaReceita`, `receitas.calculos.ts`) mostra `—` no que não dá para calcular: quantidade ou rendimento inválido, ou insumo fora do catálogo (que o backend recusa ao salvar, com 404 "Insumo não encontrado").
+### Detalhe da receita (`/receitas/[receitaId]`)
+
+- "Custo de 1 unidade": `custo.unitario`, com Ingredientes, Contas do mês, Gastos por unidade (só se > 0), Embalagem, Perdas e "Custo do lote (<rendimento>)" (`custoProducao`), mais "Lucro desta receita: <x%> de cada R$ 1,00 vendido", com "(padrão da empresa)" quando a receita não tem lucro próprio.
+- "Preço sugerido por canal": um cartão por item de `precos` (canais **ativos**, Balcão primeiro), lado a lado, com o preço (`formatMoeda`) e "Para onde vai cada R$ 1,00".
+- A barra (`montarBarraDoPreco`, `receitas.calculos.ts`) usa a `composicao` da API, só somando partes: Ingredientes (`ingredientes`), Contas do mês (`gastosMensais`), Embalagem e perdas (`embalagem + gastosPorUnidade + perdas`), Imposto, "Taxa da maquininha" no Balcão ou "Taxa do <canal>" nos outros (`taxaCanal`), Gastos em % da venda (`gastosPercentuais`) e Lucro. Parte com fração 0 não aparece, menos o lucro. A legenda mostra cada fração como reais de cada R$ 1,00 e em % (`R$ 0,15 (15,0%)`); a barra é só visual.
+- Canal sem preço: "Sem preço possível: as taxas e o lucro somam 100% ou mais (<percentuais>)."
+- Sem canal ativo: "Nenhuma forma de venda ativa. Ative uma em Configurações."
+- Exemplo do seed (Pão Francês, 28 un, 0,2 fornada por lote, perda de 5%, lucro padrão de 15%): custo de R$ 0,38 por unidade, R$ 0,46 no Balcão e R$ 0,55 no iFood, com lucro de 15,0% nos dois.
 
 ### Textos
 
-| Onde                           | Mobile                                                               | Web                                                                                                                                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Título                         | "Nova receita" / "Editar receita"                                    | igual                                                                                                                                                                                                       |
-| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"    | igual                                                                                                                                                                                                       |
-| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)   | igual                                                                                                                                                                                                       |
-| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar"  | igual, com a unidade do insumo ao lado da quantidade                                                                                                                                                        |
-| Insumo fora do catálogo        | "Insumo #<id>"                                                       | igual                                                                                                                                                                                                       |
-| Lista vazia                    | "Nenhum insumo adicionado."                                          | igual                                                                                                                                                                                                       |
-| Valores salvos (edição)        | "Custo producao", "Custo unitario", "Preco sugerido"; `–` se ausente | "Custo produção", "Custo unitário", "Preço sugerido"; `—` se ausente                                                                                                                                        |
-| Botão                          | "Salvar" / "Atualizar"                                               | igual                                                                                                                                                                                                       |
-| Toasts                         | —                                                                    | "Receita criada com sucesso." / "Receita atualizada com sucesso."                                                                                                                                           |
-| Sair com alterações não salvas | —                                                                    | ConfirmDialog "Descartar alterações?" / "As alterações não salvas serão perdidas." / "Descartar"                                                                                                            |
-| Prévia (sem equivalente)       | —                                                                    | "Prévia dos custos": "Insumos", "Gastos indiretos (1 lote)", "Custo produção", "Custo unitário", "Preço sugerido"; "Estimativa enquanto você edita. O valor gravado é o calculado pelo servidor ao salvar." |
-| Linha do insumo                | nome e unidade                                                       | nome, "Custo: R$ X", quantidade com a unidade e "Remover <nome>"                                                                                                                                            |
-| Valores salvos (seção)         | —                                                                    | "Valores salvos"                                                                                                                                                                                            |
+| Onde                           | Mobile                                                              | Web                                                                                                                                                                                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título                         | "Nova receita" / "Editar receita"                                   | igual                                                                                                                                                                                                                                                             |
+| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"   | "Nome", "Rende quantas unidades boas?", "Unidade", "Insumos"                                                                                                                                                                                                      |
+| Ficha técnica (FE-44)          | —                                                                   | cartão "Custos e lucro": "Quantas fornadas um lote ocupa?" (ou "Quantos minutos de forno um lote ocupa?", conforme a `baseRateio`), "Embalagem por unidade", "Quanto costuma sobrar ou estragar?", "Lucro desta receita"                                          |
+| Textos de apoio (FE-44)        | —                                                                   | "Por lote, sem contar as que sobram ou estragam."; "Divide as contas do mês entre as receitas. Padrão: 1."; "Caixa, pote ou saquinho de cada unidade."; "Das unidades de cada lote. Vazio é 0%."; "De cada R$ 1,00 vendido. Vazio usa o padrão (<lucro padrão>)." |
+| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)  | igual                                                                                                                                                                                                                                                             |
+| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar" | igual, com a unidade do insumo ao lado da quantidade                                                                                                                                                                                                              |
+| Insumo fora do catálogo        | "Insumo #<id>"                                                      | igual                                                                                                                                                                                                                                                             |
+| Lista vazia                    | "Nenhum insumo adicionado."                                         | igual                                                                                                                                                                                                                                                             |
+| Botão                          | "Salvar" / "Atualizar"                                              | igual; depois de salvar, abre o detalhe da receita                                                                                                                                                                                                                |
+| Toasts                         | —                                                                   | "Receita criada com sucesso." / "Receita atualizada com sucesso."                                                                                                                                                                                                 |
+| Sair com alterações não salvas | —                                                                   | ConfirmDialog "Descartar alterações?" / "As alterações não salvas serão perdidas." / "Descartar"                                                                                                                                                                  |
+| Linha do insumo                | nome e unidade                                                      | nome, "Custo: R$ X", quantidade com a unidade e "Remover <nome>"                                                                                                                                                                                                  |
+| Detalhe (FE-44)                | —                                                                   | subtítulo "Custo de cada unidade e preço em cada lugar onde você vende"; "Voltar para receitas", "Simular", "Editar"; "Custo de 1 unidade", "Preço sugerido por canal", "Para onde vai cada R$ 1,00"; erro "Não foi possível carregar a receita."                 |
 
 ## Estoque de insumos
 
