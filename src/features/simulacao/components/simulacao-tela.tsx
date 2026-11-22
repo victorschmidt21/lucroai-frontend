@@ -1,18 +1,22 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState, useSyncExternalStore } from 'react';
-import type { Receita } from '@/shared/api/contracts/recipe';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import type {
+  Receita,
+  SimularCenarioBody,
+} from '@/shared/api/contracts/recipe';
 import type { Venda } from '@/shared/api/contracts/sales';
 import { getErrorMessage } from '@/shared/api/errors';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { fimDoDia, inicioDoDia } from '@/shared/format/data';
 import { formatMoeda } from '@/shared/format/moeda';
 import {
+  formatMargem,
   formatNumero,
-  formatPercentual,
   formatQuantidade,
+  fracaoParaPercentual,
 } from '@/shared/format/numero';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -23,13 +27,16 @@ import { IconAtualizar } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
+import {
+  receitasListOptions,
+  simulacaoReceitaOptions,
+} from '@/features/receitas/api/receitas.queries';
 import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
 import {
   FAIXA_VARIACAO_CUSTO,
   calcularBase,
-  calcularProjecao,
   cenariosDeVolume,
+  custoComVariacao,
   faixaPreco,
   faixaVolume,
   limitarNaFaixa,
@@ -67,7 +74,8 @@ function periodoDoMes(mes: string) {
 
 /**
  * Simulação interativa (FE-21). Origem: simulacao_page.dart. Receitas e vendas
- * `CONCLUIDA` do mês atual; todo o cálculo é no cliente.
+ * `CONCLUIDA` do mês atual dão o ponto de partida; desde a FE-45 o lucro vem de
+ * `POST /receitas/:id/simular` (no Balcão).
  */
 export function SimulacaoTela({ receitaId }: { receitaId?: number }) {
   const mes = useMesAtual();
@@ -122,6 +130,29 @@ export function SimulacaoTela({ receitaId }: { receitaId?: number }) {
   );
 }
 
+/** O valor só depois de `ms` sem mudar: o Slider não dispara uma chamada por passo. */
+function useValorAtrasado(valor: string, ms = 300) {
+  const [atrasado, setAtrasado] = useState(valor);
+  useEffect(() => {
+    const espera = setTimeout(() => setAtrasado(valor), ms);
+    return () => clearTimeout(espera);
+  }, [valor, ms]);
+  return atrasado;
+}
+
+/** Preço e volume da simulação; o custo só vai quando há variação. */
+function corpoDaSimulacao(
+  preco: number,
+  volume: number,
+  custo: number,
+): SimularCenarioBody {
+  return {
+    novoPreco: preco,
+    volume: Math.max(1, Math.round(volume)),
+    ...(custo > 0 ? { novoCusto: custo } : {}),
+  };
+}
+
 function formatVariacao(valor: number) {
   return `${valor > 0 ? '+' : ''}${formatNumero(valor)}%`;
 }
@@ -150,9 +181,29 @@ function Simulacao({
     volumeAjustado ?? base.volumeAtual,
     faixaDoVolume,
   );
-  const projecao = calcularProjecao({ base, preco, variacaoCusto, volume });
-  const cenarios = cenariosDeVolume(preco, projecao.custoProjetado, volume);
-  const lucroPositivo = projecao.lucroProjetado >= 0;
+  const custoProjetado = custoComVariacao(base.custo, variacaoCusto);
+  const corpo = useValorAtrasado(
+    JSON.stringify(
+      corpoDaSimulacao(preco, volume, variacaoCusto === 0 ? 0 : custoProjetado),
+    ),
+  );
+  const projetado = useQuery({
+    ...simulacaoReceitaOptions(
+      receita.id,
+      JSON.parse(corpo) as SimularCenarioBody,
+    ),
+    placeholderData: keepPreviousData,
+  });
+  const atual = useQuery({
+    ...simulacaoReceitaOptions(
+      receita.id,
+      corpoDaSimulacao(base.precoAtual, base.volumeAtual, 0),
+    ),
+    enabled: base.precoAtual > 0,
+  });
+  const resultado = projetado.data;
+  const lucroAtual = atual.data?.lucroMes ?? 0;
+  const lucroPositivo = (resultado?.lucroMes ?? 0) >= 0;
 
   function restaurar() {
     setPrecoAjustado(null);
@@ -170,33 +221,47 @@ function Simulacao({
         >
           {formatMoeda(preco)}
         </p>
-        <p
-          className={cn(
-            'text-small font-semibold',
-            projecao.lucroPorUnidade >= 0 ? 'text-success' : 'text-danger',
-          )}
-        >
-          Lucro: {formatMoeda(projecao.lucroPorUnidade)} por unidade
-        </p>
-        <dl className="grid w-full grid-cols-2 divide-x divide-border">
-          <div className="flex flex-col-reverse gap-0.5 px-2">
-            <dt className="text-caption text-ink-muted">Lucro projetado</dt>
-            <dd
+        {projetado.isError ? (
+          <ErrorState
+            className="w-full"
+            title="Não foi possível simular."
+            message={getErrorMessage(projetado.error)}
+            retrying={projetado.isFetching}
+            onRetry={() => void projetado.refetch()}
+          />
+        ) : resultado ? (
+          <>
+            <p
               className={cn(
-                'text-body font-extrabold wrap-anywhere tabular-nums',
-                lucroPositivo ? 'text-success' : 'text-danger',
+                'text-small font-semibold',
+                resultado.lucroPorUnidade >= 0 ? 'text-success' : 'text-danger',
               )}
             >
-              {formatMoeda(projecao.lucroProjetado)}
-            </dd>
-          </div>
-          <div className="flex flex-col-reverse gap-0.5 px-2">
-            <dt className="text-caption text-ink-muted">Margem</dt>
-            <dd className="text-body font-extrabold text-warning tabular-nums">
-              {formatPercentual(projecao.margemProjetada)}
-            </dd>
-          </div>
-        </dl>
+              Lucro: {formatMoeda(resultado.lucroPorUnidade)} por unidade
+            </p>
+            <dl className="grid w-full grid-cols-2 divide-x divide-border">
+              <div className="flex flex-col-reverse gap-0.5 px-2">
+                <dt className="text-caption text-ink-muted">Lucro projetado</dt>
+                <dd
+                  className={cn(
+                    'text-body font-extrabold wrap-anywhere tabular-nums',
+                    lucroPositivo ? 'text-success' : 'text-danger',
+                  )}
+                >
+                  {formatMoeda(resultado.lucroMes)}
+                </dd>
+              </div>
+              <div className="flex flex-col-reverse gap-0.5 px-2">
+                <dt className="text-caption text-ink-muted">Lucro real</dt>
+                <dd className="text-body font-extrabold text-warning tabular-nums">
+                  {formatMargem(resultado.lucroReal)}
+                </dd>
+              </div>
+            </dl>
+          </>
+        ) : (
+          <Skeleton aria-label="Calculando o lucro" className="h-16 w-full" />
+        )}
       </Card>
 
       <Card title="Produto">
@@ -246,7 +311,7 @@ function Simulacao({
         onValueChange={setVariacaoCusto}
         faixa={FAIXA_VARIACAO_CUSTO}
         formatValue={formatVariacao}
-        hint={`Custo projetado: ${formatMoeda(projecao.custoProjetado)}`}
+        hint={`Custo projetado: ${formatMoeda(custoProjetado)}`}
         casas={0}
         sufixo="%"
         aceitaNegativo
@@ -268,46 +333,22 @@ function Simulacao({
         Restaurar
       </Button>
 
-      <GraficoLucro
-        lucroAtual={base.lucroAtual}
-        lucroProjetado={projecao.lucroProjetado}
-        margemAtual={base.margemAtual}
-        margemProjetada={projecao.margemProjetada}
-        diferenca={projecao.diferenca}
-      />
-
-      <Card title="Simulação de volume">
-        <ul className="flex flex-col divide-y divide-border">
-          {cenarios.map((cenario) => (
-            <li
-              key={cenario.nome}
-              className="flex items-center justify-between gap-3 py-2.5"
-            >
-              <div className="flex min-w-0 flex-col">
-                <span className="text-body text-ink">
-                  {formatNumero(cenario.volume)} unidades
-                </span>
-                <span className="text-caption text-ink-muted">
-                  {cenario.nome}
-                </span>
-              </div>
-              <div className="flex flex-col items-end text-right">
-                <span className="text-body font-extrabold text-ink tabular-nums">
-                  {formatMoeda(cenario.receita)}
-                </span>
-                <span
-                  className={cn(
-                    'text-caption font-bold tabular-nums',
-                    cenario.lucro >= 0 ? 'text-success' : 'text-danger',
-                  )}
-                >
-                  Lucro: {formatMoeda(cenario.lucro)}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {resultado ? (
+        <>
+          <GraficoLucro
+            lucroAtual={lucroAtual}
+            lucroProjetado={resultado.lucroMes}
+            margemAtual={fracaoParaPercentual(atual.data?.lucroReal ?? 0)}
+            margemProjetada={fracaoParaPercentual(resultado.lucroReal)}
+            diferenca={resultado.lucroMes - lucroAtual}
+          />
+          <CenariosDeVolume
+            preco={preco}
+            lucroPorUnidade={resultado.lucroPorUnidade}
+            volume={volume}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
@@ -320,5 +361,50 @@ function Info({ rotulo, valor }: { rotulo: string; valor: string }) {
         {valor}
       </dd>
     </div>
+  );
+}
+
+function CenariosDeVolume({
+  preco,
+  lucroPorUnidade,
+  volume,
+}: {
+  preco: number;
+  lucroPorUnidade: number;
+  volume: number;
+}) {
+  return (
+    <Card title="Simulação de volume">
+      <ul className="flex flex-col divide-y divide-border">
+        {cenariosDeVolume(preco, lucroPorUnidade, volume).map((cenario) => (
+          <li
+            key={cenario.nome}
+            className="flex items-center justify-between gap-3 py-2.5"
+          >
+            <div className="flex min-w-0 flex-col">
+              <span className="text-body text-ink">
+                {formatNumero(cenario.volume)} unidades
+              </span>
+              <span className="text-caption text-ink-muted">
+                {cenario.nome}
+              </span>
+            </div>
+            <div className="flex flex-col items-end text-right">
+              <span className="text-body font-extrabold text-ink tabular-nums">
+                {formatMoeda(cenario.receita)}
+              </span>
+              <span
+                className={cn(
+                  'text-caption font-bold tabular-nums',
+                  cenario.lucro >= 0 ? 'text-success' : 'text-danger',
+                )}
+              >
+                Lucro: {formatMoeda(cenario.lucro)}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

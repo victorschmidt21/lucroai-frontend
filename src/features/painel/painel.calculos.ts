@@ -1,13 +1,16 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
+import type { ResumoVendas } from '@/shared/api/contracts/sales';
+import { formatMoeda } from '@/shared/format/moeda';
 import { isBaixoEstoque } from '@/shared/domain/estoque';
 import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
-import { formatPercentual } from '@/shared/format/numero';
+import { formatPercentual, fracaoParaPercentual } from '@/shared/format/numero';
 
 /*
  * Painel (docs/business-rules.md#painel). Origem: dashboard_page.dart
  * (`_DashboardData.fromStates`, `_calculateVendaProfit`, `_buildMonthlyValues`,
  * `_buildMonthLabels`, `_buildTrendLabel` e `_buildTopProducts`). Não há rota de
- * painel no backend (lacuna 4): tudo é calculado das vendas, receitas e estoques.
+ * painel no backend (lacuna 4): tudo é calculado das vendas, receitas e estoques,
+ * menos o ponto de equilíbrio da empresa (`GET /vendas/resumo`, FE-45).
  */
 
 type ItemParaPainel = {
@@ -30,9 +33,11 @@ export type ReceitaParaPainel = {
   nome: string;
   rendimento: number;
   custoUnitario?: number;
-  precoSugerido?: number;
-  /** Fração (`0.6` = 60%). */
-  margemLucro?: number;
+  /** Só o lucro da `composicao` de cada canal (FE-45). */
+  precos: readonly {
+    balcao: boolean;
+    composicao: { lucro: { valor: number; fracao: number } } | null;
+  }[];
 };
 
 const ROTULOS_MES = [
@@ -182,8 +187,9 @@ export type ProdutoRentavel = {
 
 /**
  * Top 3 por lucro. Com vendas (as faturáveis recebidas, já do mês), agrupa os
- * itens por receita; sem vendas, usa as receitas com `precoSugerido −
- * custoUnitario > 0`. O mobile agrupa pelo nome do produto.
+ * itens por receita; sem vendas, usa o lucro por unidade do preço do Balcão
+ * calculado pela API (`composicao.lucro`, FE-45), só os positivos. O mobile
+ * agrupa pelo nome do produto.
  */
 export function produtosMaisRentaveis(
   vendasMes: readonly VendaParaPainel[],
@@ -217,22 +223,54 @@ export function produtosMaisRentaveis(
           lucro: grupo.lucro,
           margem: grupo.receita === 0 ? 0 : (grupo.lucro / grupo.receita) * 100,
         }))
-      : receitas
-          .map((receita) => {
-            const preco = receita.precoSugerido ?? 0;
-            const lucro = preco - (receita.custoUnitario ?? 0);
-            return {
-              receitaId: receita.id,
-              nome: receita.nome,
-              quantidade: null,
-              lucro,
-              margem:
-                preco === 0
-                  ? (receita.margemLucro ?? 0) * 100
-                  : (lucro / preco) * 100,
-            };
-          })
-          .filter((produto) => produto.lucro > 0);
+      : receitas.flatMap((receita) => {
+          const lucro = receita.precos.find((p) => p.balcao)?.composicao?.lucro;
+          return lucro && lucro.valor > 0
+            ? [
+                {
+                  receitaId: receita.id,
+                  nome: receita.nome,
+                  quantidade: null,
+                  lucro: lucro.valor,
+                  margem: fracaoParaPercentual(lucro.fracao),
+                },
+              ]
+            : [];
+        });
 
   return produtos.toSorted((a, b) => b.lucro - a.lucro).slice(0, 3);
+}
+
+export type PontoEquilibrioDoPainel = {
+  valor: string;
+  detalhe: string;
+  tom: 'muted' | 'danger';
+};
+
+/**
+ * Card "Para pagar as contas" (FE-45): o ponto de equilíbrio da empresa, em
+ * reais por mês, como a API devolve (`GET /vendas/resumo`), sem recalcular.
+ */
+export function pontoEquilibrioDoPainel(
+  ponto: ResumoVendas['pontoEquilibrio'],
+): PontoEquilibrioDoPainel {
+  if (ponto.valor !== null) {
+    return {
+      valor: formatMoeda(ponto.valor),
+      detalhe: 'em vendas por mês',
+      tom: 'muted',
+    };
+  }
+  if (ponto.motivo === 'MARGEM_NEGATIVA') {
+    return {
+      valor: '—',
+      detalhe: 'as vendas não cobrem o custo',
+      tom: 'danger',
+    };
+  }
+  return {
+    valor: '—',
+    detalhe: 'sem vendas nos últimos 30 dias',
+    tom: 'muted',
+  };
 }
