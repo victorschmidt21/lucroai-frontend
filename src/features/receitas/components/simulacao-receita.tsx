@@ -3,51 +3,44 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import type { ChangeEvent } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type {
-  PrecoVenda,
   Receita,
   ReceitaCusto,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
 import { ApiError, getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatMargem, formatNumero } from '@/shared/format/numero';
+import { formatNumero } from '@/shared/format/numero';
 import { Alert } from '@/shared/ui/alert';
 import { Button, buttonClasses } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { cn } from '@/shared/ui/cn';
 import { ErrorState } from '@/shared/ui/error-state';
-import {
-  FormIntegerInput,
-  FormMoneyInput,
-  FormPercentInput,
-} from '@/shared/ui/form';
+import { FormIntegerInput, FormMoneyInput } from '@/shared/ui/form';
 import { IconInfo } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
+import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
 import {
   receitaCustoOptions,
   receitaDetailOptions,
 } from '../api/receitas.queries';
 import {
-  useCalcularPrecoVenda,
   useSimularCenario,
   useSimularReceitaCusto,
 } from '../hooks/use-simulacao-receita';
+import { formatarResultadoDaSimulacao } from '../receitas.calculos';
 import {
   custoLotesFormSchema,
-  precoMargemFormSchema,
+  precoDoCanalNoCampo,
   simulacaoCenarioFormSchema,
-  toPrecoMargemFormInput,
-  toPrecoVendaBody,
   toSimulacaoCenarioFormInput,
   toSimularCenarioBody,
   toSimularReceitaCustoBody,
   type CustoLotesFormInput,
   type CustoLotesFormValues,
-  type PrecoMargemFormInput,
-  type PrecoMargemFormValues,
   type SimulacaoCenarioFormInput,
   type SimulacaoCenarioFormValues,
 } from '../schemas/simulacao-form.schema';
@@ -59,14 +52,15 @@ import {
 function mensagemDeErro(error: unknown) {
   if (!(error instanceof ApiError)) return 'Erro ao simular.';
 
-  return error.message
-    .replace('Informe novoCusto', 'Informe o custo por unidade')
-    .replace('Informe novoPreco', 'Informe o preço de venda');
+  return error.message.replace(
+    'Informe novoPreco',
+    'Informe o preço que você cobra',
+  );
 }
 
 /**
- * Simulação de cenário de uma receita (FE-20). Origem: simulacao_page.dart.
- * Todos os valores do resultado vêm do backend.
+ * Simulação de uma receita (FE-20, refeita na FE-45): o preço que cobra, o
+ * canal e as unidades por mês. Todos os valores do resultado vêm do backend.
  */
 export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
   const receita = useQuery(receitaDetailOptions(receitaId));
@@ -90,10 +84,7 @@ export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
           {receita.data.nome}
         </p>
         <CenarioCard receita={receita.data} />
-        <div className="grid items-start gap-4 md:grid-cols-2">
-          <PrecoMargemCard receita={receita.data} />
-          <CustoLotesCard receitaId={receitaId} />
-        </div>
+        <CustoLotesCard receitaId={receitaId} />
       </div>
     );
   }
@@ -102,7 +93,7 @@ export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <PageHeader
         title="Simulação de cenário"
-        subtitle="Ajuste os valores e veja o impacto no lucro"
+        subtitle="Quanto você lucra cobrando este preço?"
         actions={
           <Link href="/receitas" className={buttonClasses('secundario')}>
             Voltar para receitas
@@ -127,7 +118,10 @@ function CenarioCard({ receita }: { receita: Receita }) {
   });
 
   const enviar = form.handleSubmit((valores) => {
-    simular.mutate({ id: receita.id, body: toSimularCenarioBody(valores) });
+    simular.mutate({
+      id: receita.id,
+      body: toSimularCenarioBody(valores, receita),
+    });
   });
 
   return (
@@ -142,19 +136,32 @@ function CenarioCard({ receita }: { receita: Receita }) {
           >
             <div className="grid gap-4 sm:grid-cols-3">
               <FormMoneyInput
-                name="novoCusto"
-                label="Custo por unidade (R$)"
-                placeholder="Ex.: 2,50"
-              />
-              <FormMoneyInput
                 name="novoPreco"
-                label="Preço de venda (R$)"
+                label="Preço que você cobra (R$)"
                 placeholder="Ex.: 5,00"
               />
+              <Select
+                label="Onde vende"
+                {...form.register('canalId', {
+                  // Trocar o canal põe no campo o preço sugerido naquele canal.
+                  onChange: (event: ChangeEvent<HTMLSelectElement>) =>
+                    form.setValue(
+                      'novoPreco',
+                      precoDoCanalNoCampo(receita, Number(event.target.value)),
+                    ),
+                })}
+                error={form.formState.errors.canalId?.message}
+              >
+                {receita.precos.map((preco) => (
+                  <option key={preco.canalId} value={String(preco.canalId)}>
+                    {preco.canal}
+                  </option>
+                ))}
+              </Select>
               <FormIntegerInput
                 name="volume"
-                label="Quantidade (unidades)"
-                placeholder="Ex.: 12"
+                label="Unidades vendidas por mês"
+                placeholder="Ex.: 300"
               />
             </div>
             <Button
@@ -204,116 +211,62 @@ function Indicador({
 }
 
 function ResultadoCenario({ resultado }: { resultado: SimulacaoCenario }) {
-  const positivo = resultado.lucroEstimado >= 0;
+  const textos = formatarResultadoDaSimulacao(resultado);
+  const tom = textos.prejuizo ? 'text-danger' : 'text-success';
 
   return (
     <Card title="Resultado">
+      {textos.aviso ? (
+        <Alert className="font-semibold text-danger">{textos.aviso}</Alert>
+      ) : null}
       <div
         className={cn(
           'flex flex-wrap items-center justify-between gap-2 rounded-md border px-3.5 py-3',
-          positivo
-            ? 'border-success/40 bg-success/8'
-            : 'border-danger/40 bg-danger/8',
+          textos.prejuizo
+            ? 'border-danger/40 bg-danger/8'
+            : 'border-success/40 bg-success/8',
         )}
       >
-        <span className="text-body text-ink-muted">Lucro estimado</span>
-        <span
-          className={cn(
-            'text-title font-bold tabular-nums',
-            positivo ? 'text-success' : 'text-danger',
-          )}
-        >
-          {formatMoeda(resultado.lucroEstimado)}
+        <span className="text-body text-ink-muted">Lucro no mês</span>
+        <span className={cn('text-title font-bold tabular-nums', tom)}>
+          {textos.lucroMes}
         </span>
       </div>
       <dl className="grid grid-cols-2 gap-2.5">
         <Indicador
-          rotulo="Margem projetada"
-          valor={formatMargem(resultado.margemProjetada)}
-          className={
-            resultado.margemProjetada >= 0 ? 'text-success' : 'text-danger'
-          }
+          rotulo="Lucro por unidade"
+          valor={textos.lucroPorUnidade}
+          className={tom}
         />
         <Indicador
-          rotulo="Custo/unidade"
-          valor={formatMoeda(resultado.custoUnitario)}
+          rotulo="Lucro real (do preço)"
+          valor={textos.lucroReal}
+          className={tom}
         />
         <Indicador
-          rotulo="Preço de venda"
+          rotulo={`Preço (${resultado.canal})`}
           valor={formatMoeda(resultado.precoVenda)}
         />
         <Indicador
-          rotulo="Volume simulado"
+          rotulo="Custo por unidade"
+          valor={formatMoeda(resultado.custoUnitario)}
+        />
+        <Indicador
+          rotulo="Unidades por mês"
           valor={`${formatNumero(resultado.volume)} un.`}
         />
+        <Indicador
+          rotulo="Contas do mês"
+          valor={formatMoeda(resultado.gastosMensais)}
+        />
       </dl>
-      <p className="flex items-start gap-2 rounded-md bg-surface-alt px-3 py-2.5 text-small text-ink-muted">
-        <IconInfo className="mt-0.5 shrink-0" />
-        {`Venda pelo menos ${formatNumero(resultado.breakEven)} unidades para não ter prejuízo.`}
-      </p>
+      {textos.pontoEquilibrio ? (
+        <p className="flex items-start gap-2 rounded-md bg-surface-alt px-3 py-2.5 text-small text-ink-muted">
+          <IconInfo className="mt-0.5 shrink-0" />
+          {textos.pontoEquilibrio}
+        </p>
+      ) : null}
     </Card>
-  );
-}
-
-function PrecoMargemCard({ receita }: { receita: Receita }) {
-  const calcular = useCalcularPrecoVenda();
-  const form = useForm<PrecoMargemFormInput, unknown, PrecoMargemFormValues>({
-    resolver: zodResolver(precoMargemFormSchema),
-    defaultValues: toPrecoMargemFormInput(receita),
-    shouldFocusError: true,
-  });
-
-  const enviar = form.handleSubmit((valores) => {
-    calcular.mutate({ id: receita.id, body: toPrecoVendaBody(valores) });
-  });
-
-  return (
-    <Card title="Preço para margem desejada">
-      <FormProvider {...form}>
-        <form
-          noValidate
-          aria-label="Preço para margem desejada"
-          onSubmit={(event) => void enviar(event)}
-          className="flex flex-col gap-3"
-        >
-          <FormPercentInput name="margem" label="Margem de lucro" />
-          <Button
-            type="submit"
-            variant="secundario"
-            loading={calcular.isPending}
-          >
-            Calcular preço
-          </Button>
-        </form>
-      </FormProvider>
-      <div aria-live="polite">
-        {calcular.isError ? (
-          <Alert>{mensagemDeErro(calcular.error)}</Alert>
-        ) : calcular.data ? (
-          <ResultadoPreco resultado={calcular.data} />
-        ) : null}
-      </div>
-    </Card>
-  );
-}
-
-function ResultadoPreco({ resultado }: { resultado: PrecoVenda }) {
-  return (
-    <dl className="grid gap-2.5">
-      <Indicador
-        rotulo="Preço sugerido"
-        valor={formatMoeda(resultado.preco_sugerido)}
-        className="text-accent"
-      />
-      <Indicador
-        rotulo="Custo/unidade"
-        valor={formatMoeda(resultado.custo_total_unitario)}
-      />
-      <Indicador
-        rotulo="Lucro por unidade"
-        valor={formatMoeda(resultado.lucro_por_unidade)}
-      />
-    </dl>
   );
 }
 

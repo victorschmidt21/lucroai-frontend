@@ -1,27 +1,23 @@
 import { z } from 'zod';
 import type {
-  PrecoVendaBody,
   Receita,
   SimularCenarioBody,
   SimularReceitaCustoBody,
 } from '@/shared/api/contracts/recipe';
-import {
-  fracaoParaPercentual,
-  percentualParaFracao,
-} from '@/shared/format/numero';
+import { arredondarCentavos } from '@/shared/format/moeda';
 import {
   formatNumeroEditavel,
   inteiroBR,
-  numeroBR,
   numeroBROpcional,
   parseInteiroBR,
 } from '@/shared/format/numero-br';
 
-// Simulação de cenário (FE-20). O mobile não valida os campos; a web segue o
-// `simular-cenario.dto.ts` (todos opcionais e > 0; volume inteiro).
+// Simulação da receita (FE-45): o preço que cobra, o canal e quantas unidades
+// vende por mês. Segue o `simular-cenario.dto.ts` (preço > 0, volume inteiro > 0,
+// os dois opcionais; `canalId` inteiro > 0).
 const VALOR = 'Informe um valor maior que zero';
 const QUANTIDADE = 'Informe uma quantidade inteira maior que zero';
-const MARGEM = 'Informe uma margem válida';
+const CANAL = 'Escolha onde vende';
 const LOTES = 'Informe a quantidade de lotes';
 
 /** Inteiro opcional: vazio vira `undefined`; `1,5` ou `-3` falham. */
@@ -40,8 +36,14 @@ const inteiroOpcional = () =>
     );
 
 export const simulacaoCenarioFormSchema = z.object({
-  novoCusto: numeroBROpcional(z.number({ error: VALOR }).positive(VALOR)),
+  /** O `value` do `<select>` (id do canal). */
+  canalId: z
+    .string()
+    .transform((texto) => parseInteiroBR(texto) ?? Number.NaN)
+    .pipe(z.number({ error: CANAL }).int(CANAL).positive(CANAL)),
+  /** Vazio usa o preço sugerido no canal. */
   novoPreco: numeroBROpcional(z.number({ error: VALOR }).positive(VALOR)),
+  /** Vazio usa o rendimento da receita. */
   volume: inteiroOpcional(),
 });
 
@@ -52,59 +54,59 @@ export type SimulacaoCenarioFormValues = z.output<
   typeof simulacaoCenarioFormSchema
 >;
 
-/** Dinheiro positivo vai para o campo; o resto fica vazio. */
-function dinheiroPositivo(valor: number | undefined) {
-  return valor !== undefined && valor > 0 ? formatNumeroEditavel(valor, 2) : '';
+type ReceitaParaSimular = Pick<Receita, 'rendimento' | 'precos'>;
+
+function precoSugeridoNoCanal(
+  receita: Pick<Receita, 'precos'>,
+  canalId: number,
+) {
+  const preco = receita.precos.find((p) => p.canalId === canalId)?.preco;
+  return preco != null && preco > 0 ? preco : null;
 }
 
-/** Valores iniciais da receita (`initState` de simulacao_page.dart). */
+/** Preço sugerido no canal, pronto para o campo; vazio sem preço possível. */
+export function precoDoCanalNoCampo(
+  receita: Pick<Receita, 'precos'>,
+  canalId: number,
+) {
+  const preco = precoSugeridoNoCanal(receita, canalId);
+  return preco === null ? '' : formatNumeroEditavel(preco, 2);
+}
+
+/** Começa no Balcão (ou no primeiro canal), com o preço sugerido e o rendimento. */
 export function toSimulacaoCenarioFormInput(
-  receita: Pick<Receita, 'custoUnitario' | 'precoSugerido' | 'rendimento'>,
+  receita: ReceitaParaSimular,
 ): SimulacaoCenarioFormInput {
+  const canal = receita.precos.find((p) => p.balcao) ?? receita.precos[0];
+
   return {
-    novoCusto: dinheiroPositivo(receita.custoUnitario),
-    novoPreco: dinheiroPositivo(receita.precoSugerido),
+    canalId: canal ? String(canal.canalId) : '',
+    novoPreco: canal ? precoDoCanalNoCampo(receita, canal.canalId) : '',
     volume: receita.rendimento > 0 ? String(receita.rendimento) : '',
   };
 }
 
-/** Só os campos preenchidos: o vazio fica com o valor da receita no backend. */
+/**
+ * O canal e só os campos preenchidos: o vazio fica com o valor do backend. O
+ * preço igual ao sugerido no canal (o campo tem 2 casas; a API, 4) também é
+ * omitido, para a API usar o sugerido exato e o lucro real sair igual ao
+ * configurado.
+ */
 export function toSimularCenarioBody(
   valores: SimulacaoCenarioFormValues,
+  receita: Pick<Receita, 'precos'>,
 ): SimularCenarioBody {
-  const body: SimularCenarioBody = {};
+  const body: SimularCenarioBody = { canalId: valores.canalId };
+  const sugerido = precoSugeridoNoCanal(receita, valores.canalId);
+  const ehOSugerido =
+    sugerido !== null && arredondarCentavos(sugerido) === valores.novoPreco;
 
-  if (valores.novoCusto !== undefined) body.novoCusto = valores.novoCusto;
-  if (valores.novoPreco !== undefined) body.novoPreco = valores.novoPreco;
+  if (valores.novoPreco !== undefined && !ehOSugerido) {
+    body.novoPreco = valores.novoPreco;
+  }
   if (valores.volume !== undefined) body.volume = valores.volume;
 
   return body;
-}
-
-/** "Preço para margem desejada": margem em pontos percentuais, ≥ 0. */
-export const precoMargemFormSchema = z.object({
-  margem: numeroBR(z.number({ error: MARGEM }).min(0, MARGEM)),
-});
-
-export type PrecoMargemFormInput = z.input<typeof precoMargemFormSchema>;
-export type PrecoMargemFormValues = z.output<typeof precoMargemFormSchema>;
-
-/** Começa com a margem salva na receita, se houver. */
-export function toPrecoMargemFormInput(
-  receita: Pick<Receita, 'margemLucro'>,
-): PrecoMargemFormInput {
-  return {
-    margem:
-      receita.margemLucro === undefined
-        ? ''
-        : formatNumeroEditavel(fracaoParaPercentual(receita.margemLucro)),
-  };
-}
-
-export function toPrecoVendaBody(
-  valores: PrecoMargemFormValues,
-): PrecoVendaBody {
-  return { margem_lucro: percentualParaFracao(valores.margem) };
 }
 
 /** "Custo para N lotes": inteiro > 0, começa em 1. */

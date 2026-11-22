@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { apiFetch } from '@/shared/api/client';
 import {
+  resumoVendasSchema,
   vendaSchema,
   type CreateVendaBody,
   type ListVendasQuery,
@@ -24,6 +25,12 @@ export async function listVendas(
     signal,
   });
   return unwrap(corpo, z.array(vendaSchema));
+}
+
+/** Ponto de equilíbrio da empresa, para o painel (FE-45). */
+export async function getResumoVendas(signal?: AbortSignal) {
+  const corpo = await apiFetch('/vendas/resumo', { signal });
+  return unwrap(corpo, resumoVendasSchema);
 }
 
 export async function getVenda(id: number, signal?: AbortSignal) {

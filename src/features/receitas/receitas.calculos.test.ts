@@ -4,8 +4,13 @@ import receitaDoSeed from '@/test/fixtures/recipe/receita.json';
 import {
   makeComposicaoPreco,
   makePrecoCanal,
+  makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
-import { calcularCustoItem, montarBarraDoPreco } from './receitas.calculos';
+import {
+  calcularCustoItem,
+  formatarResultadoDaSimulacao,
+  montarBarraDoPreco,
+} from './receitas.calculos';
 
 describe('calcularCustoItem', () => {
   it('multiplica pela quantidade na unidade do insumo e arredonda a centavos', () => {
@@ -113,5 +118,82 @@ describe('montarBarraDoPreco', () => {
     );
 
     expect(barra.map((parte) => parte.id)).toEqual(['ingredientes', 'lucro']);
+  });
+});
+
+describe('formatarResultadoDaSimulacao', () => {
+  it('pelo preço sugerido, mostra o lucro real configurado e o ponto de equilíbrio', () => {
+    expect(formatarResultadoDaSimulacao(makeSimulacaoCenario())).toEqual({
+      lucroPorUnidade: 'R$ 0,07',
+      lucroReal: '15,0%',
+      lucroMes: 'R$ 1,93',
+      prejuizo: false,
+      aviso: null,
+      pontoEquilibrio:
+        'Para pagar as contas do mês, você precisa vender 9.745 unidades.',
+    });
+  });
+
+  it('preço abaixo do custo mostra o aviso e nenhum ponto de equilíbrio', () => {
+    const textos = formatarResultadoDaSimulacao(
+      makeSimulacaoCenario({
+        precoVenda: 0.3,
+        lucroPorUnidade: -0.0889,
+        lucroReal: -0.2962,
+        lucroMes: -88.85,
+        // A API ainda devolve unidades: a margem de contribuição é positiva.
+        pontoEquilibrio: { unidades: 25089, motivo: null },
+      }),
+    );
+
+    expect(textos).toMatchObject({
+      lucroPorUnidade: '-R$ 0,09',
+      lucroReal: '-29,6%',
+      lucroMes: '-R$ 88,85',
+      prejuizo: true,
+      aviso:
+        'Este preço não cobre o custo: você perde R$ 0,09 em cada unidade vendida.',
+      pontoEquilibrio: null,
+    });
+  });
+
+  it('sem ponto de equilíbrio pela margem negativa, só o aviso', () => {
+    const textos = formatarResultadoDaSimulacao(
+      makeSimulacaoCenario({
+        lucroPorUnidade: -0.3,
+        pontoEquilibrio: { unidades: null, motivo: 'MARGEM_NEGATIVA' },
+      }),
+    );
+
+    expect(textos.aviso).not.toBeNull();
+    expect(textos.pontoEquilibrio).toBeNull();
+  });
+
+  it('no singular com 1 unidade e sem contas do mês com 0', () => {
+    expect(
+      formatarResultadoDaSimulacao(
+        makeSimulacaoCenario({
+          pontoEquilibrio: { unidades: 1, motivo: null },
+        }),
+      ).pontoEquilibrio,
+    ).toBe('Para pagar as contas do mês, você precisa vender 1 unidade.');
+    expect(
+      formatarResultadoDaSimulacao(
+        makeSimulacaoCenario({
+          gastosMensais: 0,
+          pontoEquilibrio: { unidades: 0, motivo: null },
+        }),
+      ).pontoEquilibrio,
+    ).toBe(
+      'Você não tem contas do mês cadastradas em Gastos: qualquer venda já ajuda no lucro.',
+    );
+  });
+
+  it('lucro zero não é prejuízo', () => {
+    const textos = formatarResultadoDaSimulacao(
+      makeSimulacaoCenario({ lucroPorUnidade: 0, lucroReal: 0, lucroMes: 0 }),
+    );
+    expect(textos.prejuizo).toBe(false);
+    expect(textos.aviso).toBeNull();
   });
 });
