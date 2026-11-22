@@ -1,76 +1,291 @@
 [
   {
-    "id": 28,
+    "id": 99,
     "empresaId": 30,
     "nome": "Quindim",
     "rendimento": 12,
     "unidadeRendimento": "UN",
-    "custoProducao": 3885.8,
-    "custoUnitario": 323.82,
-    "margemLucro": 0.55,
-    "precoSugerido": 501.92,
-    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "custoProducao": 27.32,
+    "custoUnitario": 2.2768,
+    "margemLucro": 0.25,
+    "precoSugerido": 2.8952,
+    "usoPorLote": 0.5,
+    "embalagemPorUnidade": 0.15,
+    "perdaPercentual": 0.05,
+    "lucroPercentual": 0.2,
+    "dataCriacao": "2026-05-27T18:00:40.839Z",
     "itens": [
-      { "insumoId": 51, "quantidade": 0.3, "custoCalculado": 1.32 },
-      { "insumoId": 53, "quantidade": 6, "custoCalculado": 4.5 },
-      { "insumoId": 60, "quantidade": 100, "custoCalculado": 4.5 },
-      { "insumoId": 52, "quantidade": 20, "custoCalculado": 0.48 }
+      { "insumoId": 257, "quantidade": 0.3, "custoCalculado": 1.38 },
+      { "insumoId": 259, "quantidade": 6, "custoCalculado": 4.5 },
+      { "insumoId": 266, "quantidade": 100, "custoCalculado": 4.5 },
+      { "insumoId": 258, "quantidade": 20, "custoCalculado": 0.6 }
+    ],
+    "custo": {
+      "ingredientesLote": 10.98,
+      "gastosMensaisLote": 12.58,
+      "ingredientes": 0.915,
+      "gastosMensais": 1.0479,
+      "gastosPorUnidade": 0.05,
+      "embalagem": 0.15,
+      "perdas": 0.1138,
+      "unitario": 2.2768
+    },
+    "precos": [
+      {
+        "canalId": 143,
+        "canal": "Balcão",
+        "balcao": true,
+        "percentuais": 0.2136,
+        "preco": 2.8952,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.915, "fracao": 0.316 },
+          "gastosMensais": { "valor": 1.0479, "fracao": 0.362 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0173 },
+          "embalagem": { "valor": 0.15, "fracao": 0.0518 },
+          "perdas": { "valor": 0.1138, "fracao": 0.0393 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.0394, "fracao": 0.0136 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.579, "fracao": 0.2 }
+        }
+      },
+      {
+        "canalId": 144,
+        "canal": "iFood",
+        "balcao": false,
+        "percentuais": 0.352,
+        "preco": 3.5135,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.915, "fracao": 0.2604 },
+          "gastosMensais": { "valor": 1.0479, "fracao": 0.2983 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0142 },
+          "embalagem": { "valor": 0.15, "fracao": 0.0427 },
+          "perdas": { "valor": 0.1138, "fracao": 0.0324 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.5341, "fracao": 0.152 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.7027, "fracao": 0.2 }
+        }
+      }
     ]
   },
   {
-    "id": 27,
+    "id": 98,
     "empresaId": 30,
     "nome": "Brigadeiro Gourmet",
     "rendimento": 40,
     "unidadeRendimento": "UN",
-    "custoProducao": 7250.48,
-    "custoUnitario": 181.26,
-    "margemLucro": 0.6,
-    "precoSugerido": 290.02,
-    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "custoProducao": 23.79,
+    "custoUnitario": 0.5948,
+    "margemLucro": 0.3333,
+    "precoSugerido": 0.8077,
+    "usoPorLote": 0.1,
+    "embalagemPorUnidade": 0.08,
+    "perdaPercentual": 0.02,
+    "lucroPercentual": 0.25,
+    "dataCriacao": "2026-05-27T18:00:40.839Z",
     "itens": [
-      { "insumoId": 59, "quantidade": 0.3, "custoCalculado": 10.5 },
-      { "insumoId": 58, "quantidade": 100, "custoCalculado": 2.75 },
-      { "insumoId": 52, "quantidade": 20, "custoCalculado": 0.48 },
-      { "insumoId": 61, "quantidade": 50, "custoCalculado": 1.75 }
+      { "insumoId": 265, "quantidade": 0.3, "custoCalculado": 10.5 },
+      { "insumoId": 264, "quantidade": 100, "custoCalculado": 2.75 },
+      { "insumoId": 258, "quantidade": 20, "custoCalculado": 0.6 },
+      { "insumoId": 267, "quantidade": 50, "custoCalculado": 1.75 }
+    ],
+    "custo": {
+      "ingredientesLote": 15.6,
+      "gastosMensaisLote": 2.52,
+      "ingredientes": 0.39,
+      "gastosMensais": 0.0629,
+      "gastosPorUnidade": 0.05,
+      "embalagem": 0.08,
+      "perdas": 0.0119,
+      "unitario": 0.5948
+    },
+    "precos": [
+      {
+        "canalId": 143,
+        "canal": "Balcão",
+        "balcao": true,
+        "percentuais": 0.2636,
+        "preco": 0.8077,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.39, "fracao": 0.4829 },
+          "gastosMensais": { "valor": 0.0629, "fracao": 0.0778 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0619 },
+          "embalagem": { "valor": 0.08, "fracao": 0.099 },
+          "perdas": { "valor": 0.0119, "fracao": 0.0147 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.011, "fracao": 0.0136 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.2019, "fracao": 0.25 }
+        }
+      },
+      {
+        "canalId": 144,
+        "canal": "iFood",
+        "balcao": false,
+        "percentuais": 0.402,
+        "preco": 0.9946,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.39, "fracao": 0.3921 },
+          "gastosMensais": { "valor": 0.0629, "fracao": 0.0632 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0503 },
+          "embalagem": { "valor": 0.08, "fracao": 0.0804 },
+          "perdas": { "valor": 0.0119, "fracao": 0.012 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.1512, "fracao": 0.152 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.2486, "fracao": 0.25 }
+        }
+      }
     ]
   },
   {
-    "id": 26,
+    "id": 97,
     "empresaId": 30,
     "nome": "Bolo de Chocolate",
     "rendimento": 12,
     "unidadeRendimento": "UN",
-    "custoProducao": 3884.7,
-    "custoUnitario": 323.72,
-    "margemLucro": 0.5,
-    "precoSugerido": 485.58,
-    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "custoProducao": 28.67,
+    "custoUnitario": 2.3895,
+    "margemLucro": 0.25,
+    "precoSugerido": 3.0385,
+    "usoPorLote": 0.5,
+    "embalagemPorUnidade": 0.3,
+    "perdaPercentual": 0.05,
+    "lucroPercentual": 0.2,
+    "dataCriacao": "2026-05-27T18:00:40.839Z",
     "itens": [
-      { "insumoId": 50, "quantidade": 0.25, "custoCalculado": 0.75 },
-      { "insumoId": 51, "quantidade": 0.2, "custoCalculado": 0.88 },
-      { "insumoId": 52, "quantidade": 100, "custoCalculado": 2.4 },
-      { "insumoId": 53, "quantidade": 3, "custoCalculado": 2.25 },
-      { "insumoId": 54, "quantidade": 0.2, "custoCalculado": 1 },
-      { "insumoId": 56, "quantidade": 50, "custoCalculado": 2.25 },
-      { "insumoId": 55, "quantidade": 10, "custoCalculado": 0.17 }
+      { "insumoId": 256, "quantidade": 0.25, "custoCalculado": 0.88 },
+      { "insumoId": 257, "quantidade": 0.2, "custoCalculado": 0.92 },
+      { "insumoId": 258, "quantidade": 100, "custoCalculado": 3 },
+      { "insumoId": 259, "quantidade": 3, "custoCalculado": 2.25 },
+      { "insumoId": 260, "quantidade": 0.2, "custoCalculado": 1 },
+      { "insumoId": 262, "quantidade": 50, "custoCalculado": 2.25 },
+      { "insumoId": 261, "quantidade": 10, "custoCalculado": 0.17 }
+    ],
+    "custo": {
+      "ingredientesLote": 10.47,
+      "gastosMensaisLote": 12.58,
+      "ingredientes": 0.8721,
+      "gastosMensais": 1.0479,
+      "gastosPorUnidade": 0.05,
+      "embalagem": 0.3,
+      "perdas": 0.1195,
+      "unitario": 2.3895
+    },
+    "precos": [
+      {
+        "canalId": 143,
+        "canal": "Balcão",
+        "balcao": true,
+        "percentuais": 0.2136,
+        "preco": 3.0385,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.8721, "fracao": 0.287 },
+          "gastosMensais": { "valor": 1.0479, "fracao": 0.3449 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0165 },
+          "embalagem": { "valor": 0.3, "fracao": 0.0987 },
+          "perdas": { "valor": 0.1195, "fracao": 0.0393 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.0413, "fracao": 0.0136 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.6077, "fracao": 0.2 }
+        }
+      },
+      {
+        "canalId": 144,
+        "canal": "iFood",
+        "balcao": false,
+        "percentuais": 0.352,
+        "preco": 3.6875,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.8721, "fracao": 0.2365 },
+          "gastosMensais": { "valor": 1.0479, "fracao": 0.2842 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0136 },
+          "embalagem": { "valor": 0.3, "fracao": 0.0814 },
+          "perdas": { "valor": 0.1195, "fracao": 0.0324 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.5605, "fracao": 0.152 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.7375, "fracao": 0.2 }
+        }
+      }
     ]
   },
   {
-    "id": 25,
+    "id": 96,
     "empresaId": 30,
     "nome": "Pão Francês",
-    "rendimento": 50,
+    "rendimento": 28,
     "unidadeRendimento": "UN",
-    "custoProducao": 8438.31,
-    "custoUnitario": 168.77,
-    "margemLucro": 0.6,
-    "precoSugerido": 270.03,
-    "dataCriacao": "2026-05-25T16:42:10.418Z",
+    "custoProducao": 10.77,
+    "custoUnitario": 0.3848,
+    "margemLucro": 0.1765,
+    "precoSugerido": 0.46,
+    "usoPorLote": 0.2,
+    "embalagemPorUnidade": 0,
+    "perdaPercentual": 0.05,
+    "dataCriacao": "2026-05-27T18:00:40.839Z",
     "itens": [
-      { "insumoId": 50, "quantidade": 1, "custoCalculado": 3 },
-      { "insumoId": 57, "quantidade": 0.02, "custoCalculado": 0.05 },
-      { "insumoId": 55, "quantidade": 15, "custoCalculado": 0.26 }
+      { "insumoId": 256, "quantidade": 1, "custoCalculado": 3.5 },
+      { "insumoId": 263, "quantidade": 0.02, "custoCalculado": 0.05 },
+      { "insumoId": 261, "quantidade": 15, "custoCalculado": 0.26 }
+    ],
+    "custo": {
+      "ingredientesLote": 3.81,
+      "gastosMensaisLote": 5.03,
+      "ingredientes": 0.1359,
+      "gastosMensais": 0.1796,
+      "gastosPorUnidade": 0.05,
+      "embalagem": 0,
+      "perdas": 0.0192,
+      "unitario": 0.3848
+    },
+    "precos": [
+      {
+        "canalId": 143,
+        "canal": "Balcão",
+        "balcao": true,
+        "percentuais": 0.1636,
+        "preco": 0.46,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.1359, "fracao": 0.2954 },
+          "gastosMensais": { "valor": 0.1796, "fracao": 0.3905 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.1087 },
+          "embalagem": { "valor": 0, "fracao": 0 },
+          "perdas": { "valor": 0.0192, "fracao": 0.0418 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.0063, "fracao": 0.0136 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.069, "fracao": 0.15 }
+        }
+      },
+      {
+        "canalId": 144,
+        "canal": "iFood",
+        "balcao": false,
+        "percentuais": 0.302,
+        "preco": 0.5513,
+        "motivo": null,
+        "composicao": {
+          "ingredientes": { "valor": 0.1359, "fracao": 0.2465 },
+          "gastosMensais": { "valor": 0.1796, "fracao": 0.3259 },
+          "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0907 },
+          "embalagem": { "valor": 0, "fracao": 0 },
+          "perdas": { "valor": 0.0192, "fracao": 0.0349 },
+          "imposto": { "valor": 0, "fracao": 0 },
+          "taxaCanal": { "valor": 0.0838, "fracao": 0.152 },
+          "gastosPercentuais": { "valor": 0, "fracao": 0 },
+          "lucro": { "valor": 0.0827, "fracao": 0.15 }
+        }
+      }
     ]
   }
 ]

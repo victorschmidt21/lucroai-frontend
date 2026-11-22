@@ -15,32 +15,115 @@ export const itemReceitaSchema = z.object({
 
 export type ItemReceita = z.infer<typeof itemReceitaSchema>;
 
+/** `receita.dto.ts` (`CustoReceitaDetalheDto`): de onde vem o custo de 1 unidade (BE-28). */
+export const custoReceitaDetalheSchema = z.object({
+  /** Ingredientes de 1 lote, com 2 casas. */
+  ingredientesLote: z.number(),
+  /** Gastos `MENSAL` de 1 lote, com 2 casas. */
+  gastosMensaisLote: z.number(),
+  /** Por unidade, com 4 casas (como os campos abaixo). */
+  ingredientes: z.number(),
+  gastosMensais: z.number(),
+  gastosPorUnidade: z.number(),
+  embalagem: z.number(),
+  /** O que a perda acrescenta ao custo. */
+  perdas: z.number(),
+  /** Soma das partes acima: o `custoUnitario` da receita. */
+  unitario: z.number(),
+});
+
+export type CustoReceitaDetalhe = z.infer<typeof custoReceitaDetalheSchema>;
+
+/** `ParteDoPrecoDto`: reais por unidade e fração do preço, com 4 casas. */
+export const parteDoPrecoSchema = z.object({
+  valor: z.number(),
+  fracao: z.number(),
+});
+
+export type ParteDoPreco = z.infer<typeof parteDoPrecoSchema>;
+
+/** `ComposicaoPrecoDto`: "para onde vai cada R$ 1" do preço; as partes somam o preço (e 1). */
+export const composicaoPrecoSchema = z.object({
+  ingredientes: parteDoPrecoSchema,
+  gastosMensais: parteDoPrecoSchema,
+  gastosPorUnidade: parteDoPrecoSchema,
+  embalagem: parteDoPrecoSchema,
+  perdas: parteDoPrecoSchema,
+  imposto: parteDoPrecoSchema,
+  taxaCanal: parteDoPrecoSchema,
+  gastosPercentuais: parteDoPrecoSchema,
+  lucro: parteDoPrecoSchema,
+});
+
+export type ComposicaoPreco = z.infer<typeof composicaoPrecoSchema>;
+
+/** `PrecoCanalDto`: preço sugerido da receita num canal ativo (BE-28). */
+export const precoCanalSchema = z.object({
+  canalId: z.number().int(),
+  canal: z.string(),
+  balcao: z.boolean(),
+  /** `imposto + taxa do canal + gastos % da venda + lucro`, fração com 4 casas. */
+  percentuais: z.number(),
+  /** Com 4 casas; `null` com percentuais ≥ 100%. */
+  preco: z.number().nullable(),
+  /** Por que não há preço; `null` quando há. */
+  motivo: z.enum(['PERCENTUAIS_ACIMA_DE_100']).nullable(),
+  composicao: composicaoPrecoSchema.nullable(),
+});
+
+export type PrecoCanal = z.infer<typeof precoCanalSchema>;
+
 export const receitaSchema = z.object({
   id: z.number().int(),
   empresaId: z.number().int(),
   nome: z.string(),
+  /** Unidades **boas** (vendáveis) por lote. */
   rendimento: z.number().int(),
   unidadeRendimento: unidadeMedidaSchema,
-  /** Fornadas (ou minutos de forno) de 1 lote (BE-27). Opcional até a FE-44 trazer o campo ao formulário; a prévia da produção usa 1 sem ele. */
-  usoPorLote: z.number().optional(),
+  /** Fornadas (ou minutos de forno, conforme a `baseRateio`) de 1 lote (BE-27). */
+  usoPorLote: z.number(),
+  /** Reais por unidade (BE-27). */
+  embalagemPorUnidade: z.number(),
+  /** Fração das unidades que não são vendidas (BE-27). */
+  perdaPercentual: z.number(),
+  /** Fração do **preço**; omitido quando a receita usa o lucro padrão da empresa. */
+  lucroPercentual: z.number().optional(),
+  /** `custoUnitario × rendimento` (1 lote), calculado na leitura. */
   custoProducao: z.number().optional(),
+  /** Custo de 1 unidade (com embalagem e perda), calculado na leitura. */
   custoUnitario: z.number().optional(),
-  /** Fração (`0.6` = 60%). */
+  /**
+   * Legado (markup equivalente ao lucro, `lucro ÷ (1 − lucro)`): só a
+   * simulação ainda usa; sai quando ela usar os `precos` (FE-45).
+   */
   margemLucro: z.number().optional(),
+  /** Preço do Balcão; omitido sem preço possível. */
   precoSugerido: z.number().optional(),
   dataCriacao: z.iso.datetime(),
   itens: z.array(itemReceitaSchema),
+  custo: custoReceitaDetalheSchema,
+  /** Um por canal ativo, em ordem de criação do canal (Balcão primeiro). */
+  precos: z.array(precoCanalSchema),
 });
 
 export type Receita = z.infer<typeof receitaSchema>;
 
-/** `create-receita.dto.ts`: o corpo é snake_case, menos `unidadeRendimento`. */
+/**
+ * `create-receita.dto.ts`: o corpo é snake_case, menos `unidadeRendimento`.
+ * O `margem_lucro` legado não é enviado: a web usa o `lucro_percentual`.
+ */
 export type CreateReceitaBody = {
   nome: string;
   rendimento: number;
   unidadeRendimento: Receita['unidadeRendimento'];
-  /** Fração (`0.6` = 60%). */
-  margem_lucro?: number;
+  /** > 0; padrão 1. */
+  uso_por_lote?: number;
+  /** ≥ 0; padrão 0. */
+  embalagem_por_unidade?: number;
+  /** Fração de 0 até menos de 1; padrão 0. */
+  perda_percentual?: number;
+  /** Fração do preço de 0 até menos de 1; `null` usa o lucro padrão da empresa. */
+  lucro_percentual?: number | null;
   insumos: { insumo_id: number; quantidade: number }[];
 };
 

@@ -25,6 +25,7 @@ import {
 } from '@/test/factories/pricing.factory';
 import {
   makePrecoVenda,
+  makePrecoCanal,
   makeReceita,
   makeReceitaCusto,
   makeReceitasDoSeed,
@@ -148,6 +149,13 @@ const CASOS: Caso[] = [
     fixture: receita,
     factory: makeReceita(),
     invalida: { ...makeReceita(), margemLucro: null },
+  },
+  {
+    nome: 'receita sem o detalhamento do custo e os preços (BE-28)',
+    schema: receitaSchema,
+    fixture: receita,
+    factory: makeReceita(),
+    invalida: { ...makeReceita(), custo: undefined, precos: undefined },
   },
   {
     nome: 'custo da receita',
@@ -281,6 +289,37 @@ describe('campos sem valor', () => {
 
     expect(semMargem.margemLucro).toBeUndefined();
     expect(semMargem.precoSugerido).toBeUndefined();
+  });
+
+  it('canal sem preço possível vem com preco, composicao e motivo', () => {
+    const lida = unwrap(
+      {
+        ...makeReceita(),
+        precoSugerido: undefined,
+        precos: [
+          makePrecoCanal({
+            percentuais: 1.05,
+            preco: null,
+            motivo: 'PERCENTUAIS_ACIMA_DE_100',
+            composicao: null,
+          }),
+        ],
+      },
+      receitaSchema,
+    );
+
+    expect(lida.precos[0]?.preco).toBeNull();
+    expect(lida.precos[0]?.motivo).toBe('PERCENTUAIS_ACIMA_DE_100');
+  });
+
+  it('a receita do seed traz um preço por canal ativo e o lucro configurado', () => {
+    const lida = unwrap(receita, receitaSchema);
+
+    expect(lida.precos.map((p) => p.canal)).toEqual(['Balcão', 'iFood']);
+    expect(lida.precos.every((p) => p.composicao?.lucro.fracao === 0.15)).toBe(
+      true,
+    );
+    expect(lida.lucroPercentual).toBeUndefined();
   });
 
   it('movimentação de produção vem com observacao null', () => {

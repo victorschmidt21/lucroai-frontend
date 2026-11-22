@@ -1,9 +1,66 @@
 import type {
+  ComposicaoPreco,
+  CustoReceitaDetalhe,
+  PrecoCanal,
   PrecoVenda,
   Receita,
   ReceitaCusto,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
+
+/**
+ * Custo de 1 unidade do Pão Francês do seed (`GET /receitas/:id`, BE-28):
+ * 0,3848 = ingredientes + contas do mês + gastos por unidade + perdas.
+ */
+export function makeCustoReceitaDetalhe(
+  overrides: Partial<CustoReceitaDetalhe> = {},
+): CustoReceitaDetalhe {
+  return {
+    ingredientesLote: 3.81,
+    gastosMensaisLote: 5.03,
+    ingredientes: 0.1359,
+    gastosMensais: 0.1796,
+    gastosPorUnidade: 0.05,
+    embalagem: 0,
+    perdas: 0.0192,
+    unitario: 0.3848,
+    ...overrides,
+  };
+}
+
+/** Composição do preço do Pão Francês no Balcão (lucro de 15%, maquininha de 1,36%). */
+export function makeComposicaoPreco(
+  overrides: Partial<ComposicaoPreco> = {},
+): ComposicaoPreco {
+  return {
+    ingredientes: { valor: 0.1359, fracao: 0.2954 },
+    gastosMensais: { valor: 0.1796, fracao: 0.3905 },
+    gastosPorUnidade: { valor: 0.05, fracao: 0.1087 },
+    embalagem: { valor: 0, fracao: 0 },
+    perdas: { valor: 0.0192, fracao: 0.0418 },
+    imposto: { valor: 0, fracao: 0 },
+    taxaCanal: { valor: 0.0063, fracao: 0.0136 },
+    gastosPercentuais: { valor: 0, fracao: 0 },
+    lucro: { valor: 0.069, fracao: 0.15 },
+    ...overrides,
+  };
+}
+
+/** Preço do Pão Francês do seed no Balcão. */
+export function makePrecoCanal(
+  overrides: Partial<PrecoCanal> = {},
+): PrecoCanal {
+  return {
+    canalId: 1,
+    canal: 'Balcão',
+    balcao: true,
+    percentuais: 0.1636,
+    preco: 0.46,
+    motivo: null,
+    composicao: makeComposicaoPreco(),
+    ...overrides,
+  };
+}
 
 /** Pão Francês do seed (50 un, margem 60%, custo 3,31, unitário 0,07, preço 0,11). */
 export function makeReceita(overrides: Partial<Receita> = {}): Receita {
@@ -13,6 +70,9 @@ export function makeReceita(overrides: Partial<Receita> = {}): Receita {
     nome: 'Pão Francês',
     rendimento: 50,
     unidadeRendimento: 'UN',
+    usoPorLote: 1,
+    embalagemPorUnidade: 0,
+    perdaPercentual: 0,
     custoProducao: 3.31,
     custoUnitario: 0.07,
     margemLucro: 0.6,
@@ -23,6 +83,8 @@ export function makeReceita(overrides: Partial<Receita> = {}): Receita {
       { insumoId: 8, quantidade: 0.02, custoCalculado: 0.05 },
       { insumoId: 6, quantidade: 15, custoCalculado: 0.26 },
     ],
+    custo: makeCustoReceitaDetalhe(),
+    precos: [makePrecoCanal()],
     ...overrides,
   };
 }

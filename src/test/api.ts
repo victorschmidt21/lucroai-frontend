@@ -11,6 +11,7 @@ import type {
   MovimentacaoEstoque,
   Producao,
 } from '@/shared/api/contracts/operations';
+import type { ConfiguracaoCustos } from '@/shared/api/contracts/pricing';
 import type {
   PrecoVenda,
   Receita,
@@ -58,6 +59,7 @@ export type RotasDaApi = {
   'POST /gastos-indiretos': GastoIndireto;
   'PUT /gastos-indiretos/:id': GastoIndireto;
   'DELETE /gastos-indiretos/:id': undefined;
+  'GET /configuracao-custos': ConfiguracaoCustos;
   'GET /receitas': Receita[];
   'GET /receitas/:id': Receita;
   'POST /receitas': Receita;

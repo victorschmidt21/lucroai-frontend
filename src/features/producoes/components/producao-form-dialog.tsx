@@ -192,7 +192,7 @@ function Previa({
     lotes,
     receita.rendimento,
     capacidadeMensal
-      ? { usoPorLote: receita.usoPorLote ?? 1, capacidadeMensal }
+      ? { usoPorLote: receita.usoPorLote, capacidadeMensal }
       : undefined,
   );
 
