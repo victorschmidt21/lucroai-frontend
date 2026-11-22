@@ -97,7 +97,7 @@ A margem de lucro é digitada em percentual e trafega como fração: `60` → `0
 
 ## Enumerações e rótulos
 
-Valores do contrato (`shared/src/domain/enums/` no backend) e os rótulos de tela. Ficam em `src/shared/api/contracts/enums.ts` (FE-05), como `UNIDADE_MEDIDA_ROTULOS`, `METODO_RATEIO_ROTULOS`, `METODO_RATEIO_DESCRICOES`, `STATUS_VENDA_ROTULOS`, `TIPO_MOVIMENTACAO_ROTULOS` e `ORIGEM_MOVIMENTACAO_ROTULOS`. Nunca mostre o valor cru do enum.
+Valores do contrato (`shared/src/domain/enums/` no backend) e os rótulos de tela. Ficam em `src/shared/api/contracts/enums.ts` (FE-05), como `UNIDADE_MEDIDA_ROTULOS`, `TIPO_GASTO_ROTULOS`, `TIPO_GASTO_DESCRICOES`, `STATUS_VENDA_ROTULOS`, `TIPO_MOVIMENTACAO_ROTULOS` e `ORIGEM_MOVIMENTACAO_ROTULOS`. Nunca mostre o valor cru do enum.
 
 ### `UnidadeMedida`
 
@@ -109,15 +109,15 @@ Valores do contrato (`shared/src/domain/enums/` no backend) e os rótulos de tel
 | `L`   | `L`    | o mobile usa `l`; a web usa `L`, como pede a FE-05                         |
 | `UN`  | `un`   |                                                                            |
 
-### `MetodoRateio`
+### `TipoGasto`
 
-| Valor          | Rótulo (Badge e Select)           | Descrição (texto de apoio no Select)                                 | Fórmula do rateio              |
-| -------------- | --------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
-| `PROPORCIONAL` | Proporcional à qtd. de lotes      | Gastos que crescem com o volume, como energia e gás.                 | `valor × lotes`                |
-| `POR_UNIDADE`  | Proporcional ao total de unidades | Gastos por peça, como embalagem individual.                          | `valor × (lotes × rendimento)` |
-| `FIXO`         | Valor fixo por produção           | Valor integral, independente do volume, como aluguel e mensalidades. | `valor`                        |
+FE-42. Substitui o antigo `MetodoRateio` (`PROPORCIONAL`, `POR_UNIDADE`, `FIXO`), que saiu dos contratos e da tela. Backend: `TipoGasto` (BE-26), `gastos-indiretos/domain/gastos-indiretos.calculos.ts` do monolito.
 
-Rótulos: `lib/features/gastos_indiretos/domain/entities/gasto_indireto.dart` (`MetodoRateio.label`). Descrições e fórmulas: `services/catalog-service/src/modules/gastos-indiretos/OVERVIEW.md` e `producao.service.ts` (`calcularValorRateado`).
+| Valor              | Rótulo (Badge e Select) | Descrição (texto de apoio no Select)                                      | Unidade do `valor` na API          | Campo do valor no formulário |
+| ------------------ | ----------------------- | ------------------------------------------------------------------------- | ---------------------------------- | ---------------------------- |
+| `MENSAL`           | Conta do mês            | Dividida pelas fornadas do mês. Ex.: aluguel, luz, gás, água, DAS do MEI. | reais por mês                      | "Valor por mês" (R$)         |
+| `POR_UNIDADE`      | Por unidade vendida     | Valor de cada unidade. Ex.: saquinho, etiqueta.                           | reais por unidade vendida          | "Valor por unidade" (R$)     |
+| `PERCENTUAL_VENDA` | % da venda              | Percentual de cada venda. Ex.: comissão de revendedora.                   | fração do preço, de 0 a menos de 1 | "Percentual da venda" (%)    |
 
 ### `StatusVenda`
 
@@ -193,30 +193,39 @@ FE-10. Origem: `lib/features/gastos_indiretos/presentation/pages/gastos_indireto
 ### Total
 
 ```text
-totalGastos = Σ gasto.valor
+totalContasDoMes = Σ gasto.valor, só dos gastos MENSAL
 ```
 
-`GastosIndiretosState.totalGastos`. O cartão mostra também a contagem: "1 item" ou "N itens".
+`calcularTotalContasDoMes` (FE-42). Os outros tipos têm outra unidade (reais por unidade, percentual da venda) e ficam fora da soma. O cartão "Contas do mês" mostra também a contagem: "1 conta" ou "N contas".
+
+### Valor na lista
+
+`formatValorDoGasto` (FE-42): `R$ 1.800,00 por mês`, `R$ 0,05 por unidade` ou `12% da venda` (a API guarda `0.12`; até 3 casas, sem zeros à direita).
+
+### Percentual da venda
+
+O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `percentualParaFracao`); na edição, a fração volta como `12`. Ao trocar o tipo, o rótulo e a máscara do campo do valor mudam (R$ ou %), e o valor digitado fica como está.
 
 ### Validações
 
-| Campo (contrato) | Regra                           | Mensagem                                         | Origem                                                       |
-| ---------------- | ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ |
-| `descricao`      | obrigatória, até 100 caracteres | "Informe a descrição" / "Use até 100 caracteres" | mobile; backend `@MaxLength(100)`                            |
-| `valor`          | número > 0                      | "Informe um valor válido"                        | FE-10; mobile e backend aceitam 0                            |
-| `metodo_rateio`  | um dos três métodos             | —                                                | Select com rótulo e descrição, padrão `FIXO` (como o mobile) |
+| Campo (contrato)             | Regra                           | Mensagem                                            | Origem                                                 |
+| ---------------------------- | ------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| `descricao`                  | obrigatória, até 100 caracteres | "Informe a descrição" / "Use até 100 caracteres"    | mobile; backend `@MaxLength(100)`                      |
+| `tipo`                       | um dos três tipos               | —                                                   | Select com rótulo e descrição, padrão `MENSAL` (FE-42) |
+| `valor`                      | número > 0                      | "Informe um valor válido"                           | FE-10; mobile e backend aceitam 0                      |
+| `valor` (`PERCENTUAL_VENDA`) | menor que 100%                  | "Informe um percentual maior que 0 e menor que 100" | backend: fração menor que 1 (`validarGasto`)           |
 
 ### Textos
 
 | Onde                 | Mobile                                                                                                                      | Web                                                                                                                         |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | igual                                                                                                                       |
+| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Gastos Indiretos" / "Contas e custos que entram no preço das receitas" (FE-42, sem "rateio")                               |
 | Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                       |
-| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Total de gastos", "1 item" / "N itens"                                                                                     |
+| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Contas do mês", "1 conta" / "N contas" (FE-42)                                                                             |
 | Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                  |
 | Título do formulário | "Novo gasto indireto" / "Editar gasto"                                                                                      | igual                                                                                                                       |
-| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | igual                                                                                                                       |
-| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Valor (R$)", "Método de rateio"                                                                               |
+| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | "Este gasto entra no custo de todas as receitas." (FE-42)                                                                   |
+| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Tipo" e o valor conforme o tipo ([`TipoGasto`](#tipogasto)); colunas "Descrição", "Tipo", "Valor"             |
 | Confirmação          | "Excluir gasto" / `Deseja excluir "<descrição>"?\nIsso afetara o custo de todas as receitas.`                               | "Excluir gasto" / `Deseja excluir "<descrição>"? Isso afetará o custo de todas as receitas.`                                |
 | Toasts               | — (o mobile só mostra erros)                                                                                                | "Gasto criado com sucesso.", "Gasto atualizado com sucesso.", "Gasto excluído com sucesso."                                 |
 | Vazio                | "Nenhum gasto cadastrado" / "Adicione agua, energia, gas, aluguel e outros custos para calcular o custo real das receitas." | "Nenhum gasto cadastrado" / "Adicione água, energia, gás, aluguel e outros custos para calcular o custo real das receitas." |
@@ -377,13 +386,11 @@ FE-15. Origem: `lib/features/producoes/presentation/pages/producoes_page.dart`, 
 
 ```text
 totalUnidades = lotes × receita.rendimento
-valorRateado  = round2(PROPORCIONAL: valor × lotes | POR_UNIDADE: valor × totalUnidades | FIXO: valor)
-custoTotal    = round2(receita.custoProducao × lotes + Σ valorRateado)
-custoUnitario = totalUnidades > 0 ? round2(custoTotal / totalUnidades) : 0
+valorRateado  = round2(valor × usoPorLote × lotes ÷ capacidadeMensal), só dos gastos MENSAL
 ```
 
-- `receita.custoProducao` é o valor **gravado** na receita (snapshot), não um recálculo com os preços atuais.
-- Exemplo (OVERVIEW do catalog): 1 lote de 50 pãezinhos → energia R$ 450 PROPORCIONAL = R$ 450; aluguel R$ 1.800 FIXO = R$ 1.800; embalagem R$ 120 POR_UNIDADE = R$ 6.000.
+- Desde a FE-42 (BE-26 e BE-30 do monolito), só a conta do mês (`MENSAL`) entra na produção, dividida pela capacidade do mês (`capacidadeMensal` da configuração de custos) conforme o uso de forno do lote (`usoPorLote` da receita; 1 se ausente). Os gastos por unidade e os percentuais da venda ficam no custo da receita e da venda. Os chips do formulário mostram só as contas do mês; sem a configuração de custos, a prévia mostra só o total de unidades.
+- Exemplo do seed (capacidade de 100 fornadas): 2 lotes de uma receita com `usoPorLote` 1 → energia R$ 450 = R$ 9,00; aluguel R$ 1.800 = R$ 36,00.
 - A prévia do formulário é informativa: mostra o total de unidades e o rateio estimado por gasto. O valor gravado é o devolvido pelo backend.
 
 ### Seleção de gastos
@@ -405,7 +412,7 @@ Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _
 | Formulário         | "Registrar Produção" / "Informe quantos lotes foram produzidos"                          | igual                                                                         |
 | Receita            | "Receita", obrigatória: "Selecione uma receita"                                          | igual                                                                         |
 | Lotes              | "Quantidade de lotes", inteiro > 0: "Informe a quantidade de lotes"                      | igual                                                                         |
-| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | chip "Todos" e um chip por gasto (FE-15)                                      |
+| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | "Contas do mês": chip "Todos" e um chip por conta do mês (FE-15, FE-42)       |
 | Botão              | "Registrar Produção"                                                                     | igual                                                                         |
 | Sucesso            | "Produção registrada com sucesso"                                                        | "Produção registrada com sucesso."                                            |
 | Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma produção registrada" / "Registre sua primeira produção", com o botão |

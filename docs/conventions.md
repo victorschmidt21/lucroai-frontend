@@ -7,7 +7,7 @@
 | Termos de domínio (funcionalidades, campos, ações de negócio)              | português, **sem acento e sem cedilha** | `Insumo`, `GastoIndireto`, `custoUnitario`, `useRegistrarEntrada`, `features/gastos-indiretos` |
 | Termos técnicos (sufixos, verbos CRUD, infraestrutura)                     | inglês                                  | `InsumoForm`, `useCreateInsumo`, `listInsumos`, `queryKey`                                     |
 | Textos de tela, mensagens de erro, comentários, documentação, commits, PRs | português, **com acentuação correta**   | `'Não foi possível carregar os insumos.'`                                                      |
-| Nomes vindos da API (campos, enums, rotas)                                 | exatamente como no contrato             | `quantidadeBaseCusto`, `margem_lucro`, `metodo_rateio`, `CONCLUIDA`                            |
+| Nomes vindos da API (campos, enums, rotas)                                 | exatamente como no contrato             | `quantidadeBaseCusto`, `margem_lucro`, `PERCENTUAL_VENDA`, `CONCLUIDA`                         |
 
 Todo texto exibido ao usuário fica em português do Brasil, com datas, moeda e números no formato brasileiro. O mobile escreve muitos textos sem acento ("Descricao", "Calculo Real", "Nao foi possivel"): na web, use o texto de [business-rules.md](business-rules.md), já corrigido. Nunca copie um texto do mobile sem conferir a acentuação.
 
@@ -16,7 +16,7 @@ Todo texto exibido ao usuário fica em português do Brasil, com datas, moeda e 
 O contrato do backend mistura convenções, e o front usa os nomes **como estão**, sem converter (ver a [tabela de rotas](api-integration.md#rotas-usadas-pela-web)):
 
 - **Respostas** em `camelCase`: `custoUnitario`, `precoSugerido`, `quantidadeDisponivel`, `metodoRateio`. Exceções: `ReceitaCusto` e `PrecoVenda` vêm em `snake_case` (`custo_por_unidade`, `preco_sugerido`).
-- **Corpos** de receitas, gastos, produções e vendas em `snake_case`: `margem_lucro`, `metodo_rateio`, `insumo_id`, `receita_id`, `gasto_indireto_ids`, `preco_unitario_real`.
+- **Corpos** de receitas, gastos, produções e vendas em `snake_case`: `margem_lucro`, `insumo_id`, `receita_id`, `gasto_indireto_ids`, `preco_unitario_real`.
 - **Corpos** de insumos e de simulação em `camelCase`: `quantidadeBaseCusto`, `valorPago`, `quantidadeDisponivelInicial`, `novoCusto`, `quantidadeLotes`.
 
 Por isso, o schema do formulário usa os nomes do formulário, e uma função `to<Acao><Entidade>Body(values)` monta o corpo com os nomes do contrato (ex.: `toCreateReceitaBody` transforma `margem` em `margem_lucro` e divide por 100).
