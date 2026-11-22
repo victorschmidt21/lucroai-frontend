@@ -54,3 +54,28 @@ export type ListVendasQuery = {
   dataInicio?: string;
   dataFim?: string;
 };
+
+/**
+ * `resumo-vendas.dto.ts` (`GET /vendas/resumo`, BE-31): o ponto de equilíbrio
+ * da empresa, com o mix das vendas `CONCLUIDA` dos últimos 30 dias.
+ */
+export const resumoVendasSchema = z.object({
+  dias: z.number().int(),
+  dataInicio: z.iso.datetime(),
+  vendas: z.number().int(),
+  /** Com 2 casas. */
+  receita: z.number(),
+  /** Com 2 casas. */
+  margemContribuicao: z.number(),
+  /** Fração com 4 casas; `null` sem vendas. */
+  indiceMargemContribuicao: z.number().nullable(),
+  /** Soma dos gastos `MENSAL`, com 2 casas. */
+  gastosMensais: z.number(),
+  pontoEquilibrio: z.object({
+    /** Faturamento por mês para pagar os gastos mensais, com 2 casas. */
+    valor: z.number().nullable(),
+    motivo: z.enum(['SEM_VENDAS', 'MARGEM_NEGATIVA']).nullable(),
+  }),
+});
+
+export type ResumoVendas = z.infer<typeof resumoVendasSchema>;

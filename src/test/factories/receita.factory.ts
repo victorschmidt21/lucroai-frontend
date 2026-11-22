@@ -2,7 +2,6 @@ import type {
   ComposicaoPreco,
   CustoReceitaDetalhe,
   PrecoCanal,
-  PrecoVenda,
   Receita,
   ReceitaCusto,
   SimulacaoCenario,
@@ -62,7 +61,7 @@ export function makePrecoCanal(
   };
 }
 
-/** Pão Francês do seed (50 un, margem 60%, custo 3,31, unitário 0,07, preço 0,11). */
+/** Pão Francês do seed (50 un, custo 3,31, unitário 0,07, preço 0,11). */
 export function makeReceita(overrides: Partial<Receita> = {}): Receita {
   return {
     id: 1,
@@ -75,7 +74,6 @@ export function makeReceita(overrides: Partial<Receita> = {}): Receita {
     perdaPercentual: 0,
     custoProducao: 3.31,
     custoUnitario: 0.07,
-    margemLucro: 0.6,
     precoSugerido: 0.11,
     dataCriacao: '2026-06-01T10:00:00.000Z',
     itens: [
@@ -98,7 +96,6 @@ export function makeReceitasDoSeed(): Receita[] {
       rendimento: 12,
       custoProducao: 10.8,
       custoUnitario: 0.9,
-      margemLucro: 0.55,
       precoSugerido: 1.4,
       dataCriacao: '2026-06-01T10:03:00.000Z',
       itens: [
@@ -113,7 +110,6 @@ export function makeReceitasDoSeed(): Receita[] {
       rendimento: 40,
       custoProducao: 15.48,
       custoUnitario: 0.39,
-      margemLucro: 0.6,
       precoSugerido: 0.62,
       dataCriacao: '2026-06-01T10:02:00.000Z',
       itens: [
@@ -129,7 +125,6 @@ export function makeReceitasDoSeed(): Receita[] {
       rendimento: 12,
       custoProducao: 9.7,
       custoUnitario: 0.81,
-      margemLucro: 0.5,
       precoSugerido: 1.22,
       dataCriacao: '2026-06-01T10:01:00.000Z',
       itens: [
@@ -159,27 +154,24 @@ export function makeReceitaCusto(
   };
 }
 
+/** Pão Francês do seed simulado no Balcão pelo preço sugerido (BE-31). */
 export function makeSimulacaoCenario(
   overrides: Partial<SimulacaoCenario> = {},
 ): SimulacaoCenario {
   return {
-    custoUnitario: 0.07,
-    precoVenda: 0.11,
-    volume: 50,
-    lucroEstimado: 2,
-    margemProjetada: 0.36,
-    breakEven: 0,
-    ...overrides,
-  };
-}
-
-export function makePrecoVenda(
-  overrides: Partial<PrecoVenda> = {},
-): PrecoVenda {
-  return {
-    custo_total_unitario: 0.07,
-    preco_sugerido: 0.112,
-    lucro_por_unidade: 0.042,
+    canalId: 1,
+    canal: 'Balcão',
+    custoUnitario: 0.3848,
+    custoSemGastosMensais: 0.1957,
+    percentuaisSemLucro: 0.0136,
+    precoVenda: 0.46,
+    volume: 28,
+    margemContribuicao: 0.2581,
+    lucroPorUnidade: 0.069,
+    lucroReal: 0.15,
+    lucroMes: 1.93,
+    gastosMensais: 2515,
+    pontoEquilibrio: { unidades: 9745, motivo: null },
     ...overrides,
   };
 }

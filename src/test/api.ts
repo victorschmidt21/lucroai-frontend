@@ -13,12 +13,11 @@ import type {
 } from '@/shared/api/contracts/operations';
 import type { ConfiguracaoCustos } from '@/shared/api/contracts/pricing';
 import type {
-  PrecoVenda,
   Receita,
   ReceitaCusto,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
-import type { Venda } from '@/shared/api/contracts/sales';
+import type { ResumoVendas, Venda } from '@/shared/api/contracts/sales';
 
 /** URL do proxy BFF, sem depender da origem: `*\/api/backend/insumos`. */
 export function apiUrl(caminho: string) {
@@ -68,7 +67,6 @@ export type RotasDaApi = {
   'GET /receitas/:id/custo': ReceitaCusto;
   'POST /receitas/:id/custo/simular': ReceitaCusto;
   'POST /receitas/:id/simular': SimulacaoCenario;
-  'POST /receitas/:id/preco-venda': PrecoVenda;
   'GET /estoque/insumos': Estoque[];
   'POST /estoque/insumos/:id/entrada': Estoque;
   'PATCH /estoque/insumos/:id/minimo': Estoque;
@@ -78,6 +76,7 @@ export type RotasDaApi = {
   'GET /producoes/:id': Producao;
   'POST /producoes': Producao;
   'GET /vendas': Venda[];
+  'GET /vendas/resumo': ResumoVendas;
   'GET /vendas/:id': Venda;
   'POST /vendas': Venda;
   'PATCH /vendas/:id/status': Venda;

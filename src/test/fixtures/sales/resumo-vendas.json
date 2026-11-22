@@ -1,0 +1,13 @@
+{
+  "dias": 30,
+  "dataInicio": "2026-10-23T19:41:17.361Z",
+  "vendas": 2,
+  "receita": 22.66,
+  "margemContribuicao": 12.6,
+  "indiceMargemContribuicao": 0.5559,
+  "gastosMensais": 2515,
+  "pontoEquilibrio": {
+    "valor": 4524.36,
+    "motivo": null
+  }
+}

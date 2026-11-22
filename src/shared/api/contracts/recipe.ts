@@ -92,11 +92,6 @@ export const receitaSchema = z.object({
   custoProducao: z.number().optional(),
   /** Custo de 1 unidade (com embalagem e perda), calculado na leitura. */
   custoUnitario: z.number().optional(),
-  /**
-   * Legado (markup equivalente ao lucro, `lucro ÷ (1 − lucro)`): só a
-   * simulação ainda usa; sai quando ela usar os `precos` (FE-45).
-   */
-  margemLucro: z.number().optional(),
   /** Preço do Balcão; omitido sem preço possível. */
   precoSugerido: z.number().optional(),
   dataCriacao: z.iso.datetime(),
@@ -149,37 +144,57 @@ export type SimularReceitaCustoBody = {
   quantidadeLotes: number;
 };
 
-/** `simulacao-cenario-resultado.dto.ts` */
+/** `simular-cenario.dto.ts` (`PontoEquilibrioProdutoDto`, BE-31). */
+export const pontoEquilibrioProdutoSchema = z.object({
+  /** Unidades por mês para pagar os gastos mensais; `null` com o motivo. */
+  unidades: z.number().int().nullable(),
+  /** `MARGEM_NEGATIVA`: nenhuma quantidade paga os gastos do mês. */
+  motivo: z.enum(['MARGEM_NEGATIVA']).nullable(),
+});
+
+export type PontoEquilibrioProduto = z.infer<
+  typeof pontoEquilibrioProdutoSchema
+>;
+
+/**
+ * `simular-cenario.dto.ts` (`SimulacaoCenarioDto`, BE-31). Os legados
+ * `lucroEstimado`, `margemProjetada` e `breakEven` não são lidos (FE-45).
+ */
 export const simulacaoCenarioSchema = z.object({
+  canalId: z.number().int(),
+  canal: z.string(),
+  /** Com 4 casas. */
   custoUnitario: z.number(),
+  /** O custo sem os gastos mensais, com 4 casas. */
+  custoSemGastosMensais: z.number(),
+  /** Imposto, taxa do canal e gastos `PERCENTUAL_VENDA`, fração com 4 casas. */
+  percentuaisSemLucro: z.number(),
+  /** Com 4 casas. */
   precoVenda: z.number(),
-  volume: z.number(),
-  lucroEstimado: z.number(),
-  /** Fração com 2 casas (pode ser negativa). */
-  margemProjetada: z.number(),
-  breakEven: z.number(),
+  /** Unidades no mês. */
+  volume: z.number().int(),
+  /** Margem de contribuição por unidade, com 4 casas. */
+  margemContribuicao: z.number(),
+  /** Com 4 casas; negativo quando o preço não cobre o custo e as taxas. */
+  lucroPorUnidade: z.number(),
+  /** `lucroPorUnidade ÷ preço`, fração com 4 casas (pode ser negativa). */
+  lucroReal: z.number(),
+  /** `lucroPorUnidade × volume`, com 2 casas. */
+  lucroMes: z.number(),
+  /** Soma dos gastos `MENSAL` da empresa, com 2 casas. */
+  gastosMensais: z.number(),
+  pontoEquilibrio: pontoEquilibrioProdutoSchema,
 });
 
 export type SimulacaoCenario = z.infer<typeof simulacaoCenarioSchema>;
 
-/** `simular-cenario.dto.ts` */
+/** `simular-cenario.dto.ts`: campo omitido usa o valor calculado na leitura. */
 export type SimularCenarioBody = {
   novoCusto?: number;
+  /** Preço praticado; omitido usa o preço sugerido no canal. */
   novoPreco?: number;
+  /** Unidades vendidas no mês; omitido usa o rendimento. */
   volume?: number;
-};
-
-/** `preco-venda.dto.ts` (`PrecoVendaResponseDto`): sem arredondamento. */
-export const precoVendaSchema = z.object({
-  custo_total_unitario: z.number(),
-  preco_sugerido: z.number(),
-  lucro_por_unidade: z.number(),
-});
-
-export type PrecoVenda = z.infer<typeof precoVendaSchema>;
-
-/** `preco-venda.dto.ts` (`PrecoVendaDto`) */
-export type PrecoVendaBody = {
-  /** Fração (`0.6` = 60%). */
-  margem_lucro: number;
+  /** Omitido usa o Balcão. */
+  canalId?: number;
 };

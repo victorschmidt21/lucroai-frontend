@@ -193,7 +193,6 @@ function criarReceita(body) {
       : { lucroPercentual: body.lucro_percentual }),
     custoProducao: round2(custoLote),
     custoUnitario,
-    margemLucro: round4(lucro / (1 - lucro)),
     precoSugerido: preco,
     dataCriacao: agora(),
     itens,
@@ -443,6 +442,21 @@ const routes = {
   'POST /producoes': autenticada((_req, _url, body) => criarProducao(body)),
   // Vendas.
   'GET /vendas': autenticada((_req, url) => listarVendas(url)),
+  // Ponto de equilíbrio da empresa (FE-45): sem gastos mensais nem mix
+  // calculado, a API falsa responde como se não houvesse vendas.
+  'GET /vendas/resumo': autenticada(() => [
+    200,
+    {
+      dias: 30,
+      dataInicio: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      vendas: 0,
+      receita: 0,
+      margemContribuicao: 0,
+      indiceMargemContribuicao: null,
+      gastosMensais: 0,
+      pontoEquilibrio: { valor: null, motivo: 'SEM_VENDAS' },
+    },
+  ]),
   'GET /vendas/:id': autenticada((_req, _url, _body, id) =>
     buscar('vendas', id, 'VENDA_NAO_ENCONTRADA', 'Venda não encontrada'),
   ),

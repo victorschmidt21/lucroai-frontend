@@ -24,14 +24,13 @@ import {
   makeConfiguracaoCustos,
 } from '@/test/factories/pricing.factory';
 import {
-  makePrecoVenda,
   makePrecoCanal,
   makeReceita,
   makeReceitaCusto,
   makeReceitasDoSeed,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
-import { makeVenda } from '@/test/factories/venda.factory';
+import { makeResumoVendas, makeVenda } from '@/test/factories/venda.factory';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
 import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
@@ -46,12 +45,12 @@ import producao from '@/test/fixtures/operations/producao.json';
 import producoes from '@/test/fixtures/operations/producoes.json';
 import canais from '@/test/fixtures/pricing/canais.json';
 import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
-import precoVenda from '@/test/fixtures/recipe/preco-venda.json';
 import receitaCustoSimulada from '@/test/fixtures/recipe/receita-custo-simulada.json';
 import receitaCusto from '@/test/fixtures/recipe/receita-custo.json';
 import receita from '@/test/fixtures/recipe/receita.json';
 import receitas from '@/test/fixtures/recipe/receitas.json';
 import simulacaoCenario from '@/test/fixtures/recipe/simulacao-cenario.json';
+import resumoVendas from '@/test/fixtures/sales/resumo-vendas.json';
 import venda from '@/test/fixtures/sales/venda.json';
 import vendas from '@/test/fixtures/sales/vendas.json';
 import { unwrap } from '../request';
@@ -69,12 +68,11 @@ import {
 } from './operations';
 import { canalVendaSchema, configuracaoCustosSchema } from './pricing';
 import {
-  precoVendaSchema,
   receitaCustoSchema,
   receitaSchema,
   simulacaoCenarioSchema,
 } from './recipe';
-import { vendaSchema } from './sales';
+import { resumoVendasSchema, vendaSchema } from './sales';
 
 type Caso = {
   nome: string;
@@ -148,7 +146,7 @@ const CASOS: Caso[] = [
     schema: receitaSchema,
     fixture: receita,
     factory: makeReceita(),
-    invalida: { ...makeReceita(), margemLucro: null },
+    invalida: { ...makeReceita(), precoSugerido: null },
   },
   {
     nome: 'receita sem o detalhamento do custo e os preços (BE-28)',
@@ -176,14 +174,21 @@ const CASOS: Caso[] = [
     schema: simulacaoCenarioSchema,
     fixture: simulacaoCenario,
     factory: makeSimulacaoCenario(),
-    invalida: { ...makeSimulacaoCenario(), breakEven: undefined },
+    invalida: { ...makeSimulacaoCenario(), pontoEquilibrio: undefined },
   },
   {
-    nome: 'preço de venda',
-    schema: precoVendaSchema,
-    fixture: precoVenda,
-    factory: makePrecoVenda(),
-    invalida: { precoSugerido: 0.11 },
+    nome: 'simulação sem ponto de equilíbrio (margem negativa)',
+    schema: simulacaoCenarioSchema,
+    fixture: simulacaoCenario,
+    factory: makeSimulacaoCenario({
+      lucroPorUnidade: -0.2,
+      lucroReal: -2,
+      pontoEquilibrio: { unidades: null, motivo: 'MARGEM_NEGATIVA' },
+    }),
+    invalida: {
+      ...makeSimulacaoCenario(),
+      pontoEquilibrio: { unidades: null, motivo: 'SEM_VENDAS' },
+    },
   },
   {
     nome: 'estoque',
@@ -241,6 +246,22 @@ const CASOS: Caso[] = [
     invalida: [{ ...makeVenda(), status: 'concluida' }],
   },
   {
+    nome: 'resumo de vendas (ponto de equilíbrio da empresa)',
+    schema: resumoVendasSchema,
+    fixture: resumoVendas,
+    factory: makeResumoVendas({
+      vendas: 0,
+      receita: 0,
+      margemContribuicao: 0,
+      indiceMargemContribuicao: null,
+      pontoEquilibrio: { valor: null, motivo: 'SEM_VENDAS' },
+    }),
+    invalida: {
+      ...makeResumoVendas(),
+      pontoEquilibrio: { valor: null, motivo: 'SEM_GASTOS' },
+    },
+  },
+  {
     nome: 'venda',
     schema: vendaSchema,
     fixture: venda,
@@ -281,14 +302,13 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
-  it('receita sem margem omite margem e preço sugerido', () => {
-    const semMargem = unwrap(
-      { ...makeReceita(), margemLucro: undefined, precoSugerido: undefined },
+  it('receita sem preço possível omite o preço sugerido', () => {
+    const semPreco = unwrap(
+      { ...makeReceita(), precoSugerido: undefined },
       receitaSchema,
     );
 
-    expect(semMargem.margemLucro).toBeUndefined();
-    expect(semMargem.precoSugerido).toBeUndefined();
+    expect(semPreco.precoSugerido).toBeUndefined();
   });
 
   it('canal sem preço possível vem com preco, composicao e motivo', () => {
