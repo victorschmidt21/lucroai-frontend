@@ -15,14 +15,18 @@ export function isBaixoEstoque({
   return quantidadeDisponivel < quantidadeMinima;
 }
 
-/** Disponível sobre o mínimo, em pontos percentuais; mínimo 0 dá 100. */
+/**
+ * Disponível sobre o mínimo, em pontos percentuais; mínimo 0 dá 100, menos com
+ * saldo negativo (FE-47), que dá 0: a barra não aparece cheia no Crítico.
+ */
 export function percentualEstoque({
   quantidadeDisponivel,
   quantidadeMinima,
 }: Saldo) {
-  return quantidadeMinima > 0
-    ? (quantidadeDisponivel / quantidadeMinima) * 100
-    : 100;
+  if (quantidadeMinima > 0) {
+    return (quantidadeDisponivel / quantidadeMinima) * 100;
+  }
+  return quantidadeDisponivel < 0 ? 0 : 100;
 }
 
 /**

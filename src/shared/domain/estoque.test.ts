@@ -34,6 +34,10 @@ describe('percentualEstoque', () => {
     expect(percentualEstoque(saldo(0, 0))).toBe(100);
     expect(percentualEstoque(saldo(13, 0))).toBe(100);
   });
+
+  it('dá 0 com mínimo 0 e saldo negativo (estoque negativo)', () => {
+    expect(percentualEstoque(saldo(-500, 0))).toBe(0);
+  });
 });
 
 describe('statusEstoque', () => {

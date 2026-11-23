@@ -8,6 +8,7 @@ import { formatData } from '@/shared/format/data';
 import { formatCustoUnitario, formatMoeda } from '@/shared/format/moeda';
 import { formatQuantidade } from '@/shared/format/numero';
 import { Button } from '@/shared/ui/button';
+import { cn } from '@/shared/ui/cn';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { Drawer } from '@/shared/ui/drawer';
 import { EmptyState } from '@/shared/ui/empty-state';
@@ -26,6 +27,8 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** O insumo da lista: depois de uma compra, chega atualizado pela invalidação. */
   insumo: Insumo;
+  /** Já abre "Registrar compra" (link do aviso de estoque negativo, FE-47). */
+  abrirCompra?: boolean;
 };
 
 type Acao = 'compra' | 'preco' | 'voltar' | null;
@@ -34,8 +37,13 @@ type Acao = 'compra' | 'preco' | 'voltar' | null;
  * Detalhe do insumo (FE-43): estoque, custo médio, última compra e preço de
  * hoje, com "Registrar compra", "Já sei que o preço mudou" e as compras.
  */
-export function InsumoDetalheDrawer({ open, onOpenChange, insumo }: Props) {
-  const [acao, setAcao] = useState<Acao>(null);
+export function InsumoDetalheDrawer({
+  open,
+  onOpenChange,
+  insumo,
+  abrirCompra = false,
+}: Props) {
+  const [acao, setAcao] = useState<Acao>(abrirCompra ? 'compra' : null);
   const update = useUpdateInsumo();
   const toast = useToast();
   const fecharAcao = (aberto: boolean) => {
@@ -53,6 +61,12 @@ export function InsumoDetalheDrawer({ open, onOpenChange, insumo }: Props) {
         <Numero
           rotulo="Em estoque"
           valor={formatQuantidade(insumo.quantidadeDisponivel, insumo.unidade)}
+          explicacao={
+            insumo.estoqueNegativo
+              ? 'Estoque negativo: registre a compra para acertar o saldo e o custo.'
+              : undefined
+          }
+          negativo={insumo.estoqueNegativo}
         />
         <Numero
           rotulo="Custo médio"
@@ -134,21 +148,24 @@ function Numero({
   valor,
   explicacao,
   destaque = false,
+  negativo = false,
 }: {
   rotulo: string;
   valor: string;
   explicacao?: string;
   destaque?: boolean;
+  /** Saldo abaixo de zero: vermelho, com a explicação em texto (FE-47). */
+  negativo?: boolean;
 }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 gap-y-0.5 rounded-md border border-border bg-surface-alt p-3">
       <dt className="text-small text-ink-muted">{rotulo}</dt>
       <dd
-        className={
-          destaque
-            ? 'font-semibold text-accent tabular-nums'
-            : 'font-semibold tabular-nums'
-        }
+        className={cn(
+          'font-semibold tabular-nums',
+          destaque && 'text-accent',
+          negativo && 'text-danger',
+        )}
       >
         {valor}
       </dd>

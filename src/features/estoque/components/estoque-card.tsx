@@ -13,9 +13,10 @@ import {
 } from '@/shared/domain/estoque';
 import { formatData } from '@/shared/format/data';
 import { formatNumero, formatQuantidade } from '@/shared/format/numero';
-import { StatusEstoqueBadge } from '@/shared/ui/badge';
+import { EstoqueNegativoBadge, StatusEstoqueBadge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Chip } from '@/shared/ui/chip';
+import { cn } from '@/shared/ui/cn';
 import {
   IconAdicionar,
   IconEditar,
@@ -124,7 +125,10 @@ function Saldo({
   return (
     <>
       <div className="flex items-center justify-between gap-2">
-        <StatusEstoqueBadge status={status} />
+        <span className="flex flex-wrap items-center gap-2">
+          <StatusEstoqueBadge status={status} />
+          {estoque.estoqueNegativo ? <EstoqueNegativoBadge /> : null}
+        </span>
         <span className="text-small text-ink-muted tabular-nums">
           {percentual}
         </span>
@@ -138,7 +142,12 @@ function Saldo({
       <dl className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-0.5">
           <dt className="text-small text-ink-muted">Disponível</dt>
-          <dd className="font-semibold tabular-nums">
+          <dd
+            className={cn(
+              'font-semibold tabular-nums',
+              estoque.estoqueNegativo && 'text-danger',
+            )}
+          >
             {formatQuantidade(estoque.quantidadeDisponivel, unidade)}
           </dd>
         </div>

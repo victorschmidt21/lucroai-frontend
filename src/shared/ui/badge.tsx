@@ -75,3 +75,8 @@ export function StatusVendaBadge({ status }: { status: StatusVenda }) {
 export function TipoGastoBadge({ tipo }: { tipo: TipoGasto }) {
   return <Badge>{TIPO_GASTO_ROTULOS[tipo]}</Badge>;
 }
+
+/** Saldo abaixo de zero (`estoqueNegativo`, FE-47): cor e texto, nunca só cor. */
+export function EstoqueNegativoBadge() {
+  return <Badge tone="critico">Estoque negativo</Badge>;
+}
