@@ -213,7 +213,7 @@ function Simulacao({
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="items-center text-center" variant="resumo">
+      <Card className="items-center text-center">
         <h2 className="text-section-label text-ink-muted">PREÇO SIMULADO</h2>
         <p
           aria-live="polite"

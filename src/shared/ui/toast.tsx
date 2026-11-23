@@ -87,7 +87,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               </RadixToast.Description>
               <RadixToast.Close
                 aria-label="Fechar notificação"
-                className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-muted transition-colors duration-150 hover:bg-surface-alt hover:text-ink"
+                className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-muted transition-colors duration-150 hover:bg-surface-alt hover:text-ink"
               >
                 <IconFechar className="size-4" />
               </RadixToast.Close>

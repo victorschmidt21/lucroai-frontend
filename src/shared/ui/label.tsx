@@ -111,11 +111,11 @@ export function FieldLayout({
 
 /**
  * Campo: fundo `surface-alt` (Merengue), borda `border-field` (3:1 não textual,
- * FE-51), cantos de 12px e borda `accent` no foco. Texto de 16px, para o
+ * FE-51), cantos de 14px e borda `accent` no foco. Texto de 16px, para o
  * iOS não ampliar a tela ao focar.
  */
 export const CONTROL_CLASSES =
   'w-full rounded-md border border-border-field bg-surface-alt px-4 py-2 text-field text-ink transition-colors duration-150 placeholder:text-ink-subtle not-disabled:hover:border-ink focus-visible:border-accent focus-visible:outline-offset-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger';
 
-/** 48px no toque e 44px a partir de `lg`, perto dos 46px do mobile. */
-export const CONTROL_HEIGHT_CLASSES = 'min-h-12 lg:min-h-11';
+/** 48px de altura em qualquer tela (área de toque da marca, FE-53). */
+export const CONTROL_HEIGHT_CLASSES = 'min-h-12';

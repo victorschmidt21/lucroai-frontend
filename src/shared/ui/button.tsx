@@ -15,12 +15,11 @@ const VARIANT_CLASSES = {
     'border-transparent bg-transparent text-ink not-disabled:hover:bg-surface-alt',
 };
 
-// 44px no toque; a partir de `lg`, 40px. O mobile usa 46px nos botões de formulário.
+// Pílula com 48px de altura em qualquer tela (área de toque da marca, FE-53).
 const SIZE_CLASSES = {
-  padrao: 'min-h-11 rounded-md px-4 py-2 lg:min-h-10',
-  compacto: 'min-h-11 rounded-sm px-3 py-1 md:min-h-8',
-  // IconButton do Material: redondo.
-  icone: 'size-11 rounded-full lg:size-10',
+  padrao: 'min-h-12 rounded-full px-5 py-2',
+  compacto: 'min-h-12 rounded-full px-4 py-1',
+  icone: 'size-12 rounded-full',
 };
 
 export type ButtonVariant = keyof typeof VARIANT_CLASSES;

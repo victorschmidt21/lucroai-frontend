@@ -37,7 +37,7 @@ export function CarrinhoCard({
   return (
     <section
       aria-labelledby={tituloId}
-      className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4 text-ink"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-ink"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id={tituloId} className="text-body font-semibold">

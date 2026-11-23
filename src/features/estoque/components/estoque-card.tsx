@@ -39,7 +39,7 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
   return (
     <article
       aria-labelledby={tituloId}
-      className="flex h-full flex-col gap-3 rounded-md border border-border bg-surface p-4 text-ink"
+      className="flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-ink"
     >
       <div className="flex flex-col items-start gap-1.5">
         <h2 id={tituloId} className="text-body font-semibold wrap-anywhere">

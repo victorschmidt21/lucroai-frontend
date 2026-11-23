@@ -200,7 +200,7 @@ export function CadastroForm() {
       <Button
         type="submit"
         loading={cadastro.isPending || cadastro.isSuccess}
-        className="mt-1 min-h-13 lg:min-h-13"
+        className="mt-1 min-h-13"
       >
         Criar conta
       </Button>

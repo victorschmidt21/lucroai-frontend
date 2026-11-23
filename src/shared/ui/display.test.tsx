@@ -68,12 +68,12 @@ describe('Card', () => {
     );
 
     expect(screen.getByRole('region', { name: 'Rendimento' })).toHaveClass(
-      'rounded-md',
+      'rounded-lg',
     );
   });
 
-  it('sem título, é um bloco; o resumo tem cantos de 14px', () => {
-    render(<Card variant="resumo">Total vendido</Card>);
+  it('sem título, é um bloco com cantos de 20px', () => {
+    render(<Card>Total vendido</Card>);
 
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
     expect(screen.getByText('Total vendido')).toHaveClass('rounded-lg');

@@ -9,8 +9,8 @@ const VARIANTES = {
   // Menu lateral do desktop: ícone e rótulo na mesma linha.
   lateral: {
     lista: 'flex flex-col gap-1',
-    item: 'flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-body hover:bg-surface-alt',
-    ativo: 'bg-surface-alt font-semibold',
+    item: 'flex min-h-12 items-center gap-3 rounded-full px-4 py-2 text-body hover:bg-surface-alt',
+    ativo: 'bg-surface-alt font-bold',
     icone: 'size-5',
     itens: ITENS_MENU_LATERAL,
   },

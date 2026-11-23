@@ -22,7 +22,7 @@ type StatCardProps = {
   className?: string;
 };
 
-/** Indicador do painel (`_KpiCard` de dashboard_page.dart). */
+/** Indicador do painel (`_KpiCard` de dashboard_page.dart). O valor usa Fredoka (`text-display`). */
 export function StatCard({
   title,
   value,
@@ -34,7 +34,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-1 rounded-lg border border-border bg-surface p-3.5',
+        'flex min-w-0 flex-col gap-1 rounded-lg border border-border bg-surface p-4',
         className,
       )}
     >

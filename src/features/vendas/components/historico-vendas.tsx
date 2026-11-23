@@ -207,7 +207,7 @@ function ListaDeVendas({
 
   return (
     <>
-      <Card variant="resumo">
+      <Card>
         <dl className="grid grid-cols-3 gap-3">
           <Metrica
             rotulo="Total vendido"

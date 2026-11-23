@@ -24,7 +24,7 @@ export function Checkbox({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex min-h-11 items-center gap-3">
+      <div className="flex min-h-12 items-center gap-3">
         <span className="relative inline-flex size-5 shrink-0">
           <input
             type="checkbox"

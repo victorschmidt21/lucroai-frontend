@@ -105,7 +105,7 @@ export function LoginForm({
       <Button
         type="submit"
         loading={login.isPending || login.isSuccess}
-        className="mt-1 min-h-13 lg:min-h-13"
+        className="mt-1 min-h-13"
       >
         Entrar
       </Button>

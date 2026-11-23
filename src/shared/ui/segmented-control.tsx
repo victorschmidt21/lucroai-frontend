@@ -52,14 +52,15 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           value={option.value}
           className={cn(
-            'group inline-flex min-h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 text-body font-medium whitespace-nowrap text-ink transition-colors duration-150 lg:min-h-10',
+            // O rótulo quebra em duas linhas quando não cabe (texto de 16px em 360px, FE-53).
+            'group inline-flex min-h-12 min-w-0 cursor-pointer items-center justify-center gap-1.5 py-1.5 text-center text-body font-semibold text-balance text-ink transition-colors duration-150',
             larguraDoTexto ? 'flex-auto px-3' : 'flex-1 px-4',
             'not-first:border-l not-first:border-border-field hover:bg-surface-alt',
             'data-[state=on]:bg-accent data-[state=on]:text-on-accent',
             'focus-visible:-outline-offset-4',
           )}
         >
-          <IconCheck className="hidden size-4 group-data-[state=on]:block" />
+          <IconCheck className="hidden size-4 shrink-0 group-data-[state=on]:block" />
           {option.label}
         </ToggleGroup.Item>
       ))}

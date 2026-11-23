@@ -164,7 +164,7 @@ export function EstoqueLista() {
           {[0, 1, 2].map((chave) => (
             <span
               key={chave}
-              className="block h-44 animate-pulse rounded-md border border-border bg-surface motion-reduce:animate-none"
+              className="block h-44 animate-pulse rounded-lg border border-border bg-surface motion-reduce:animate-none"
             />
           ))}
         </output>

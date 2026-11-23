@@ -200,7 +200,7 @@ export function Combobox({
                 onClick={() => escolher(option)}
                 onMouseMove={() => setAtiva(indice)}
                 className={cn(
-                  'flex min-h-11 cursor-pointer items-center justify-between gap-2 px-4 text-body text-ink',
+                  'flex min-h-12 cursor-pointer items-center justify-between gap-2 px-4 text-body text-ink',
                   indice === ativa && 'bg-surface-alt',
                   escolhida && 'font-semibold text-accent',
                 )}

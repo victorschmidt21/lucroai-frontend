@@ -155,7 +155,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-heading font-extrabold text-ink">LucroAI</h1>
+          <h1 className="text-heading text-ink">LucroAI</h1>
           <p className="text-subtitle text-ink-subtle">Seu painel financeiro</p>
           <p className="text-body font-semibold wrap-anywhere text-ink-muted">
             {empresa}
@@ -302,7 +302,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
         acao={
           <Link
             href="/vendas?aba=historico"
-            className="inline-flex min-h-11 items-center gap-1 text-small font-bold text-accent hover:underline lg:min-h-8"
+            className="inline-flex min-h-12 items-center gap-1 text-small font-bold text-accent hover:underline"
           >
             Ver tudo
             <IconSeta className="size-4" />

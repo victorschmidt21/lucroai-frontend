@@ -59,7 +59,7 @@ function ListaCarregando({ label }: { label: string }) {
       {LINHAS_DO_ESQUELETO.map((largura) => (
         <span
           key={largura}
-          className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4"
+          className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4"
         >
           <span
             className={`block h-4 animate-pulse rounded-sm bg-surface-alt motion-reduce:animate-none ${largura}`}
