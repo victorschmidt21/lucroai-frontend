@@ -168,19 +168,19 @@ Exemplo do seed: farinha, 5 kg por R$ 15,00 → `R$ 3,0000/kg`; manteiga, 500 g 
 
 ### Textos
 
-| Onde                    | Mobile                                                                                         | Web                                                                                                     |
-| ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo      | "Insumos" / "Gerencie quantidade, valor pago e custo unitario"                                 | "Ingredientes e embalagens" / "O que você compra para produzir" (FE-57)                                 |
-| Ação primária           | —                                                                                              | "Novo ingrediente" (FE-57)                                                                              |
-| Busca                   | "Buscar insumo..."                                                                             | "Buscar ingrediente"; contagem "1 ingrediente" / "N ingredientes"                                       |
-| Linha da lista          | `<quantidade> <unidade> - R$ <valorPago>` e `R$ <custo>/<unidade>`                             | igual, com os formatadores                                                                              |
-| Título do formulário    | "Novo insumo" / "Editar insumo"                                                                | "Novo ingrediente" / "Editar ingrediente"                                                               |
-| Prévia                  | "Custo unitario: R$ X/un"                                                                      | "Custo unitário: R$ X/un" (com a unidade escolhida)                                                     |
-| Botões                  | "Cancelar", "Salvar" / "Atualizar"                                                             | igual                                                                                                   |
-| Confirmação de exclusão | "Excluir insumo" / `Deseja excluir "<nome>"?`                                                  | "Excluir ingrediente" / `Deseja excluir "<nome>"?`; botão "Excluir"                                     |
-| Toasts                  | "Insumo criado com sucesso.", "Insumo atualizado com sucesso.", "Insumo excluido com sucesso." | "Ingrediente cadastrado.", "Ingrediente atualizado.", "Ingrediente excluído." (FE-57)                   |
-| Vazio                   | "Nenhum insumo encontrado."                                                                    | "Sua despensa está vazia" / "Comece pelo ingrediente que você mais usa, como leite condensado." (FE-57) |
-| Erro                    | "Nao foi possivel carregar os insumos."                                                        | "Não consegui buscar seus ingredientes agora.", com "Tentar de novo"                                    |
+| Onde                    | Mobile                                                                                         | Web                                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo      | "Insumos" / "Gerencie quantidade, valor pago e custo unitario"                                 | "Ingredientes e embalagens" / "O que você compra para produzir" (FE-57)                                                                                                         |
+| Ação primária           | —                                                                                              | "Novo ingrediente" (FE-57)                                                                                                                                                      |
+| Busca                   | "Buscar insumo..."                                                                             | "Buscar ingrediente"; contagem "1 ingrediente" / "N ingredientes"                                                                                                               |
+| Linha da lista          | `<quantidade> <unidade> - R$ <valorPago>` e `R$ <custo>/<unidade>`                             | igual, com os formatadores                                                                                                                                                      |
+| Título do formulário    | "Novo insumo" / "Editar insumo"                                                                | "Novo ingrediente" / "Editar ingrediente"                                                                                                                                       |
+| Prévia                  | "Custo unitario: R$ X/un"                                                                      | "Custo unitário: R$ X/un" (com a unidade escolhida)                                                                                                                             |
+| Botões                  | "Cancelar", "Salvar" / "Atualizar"                                                             | igual                                                                                                                                                                           |
+| Confirmação de exclusão | "Excluir insumo" / `Deseja excluir "<nome>"?`                                                  | "Excluir ingrediente" / `Deseja excluir "<nome>"?`; botão "Excluir"                                                                                                             |
+| Toasts                  | "Insumo criado com sucesso.", "Insumo atualizado com sucesso.", "Insumo excluido com sucesso." | "Ingrediente cadastrado.", "Ingrediente atualizado.", "Ingrediente excluído." (FE-57)                                                                                           |
+| Vazio                   | "Nenhum insumo encontrado."                                                                    | "Sua despensa está vazia" / "Comece pelo ingrediente que você mais usa, como leite condensado." (FE-57), com a ilustração da despensa e o botão "Adicionar ingrediente" (FE-59) |
+| Erro                    | "Nao foi possivel carregar os insumos."                                                        | "Não consegui buscar seus ingredientes agora.", com "Tentar de novo"                                                                                                            |
 
 ### Ordem e busca
 
@@ -236,19 +236,19 @@ O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `perc
 
 ### Textos
 
-| Onde                 | Mobile                                                                                                                      | Web                                                                                                                         |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Contas do mês" / "Gás, luz, internet, aluguel e outros custos que entram no preço" (FE-57)                                 |
-| Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                       |
-| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Total por mês", "1 conta" / "N contas" (FE-42; "Total por mês" desde a FE-57)                                              |
-| Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                  |
-| Título do formulário | "Novo gasto indireto" / "Editar gasto"                                                                                      | "Novo gasto" / "Editar gasto" (FE-57)                                                                                       |
-| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | "Este gasto entra no custo de todas as receitas." (FE-42)                                                                   |
-| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Tipo" e o valor conforme o tipo ([`TipoGasto`](#tipogasto)); colunas "Descrição", "Tipo", "Valor"             |
-| Confirmação          | "Excluir gasto" / `Deseja excluir "<descrição>"?\nIsso afetara o custo de todas as receitas.`                               | "Excluir gasto" / `Deseja excluir "<descrição>"? Isso afetará o custo de todas as receitas.`                                |
-| Toasts               | — (o mobile só mostra erros)                                                                                                | "Gasto criado com sucesso.", "Gasto atualizado com sucesso.", "Gasto excluído com sucesso."                                 |
-| Vazio                | "Nenhum gasto cadastrado" / "Adicione agua, energia, gas, aluguel e outros custos para calcular o custo real das receitas." | "Nenhum gasto cadastrado" / "Adicione água, energia, gás, aluguel e outros custos para calcular o custo real das receitas." |
-| Erro                 | "Nao foi possivel carregar os gastos."                                                                                      | "Não foi possível carregar os gastos."                                                                                      |
+| Onde                 | Mobile                                                                                                                      | Web                                                                                                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Contas do mês" / "Gás, luz, internet, aluguel e outros custos que entram no preço" (FE-57)                                                                                              |
+| Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                                                                                    |
+| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Total por mês", "1 conta" / "N contas" (FE-42; "Total por mês" desde a FE-57)                                                                                                           |
+| Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                                                                               |
+| Título do formulário | "Novo gasto indireto" / "Editar gasto"                                                                                      | "Novo gasto" / "Editar gasto" (FE-57)                                                                                                                                                    |
+| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | "Este gasto entra no custo de todas as receitas." (FE-42)                                                                                                                                |
+| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Tipo" e o valor conforme o tipo ([`TipoGasto`](#tipogasto)); colunas "Descrição", "Tipo", "Valor"                                                                          |
+| Confirmação          | "Excluir gasto" / `Deseja excluir "<descrição>"?\nIsso afetara o custo de todas as receitas.`                               | "Excluir gasto" / `Deseja excluir "<descrição>"? Isso afetará o custo de todas as receitas.`                                                                                             |
+| Toasts               | — (o mobile só mostra erros)                                                                                                | "Gasto criado com sucesso.", "Gasto atualizado com sucesso.", "Gasto excluído com sucesso."                                                                                              |
+| Vazio                | "Nenhum gasto cadastrado" / "Adicione agua, energia, gas, aluguel e outros custos para calcular o custo real das receitas." | "Nenhuma conta do mês ainda" / "Adicione gás, luz, internet, aluguel e o que mais você paga, para o preço cobrir tudo.", com a ilustração das contas e o botão "Adicionar conta" (FE-59) |
+| Erro                 | "Nao foi possivel carregar os gastos."                                                                                      | "Não foi possível carregar os gastos."                                                                                                                                                   |
 
 ## Receitas: listagem
 
@@ -259,15 +259,15 @@ FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `l
 - `custoProducao`, `custoUnitario` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`; sem preço possível no Balcão, não há `precoSugerido`): exiba `—`.
 - Ações: Editar (`/receitas/[receitaId]/editar`), Simular (`/receitas/[receitaId]/simular`, FE-20) e Excluir.
 
-| Onde               | Mobile                                                                 | Web                                                              |
-| ------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Quanto custa e quanto cobrar por cada uma" (FE-57) |
-| Ação primária      | —                                                                      | "Nova receita"                                                   |
-| Busca              | "Buscar receita..."                                                    | "Buscar receita"                                                 |
-| Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                            |
-| Toast              | —                                                                      | "Receita excluída com sucesso."                                  |
-| Vazio              | "Nenhuma receita encontrada."                                          | igual                                                            |
-| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar de novo"   |
+| Onde               | Mobile                                                                 | Web                                                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Quanto custa e quanto cobrar por cada uma" (FE-57)                                                                                                        |
+| Ação primária      | —                                                                      | "Nova receita"                                                                                                                                                          |
+| Busca              | "Buscar receita..."                                                    | "Buscar receita"                                                                                                                                                        |
+| Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                                                                                                                                   |
+| Toast              | —                                                                      | "Receita excluída com sucesso."                                                                                                                                         |
+| Vazio              | "Nenhuma receita encontrada."                                          | "Seu caderno de receitas está vazio" / "Crie a primeira receita e descubra quanto custa e quanto cobrar.", com a ilustração do caderno e o link "Criar receita" (FE-59) |
+| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar de novo"                                                                                                          |
 
 ## Receitas: formulário e custo
 
@@ -361,22 +361,22 @@ barra          = clamp(percentual / 100, 0, 1)
 
 ### Textos
 
-| Onde               | Mobile                                                       | Web                                                                                                                                   |
-| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | "Estoque" / "O que tem na sua despensa" (FE-57)                                                                                       |
-| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                                                            |
-| Busca              | "Buscar insumos..."                                          | "Buscar ingredientes", pelo nome e sem acentos, em `?q=`; sem resultado, "Nenhum resultado para "<termo>"" com "Limpar busca" (FE-23) |
-| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)                                                     |
-| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                                 |
-| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | "Status": "Todos" / "Acabando"; chip "Acabando" e "Limpar" (FE-57); `baixo=1` na URL                                                  |
-| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | "Nenhum estoque encontrado" / "Comece cadastrando os ingredientes que você compra.", com link para `/insumos`                         |
-| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Não consegui buscar o estoque agora." / "Tentar de novo"                                                                             |
-| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)           |
+| Onde               | Mobile                                                       | Web                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | "Estoque" / "O que tem na sua despensa" (FE-57)                                                                                                                                 |
+| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                                                                                                      |
+| Busca              | "Buscar insumos..."                                          | "Buscar ingredientes", pelo nome e sem acentos, em `?q=`; sem resultado, "Nenhum resultado para "<termo>"" com "Limpar busca" (FE-23)                                           |
+| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)                                                                                               |
+| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                                                                           |
+| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | "Status": "Todos" / "Acabando"; chip "Acabando" e "Limpar" (FE-57); `baixo=1` na URL                                                                                            |
+| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | "Sua despensa está vazia" / "Comece cadastrando os ingredientes que você compra.", com a ilustração da despensa e o link "Adicionar ingrediente" para `/insumos?novo=1` (FE-59) |
+| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Não consegui buscar o estoque agora." / "Tentar de novo"                                                                                                                       |
+| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)                                                     |
 
 O filtro "Acabando" (o "Baixo" do mobile) mostra os itens com `isBaixoEstoque`. Na web, um item sem saldo continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
 
 - Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum ingrediente acabando.", com "Limpar filtro".
-- A ação do vazio é o link "Novo ingrediente" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
+- A ação do vazio é o link "Adicionar ingrediente" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
 - O percentual aparece com `formatNumero(percentual, 0)` + `%` (`500%`) e as quantidades com `formatQuantidade` (`10 kg`), em vez das 2 casas fixas do mobile.
 - Ações do cartão (FE-14): "Registrar entrada" (só com o saldo carregado, porque o diálogo mostra a quantidade atual) e "Histórico", que abre a gaveta de movimentações. No mobile, tocar no cartão ou no menu ⋮ abre a entrada; a web usa botões visíveis.
 
@@ -431,23 +431,23 @@ Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _
 
 ### Validações e textos
 
-| Onde               | Mobile                                                                                   | Web                                                                                                                                                 |
-| ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo | "Produções" / "Registre e acompanhe suas produções"                                      | "Fornadas" / "O que você produziu" (FE-57)                                                                                                          |
-| Ação primária      | "Nova Produção"                                                                          | "Nova fornada"                                                                                                                                      |
-| Linha              | nome da receita ou "Receita #<id>"; "N lote(s) · dd/mm/aaaa"; custo total; `R$ X/un`     | igual: "1 lote" / "N lotes"                                                                                                                         |
-| Formulário         | "Registrar Produção" / "Informe quantos lotes foram produzidos"                          | "Anotar fornada" / "Informe quantos lotes foram produzidos"                                                                                         |
-| Receita            | "Receita", obrigatória: "Selecione uma receita"                                          | igual                                                                                                                                               |
-| Lotes              | "Quantidade de lotes", inteiro > 0: "Informe a quantidade de lotes"                      | igual                                                                                                                                               |
-| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | "Contas do mês": chip "Todos" e um chip por conta do mês (FE-15, FE-42)                                                                             |
-| Botão              | "Registrar Produção"                                                                     | "Anotar fornada"                                                                                                                                    |
-| Sucesso            | "Produção registrada com sucesso"                                                        | "Fornada anotada."                                                                                                                                  |
-| Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma fornada anotada" / "Anote a primeira fornada para o estoque e o custo baterem.", com o botão                                               |
-| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Não consegui buscar suas fornadas agora.", com "Tentar de novo"                                                                                    |
-| Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                                                                                      |
-| Vazio no filtro    | —                                                                                        | "Nenhuma fornada desta receita"                                                                                                                     |
-| Prévia             | —                                                                                        | "Total de unidades", "Parte das contas do mês nesta fornada" por conta e "Total das contas"; sem conta, "Nenhuma conta do mês entra nesta fornada." |
-| Detalhe            | —                                                                                        | Drawer com os custos, o total de unidades e os rateios (abaixo)                                                                                     |
+| Onde               | Mobile                                                                                   | Web                                                                                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Produções" / "Registre e acompanhe suas produções"                                      | "Fornadas" / "O que você produziu" (FE-57)                                                                                                                |
+| Ação primária      | "Nova Produção"                                                                          | "Nova fornada"                                                                                                                                            |
+| Linha              | nome da receita ou "Receita #<id>"; "N lote(s) · dd/mm/aaaa"; custo total; `R$ X/un`     | igual: "1 lote" / "N lotes"                                                                                                                               |
+| Formulário         | "Registrar Produção" / "Informe quantos lotes foram produzidos"                          | "Anotar fornada" / "Informe quantos lotes foram produzidos"                                                                                               |
+| Receita            | "Receita", obrigatória: "Selecione uma receita"                                          | igual                                                                                                                                                     |
+| Lotes              | "Quantidade de lotes", inteiro > 0: "Informe a quantidade de lotes"                      | igual                                                                                                                                                     |
+| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | "Contas do mês": chip "Todos" e um chip por conta do mês (FE-15, FE-42)                                                                                   |
+| Botão              | "Registrar Produção"                                                                     | "Anotar fornada"                                                                                                                                          |
+| Sucesso            | "Produção registrada com sucesso"                                                        | "Fornada anotada."                                                                                                                                        |
+| Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma fornada anotada" / "Anote a primeira fornada para o estoque e o custo baterem.", com a ilustração do forno e o botão "Registrar fornada" (FE-59) |
+| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Não consegui buscar suas fornadas agora.", com "Tentar de novo"                                                                                          |
+| Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                                                                                            |
+| Vazio no filtro    | —                                                                                        | "Nenhuma fornada desta receita"                                                                                                                           |
+| Prévia             | —                                                                                        | "Total de unidades", "Parte das contas do mês nesta fornada" por conta e "Total das contas"; sem conta, "Nenhuma conta do mês entra nesta fornada."       |
+| Detalhe            | —                                                                                        | Drawer com os custos, o total de unidades e os rateios (abaixo)                                                                                           |
 
 Chips de gastos (web): escolher um gasto desmarca "Todos" e fica só com os gastos escolhidos; marcar "Todos" limpa a seleção. O formulário já vem com a receita do filtro da lista.
 
@@ -601,12 +601,12 @@ lucroReal = 1 − percentuais do canal sem o lucro − custoUnitario / precoUnit
 - Sem `lucroReal` (vendas antigas): `—`. Sem `canalId` (vendas antigas ou canal excluído): "Não informado"; canal fora da lista: "Canal #<id>" (`nomeDoCanal`).
 - Exemplo do seed: Quindim no iFood a R$ 3,69 com custo R$ 2,3326 → `21,6%`, já descontada a comissão de 15,2%.
 
-| Onde   | Mobile                                    | Web                                                                    |
-| ------ | ----------------------------------------- | ---------------------------------------------------------------------- |
-| Filtro | "Data inicial", "Data final"              | igual; status opcional ("Todos", "Pendente", "Concluída", "Cancelada") |
-| Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                              |
-| Vazio  | "Nenhuma venda encontrada no período."    | igual                                                                  |
-| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar de novo"                                            |
+| Onde   | Mobile                                    | Web                                                                                                                                                        |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Filtro | "Data inicial", "Data final"              | igual; status opcional ("Todos", "Pendente", "Concluída", "Cancelada")                                                                                     |
+| Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                                                                                                                  |
+| Vazio  | "Nenhuma venda encontrada no período."    | igual, com "Anote as vendas do dia para ver quanto sobrou pra você.", a ilustração da sacola e o botão "Anotar venda", que volta à aba "Registrar" (FE-59) |
+| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar de novo"                                                                                                                                |
 
 Na web (FE-18):
 
@@ -715,7 +715,7 @@ A simulação não grava nada: mutação sem invalidação.
 
 FE-21. Origem: `lib/features/simulacao/presentation/pages/simulacao_page.dart` (`_ScenarioBase.fromReceita`, `_priceRangeFor`, `_volumeRangeFor`, `_buildSimulationContent`, `_ProjectionChartCard`, `_VolumePreviewCard`). Funções puras em `features/simulacao/simulacao.calculos.ts`. **Desde a FE-45** o lucro vem de `POST /receitas/:id/simular` (no Balcão, com o imposto, a maquininha e os gastos % da venda): as fórmulas locais de lucro e margem saíram.
 
-Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas carregadas no histórico, que por padrão é o mês atual). Sem receitas: "Cadastre uma receita para simular cenários.". A receita selecionada fica em `receitaId` na URL; sem ela, usa a primeira da lista.
+Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas carregadas no histórico, que por padrão é o mês atual). Sem receitas: "Cadastre uma receita para simular cenários.", com a ilustração do caderno e o link "Criar receita" (FE-59). A receita selecionada fica em `receitaId` na URL; sem ela, usa a primeira da lista.
 
 ### Base da receita
 
@@ -856,7 +856,7 @@ Seção "O que mais deu lucro" (FE-58). Top 3 por lucro, decrescente, com "Ver t
 
 - **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - R$ X de cada R$ 100` (`porCadaCemReais`; com margem negativa, `N un - abaixo do custo`). O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
 - **Sem vendas:** desde a FE-45, usa o lucro por unidade do preço do Balcão calculado pela API (`precos[balcao].composicao.lucro`): `lucro = lucro.valor`, `margem = lucro.fracao × 100`, só as receitas com `lucro > 0` (sem preço possível, a receita fica fora). Linha: `sem vendas no período - R$ X de cada R$ 100` (o `unitsLabel` do mobile sem vendas).
-- **Vazio:** "Cadastre receitas e registre vendas para ver rentabilidade.".
+- **Vazio:** "Crie uma receita e anote as vendas para ver o que mais deu lucro." (FE-59; antes, "Cadastre receitas e registre vendas para ver rentabilidade."), com a ilustração da sacola e o link secundário "Criar receita" (a primária da tela é "Nova receita", das ações rápidas).
 
 ### Contas do mês (ponto de equilíbrio da empresa)
 

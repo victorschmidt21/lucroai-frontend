@@ -3,7 +3,7 @@
 Manual de marca do produto (antes chamado LucroAI). Fonte: proposta de 2026-11-22, aprovada pela pessoa responsável.
 Implementação: issues FE-50 a FE-60 (épico "E9 Marca Doce Fatia").
 
-> **Status:** referência (FE-50). O tema claro com a paleta Confeitaria **existe** desde a FE-51 (`src/app/globals.css`) e o modo noite opcional desde a FE-52 ([ui.md](ui.md#aparência)). A tipografia Fredoka e Nunito, os raios e as áreas de toque de 48px **existem** desde a FE-53 ([ui.md](ui.md#tipografia)). O nome e o logo **existem** desde a FE-54 (`Logo`, ícones do app e manifesto; [ui.md](ui.md#logo)). Os componentes base de `src/shared/ui/` e o menu **existem** no visual novo desde a FE-55 ([ui.md](ui.md#componentes-srcsharedui)), e os ícones de traço arredondado desde a FE-56 ([ui.md](ui.md#ícones)). A linguagem de cozinha **existe** desde a FE-57 e o painel com o lucro em destaque desde a FE-58 ([business-rules.md](business-rules.md#painel)). O resto do código segue o visual antigo até cada issue do épico ser entregue: estados vazios (FE-59) e card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
+> **Status:** referência (FE-50). O tema claro com a paleta Confeitaria **existe** desde a FE-51 (`src/app/globals.css`) e o modo noite opcional desde a FE-52 ([ui.md](ui.md#aparência)). A tipografia Fredoka e Nunito, os raios e as áreas de toque de 48px **existem** desde a FE-53 ([ui.md](ui.md#tipografia)). O nome e o logo **existem** desde a FE-54 (`Logo`, ícones do app e manifesto; [ui.md](ui.md#logo)). Os componentes base de `src/shared/ui/` e o menu **existem** no visual novo desde a FE-55 ([ui.md](ui.md#componentes-srcsharedui)), e os ícones de traço arredondado desde a FE-56 ([ui.md](ui.md#ícones)). A linguagem de cozinha **existe** desde a FE-57 e o painel com o lucro em destaque desde a FE-58 ([business-rules.md](business-rules.md#painel)). As ilustrações dos estados vazios e de erro **existem** desde a FE-59 ([ui.md](ui.md#ilustrações)). O resto do código segue o visual antigo até cada issue do épico ser entregue: card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
 
 ## Nome
 
@@ -94,7 +94,7 @@ Na navegação, ícone sempre com rótulo.
 
 ## Ilustração e foto
 
-- Ilustrações "spot" planas com as cores da paleta, em estados vazios, boas-vindas, conquistas e erros. Nunca enfeitando telas de trabalho.
+- Ilustrações "spot" planas com as cores da paleta, em estados vazios, boas-vindas, conquistas e erros. Nunca enfeitando telas de trabalho. Os desenhos (despensa, caderno, forno, sacola, contas e sem conexão) e onde cada um aparece estão em [ui.md](ui.md#ilustrações) (FE-59).
 - Pessoas: mulheres reais e diversas em idade, corpo e cor de pele, trabalhando.
 - Fotos (site, loja de apps, redes): luz natural, mãos em ação, cozinha de casa de verdade. Nada de banco de imagens genérico.
 
