@@ -59,6 +59,82 @@
 
   /* Fundo atrás de Dialog e Drawer, em tom Cacau. */
   --overlay: rgb(58 37 48 / 0.45);
+
+  /* Elevação quente (tom Cacau, nunca preta): Dialog, Drawer, Toast e Combobox. */
+  --sombra-elevacao:
+    0 1px 2px rgb(58 37 48 / 0.06), 0 8px 24px rgb(58 37 48 / 0.1);
+}
+
+/*
+ * Modo noite (FE-52, fundo Ganache), opcional. O `RootLayout` põe o cookie `tema`
+ * em `data-tema` no <html>: "noite" vale sempre; "automatico" segue o sistema. Os
+ * dois blocos têm os mesmos valores (`tokens.test.ts` confere). Os tokens de status
+ * apontam para os semânticos e acompanham sozinhos.
+ */
+:root[data-tema='noite'] {
+  color-scheme: dark;
+
+  --bg: #1f1519;
+  --bg-alt: #1f1519;
+  --surface: #2a1c22;
+  --surface-alt: #352630;
+  --surface-raised: #352630;
+  --border: #4a3540;
+  --border-strong: #5a4250;
+  --border-field: #8e7480;
+  --ink: #fbefe8;
+  --ink-muted: #c2a9b2;
+  --ink-subtle: #c2a9b2;
+  --accent: #f291bd;
+  --accent-strong: #f7a8cb;
+  --on-accent: #1f1519;
+  --accent-soft: #4a2338;
+  --highlight: #f7a27b;
+  --highlight-ink: #f7a27b;
+  --success: #7fd19d;
+  --success-soft: #1e3a2a;
+  --warning: #f2c46b;
+  --warning-soft: #3d2e10;
+  --danger: #ff8a7d;
+  --danger-strong: #ff8a7d;
+  --on-danger: #1f1519;
+  --danger-soft: #47201c;
+  --overlay: rgb(0 0 0 / 0.7);
+  --sombra-elevacao: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-tema='automatico'] {
+    color-scheme: dark;
+
+    --bg: #1f1519;
+    --bg-alt: #1f1519;
+    --surface: #2a1c22;
+    --surface-alt: #352630;
+    --surface-raised: #352630;
+    --border: #4a3540;
+    --border-strong: #5a4250;
+    --border-field: #8e7480;
+    --ink: #fbefe8;
+    --ink-muted: #c2a9b2;
+    --ink-subtle: #c2a9b2;
+    --accent: #f291bd;
+    --accent-strong: #f7a8cb;
+    --on-accent: #1f1519;
+    --accent-soft: #4a2338;
+    --highlight: #f7a27b;
+    --highlight-ink: #f7a27b;
+    --success: #7fd19d;
+    --success-soft: #1e3a2a;
+    --warning: #f2c46b;
+    --warning-soft: #3d2e10;
+    --danger: #ff8a7d;
+    --danger-strong: #ff8a7d;
+    --on-danger: #1f1519;
+    --danger-soft: #47201c;
+    --overlay: rgb(0 0 0 / 0.7);
+    --sombra-elevacao: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+  }
 }
 
 /* Tira do Tailwind o que o LucroAI não usa: cores prontas, sombras, raios e tamanhos. */
@@ -75,10 +151,6 @@
   --radius-md: 12px;
   --radius-lg: 14px;
   --radius-xl: 18px;
-
-  /* Elevação quente (tom Cacau, nunca preta): Dialog, Drawer, Toast e Combobox. */
-  --shadow-elevacao:
-    0 1px 2px rgb(58 37 48 / 0.06), 0 8px 24px rgb(58 37 48 / 0.1);
 
   /* Escala tipográfica, em px do mobile convertidos para rem. */
   --text-*: initial;
@@ -168,6 +240,8 @@
   --color-danger-strong: var(--danger-strong);
   --color-on-danger: var(--on-danger);
   --color-overlay: var(--overlay);
+
+  --shadow-elevacao: var(--sombra-elevacao);
 
   --color-status-critico: var(--status-critico);
   --color-status-baixo: var(--status-baixo);

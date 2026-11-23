@@ -4,16 +4,28 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
-const rootBlock = /:root \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
-const tokens = new Map(
-  [...rootBlock.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [
-    match[1],
-    match[2].trim(),
-  ]),
-);
+function lerTokens(seletor: RegExp) {
+  const bloco = seletor.exec(css)?.[1] ?? '';
 
-function resolve(name: string): string {
-  const value = tokens.get(name);
+  return new Map(
+    [...bloco.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [
+      match[1],
+      match[2].trim(),
+    ]),
+  );
+}
+
+const claro = lerTokens(/:root \{([\s\S]*?)\n\}/);
+// O modo noite (FE-52) só troca valores; os tokens de status vêm do claro e
+// apontam para os semânticos do noite.
+const noite = lerTokens(/:root\[data-tema='noite'\] \{([\s\S]*?)\n\}/);
+const automatico = lerTokens(
+  /:root\[data-tema='automatico'\] \{([\s\S]*?)\n {2}\}/,
+);
+const TEMAS = { claro, noite: new Map([...claro, ...noite]) };
+
+function resolveNo(tema: keyof typeof TEMAS, name: string): string {
+  const value = TEMAS[tema].get(name);
 
   if (!value) {
     throw new Error(`Token inexistente: ${name}`);
@@ -21,8 +33,11 @@ function resolve(name: string): string {
 
   const reference = /^var\(--([\w-]+)\)$/.exec(value);
 
-  return reference ? resolve(reference[1]) : value;
+  return reference ? resolveNo(tema, reference[1]) : value;
 }
+
+const resolve = (name: string) => resolveNo('claro', name);
+const resolveNoite = (name: string) => resolveNo('noite', name);
 
 type Rgb = [number, number, number];
 
@@ -67,6 +82,21 @@ const MEDIDOS: [string, string, number][] = [
   ['danger', 'danger-soft', 4.75],
   ['on-danger', 'danger-strong', 7.44],
   ['border-field', 'surface', 3.57],
+];
+
+// Pares do modo noite (FE-52), medidos com a mesma fórmula.
+const MEDIDOS_NOITE: [string, string, number][] = [
+  ['ink', 'surface-raised', 12.65],
+  ['ink-muted', 'surface-raised', 6.53],
+  ['accent', 'bg', 8.11],
+  ['accent', 'surface-raised', 6.5],
+  ['on-accent', 'accent-strong', 9.68],
+  ['success', 'success-soft', 6.79],
+  ['warning', 'warning-soft', 8.07],
+  ['danger', 'danger-soft', 6.16],
+  ['on-danger', 'danger', 7.79],
+  ['ink', 'accent-soft', 11.72],
+  ['border-field', 'surface', 3.85],
 ];
 
 // Texto de qualquer tamanho: 4,5:1 (WCAG 1.4.3).
@@ -170,5 +200,37 @@ describe('tokens', () => {
 
   it.each(NAO_TEXTO)('%s sobre %s atinge 3:1', (frente, fundo) => {
     expect(contrast(resolve(frente), resolve(fundo))).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('tokens do modo noite', () => {
+  it('"noite" e "automatico" (sistema escuro) têm os mesmos valores', () => {
+    expect(noite.size).toBeGreaterThan(20);
+    expect(automatico).toEqual(noite);
+  });
+
+  it('usa o fundo Ganache e color-scheme escuro', () => {
+    expect(resolveNoite('bg').toUpperCase()).toBe('#1F1519');
+    expect(css).toMatch(/\[data-tema='noite'\] \{\s*color-scheme: dark;/);
+    expect(css).toMatch(/\[data-tema='automatico'\] \{\s*color-scheme: dark;/);
+  });
+
+  it.each(MEDIDOS_NOITE)('%s sobre %s mede %s:1', (frente, fundo, esperado) => {
+    expect(contrast(resolveNoite(frente), resolveNoite(fundo))).toBeCloseTo(
+      esperado,
+      1,
+    );
+  });
+
+  it.each(TEXTO)('%s sobre %s atinge 4,5:1', (frente, fundo) => {
+    expect(
+      contrast(resolveNoite(frente), resolveNoite(fundo)),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(NAO_TEXTO)('%s sobre %s atinge 3:1', (frente, fundo) => {
+    expect(
+      contrast(resolveNoite(frente), resolveNoite(fundo)),
+    ).toBeGreaterThanOrEqual(3);
   });
 });
