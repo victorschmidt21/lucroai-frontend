@@ -39,10 +39,10 @@ Paleta **Confeitaria** da marca, em tema claro (FE-51, [marca.md](marca.md#cores
 | `success-soft`   | #DDF1E3                  | fundo dos status Adequado e Concluída                                     |
 | `warning`        | #8A5A00 (Caramelo)       | status Baixo e Pendente                                                   |
 | `warning-soft`   | #FCEBC6                  | fundo dos status Baixo e Pendente                                         |
-| `danger`         | #B8342A (Cereja)         | erro, prejuízo, status Crítico                                            |
+| `danger`         | #B8342A (Cereja)         | erro, prejuízo, status Acabando                                           |
 | `danger-strong`  | #9E2B22                  | botão de perigo                                                           |
 | `on-danger`      | #FFFFFF                  | texto sobre `danger` e `danger-strong`                                    |
-| `danger-soft`    | #FBE1DC                  | fundo do status Crítico                                                   |
+| `danger-soft`    | #FBE1DC                  | fundo do status Acabando                                                  |
 | `overlay`        | `rgb(58 37 48 / 0.45)`   | fundo atrás de Dialog e Drawer, em tom Cacau                              |
 
 Os valores do modo noite estão em [Aparência](#aparência).
@@ -61,7 +61,7 @@ Medido em `src/shared/ui/tokens.test.ts`, que lê `globals.css` e calcula a raz�
 | `highlight-ink` sobre `surface`                     | 5,30:1          | texto em Damasco; o próprio `highlight` não atinge 4,5:1            |
 | `success` sobre `success-soft`                      | 5,13:1          | badges Adequado e Concluída                                         |
 | `warning` sobre `warning-soft`                      | 5,03:1          | badges Baixo e Pendente                                             |
-| `danger` sobre `danger-soft`                        | 4,75:1          | badge Crítico e "Estoque negativo"                                  |
+| `danger` sobre `danger-soft`                        | 4,75:1          | badge Acabando e "Estoque negativo"                                 |
 | `on-danger` sobre `danger-strong`                   | 7,44:1          | botão de perigo                                                     |
 | `border-field` sobre `surface` (não textual, ≥ 3:1) | 3,57:1          | borda de campo, Checkbox e `SegmentedControl`                       |
 
@@ -102,7 +102,7 @@ Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](busin
 
 | Domínio | Valor       | Texto     | Token              | Aponta para | Fundo do Badge |
 | ------- | ----------- | --------- | ------------------ | ----------- | -------------- |
-| Estoque | crítico     | Crítico   | `status-critico`   | `danger`    | `danger-soft`  |
+| Estoque | crítico     | Acabando  | `status-critico`   | `danger`    | `danger-soft`  |
 | Estoque | baixo       | Baixo     | `status-baixo`     | `warning`   | `warning-soft` |
 | Estoque | adequado    | Adequado  | `status-adequado`  | `success`   | `success-soft` |
 | Venda   | `PENDENTE`  | Pendente  | `status-pendente`  | `warning`   | `warning-soft` |
@@ -250,8 +250,8 @@ Cada tela tem **uma** ação primária, no `PageHeader`. O que se repete em cada
 
 | Onde                | Use                                                                                                              |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Ação principal      | `primario` ("Novo insumo", "Registrar Venda")                                                                    |
-| Ações do cabeçalho  | `secundario` ("Atualizar", atalho "Produção")                                                                    |
+| Ação principal      | `primario` ("Novo ingrediente", "Registrar Venda")                                                               |
+| Ações do cabeçalho  | `secundario` ("Atualizar", atalho "Fornadas")                                                                    |
 | Ações por linha     | `IconButton` (ou `iconButtonClasses()` num link) com `aria-label` com o nome do item ("Editar Farinha de Trigo") |
 | Confirmar exclusão  | `perigo`, só dentro do `ConfirmDialog`                                                                           |
 | Durante uma chamada | `loading`: desabilita e mostra progresso, mantendo o texto                                                       |
@@ -350,17 +350,17 @@ Guardam o texto digitado e são convertidos pelo schema com `numeroBR()`, `numer
 
 ### Cabeçalho
 
-Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): título no `h1`, subtítulo cinza e, à direita, a ação primária. Os textos de cada tela estão em [business-rules.md](business-rules.md). Defina também `metadata.title` na página, com o título da tela: o layout raiz usa o modelo `%s | Doce Fatia` (desde a FE-08; o nome mudou na FE-54), e a aba mostra "Insumos | Doce Fatia". Sem título, a aba mostra só "Doce Fatia" (a Home).
+Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): título no `h1`, subtítulo cinza e, à direita, a ação primária. Os textos de cada tela estão em [business-rules.md](business-rules.md). Defina também `metadata.title` na página, com o título da tela: o layout raiz usa o modelo `%s | Doce Fatia` (desde a FE-08; o nome mudou na FE-54), e a aba mostra "Ingredientes e embalagens | Doce Fatia". Sem título, a aba mostra só "Doce Fatia" (o Início).
 
 ### Menu
 
-Oito destinos fixos, na ordem do mobile (`main_screen.dart`), em `features/navegacao/menu.ts` (existe desde a FE-08): Home (`/`), Insumos, Receitas, Custos, Vendas, Estoque, Produção (`/producoes`) e Gastos (`/gastos-indiretos`). `getItemAtivo(pathname)` marca também as subtelas (`/receitas/nova` marca Receitas); telas fora do menu, como `/simulacao`, não marcam nenhum.
+Oito destinos fixos, na ordem do mobile (`main_screen.dart`), em `features/navegacao/menu.ts` (existe desde a FE-08), com os nomes de cozinha da FE-57 ([marca.md](marca.md#voz-e-tom)): Início (`/`), Ingredientes (`/insumos`), Receitas, Custos, Vendas, Estoque, Fornadas (`/producoes`) e Contas do mês (`/gastos-indiretos`); no lateral e na gaveta "Mais", também Ajustes de preço (`/configuracoes`). As rotas não mudaram. `getItemAtivo(pathname)` marca também as subtelas (`/receitas/nova` marca Receitas); telas fora do menu, como `/simulacao`, não marcam nenhum.
 
 | Onde                     | Como                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Celular (< 768px)        | barra inferior fixa (`MenuNavegacao variante="inferior"`), fundo `bg` com borda superior `surface-alt` (`app_bottom_nav.dart`), cinco colunas iguais com ícone de 24px (FE-56) e rótulo `text-nav` (12px) sem quebrar, 64px de altura e `env(safe-area-inset-bottom)`. Desde a FE-57, os oito destinos com 12px não cabiam em 360px: a barra tem Início, Receitas, Vendas, Estoque e o botão "Mais", que abre uma gaveta com Ingredientes, Custos, Fornadas, Contas do mês e Ajustes de preço (`ITENS_BARRA_INFERIOR` e `ITENS_MAIS`, `features/navegacao/menu.ts`); "Mais" ganha a pílula quando a tela atual está na gaveta |
-| Celular, cabeçalho       | logo (leva à Home) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens e o `UserMenu` no rodapé                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Celular, cabeçalho       | logo (leva ao Início) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens, Ajustes de preço e o `UserMenu` no rodapé                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Os dois                  | item ativo em `ink` com o ícone `accent` e `aria-current="page"` (no lateral, sobre a pílula `accent-soft`, em 800; na barra inferior, a pílula fica atrás do ícone; FE-55); lateral e barra em `surface` com borda `border`; inativos em `ink-muted`; links reais (`<a>`), sem pré-carregamento; atalho "Pular para o conteúdo" antes do menu                                                                                                                                                                                                                                                                                |
 
 O `next dev` mostra o indicador dele em cima, à esquerda (`devIndicators` no `next.config.ts`): na posição padrão, ele cobria o item Home da barra.

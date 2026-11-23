@@ -80,7 +80,7 @@ Server Components `async` não são renderizados pelo Testing Library: cubra-os 
 - **Contraste dos tokens:** `src/shared/ui/tokens.test.ts` lê `globals.css` e calcula as combinações de [ui.md](ui.md#contraste), inclusive o fundo translúcido dos Badges. Token novo entra nessa lista.
 - **Cores fixas:** `src/shared/ui/sem-cores-fixas.test.ts` falha se houver hex, `rgb()` ou paleta pronta do Tailwind fora de `globals.css`.
 - **Navegador real:** `e2e/design-system.spec.ts` roda o `@axe-core/playwright` na página `/design-system`, **com contraste**, e com o Dialog e o Drawer abertos; `e2e/listagem-formulario.spec.ts` faz o mesmo em `/design-system/listagem`, com o `FormDialog` aberto e com erros. Como a página só existe em desenvolvimento (no build, 404, como na Urbizzi), esses testes rodam com `npm run test:e2e` local (`next dev`); com `E2E_USAR_BUILD=true` (o CI) eles são pulados e só se confere o 404.
-- **Layout:** `e2e/navegacao.spec.ts` roda o `axe` com contraste no layout em 1280px e em 360px (com a gaveta "Conta" aberta) e no 404 (FE-08); também roda no build.
+- **Layout:** `e2e/navegacao.spec.ts` roda o `axe` com contraste no layout em 1280px e em 360px (com as gavetas "Conta" e "Mais" abertas) e no 404 (FE-08); também roda no build.
 
 ### E2E (`e2e/<funcionalidade>.spec.ts`)
 

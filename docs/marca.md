@@ -62,7 +62,7 @@ A marca não é: infantil, "tudo rosa por ser para mulheres", banco ou contador,
 | Damasco texto  | #B04E25                 | #F7A27B           | texto em Damasco                                                               |
 | Pistache       | #2A6F46 / suave #DDF1E3 | #7FD19D / #1E3A2A | lucro, Adequado, Concluída                                                     |
 | Caramelo       | #8A5A00 / suave #FCEBC6 | #F2C46B / #3D2E10 | atenção, Baixo, Pendente                                                       |
-| Cereja         | #B8342A / suave #FBE1DC | #FF8A7D / #47201C | erro, prejuízo, Crítico                                                        |
+| Cereja         | #B8342A / suave #FBE1DC | #FF8A7D / #47201C | erro, prejuízo, Acabando                                                       |
 
 Proporção numa tela: 60% Chantilly/Merengue, 25% Forma, 10% Amora, 5% Damasco e status.
 
@@ -100,7 +100,7 @@ Na navegação, ícone sempre com rótulo.
 
 ## Voz e tom
 
-1. **Fala como ela fala.** "Custos da casa", não "gastos indiretos". O termo técnico pode aparecer entre parênteses, uma vez.
+1. **Fala como ela fala.** "Contas do mês", não "gastos indiretos". O termo técnico pode aparecer entre parênteses, uma vez.
 2. **Um número por vez.** Cada tela responde uma pergunta: quanto custa, quanto cobrar, quanto sobrou.
 3. **Comemora junto.** Lucro bom merece festa discreta; prejuízo merece um caminho, não um alarme.
 4. **Respeita a profissional.** "Você", sem diminutivos, sem "amiga", sem excesso de exclamação ou emoji.
@@ -110,15 +110,23 @@ Glossário (interface → termo técnico, que fica no código e na API):
 | Interface                                    | Código/API              |
 | -------------------------------------------- | ----------------------- |
 | Ingredientes e embalagens                    | insumos                 |
-| Custos da casa                               | gastos indiretos        |
+| Contas do mês                                | gastos indiretos        |
 | Sobrou pra você                              | lucro líquido           |
 | De cada R$ 100 vendidos, R$ X ficam com você | margem                  |
 | Fornada                                      | produção                |
 | Para pagar as contas do mês, venda R$ X      | ponto de equilíbrio     |
 | Acabando                                     | estoque baixo / crítico |
+| Ajustes de preço                             | configurações de custo  |
+| Início                                       | home / painel           |
 
 Mensagens: dizem o que aconteceu e o que fazer, sem pedir desculpas e sem código de erro.
-Ex.: "Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo."
+Ex.: "Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo." O botão de repetir é sempre "Tentar de novo".
+
+Decisões da FE-57:
+
+- **"Contas do mês", não "Custos da casa".** Desde a FE-42, a tela de gastos também tem custos por unidade vendida (saquinho, etiqueta) e em % da venda (comissão), que não são "da casa". O menu, o título e a aba usam "Contas do mês"; o cartão de soma da tela virou "Total por mês".
+- **Barra inferior do celular com "Mais".** Com o rótulo de 12px, os oito destinos não cabem em 360px: ficam Início, Receitas, Vendas, Estoque e "Mais", uma gaveta com Ingredientes, Custos, Fornadas, Contas do mês e Ajustes de preço ([ui.md](ui.md#layout-das-telas-internas)).
+- **Margem negativa.** "R$ X de cada R$ 100" só com margem ≥ 0; com prejuízo, a tela diz que ficou abaixo do custo e, na simulação, sugere o preço do canal ("Que tal R$ Y? Assim sobram R$ Z por unidade."). Sem preço possível (taxas e lucro ≥ 100%), não há preço para sugerir: a tela manda diminuir o lucro ou as taxas em Ajustes de preço.
 
 Os textos exatos de cada tela continuam em [business-rules.md](business-rules.md) (atualizados na FE-57). Quando um texto de lá divergir desta seção, siga o de lá e corrija-o no mesmo PR que trocar a tela.
 
