@@ -21,10 +21,17 @@ type StatCardProps = {
   /** Ícone decorativo à direita do título, em Amora. */
   icon?: ReactNode;
   /**
-   * `heroi`: o número principal da tela, sobre Amora e com valor de 36px (painel,
-   * FE-58). No `heroi`, o detalhe fica em chip `accent-strong`, sem a cor do tom.
+   * `heroi`: o número principal da tela, com valor de 36px (painel, FE-58). No
+   * `heroi`, o detalhe fica em chip `bg-surface text-success` e o título quebra
+   * linha em vez de cortar.
    */
   variant?: 'padrao' | 'heroi';
+  /** Só no `heroi`: `accent` (sobre Amora, padrão) ou `danger` (`danger-soft` com texto `ink`). */
+  heroiTone?: 'accent' | 'danger';
+  /** Só no `heroi`: enfeite decorativo no canto (marca d'água), já `aria-hidden`. */
+  decoration?: ReactNode;
+  /** Conteúdo abaixo do detalhe, como um link de ação. */
+  children?: ReactNode;
   className?: string;
 };
 
@@ -40,26 +47,43 @@ export function StatCard({
   detailTone = 'muted',
   icon,
   variant = 'padrao',
+  heroiTone = 'accent',
+  decoration,
+  children,
   className,
 }: StatCardProps) {
   const heroi = variant === 'heroi';
+  const sobreAmora = heroi && heroiTone === 'accent';
 
   return (
     <div
       data-variant={variant}
       className={cn(
         'flex min-w-0 flex-col gap-1 rounded-lg border p-4',
-        heroi
+        heroi && 'relative overflow-hidden p-5',
+        sobreAmora
           ? 'border-accent bg-accent text-on-accent'
-          : 'border-border bg-surface text-ink',
+          : heroi
+            ? 'border-danger-soft bg-danger-soft text-ink'
+            : 'border-border bg-surface text-ink',
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
+      {heroi && decoration ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-6 -bottom-6 opacity-20"
+        >
+          {decoration}
+        </span>
+      ) : null}
+      <div className="relative flex items-center justify-between gap-2">
         <p
           className={cn(
-            'truncate text-caption',
-            heroi ? 'text-on-accent' : 'text-ink-muted',
+            heroi
+              ? 'text-body font-bold'
+              : 'truncate text-caption text-ink-muted',
+            sobreAmora && 'text-on-accent',
           )}
         >
           {title}
@@ -68,7 +92,7 @@ export function StatCard({
           <span
             className={cn(
               '[&>svg]:size-[18px]',
-              heroi ? 'text-on-accent' : 'text-accent',
+              sobreAmora ? 'text-on-accent' : 'text-accent',
             )}
           >
             {icon}
@@ -77,7 +101,7 @@ export function StatCard({
       </div>
       <p
         className={cn(
-          'mt-2 truncate tabular-nums',
+          'relative mt-2 truncate tabular-nums',
           heroi ? 'text-display-lg' : 'text-display',
         )}
       >
@@ -86,15 +110,14 @@ export function StatCard({
       {detail ? (
         <p
           className={cn(
-            'mt-1 max-w-full self-start truncate rounded-full px-2.5 py-0.5 text-caption',
-            heroi
-              ? 'bg-accent-strong text-on-accent'
-              : DETAIL_CLASSES[detailTone],
+            'relative mt-1 max-w-full self-start truncate rounded-full px-2.5 py-0.5 text-caption',
+            sobreAmora ? 'bg-surface text-success' : DETAIL_CLASSES[detailTone],
           )}
         >
           {detail}
         </p>
       ) : null}
+      {children ? <div className="relative mt-2">{children}</div> : null}
     </div>
   );
 }

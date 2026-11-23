@@ -119,6 +119,8 @@ const TEXTO: [string, string][] = [
   ['warning', 'surface'],
   ['danger', 'surface'],
   ['danger', 'surface-alt'],
+  // Herói do painel no vermelho (FE-58).
+  ['ink', 'danger-soft'],
   ['on-accent', 'accent'],
   ['on-accent', 'accent-strong'],
   ['on-danger', 'danger'],

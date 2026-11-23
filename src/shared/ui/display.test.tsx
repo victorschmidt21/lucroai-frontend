@@ -119,10 +119,29 @@ describe('StatCard', () => {
     expect(valor).toHaveClass('text-display-lg', 'tabular-nums');
     expect(valor.parentElement).toHaveClass('bg-accent', 'text-on-accent');
     expect(screen.getByText('Sobrou pra você')).toHaveClass('text-on-accent');
-    // O tom do detalhe não vale sobre Amora: o chip fica em `accent-strong`.
+    // O tom do detalhe não vale sobre Amora: o chip fica em `surface` com `success`.
     expect(
       screen.getByText('De cada R$ 100, R$ 32 ficam com você'),
-    ).toHaveClass('bg-accent-strong');
+    ).toHaveClass('bg-surface', 'text-success');
+  });
+
+  it('na variante heroi com tom danger, fica sobre danger-soft com texto ink', () => {
+    render(
+      <StatCard
+        variant="heroi"
+        heroiTone="danger"
+        title="Este mês ainda está no vermelho"
+        value="-R$ 10,00"
+      >
+        <button type="button">Ver como ajustar os preços</button>
+      </StatCard>,
+    );
+
+    const valor = screen.getByText('-R$ 10,00');
+    expect(valor.parentElement).toHaveClass('bg-danger-soft', 'text-ink');
+    expect(
+      screen.getByRole('button', { name: 'Ver como ajustar os preços' }),
+    ).toBeInTheDocument();
   });
 
   it('na variante padrao, fica sobre surface com o valor em display', () => {
