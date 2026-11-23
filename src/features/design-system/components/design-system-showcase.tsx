@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentType, type ReactNode } from 'react';
 import { Alert } from '@/shared/ui/alert';
 import {
   Badge,
@@ -24,6 +24,15 @@ import { DateRangePicker, type Periodo } from '@/shared/ui/date-picker';
 import { Dialog, DialogClose } from '@/shared/ui/dialog';
 import { Drawer } from '@/shared/ui/drawer';
 import { EmptyState } from '@/shared/ui/empty-state';
+import {
+  IlustracaoCaderno,
+  IlustracaoContas,
+  IlustracaoDespensa,
+  IlustracaoForno,
+  IlustracaoSacola,
+  IlustracaoSemConexao,
+  type IlustracaoProps,
+} from '@/shared/ui/ilustracoes';
 import { ErrorState } from '@/shared/ui/error-state';
 import {
   IconAdicionar,
@@ -74,6 +83,15 @@ import { StatCard } from '@/shared/ui/stat-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
 import { ToastProvider, useToast } from '@/shared/ui/toast';
+
+const ILUSTRACOES: [string, ComponentType<IlustracaoProps>][] = [
+  ['Despensa', IlustracaoDespensa],
+  ['Caderno', IlustracaoCaderno],
+  ['Forno', IlustracaoForno],
+  ['Sacola', IlustracaoSacola],
+  ['Contas', IlustracaoContas],
+  ['Sem conexão', IlustracaoSemConexao],
+];
 
 const CORES = [
   { nome: 'bg', classe: 'bg-bg', uso: 'fundo da página (Chantilly)' },
@@ -745,10 +763,22 @@ export function DesignSystemShowcase() {
               action={<Button>Cadastrar insumo</Button>}
             />
             <EmptyState
-              title="Nenhuma venda no período."
-              description="Com a prop ilustracao (os desenhos chegam na FE-59)."
-              ilustracao={<IconVendas className="size-16 text-highlight" />}
+              title="Sua despensa está vazia"
+              description="Com a prop ilustracao (FE-59)."
+              ilustracao={<IlustracaoDespensa />}
+              action={<Button>Adicionar ingrediente</Button>}
             />
+            <ul
+              aria-label="Ilustrações"
+              className="flex flex-wrap gap-4 rounded-lg bg-surface p-4"
+            >
+              {ILUSTRACOES.map(([nome, Ilustracao]) => (
+                <li key={nome} className="flex flex-col items-center gap-1">
+                  <Ilustracao />
+                  <span className="text-small text-ink-muted">{nome}</span>
+                </li>
+              ))}
+            </ul>
             <ErrorState
               title="Não foi possível carregar os insumos."
               message="Verifique sua conexão."

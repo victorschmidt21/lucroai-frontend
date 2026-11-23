@@ -38,7 +38,9 @@ it('tem um só h1 e uma seção para cada grupo', () => {
   ]);
 });
 
-it('dispara os três tipos de notificação', async () => {
+// O catálogo é grande (com as ilustrações desde a FE-59): sob a suíte inteira,
+// as buscas por papel passam dos 5 s padrão.
+it('dispara os três tipos de notificação', { timeout: 20_000 }, async () => {
   render(<DesignSystemShowcase />);
 
   await userEvent.click(
