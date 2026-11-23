@@ -9,7 +9,12 @@ import {
   StatusEstoqueBadge,
   StatusVendaBadge,
 } from '@/shared/ui/badge';
-import { Button, buttonClasses, IconButton } from '@/shared/ui/button';
+import {
+  Button,
+  buttonClasses,
+  IconButton,
+  type ButtonVariant,
+} from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Chip, ToggleChip } from '@/shared/ui/chip';
@@ -59,6 +64,7 @@ import { PageHeader } from '@/shared/ui/page-header';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { Select } from '@/shared/ui/select';
+import { SeletorAparencia } from '@/shared/ui/seletor-aparencia';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Slider } from '@/shared/ui/slider';
 import { Spinner } from '@/shared/ui/spinner';
@@ -104,10 +110,33 @@ const CORES = [
 ];
 
 const RAIOS = [
-  { nome: 'radius-sm (8px)', classe: 'rounded-sm', uso: 'badges e chips' },
-  { nome: 'radius-md (12px)', classe: 'rounded-md', uso: 'cartões e campos' },
-  { nome: 'radius-lg (14px)', classe: 'rounded-lg', uso: 'resumos' },
-  { nome: 'radius-xl (18px)', classe: 'rounded-xl', uso: 'Dialog e Drawer' },
+  { nome: 'radius-sm (10px)', classe: 'rounded-sm', uso: 'itens pequenos' },
+  { nome: 'radius-md (14px)', classe: 'rounded-md', uso: 'campos' },
+  { nome: 'radius-lg (20px)', classe: 'rounded-lg', uso: 'cartões e estados' },
+  { nome: 'radius-xl (24px)', classe: 'rounded-xl', uso: 'Dialog e Drawer' },
+  { nome: 'rounded-full', classe: 'rounded-full', uso: 'botões e chips' },
+];
+
+/*
+ * Hover e foco simulados com `!`, para ver todos os estados lado a lado (FE-55).
+ * As classes repetem as de `button.tsx` e `label.tsx`: se mudarem lá, mude aqui.
+ */
+const HOVER_DO_BOTAO: Record<ButtonVariant, string> = {
+  primario: 'border-accent-strong! bg-accent-strong!',
+  secundario: 'bg-accent-soft!',
+  perigo: 'border-danger! bg-danger!',
+  fantasma: 'border-accent!',
+  icone: 'bg-accent-soft!',
+};
+const FOCO_SIMULADO = 'outline-2 outline-offset-2 outline-accent';
+const HOVER_DO_CAMPO = 'border-ink!';
+const FOCO_DO_CAMPO = 'border-accent! ring-4 ring-accent-soft';
+
+const VARIANTES_DE_BOTAO: [ButtonVariant, string][] = [
+  ['primario', 'Primário'],
+  ['secundario', 'Secundário'],
+  ['fantasma', 'Suave'],
+  ['perigo', 'Perigo'],
 ];
 
 const ICONES_MENU: [string, IconComponent][] = [
@@ -169,6 +198,126 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
       <h2 className="text-section-label text-ink-muted">{titulo}</h2>
       {children}
     </section>
+  );
+}
+
+function Estado({ nome, children }: { nome: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-start gap-1.5">
+      {children}
+      <span className="text-caption text-ink-muted">{nome}</span>
+    </div>
+  );
+}
+
+/** Padrão, hover, foco, erro ou carregando e desabilitado, lado a lado. */
+function EstadosDosComponentes() {
+  return (
+    <div className="flex flex-col gap-6">
+      {VARIANTES_DE_BOTAO.map(([variant, nome]) => (
+        <div key={variant} className="flex flex-col gap-2">
+          <p className="text-small font-extrabold text-ink">{nome}</p>
+          <div className="flex flex-wrap gap-4">
+            <Estado nome="Padrão">
+              <Button variant={variant}>{nome}</Button>
+            </Estado>
+            <Estado nome="Hover">
+              <Button variant={variant} className={HOVER_DO_BOTAO[variant]}>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Foco">
+              <Button variant={variant} className={FOCO_SIMULADO}>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Carregando">
+              <Button variant={variant} loading>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Desabilitado">
+              <Button variant={variant} disabled>
+                {nome}
+              </Button>
+            </Estado>
+          </div>
+        </div>
+      ))}
+      <div className="flex flex-col gap-2">
+        <p className="text-small font-extrabold text-ink">IconButton</p>
+        <div className="flex flex-wrap gap-4">
+          <Estado nome="Padrão">
+            <IconButton aria-label="Editar (padrão)">
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Hover">
+            <IconButton
+              aria-label="Editar (hover)"
+              className={HOVER_DO_BOTAO.icone}
+            >
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Foco">
+            <IconButton aria-label="Editar (foco)" className={FOCO_SIMULADO}>
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Desabilitado">
+            <IconButton aria-label="Editar (desabilitado)" disabled>
+              <IconEditar />
+            </IconButton>
+          </Estado>
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Input label="Campo (padrão)" placeholder="Farinha de Trigo" />
+        <Input
+          label="Campo (hover)"
+          defaultValue="Farinha de Trigo"
+          className={HOVER_DO_CAMPO}
+        />
+        <Input
+          label="Campo (foco)"
+          defaultValue="Farinha de Trigo"
+          className={FOCO_DO_CAMPO}
+        />
+        <Input
+          label="Campo (erro)"
+          defaultValue=""
+          error="Informe o nome do insumo"
+        />
+        <Input
+          label="Campo (desabilitado)"
+          defaultValue="Farinha de Trigo"
+          disabled
+        />
+        <Input
+          label="Campo (com dica)"
+          hint="Como aparece nas listagens."
+          defaultValue="Farinha de Trigo"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-small font-extrabold text-ink">Chip</p>
+        <div className="flex flex-wrap gap-4">
+          <Estado nome="Padrão">
+            <ToggleChip>Aluguel</ToggleChip>
+          </Estado>
+          <Estado nome="Hover">
+            <ToggleChip className="border-accent! text-ink!">Gás</ToggleChip>
+          </Estado>
+          <Estado nome="Selecionado">
+            <ToggleChip defaultSelected>Energia</ToggleChip>
+          </Estado>
+          <Estado nome="Desabilitado">
+            <ToggleChip disabled>Internet</ToggleChip>
+          </Estado>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -309,7 +458,11 @@ export function DesignSystemShowcase() {
     <ToastProvider>
       <main className="mx-auto flex max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
         <div className="flex flex-col gap-6">
-          <Logo />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <Logo />
+            {/* Os componentes nos dois temas: troque aqui (FE-55). */}
+            <SeletorAparencia />
+          </div>
           <PageHeader
             title="Design system"
             subtitle="Tokens e componentes base do Doce Fatia"
@@ -409,7 +562,7 @@ export function DesignSystemShowcase() {
             <Button>Primário</Button>
             <Button variant="secundario">Secundário</Button>
             <Button variant="perigo">Perigo</Button>
-            <Button variant="fantasma">Fantasma</Button>
+            <Button variant="fantasma">Suave</Button>
             <Button disabled>Desabilitado</Button>
             <Button loading>Salvando</Button>
           </div>
@@ -431,6 +584,10 @@ export function DesignSystemShowcase() {
           </div>
         </Secao>
 
+        <Secao titulo="Estados dos componentes">
+          <EstadosDosComponentes />
+        </Secao>
+
         <Secao titulo="Campos">
           <ExemploDeCampos />
           <Alert>Não foi possível salvar o insumo.</Alert>
@@ -442,6 +599,14 @@ export function DesignSystemShowcase() {
 
         <Secao titulo="Cartões">
           <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            <StatCard
+              variant="heroi"
+              className="col-span-2 lg:col-span-4"
+              title="Sobrou pra você"
+              value="R$ 1.234,56"
+              detail="Variante heroi (FE-58)"
+              icon={<IconTendencia />}
+            />
             <StatCard
               title="Faturamento"
               value="R$ 1.234,56"
@@ -476,8 +641,10 @@ export function DesignSystemShowcase() {
                 Cartão com rótulo de seção, como no cálculo real.
               </p>
             </Card>
-            <Card>
-              <p className="text-small text-ink-muted">Total vendido</p>
+            <Card variant="destaque">
+              <p className="text-small text-ink-muted">
+                Total vendido (destaque)
+              </p>
               <p className="text-title text-accent">R$ 3.480,00</p>
             </Card>
           </div>
@@ -572,6 +739,11 @@ export function DesignSystemShowcase() {
               title="Nenhum insumo encontrado."
               description="Cadastre o primeiro insumo para começar."
               action={<Button>Cadastrar insumo</Button>}
+            />
+            <EmptyState
+              title="Nenhuma venda no período."
+              description="Com a prop ilustracao (os desenhos chegam na FE-59)."
+              ilustracao={<IconVendas className="size-16 text-highlight" />}
             />
             <ErrorState
               title="Não foi possível carregar os insumos."

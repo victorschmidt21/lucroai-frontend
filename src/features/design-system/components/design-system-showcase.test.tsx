@@ -25,6 +25,7 @@ it('tem um só h1 e uma seção para cada grupo', () => {
     'Raios',
     'Ícones',
     'Botões',
+    'Estados dos componentes',
     'Campos',
     'Seleção',
     'Cartões',
