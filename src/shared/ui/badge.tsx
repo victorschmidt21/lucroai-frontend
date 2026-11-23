@@ -7,21 +7,17 @@ import {
 } from '@/shared/api/contracts/enums';
 import { cn } from './cn';
 
-// Fundo com 8% da cor e texto na cor cheia, como os status de estoque_card.dart e
-// venda_card.dart (que usam 12%: com ele, "Cancelada" não atinge 4,5:1).
+// Fundo suave do status (`*-soft`) e texto na cor cheia; "Cancelada" é neutra, sobre
+// `surface-alt` (FE-51, docs/ui.md#status). Pares medidos em tokens.test.ts.
 const TONE_CLASSES = {
-  critico: 'border-status-critico/30 bg-status-critico/8 text-status-critico',
-  baixo: 'border-status-baixo/30 bg-status-baixo/8 text-status-baixo',
-  adequado:
-    'border-status-adequado/30 bg-status-adequado/8 text-status-adequado',
-  pendente:
-    'border-status-pendente/30 bg-status-pendente/8 text-status-pendente',
-  concluida:
-    'border-status-concluida/30 bg-status-concluida/8 text-status-concluida',
-  cancelada:
-    'border-status-cancelada/30 bg-status-cancelada/8 text-status-cancelada',
-  neutro: 'border-border-strong bg-surface-raised text-ink-muted',
-  destaque: 'border-accent/30 bg-accent/8 text-accent',
+  critico: 'border-transparent bg-danger-soft text-status-critico',
+  baixo: 'border-transparent bg-warning-soft text-status-baixo',
+  adequado: 'border-transparent bg-success-soft text-status-adequado',
+  pendente: 'border-transparent bg-warning-soft text-status-pendente',
+  concluida: 'border-transparent bg-success-soft text-status-concluida',
+  cancelada: 'border-transparent bg-surface-alt text-status-cancelada',
+  neutro: 'border-border bg-surface-alt text-ink-muted',
+  destaque: 'border-transparent bg-accent-soft text-ink',
 };
 
 export type BadgeTone = keyof typeof TONE_CLASSES;

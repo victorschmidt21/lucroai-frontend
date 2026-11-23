@@ -101,8 +101,8 @@ function ItemMovimentacao({
         className={cn(
           'flex size-9 shrink-0 items-center justify-center rounded-full',
           entrada
-            ? 'bg-status-adequado/8 text-status-adequado'
-            : 'bg-status-critico/8 text-status-critico',
+            ? 'bg-success-soft text-status-adequado'
+            : 'bg-danger-soft text-status-critico',
         )}
       >
         <Icone className="size-5" />

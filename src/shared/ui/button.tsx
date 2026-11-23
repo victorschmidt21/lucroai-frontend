@@ -4,11 +4,11 @@ import { cn } from './cn';
 // `not-disabled:` em vez de `enabled:`: `:enabled` nunca casa com `<a>`, e o link
 // com aparência de botão ficaria sem hover.
 const VARIANT_CLASSES = {
-  // ElevatedButton laranja do mobile; o texto é preto pelo contraste (docs/ui.md).
+  // Ação primária em Amora; `accent-strong` no hover (FE-51, docs/ui.md#contraste).
   primario:
-    'border-accent-strong bg-accent-strong text-on-accent not-disabled:hover:border-accent not-disabled:hover:bg-accent',
+    'border-accent bg-accent text-on-accent not-disabled:hover:border-accent-strong not-disabled:hover:bg-accent-strong',
   secundario:
-    'border-border-strong bg-surface-alt text-ink not-disabled:hover:border-ink-subtle',
+    'border-border-field bg-surface text-ink not-disabled:hover:border-ink not-disabled:hover:bg-surface-alt',
   perigo:
     'border-danger-strong bg-danger-strong text-on-danger not-disabled:hover:border-danger not-disabled:hover:bg-danger',
   fantasma:

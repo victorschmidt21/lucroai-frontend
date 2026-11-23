@@ -17,7 +17,7 @@ type StatCardProps = {
   detail?: string;
   /** Cor do detalhe, como `detailColor` do `_KpiCard` do painel. */
   detailTone?: StatCardDetailTone;
-  /** Ícone decorativo à direita do título, em laranja. */
+  /** Ícone decorativo à direita do título, em Amora. */
   icon?: ReactNode;
   className?: string;
 };

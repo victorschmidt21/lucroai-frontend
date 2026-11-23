@@ -14,7 +14,7 @@ export function Chip({ className, ...props }: ComponentProps<'span'>) {
     <span
       className={cn(
         CHIP_CLASSES,
-        'border-border-strong bg-surface-raised text-ink-muted',
+        'border-border bg-surface-alt text-ink-muted',
         className,
       )}
       {...props}
@@ -33,8 +33,8 @@ type ToggleChipProps = Omit<
 
 /**
  * Chip que liga e desliga, como o `FilterChip` dos gastos na produção
- * (producoes_page.dart). Botão com `aria-pressed`, pelo Radix Toggle. Selecionado,
- * o texto usa `accent`: o `accent-strong` do mobile não atinge 4,5:1 sobre o fundo do chip.
+ * (producoes_page.dart). Botão com `aria-pressed`, pelo Radix Toggle. Selecionado:
+ * fundo `accent-soft`, texto `ink` e borda `accent` (FE-51).
  */
 export function ToggleChip({
   selected,
@@ -53,8 +53,8 @@ export function ToggleChip({
         CHIP_CLASSES,
         // 44px de alvo de toque sem aumentar o chip.
         'group relative cursor-pointer transition-colors duration-150 before:absolute before:-inset-y-1.5 before:inset-x-0',
-        'border-border-strong bg-surface-raised text-ink-muted not-disabled:hover:text-ink',
-        'data-[state=on]:border-accent-strong data-[state=on]:bg-accent-strong/20 data-[state=on]:text-accent',
+        'border-border-field bg-surface text-ink-muted not-disabled:hover:text-ink',
+        'data-[state=on]:border-accent data-[state=on]:bg-accent-soft data-[state=on]:text-ink',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}

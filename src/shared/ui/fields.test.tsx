@@ -42,8 +42,8 @@ describe('Button', () => {
   });
 
   it.each([
-    ['primario', 'bg-accent-strong'],
-    ['secundario', 'bg-surface-alt'],
+    ['primario', 'bg-accent'],
+    ['secundario', 'bg-surface'],
     ['perigo', 'bg-danger-strong'],
     ['fantasma', 'bg-transparent'],
   ] as const)('aplica a variante %s', (variant, classe) => {

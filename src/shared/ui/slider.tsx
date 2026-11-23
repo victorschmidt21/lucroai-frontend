@@ -21,7 +21,7 @@ type SliderProps = {
 
 /**
  * Controle deslizante da simulação (`_SliderCard` de simulacao_page.dart): título,
- * valor em laranja, trilho de 8px e os limites embaixo. Radix Slider: setas,
+ * valor em Amora, trilho de 8px e os limites embaixo. Radix Slider: setas,
  * Page Up/Down, Home e End.
  */
 export function Slider({

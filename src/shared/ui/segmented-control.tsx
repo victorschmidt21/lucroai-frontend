@@ -36,7 +36,7 @@ export function SegmentedControl<T extends string>({
         if (opcao) onValueChange(opcao.value);
       }}
       className={cn(
-        'inline-flex max-w-full overflow-hidden rounded-full border border-ink-subtle',
+        'inline-flex max-w-full overflow-hidden rounded-full border border-border-field',
         className,
       )}
       {...props}
@@ -47,8 +47,8 @@ export function SegmentedControl<T extends string>({
           value={option.value}
           className={cn(
             'group inline-flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 px-4 text-body font-medium whitespace-nowrap text-ink transition-colors duration-150 lg:min-h-10',
-            'not-first:border-l not-first:border-ink-subtle hover:bg-surface-alt',
-            'data-[state=on]:bg-accent-strong data-[state=on]:text-on-accent',
+            'not-first:border-l not-first:border-border-field hover:bg-surface-alt',
+            'data-[state=on]:bg-accent data-[state=on]:text-on-accent',
             'focus-visible:-outline-offset-4',
           )}
         >

@@ -13,7 +13,7 @@ type SelectProps = ComponentProps<'select'> & FieldProps;
 
 /**
  * `<select>` nativo, como na Urbizzi: teclado, leitor de tela e o seletor do celular
- * já funcionam, e ele aceita `{...register('campo')}`. A seta laranja repete o
+ * já funcionam, e ele aceita `{...register('campo')}`. A seta em Amora repete o
  * `iconEnabledColor` do `DropdownButtonFormField` do mobile.
  */
 export function Select({

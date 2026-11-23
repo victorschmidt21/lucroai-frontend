@@ -29,7 +29,7 @@ export function Checkbox({
           <input
             type="checkbox"
             className={cn(
-              'peer size-5 cursor-pointer appearance-none rounded-[4px] border-2 border-ink-muted bg-transparent transition-colors duration-150 not-disabled:hover:border-ink checked:border-accent checked:bg-accent not-disabled:checked:hover:border-accent',
+              'peer size-5 cursor-pointer appearance-none rounded-[4px] border-2 border-border-field bg-surface transition-colors duration-150 not-disabled:hover:border-ink checked:border-accent checked:bg-accent not-disabled:checked:hover:border-accent',
               'disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger',
               className,
             )}

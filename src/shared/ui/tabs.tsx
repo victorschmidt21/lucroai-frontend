@@ -19,7 +19,7 @@ export function TabsList({
   );
 }
 
-/** Aba do `TabBar` do mobile: rótulo e indicador laranja na ativa. */
+/** Aba do `TabBar` do mobile: rótulo e indicador em Amora na ativa. */
 export function TabsTrigger({
   className,
   ...props

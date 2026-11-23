@@ -1,45 +1,55 @@
 @import 'tailwindcss';
 
 /*
- * Tokens do LucroAI, extraídos do app Flutter (`lib/main.dart` e telas de
- * `lib/features/*\/presentation/`). Só tema escuro, como o mobile.
- * Contraste medido em `src/shared/ui/tokens.test.ts` (docs/ui.md#contraste).
+ * Tokens da marca Doce Fatia, paleta Confeitaria em tema claro (FE-51,
+ * docs/marca.md#cores-paleta-confeitaria). Os nomes vêm do tema escuro antigo,
+ * para as telas não mudarem. Contraste medido em `src/shared/ui/tokens.test.ts`
+ * (docs/ui.md#contraste).
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Fundos: scaffold do painel e das telas internas */
-  --bg: #050505;
-  --bg-alt: #0a0a0a;
+  /* Fundo da página: Chantilly. `bg-alt` fica com o mesmo valor, por compatibilidade. */
+  --bg: #fff8f3;
+  --bg-alt: #fff8f3;
 
-  /* Superfícies: cartões, campos e sobreposições */
-  --surface: #111111;
-  --surface-alt: #171717;
-  --surface-raised: #1a1a1a;
+  /* Superfícies: Forma (cartões), Merengue (campos e áreas agrupadas). No tema
+   * claro, `surface-raised` é branco e se separa pela sombra. */
+  --surface: #ffffff;
+  --surface-alt: #fbeee7;
+  --surface-raised: #ffffff;
 
-  --border: #272727;
-  --border-strong: #2b2b2b;
+  /* Borda de cartão, divisores e borda de campo (3:1 não textual). */
+  --border: #ebd8cf;
+  --border-strong: #d9c0b5;
+  --border-field: #9c8279;
 
-  /* Texto. `ink-subtle` era #7C7C7C no mobile e foi clareado para #858585 (o
-   * cinza do painel e das vendas no mobile): #7C7C7C fica em 4,17:1 sobre
-   * `surface-raised`, abaixo de 4,5:1. */
-  --ink: #ffffff;
-  --ink-muted: #8a8a8a;
-  --ink-subtle: #858585;
+  /* Texto: Cacau e Cacau 2 (nunca preto puro). */
+  --ink: #3a2530;
+  --ink-muted: #7a5f69;
+  --ink-subtle: #7a5f69;
 
-  /* Destaque. Preto sobre laranja: o branco do mobile fica em 2,83:1 e 3,47:1. */
-  --accent: #ff6b3d;
-  --accent-strong: #e85d33;
-  --on-accent: #000000;
+  /* Primária Amora; `accent-strong` é o hover e o pressionado. */
+  --accent: #a3326e;
+  --accent-strong: #8a285c;
+  --on-accent: #ffffff;
+  --accent-soft: #fadce9;
 
-  --success: #4caf50;
-  --warning: #ffb000;
-  --danger: #ff5252;
-  --danger-strong: #e53935;
-  /* Preto sobre `danger-strong` dá 4,97:1; o branco do mobile, 4,23:1. */
-  --on-danger: #000000;
+  /* Acento Damasco: decorativo, nunca texto nem fundo de botão. */
+  --highlight: #f08a5d;
+  --highlight-ink: #b04e25;
 
-  /* Status reutilizados nas telas (estoque_card.dart e venda_card.dart) */
+  /* Pistache, Caramelo e Cereja, cada um com o fundo suave dos badges. */
+  --success: #2a6f46;
+  --success-soft: #ddf1e3;
+  --warning: #8a5a00;
+  --warning-soft: #fcebc6;
+  --danger: #b8342a;
+  --danger-strong: #9e2b22;
+  --on-danger: #ffffff;
+  --danger-soft: #fbe1dc;
+
+  /* Status reutilizados nas telas. Cancelada é neutra, para não parecer erro. */
   --status-critico: var(--danger);
   --status-baixo: var(--warning);
   --status-adequado: var(--success);
@@ -47,8 +57,8 @@
   --status-concluida: var(--success);
   --status-cancelada: var(--ink-muted);
 
-  /* `barrierColor: Colors.black87` dos diálogos do mobile */
-  --overlay: rgb(0 0 0 / 0.87);
+  /* Fundo atrás de Dialog e Drawer, em tom Cacau. */
+  --overlay: rgb(58 37 48 / 0.45);
 }
 
 /* Tira do Tailwind o que o LucroAI não usa: cores prontas, sombras, raios e tamanhos. */
@@ -66,8 +76,9 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
 
-  /* Elevação: só Dialog e Drawer, como no mobile. */
-  --shadow-elevacao: 0 12px 32px rgb(0 0 0 / 0.6);
+  /* Elevação quente (tom Cacau, nunca preta): Dialog, Drawer, Toast e Combobox. */
+  --shadow-elevacao:
+    0 1px 2px rgb(58 37 48 / 0.06), 0 8px 24px rgb(58 37 48 / 0.1);
 
   /* Escala tipográfica, em px do mobile convertidos para rem. */
   --text-*: initial;
@@ -138,15 +149,22 @@
   --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-field: var(--border-field);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-highlight: var(--highlight);
+  --color-highlight-ink: var(--highlight-ink);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --color-danger-strong: var(--danger-strong);
   --color-on-danger: var(--on-danger);
   --color-overlay: var(--overlay);
@@ -169,7 +187,7 @@
 }
 
 @layer base {
-  /* `accent` tem 7,2:1 sobre `bg` e passa de 3:1 em todas as superfícies. */
+  /* `accent` tem 6,48:1 sobre `surface` e passa de 3:1 em todas as superfícies. */
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
