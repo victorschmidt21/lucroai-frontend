@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   calcularIndicadores,
-  contarEstoqueBaixo,
+  chipsAcabando,
+  diasParaFecharOMes,
+  estadoDoHeroi,
   evolucaoMensal,
+  heroiDoMes,
+  ingredientesAcabando,
   inicioDosSeisMeses,
-  descreverSobraDoMes,
+  primeiroNome,
+  saudacao,
+  textoFechamentoDoMes,
   pontoEquilibrioDoPainel,
   porCadaCemReais,
   rotuloAcabando,
@@ -131,15 +137,36 @@ describe('vendasDoMes', () => {
   });
 });
 
-describe('contarEstoqueBaixo', () => {
-  it('conta só os insumos com disponível abaixo do mínimo', () => {
+describe('ingredientesAcabando e chipsAcabando', () => {
+  const insumos = [
+    { id: 1, nome: 'Farinha' },
+    { id: 2, nome: 'Açúcar' },
+    { id: 3, nome: 'Ovos' },
+  ];
+
+  it('lista só os insumos abaixo do mínimo, na ordem dos insumos', () => {
     expect(
-      contarEstoqueBaixo([
-        { quantidadeDisponivel: 1, quantidadeMinima: 2 },
-        { quantidadeDisponivel: 2, quantidadeMinima: 2 },
-        { quantidadeDisponivel: 5, quantidadeMinima: 0 },
-      ]),
-    ).toBe(1);
+      ingredientesAcabando(
+        [
+          { insumoId: 3, quantidadeDisponivel: 1, quantidadeMinima: 2 },
+          { insumoId: 2, quantidadeDisponivel: 2, quantidadeMinima: 2 },
+          { insumoId: 1, quantidadeDisponivel: -1, quantidadeMinima: 0 },
+          { insumoId: 9, quantidadeDisponivel: 0, quantidadeMinima: 5 },
+        ],
+        insumos,
+      ),
+    ).toEqual(['Farinha', 'Ovos', 'Ingrediente #9']);
+  });
+
+  it('mostra até 3 nomes e conta o resto', () => {
+    expect(chipsAcabando(['a', 'b'])).toEqual({
+      visiveis: ['a', 'b'],
+      resto: 0,
+    });
+    expect(chipsAcabando(['a', 'b', 'c', 'd', 'e'])).toEqual({
+      visiveis: ['a', 'b', 'c'],
+      resto: 2,
+    });
   });
 });
 
@@ -257,19 +284,37 @@ describe('produtosMaisRentaveis', () => {
 });
 
 describe('pontoEquilibrioDoPainel', () => {
-  it('mostra o valor por mês da API', () => {
-    expect(pontoEquilibrioDoPainel({ valor: 4524.36, motivo: null })).toEqual({
-      valor: 'R$ 4.524,36',
-      detalhe: 'por mês',
+  it('mostra o valor por mês da API e quanto já foi vendido', () => {
+    expect(
+      pontoEquilibrioDoPainel({ valor: 4000, motivo: null }, 1000),
+    ).toEqual({
+      titulo: 'Para pagar as contas do mês, venda R$ 4.000,00',
+      progresso: 0.25,
+      detalhe: 'Você já vendeu R$ 1.000,00 este mês',
       tom: 'muted',
     });
   });
 
+  it('com as vendas acima do valor, diz que as contas estão pagas', () => {
+    expect(
+      pontoEquilibrioDoPainel({ valor: 4000, motivo: null }, 5000),
+    ).toEqual({
+      titulo: 'Para pagar as contas do mês, venda R$ 4.000,00',
+      progresso: 1,
+      detalhe: 'Contas do mês pagas. O que vender agora sobra pra você.',
+      tom: 'success',
+    });
+    expect(
+      pontoEquilibrioDoPainel({ valor: 0, motivo: null }, 0).progresso,
+    ).toBe(1);
+  });
+
   it('sem vendas, diz que ainda não vendeu', () => {
     expect(
-      pontoEquilibrioDoPainel({ valor: null, motivo: 'SEM_VENDAS' }),
+      pontoEquilibrioDoPainel({ valor: null, motivo: 'SEM_VENDAS' }, 0),
     ).toEqual({
-      valor: '—',
+      titulo: 'Para pagar as contas do mês',
+      progresso: null,
       detalhe: 'Ainda sem vendas este mês',
       tom: 'muted',
     });
@@ -277,9 +322,10 @@ describe('pontoEquilibrioDoPainel', () => {
 
   it('com margem negativa, avisa em vermelho', () => {
     expect(
-      pontoEquilibrioDoPainel({ valor: null, motivo: 'MARGEM_NEGATIVA' }),
+      pontoEquilibrioDoPainel({ valor: null, motivo: 'MARGEM_NEGATIVA' }, 100),
     ).toEqual({
-      valor: '—',
+      titulo: 'Para pagar as contas do mês',
+      progresso: null,
       detalhe: 'Com os preços de hoje, você paga para vender.',
       tom: 'danger',
     });
@@ -299,33 +345,75 @@ describe('porCadaCemReais', () => {
   });
 });
 
-describe('descreverSobraDoMes', () => {
-  it('com lucro, diz quanto fica de cada R$ 100, em verde', () => {
-    expect(descreverSobraDoMes({ faturamento: 200, margem: 23.6 })).toEqual({
+describe('estadoDoHeroi e heroiDoMes', () => {
+  it('com lucro, mostra quanto fica de cada R$ 100', () => {
+    const ind = { faturamento: 200, lucro: 47.2, margem: 23.6 };
+    expect(estadoDoHeroi(ind)).toBe('positivo');
+    expect(heroiDoMes(ind)).toEqual({
+      estado: 'positivo',
+      titulo: 'Sobrou pra você este mês',
       detalhe: 'R$ 24 de cada R$ 100',
-      tom: 'success',
     });
   });
 
-  it('com prejuízo, diz que ficou abaixo do custo, em vermelho', () => {
-    expect(descreverSobraDoMes({ faturamento: 200, margem: -5 })).toEqual({
-      detalhe: 'As vendas ficaram abaixo do custo',
-      tom: 'danger',
+  it('com lucro zero e vendas, continua positivo', () => {
+    expect(estadoDoHeroi({ faturamento: 10, lucro: 0 })).toBe('positivo');
+  });
+
+  it('com prejuízo, diz que o mês está no vermelho', () => {
+    const ind = { faturamento: 200, lucro: -10, margem: -5 };
+    expect(estadoDoHeroi(ind)).toBe('negativo');
+    expect(heroiDoMes(ind)).toEqual({
+      estado: 'negativo',
+      titulo: 'Este mês ainda está no vermelho',
+      detalhe: null,
     });
   });
 
-  it('sem vendas no mês, diz que ainda não vendeu', () => {
-    expect(descreverSobraDoMes({ faturamento: 0, margem: 0 })).toEqual({
-      detalhe: 'Ainda sem vendas este mês',
-      tom: 'muted',
+  it('sem faturamento no mês, diz que ainda não vendeu', () => {
+    const ind = { faturamento: 0, lucro: 0, margem: 0 };
+    expect(estadoDoHeroi(ind)).toBe('sem-vendas');
+    expect(heroiDoMes(ind)).toEqual({
+      estado: 'sem-vendas',
+      titulo: 'Ainda sem vendas este mês',
+      detalhe: null,
     });
   });
 });
 
 describe('rotuloAcabando', () => {
   it('concorda com a quantidade', () => {
-    expect(rotuloAcabando(1)).toBe('ingrediente acabando');
-    expect(rotuloAcabando(0)).toBe('ingredientes acabando');
-    expect(rotuloAcabando(3)).toBe('ingredientes acabando');
+    expect(rotuloAcabando(1)).toBe('1 ingrediente acabando');
+    expect(rotuloAcabando(3)).toBe('3 ingredientes acabando');
+  });
+});
+
+describe('primeiroNome e saudacao', () => {
+  it.each([
+    ['João da Silva', 'João'],
+    ['  Maria  ', 'Maria'],
+    ['', null],
+    ['   ', null],
+    [null, null],
+  ])('%j → %j', (nome, esperado) => {
+    expect(primeiroNome(nome)).toBe(esperado);
+  });
+
+  it('cumprimenta pelo primeiro nome ou só com "Oi!"', () => {
+    expect(saudacao('Mah Souza')).toBe('Oi, Mah!');
+    expect(saudacao(null)).toBe('Oi!');
+  });
+});
+
+describe('diasParaFecharOMes e textoFechamentoDoMes', () => {
+  it.each([
+    [new Date(2026, 10, 19, 15), 11, 'Faltam 11 dias para fechar o mês'],
+    [new Date(2026, 10, 29), 1, 'Falta 1 dia para fechar o mês'],
+    [new Date(2026, 10, 30, 23, 59), 0, 'Último dia do mês'],
+    [new Date(2028, 1, 1), 28, 'Faltam 28 dias para fechar o mês'],
+    [new Date(2027, 11, 31), 0, 'Último dia do mês'],
+  ])('%s → %i', (hoje, dias, texto) => {
+    expect(diasParaFecharOMes(hoje)).toBe(dias);
+    expect(textoFechamentoDoMes(hoje)).toBe(texto);
   });
 });
