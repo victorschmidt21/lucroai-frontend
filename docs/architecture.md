@@ -21,7 +21,7 @@ src/
 ├── app/                          # só rotas: páginas finas que compõem funcionalidades
 │   ├── layout.tsx                # existe: layout raiz, com Fredoka e Nunito
 │   ├── fonts.ts                  # existe: Fredoka e Nunito via next/font
-│   ├── icon.svg                  # existe: favicon
+│   ├── icon.svg                  # existe: favicon (símbolo Doce Fatia, FE-54)
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
 │   ├── not-found.tsx, error.tsx  # existe (FE-08): 404 e erro fora do layout de (app)
@@ -177,11 +177,11 @@ O layout de `(app)` (existe desde a FE-08) confere a sessão com `getUsuarioAtua
 
 Páginas de status (FE-08, com a `StatusPage` de `shared/ui/`):
 
-| Arquivo                                            | Quando                                                                                                                                                         |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| LucroAI") |
-| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar novamente" (`retry`)                                                                                  |
-| `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                      |
+| Arquivo                                            | Quando                                                                                                                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| Doce Fatia") |
+| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar novamente" (`retry`)                                                                                     |
+| `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                         |
 
 Sem sessão, rota inexistente também leva ao login (o `src/proxy.ts` age antes). Erros de dados da API não chegam a essas páginas: ficam no `ErrorState` de cada bloco.
 

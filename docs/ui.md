@@ -142,7 +142,7 @@ Duas fontes arredondadas da [marca](marca.md#tipografia), via `next/font/google`
 
 O peso de cada token vale quando não há um `font-*` explícito, que sempre vence. Nada abaixo de 12px, com uma exceção provisória: o `text-nav`, até a FE-57.
 
-`text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva o nome do produto como manda a [marca](marca.md#nome): **Doce Fatia** (as telas ainda dizem "LucroAI" até a FE-54).
+`text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva o nome do produto como manda a [marca](marca.md#nome): **Doce Fatia** (desde a FE-54).
 
 ## Componentes (`src/shared/ui/`)
 
@@ -176,11 +176,19 @@ Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tab
 | `page-header.tsx`                    | `PageHeader`                                                                | `title` (o `h1`), `subtitle` e `actions`                                                                                                                                                                                                                                                     |
 | `status-page.tsx`                    | `StatusPage`                                                                | páginas 404 e de erro (FE-08): `code`, `title` (o `h1`), `description`, `alert` (anuncia a descrição) e `action`; `standalone` traz o `<main>` e a logo, para as páginas fora do layout de `(app)`                                                                                           |
 | `date-picker.tsx`                    | `DateRangePicker`, `isPeriodoValido`                                        | período do histórico de vendas: `legend`, `value` e `onChange` com `{ inicio, fim }` em `YYYY-MM-DD`; dois `<input type="date">` ("Data inicial", "Data final") e o erro de data inicial depois da final                                                                                     |
-| `logo.tsx`                           | `Logo`                                                                      | wordmark "LucroAI" do cabeçalho do painel, em texto (o mobile não tem logo em imagem); `size="compacto"` para o menu                                                                                                                                                                         |
+| `logo.tsx`                           | `Logo`                                                                      | logo Doce Fatia (FE-54): símbolo e logotipo, `variante`, `size` e `tom`; ver [Logo](#logo)                                                                                                                                                                                                   |
 | `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…                   | SVGs locais equivalentes aos Material Icons do mobile; decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone`. Do login (FE-07): `IconEmail`, `IconCadeado`, `IconMostrar`, `IconOcultar` e `IconSair`; do layout (FE-08): `IconConta` e `IconConstrucao`                         |
 | `cn.ts`                              | `cn`                                                                        | junta classes condicionais                                                                                                                                                                                                                                                                   |
 
-O favicon (`src/app/icon.svg`) repete a identidade: fundo `bg`, "L" branco e a linha de gráfico em `accent`. É um arquivo de imagem, por isso tem as cores escritas nele.
+### Logo
+
+O desenho, as versões e as proibições estão em [marca.md](marca.md#logo). No código (FE-54), `Logo` é um `role="img"` com `aria-label="Doce Fatia"` (o SVG e o logotipo ficam `aria-hidden`), e as cores vêm dos tokens, então o modo noite troca sozinho:
+
+- `variante`: `completo` (símbolo + "Doce" em Fredoka 500 `accent` + "Fatia" em Fredoka 600 `ink`, padrão) ou `simbolo`;
+- `size`: `padrao` (login, páginas de erro) ou `compacto` (menu lateral e topo do celular);
+- `tom`: `normal` ou `sobre-cor`, sobre fundo `accent` (bolo `on-accent`, fatia `highlight`, confeitos `accent`, logotipo `on-accent`).
+
+Os ícones do app são arquivos de imagem, por isso têm as cores escritas neles: `src/app/icon.svg` (favicon, só o símbolo), `src/app/apple-icon.png` (180px) e `public/icon-192.png` e `icon-512.png` (do `src/app/manifest.ts`), com o símbolo sobre Chantilly e 15% de margem. O manifesto também tem as cores fixas (`theme_color` Amora, `background_color` Chantilly) e é a única exceção do `sem-cores-fixas.test.ts` além do `globals.css`. Se a arte final do símbolo mudar, troque os caminhos no `logo.tsx` e no `icon.svg` e gere os PNGs de novo a partir do `icon.svg` (com o `sharp`, que já vem com o Next).
 
 A página `/design-system` (`src/app/design-system/page.tsx`, com o catálogo em `src/features/design-system/`) mostra todos os tokens e componentes. `/design-system/listagem` (FE-06) é o exemplo funcionando da listagem de insumos com busca, cadastro, edição e exclusão, do `Form` em página e dos estados, sobre uma API em memória (`src/features/design-system/exemplo-api.ts`) com os cenários "Falhar ao carregar", "Lista vazia" e "Falhar ao salvar e excluir". As duas devolvem 404 no build de produção.
 
@@ -290,7 +298,7 @@ Guardam o texto digitado e são convertidos pelo schema com `numeroBR()`, `numer
 
 ### Cabeçalho
 
-Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): título no `h1`, subtítulo cinza e, à direita, a ação primária. Os textos de cada tela estão em [business-rules.md](business-rules.md). Defina também `metadata.title` na página, com o título da tela: o layout raiz usa o modelo `%s | LucroAI` (desde a FE-08), e a aba mostra "Insumos | LucroAI". Sem título, a aba mostra só "LucroAI" (a Home).
+Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): título no `h1`, subtítulo cinza e, à direita, a ação primária. Os textos de cada tela estão em [business-rules.md](business-rules.md). Defina também `metadata.title` na página, com o título da tela: o layout raiz usa o modelo `%s | Doce Fatia` (desde a FE-08; o nome mudou na FE-54), e a aba mostra "Insumos | Doce Fatia". Sem título, a aba mostra só "Doce Fatia" (a Home).
 
 ### Menu
 

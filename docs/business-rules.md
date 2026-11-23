@@ -856,7 +856,7 @@ A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e
 
 ### Cabeçalho e ações rápidas
 
-Cabeçalho "LucroAI", "Seu painel financeiro", nome da empresa (do JWT) e atalho para `/simulacao`.
+Cabeçalho "Doce Fatia", "Seu painel financeiro", nome da empresa (do JWT) e atalho para `/simulacao`.
 
 | Ação         | Destino                    |
 | ------------ | -------------------------- |
@@ -950,7 +950,7 @@ FE-05 e FE-07. Origem: `lib/features/auth/presentation/pages/login_page.dart`, `
 | Login 401               | "E-mail ou senha inválidos"                                        |
 | Login, outros erros     | "Não foi possível entrar. Verifique o servidor e tente novamente." |
 | Login, botão do olho    | "Mostrar senha" / "Ocultar senha" (nome acessível do botão)        |
-| Login, cabeçalho        | "LucroAI" e "Entre para acessar os dados da sua empresa"           |
+| Login, cabeçalho        | logo Doce Fatia e "Seu doce, seu preço justo." (FE-54)             |
 | 401 em qualquer serviço | "Sessão expirada. Faça login novamente." (leva ao login)           |
 | 404                     | "Registro não encontrado."                                         |
 | 409                     | mensagem do backend ("CNPJ já cadastrado", "E-mail já cadastrado") |
@@ -972,10 +972,10 @@ FE-48. Não existe no mobile. Backend: `POST /auth/empresa` (BE-06, BE-36), `cre
 
 | Situação                                         | Texto                                                                                                                                         |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cabeçalho                                        | "Criar conta" e "Cadastre sua empresa para começar a usar o LucroAI"                                                                          |
+| Cabeçalho                                        | "Criar conta" e "Cadastre sua empresa para começar a usar o Doce Fatia"                                                                       |
 | Grupos                                           | "Sua empresa" e "Seu acesso"                                                                                                                  |
 | Campos                                           | "Nome da empresa", "CNPJ (opcional)", "Segmento (opcional)", "Seu nome", "E-mail", "Senha", "Confirmar senha", "Token de cadastro"            |
-| Dicas                                            | senha: "Pelo menos 6 caracteres"; token: "Você recebe esse código da equipe do LucroAI"                                                       |
+| Dicas                                            | senha: "Pelo menos 6 caracteres"; token: "Você recebe esse código da equipe do Doce Fatia"                                                    |
 | Vazios                                           | "Informe o nome da empresa", "Informe seu nome", "Informe seu e-mail", "Informe uma senha", "Confirme a senha", "Informe o token de cadastro" |
 | E-mail inválido / senha curta                    | "Informe um e-mail válido" / "A senha precisa ter pelo menos 6 caracteres"                                                                    |
 | Texto acima do limite                            | "Use até 100 caracteres" (empresa) ou "Use até 18/80 caracteres"                                                                              |
