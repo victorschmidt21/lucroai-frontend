@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SESSION_COOKIE } from '@/shared/auth/session-paths';
 import { apiErrorBody } from '@/test/api';
 import { makeNextRequest, stubAmbienteDoBff } from '@/test/bff';
-import { makeJwt } from '@/test/factories/auth.factory';
+import { makeEmpresaCriada, makeJwt } from '@/test/factories/auth.factory';
 import { server } from '@/test/server';
+import { POST as cadastro } from './cadastro/route';
 import { POST as login } from './login/route';
 import { POST as logout } from './logout/route';
 import { GET as sessao } from './sessao/route';
@@ -154,6 +155,116 @@ describe('POST /api/auth/login', () => {
     const response = await postLogin(CREDENCIAIS, 'http://outro.test');
 
     expect(response.status).toBe(403);
+  });
+});
+
+const CADASTRO = {
+  nome_empresa: 'Padaria da Ana',
+  segmento: 'Padaria',
+  nome_usuario: 'Ana Souza',
+  email: 'ana@padariadaana.com.br',
+  senha: '123456',
+  token_cadastro: 'token-ficticio-de-teste',
+};
+
+function postCadastro(body: unknown, origin?: string | null) {
+  return cadastro(
+    makeNextRequest('/api/auth/cadastro', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      origin,
+    }),
+  );
+}
+
+describe('POST /api/auth/cadastro', () => {
+  it('cria a empresa, grava o token no cookie httpOnly e não o devolve', async () => {
+    const token = makeJwt();
+    const recebidos: unknown[] = [];
+    server.use(
+      http.post('http://api.test/auth/empresa', async ({ request }) => {
+        recebidos.push(await request.json());
+        return HttpResponse.json(makeEmpresaCriada({ access_token: token }), {
+          status: 201,
+        });
+      }),
+    );
+
+    const response = await postCadastro({ ...CADASTRO, extra: 'x' });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe('');
+    // Só os campos do CreateEmpresaDto chegam ao backend.
+    expect(recebidos).toEqual([CADASTRO]);
+    const cookie = cookieDaSessao(response);
+    expect(cookie).toContain(`${SESSION_COOKIE}=${token}`);
+    expect(cookie).toMatch(/HttpOnly/i);
+    expect(cookie).toMatch(/SameSite=lax/i);
+  });
+
+  it('repassa o 403 do token de cadastro sem gravar cookie', async () => {
+    server.use(
+      http.post('http://api.test/auth/empresa', () =>
+        HttpResponse.json(
+          apiErrorBody(
+            403,
+            'Token de cadastro inválido',
+            'TOKEN_CADASTRO_INVALIDO',
+          ),
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const response = await postCadastro({
+      ...CADASTRO,
+      token_cadastro: 'errado',
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      statusCode: 403,
+      code: 'TOKEN_CADASTRO_INVALIDO',
+      message: 'Token de cadastro inválido',
+    });
+    expect(cookieDaSessao(response)).toBeUndefined();
+  });
+
+  it('repassa os campos recusados do 400', async () => {
+    const details = [{ field: 'email', messages: ['email must be an email'] }];
+    server.use(
+      http.post('http://api.test/auth/empresa', () =>
+        HttpResponse.json(
+          {
+            ...apiErrorBody(
+              400,
+              'Os dados enviados são inválidos',
+              'DADOS_INVALIDOS',
+            ),
+            details,
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    const response = await postCadastro({ ...CADASTRO, email: 'ana@' });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      code: 'DADOS_INVALIDOS',
+      details,
+    });
+  });
+
+  it('recusa com 403 a origem de outro site, sem chamar o backend', async () => {
+    const response = await postCadastro(CADASTRO, 'http://outro.test');
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      code: 'ORIGEM_NAO_PERMITIDA',
+    });
+    expect(cookieDaSessao(response)).toBeUndefined();
   });
 });
 
