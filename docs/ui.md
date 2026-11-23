@@ -2,12 +2,12 @@
 
 > **Marca:** o visual e os textos seguem a marca **Doce Fatia**, descrita em [marca.md](marca.md). Leia-o antes de mexer em interface ou texto.
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite chega na FE-52.
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite opcional **existe** desde a FE-52 ([Aparência](#aparência)).
 
 ## Princípios
 
 1. **A marca Doce Fatia guia o visual** ([marca.md](marca.md)).
-2. **Tema claro é o padrão**; o modo noite é opcional (FE-52).
+2. **Tema claro é o padrão**; o modo noite é opcional ([Aparência](#aparência)).
 3. **Use o design system e os tokens.** Não recrie botão, campo ou diálogo dentro de uma funcionalidade; se faltar uma variação, adicione-a em `src/shared/ui/`. Nenhuma cor fixa fora de `src/app/globals.css`.
 4. **Acessibilidade não é opcional**: teclado, foco visível, rótulos, contraste de 4,5:1 e status com cor **e** texto.
 5. **Celular primeiro.** O público usa o celular na produção; toda tela funciona em 360px sem rolagem horizontal.
@@ -45,6 +45,8 @@ Paleta **Confeitaria** da marca, em tema claro (FE-51, [marca.md](marca.md#cores
 | `danger-soft`    | #FBE1DC                  | fundo do status Crítico                                                   |
 | `overlay`        | `rgb(58 37 48 / 0.45)`   | fundo atrás de Dialog e Drawer, em tom Cacau                              |
 
+Os valores do modo noite estão em [Aparência](#aparência).
+
 ### Contraste
 
 Medido em `src/shared/ui/tokens.test.ts`, que lê `globals.css` e calcula a razão do WCAG para cada par usado. Token ou combinação nova entra nesse teste. No navegador, o `axe` do `e2e/design-system.spec.ts` confere o contraste da página `/design-system` inteira.
@@ -64,6 +66,35 @@ Medido em `src/shared/ui/tokens.test.ts`, que lê `globals.css` e calcula a raz�
 | `border-field` sobre `surface` (não textual, ≥ 3:1) | 3,57:1          | borda de campo, Checkbox e `SegmentedControl`                       |
 
 A borda de cartão (`border`) é decorativa e não precisa de 3:1: o cartão se separa pelo fundo. Campos, Checkbox e controles de seleção usam `border-field`, que passa de 3:1 sobre `surface`, `surface-alt` e `bg`.
+
+### Aparência
+
+Desde a FE-52. **O tema claro é o padrão**: a cozinha é iluminada e muita gente do público tem mais de 40 anos. O **modo noite** (fundo Ganache) é opcional, para quem anota pedidos à noite.
+
+- Três escolhas: "Claro" (`claro`, padrão), "Noite" (`noite`) e "Igual ao celular" (`automatico`, segue `prefers-color-scheme`). Ficam em `src/shared/ui/tema.ts` (`TEMAS`, `OPCOES_TEMA`, `lerTema`, `cookieDoTema`).
+- A escolha fica no cookie `tema` (1 ano, `SameSite=Lax`, `Path=/`, `Secure` em HTTPS, **sem** `HttpOnly`): é só preferência visual, não dado de negócio ([security.md](security.md#o-que-nunca-guardar-no-navegador)). O `RootLayout` lê o cookie no servidor (`lerTema`: ausente ou inválido vira `claro`) e põe `data-tema` no `<html>`; assim o modo noite não pisca o claro ao carregar, sem script inline. Sem cookie, o app abre claro mesmo com o celular no modo escuro.
+- `TemaProvider` (no `RootLayout`) guarda a escolha; `useTema()` a lê e troca: atualiza o `data-tema` e o cookie na hora, sem recarregar. `SeletorAparencia` mostra a escolha com o toast "Aparência alterada": `SegmentedControl` no cartão "Aparência" de `/configuracoes` e `Select` "Aparência" (`variante="lista"`) no `UserMenu` (menu lateral e gaveta "Conta").
+- Em `globals.css`, os tokens do noite ficam em `:root[data-tema='noite']` e, repetidos, em `@media (prefers-color-scheme: dark) { :root[data-tema='automatico'] }`, com `color-scheme: dark`. "Igual ao celular" acompanha a troca do sistema sem recarregar, pela própria media query. A sombra virou token (`--sombra-elevacao`, usada por `shadow-elevacao`) para trocar junto. As telas não mudam: os mesmos nomes de token valem nos dois modos.
+
+| Token                                     | Noite                                                    |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `bg`, `bg-alt`                            | #1F1519 (Ganache)                                        |
+| `surface`                                 | #2A1C22                                                  |
+| `surface-alt`, `surface-raised`           | #352630                                                  |
+| `border` / `border-strong`                | #4A3540 / #5A4250                                        |
+| `border-field`                            | #8E7480                                                  |
+| `ink` / `ink-muted`, `ink-subtle`         | #FBEFE8 / #C2A9B2                                        |
+| `accent` / `accent-strong`                | #F291BD / #F7A8CB                                        |
+| `on-accent`, `on-danger`                  | #1F1519                                                  |
+| `accent-soft`                             | #4A2338                                                  |
+| `highlight`, `highlight-ink`              | #F7A27B                                                  |
+| `success` / `success-soft`                | #7FD19D / #1E3A2A                                        |
+| `warning` / `warning-soft`                | #F2C46B / #3D2E10                                        |
+| `danger`, `danger-strong` / `danger-soft` | #FF8A7D / #47201C                                        |
+| `overlay`                                 | `rgb(0 0 0 / 0.7)`                                       |
+| `--sombra-elevacao`                       | `0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .35)` |
+
+O `tokens.test.ts` mede os pares do noite (`ink`/`surface-raised` 12,65:1, `ink-muted`/`surface-raised` 6,53:1, `accent`/`bg` 8,11:1, `accent`/`surface-raised` 6,50:1, `on-accent`/`accent-strong` 9,68:1, `success`/`success-soft` 6,79:1, `warning`/`warning-soft` 8,07:1, `danger`/`danger-soft` 6,16:1, `on-danger`/`danger` 7,79:1, `ink`/`accent-soft` 11,72:1, `border-field`/`surface` 3,85:1 não textual), passa todas as combinações de texto e não textuais do claro também no noite e confere que os blocos `noite` e `automatico` são iguais. Token novo ganha valor nos dois modos.
 
 ### Status
 
