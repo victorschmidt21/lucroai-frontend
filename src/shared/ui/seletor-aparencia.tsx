@@ -49,6 +49,7 @@ export function SeletorAparencia({
       options={OPCOES_TEMA}
       value={tema}
       onValueChange={escolher}
+      larguraDoTexto
       className="w-full sm:w-auto"
     />
   );

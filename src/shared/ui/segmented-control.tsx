@@ -13,6 +13,11 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onValueChange: (value: T) => void;
   className?: string;
+  /**
+   * Cada opção com a largura do próprio texto, em vez de larguras iguais: para
+   * rótulos de tamanhos diferentes caberem em 360px, como "Igual ao celular".
+   */
+  larguraDoTexto?: boolean;
 };
 
 /**
@@ -24,6 +29,7 @@ export function SegmentedControl<T extends string>({
   value,
   onValueChange,
   className,
+  larguraDoTexto = false,
   ...props
 }: SegmentedControlProps<T>) {
   return (
@@ -46,7 +52,8 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           value={option.value}
           className={cn(
-            'group inline-flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 px-4 text-body font-medium whitespace-nowrap text-ink transition-colors duration-150 lg:min-h-10',
+            'group inline-flex min-h-11 min-w-0 cursor-pointer items-center justify-center gap-1.5 text-body font-medium whitespace-nowrap text-ink transition-colors duration-150 lg:min-h-10',
+            larguraDoTexto ? 'flex-auto px-3' : 'flex-1 px-4',
             'not-first:border-l not-first:border-border-field hover:bg-surface-alt',
             'data-[state=on]:bg-accent data-[state=on]:text-on-accent',
             'focus-visible:-outline-offset-4',
