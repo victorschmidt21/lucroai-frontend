@@ -29,6 +29,7 @@ import {
   IconAdicionar,
   IconAlerta,
   IconAtualizar,
+  IconAvisos,
   IconBusca,
   IconCalendario,
   IconCheck,
@@ -48,6 +49,7 @@ import {
 } from '@/shared/ui/icons/acoes';
 import type { IconComponent } from '@/shared/ui/icons/icone';
 import {
+  IconConfiguracoes,
   IconCustos,
   IconEstoque,
   IconGastos,
@@ -148,6 +150,7 @@ const ICONES_MENU: [string, IconComponent][] = [
   ['Estoque', IconEstoque],
   ['Produção', IconProducao],
   ['Gastos', IconGastos],
+  ['Configurações', IconConfiguracoes],
 ];
 
 const ICONES_ACOES: [string, IconComponent][] = [
@@ -165,6 +168,7 @@ const ICONES_ACOES: [string, IconComponent][] = [
   ['Check', IconCheck],
   ['Sucesso', IconSucesso],
   ['Info', IconInfo],
+  ['Avisos', IconAvisos],
   ['Alerta', IconAlerta],
   ['Erro', IconErro],
   ['Vazio', IconVazio],
@@ -539,7 +543,7 @@ export function DesignSystemShowcase() {
                 key={nome}
                 className="flex flex-col items-center gap-1 text-ink-muted"
               >
-                <Icone className="size-[22px]" />
+                <Icone className="size-6" />
                 <span className="text-caption">{nome}</span>
               </li>
             ))}

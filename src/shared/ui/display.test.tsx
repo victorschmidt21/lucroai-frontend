@@ -366,14 +366,20 @@ describe('ícones', () => {
     ]);
   });
 
-  it.each(icones)('%s é decorativo e aceita classe', (_nome, Icone) => {
-    const { container } = render(<Icone className="text-accent" />);
-    const svg = container.querySelector('svg');
+  it.each(icones)(
+    '%s é decorativo, em contorno de 2px e aceita classe',
+    (_nome, Icone) => {
+      const { container } = render(<Icone className="text-accent" />);
+      const svg = container.querySelector('svg');
 
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg).toHaveClass('text-accent', 'size-5');
-    expect(svg?.querySelector('path')?.getAttribute('d')).toMatch(/^M/);
-  });
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg).toHaveClass('text-accent', 'size-5');
+      expect(svg).toHaveAttribute('fill', 'none');
+      expect(svg).toHaveAttribute('stroke', 'currentColor');
+      expect(svg).toHaveAttribute('stroke-width', '2');
+      expect(svg).toHaveAttribute('stroke-linecap', 'round');
+    },
+  );
 });
 
 it('os componentes de exibição não têm violações de acessibilidade', async () => {
