@@ -1,6 +1,10 @@
 import { Button } from './button';
 import { cn } from './cn';
-import { BLOCO_ESTADO_CLASSES, ICONE_ESTADO_CLASSES } from './empty-state';
+import {
+  BLOCO_ESTADO_CLASSES,
+  ICONE_ESTADO_CLASSES,
+  TITULO_ESTADO_CLASSES,
+} from './empty-state';
 import { IconAtualizar, IconErro } from './icons/acoes';
 
 type ErrorStateProps = {
@@ -14,7 +18,7 @@ type ErrorStateProps = {
   className?: string;
 };
 
-/** Falha ao carregar dados, sempre com "Tentar novamente". */
+/** Falha ao carregar dados, no mesmo bloco do `EmptyState`, sempre com "Tentar novamente". */
 export function ErrorState({
   title,
   message,
@@ -28,7 +32,7 @@ export function ErrorState({
         <IconErro />
       </span>
       <div className="flex max-w-prose flex-col gap-1">
-        <p className="text-body font-semibold text-ink">{title}</p>
+        <p className={TITULO_ESTADO_CLASSES}>{title}</p>
         {message ? <p className="text-body text-ink-muted">{message}</p> : null}
       </div>
       <Button variant="secundario" loading={retrying} onClick={onRetry}>
