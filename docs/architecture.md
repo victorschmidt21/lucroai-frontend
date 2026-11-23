@@ -19,8 +19,8 @@ src/
 ├── instrumentation-node.ts       # existe
 ├── proxy.ts                      # existe (FE-07): redirecionamento otimista por sessão
 ├── app/                          # só rotas: páginas finas que compõem funcionalidades
-│   ├── layout.tsx                # existe: layout raiz, com a Roboto
-│   ├── fonts.ts                  # existe: Roboto via next/font
+│   ├── layout.tsx                # existe: layout raiz, com Fredoka e Nunito
+│   ├── fonts.ts                  # existe: Fredoka e Nunito via next/font
 │   ├── icon.svg                  # existe: favicon
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento

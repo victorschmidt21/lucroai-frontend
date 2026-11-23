@@ -3,7 +3,7 @@
 Manual de marca do produto (antes chamado LucroAI). Fonte: proposta de 2026-11-22, aprovada pela pessoa responsável.
 Implementação: issues FE-50 a FE-60 (épico "E9 Marca Doce Fatia").
 
-> **Status:** referência (FE-50). O tema claro com a paleta Confeitaria **existe** desde a FE-51 (`src/app/globals.css`) e o modo noite opcional desde a FE-52 ([ui.md](ui.md#aparência)). O resto do código segue o visual antigo até cada issue do épico ser entregue: tipografia, raios e toque (FE-53), nome e logo (FE-54), componentes (FE-55), ícones (FE-56), linguagem (FE-57), painel (FE-58), estados vazios (FE-59) e card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
+> **Status:** referência (FE-50). O tema claro com a paleta Confeitaria **existe** desde a FE-51 (`src/app/globals.css`) e o modo noite opcional desde a FE-52 ([ui.md](ui.md#aparência)). A tipografia Fredoka e Nunito, os raios e as áreas de toque de 48px **existem** desde a FE-53 ([ui.md](ui.md#tipografia)). O resto do código segue o visual antigo até cada issue do épico ser entregue: nome e logo (FE-54), componentes (FE-55), ícones (FE-56), linguagem (FE-57), painel (FE-58), estados vazios (FE-59) e card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
 
 ## Nome
 

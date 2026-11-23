@@ -2,7 +2,7 @@
 
 > **Marca:** o visual e os textos seguem a marca **Doce Fatia**, descrita em [marca.md](marca.md). Leia-o antes de mexer em interface ou texto.
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite opcional **existe** desde a FE-52 ([Aparência](#aparência)).
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite opcional **existe** desde a FE-52 ([Aparência](#aparência)); a tipografia Fredoka e Nunito, os raios da marca e as áreas de toque de 48px **existem** desde a FE-53.
 
 ## Princípios
 
@@ -113,27 +113,34 @@ Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](busin
 
 ### Forma e profundidade
 
-- **Cantos arredondados**, diferente da Urbizzi: `rounded-md` (12px) em cartões, campos e botões (padrão), `rounded-sm` (8px) em badges e chips, `rounded-lg` (14px) em cartões de resumo e no `StatCard`, `rounded-xl` (18px) no Dialog e no Drawer (o `Dialog` de cadastro do mobile usa 18px). `rounded-full` em `IconButton`, `SegmentedControl` e Spinner.
+- **Cantos macios**, da marca Doce Fatia ([marca.md](marca.md#forma), FE-53): `rounded-sm` (10px) em itens pequenos, `rounded-md` (14px) em campos, na lista do Combobox, no Toast e nas áreas agrupadas dentro de cartões, `rounded-lg` (20px) em cartões (`Card`, `StatCard`, cartões da `DataTable` e da `ListPage`) e `rounded-xl` (24px) no Dialog e no Drawer. Pílula (`rounded-full`) em botões, `IconButton`, chips, badges, `SegmentedControl`, itens do menu lateral e Spinner.
+- **Áreas de toque de 48px** (`min-h-12`) em qualquer largura: botões (inclusive `compacto`), `IconButton` (`size-12`), campos (`CONTROL_HEIGHT_CLASSES`), `SegmentedControl`, abas, itens do menu lateral e opções do Combobox. O `ToggleChip` tem 32px de altura visível e chega a 48px pelo `::before`.
 - **Sem gradientes.** Sombra (`shadow-elevacao`, quente, em tom Cacau) só em Dialog, Drawer, Toast e a lista do Combobox.
 - Separação entre áreas por fundo e borda (`surface` com `border`).
 
 ### Tipografia
 
-Roboto (a fonte padrão do Material no Flutter), via `next/font/google` em `src/app/fonts.ts`, nos pesos 400, 500, 600 e 700. O `next/font` hospeda os arquivos no próprio app: o navegador não chama o Google. Onde o mobile usa `w800`, a web usa 700.
+Duas fontes arredondadas da [marca](marca.md#tipografia), via `next/font/google` em `src/app/fonts.ts` (FE-53). O `next/font` hospeda os arquivos no próprio app: o navegador não chama o Google.
 
-| Classe               | Tamanho (mobile)      | Uso                                                                |
-| -------------------- | --------------------- | ------------------------------------------------------------------ |
-| `text-display-lg`    | 36px, 700             | destaque "CUSTO POR UNIDADE" do cálculo real                       |
-| `text-display`       | 22px, 700             | valor dos indicadores do painel (`StatCard`)                       |
-| `text-heading`       | 27px, 700             | título da página (`h1`), como "Insumos"; a `Logo`                  |
-| `text-title`         | 18px, 700             | título de Dialog e Drawer, valor do Slider                         |
-| `text-subtitle`      | 12,5px                | texto cinza sob o título (com `text-ink-subtle`)                   |
-| `text-section-label` | 11px, 700, caixa alta | rótulos de seção, como "CUSTOS INVISÍVEIS"; nunca em texto corrido |
-| `text-field`         | 16px                  | texto digitado nos campos (o iOS amplia a tela com menos de 16px)  |
-| `text-body`          | 14px                  | texto, botões e rótulos                                            |
-| `text-small`         | 12px                  | texto de apoio, dicas e erros dos campos                           |
-| `text-caption`       | 11px                  | legendas, metadados e badges                                       |
-| `text-nav`           | 10px (mobile: 9px)    | rótulo da barra inferior do celular, com oito itens (FE-08)        |
+- **Fredoka** (500 e 600, variável `--font-fredoka`): títulos, números de destaque e logotipo. Os tokens `text-display-lg`, `text-heading` e `text-display` já trocam a fonte (regra em `@layer utilities` no `globals.css`, porque o Tailwind não aceita `--text-*--font-family`); fora deles, use o utilitário `font-display`. **Nunca em texto corrido.**
+- **Nunito** (400, 600, 700 e 800, variável `--font-nunito`): todo o resto, pelo `font-sans` do `<body>`. Sem o peso 500: `font-medium` cai no 400.
+- Valores em R$ e quantidades com `tabular-nums`: já vem no `StatCard`, no `Card`, na `DataTable` e nos campos numéricos.
+
+| Classe               | Tamanho e fonte                                   | Uso                                                                                                       |
+| -------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `text-display-lg`    | 36px, altura 40px, Fredoka 600                    | destaque "CUSTO POR UNIDADE" do cálculo real, código da `StatusPage`                                      |
+| `text-heading`       | 24px, altura 30px, Fredoka 600                    | título da página (`h1`, `PageHeader`), como "Insumos"; a `Logo`                                           |
+| `text-display`       | 22px, altura 28px, Fredoka 600                    | valor dos indicadores do painel (`StatCard`) e preços em destaque                                         |
+| `text-title`         | 18px, altura 24px, Nunito 800                     | título de Dialog e Drawer, valor do Slider                                                                |
+| `text-field`         | 16px, altura 24px, Nunito 400                     | texto digitado nos campos (não diminuir: o iOS amplia a tela com menos de 16px)                           |
+| `text-body`          | 16px, altura 24px, Nunito 400                     | texto, botões e rótulos                                                                                   |
+| `text-small`         | 14px, altura 20px, Nunito 600                     | texto de apoio, dicas e erros dos campos                                                                  |
+| `text-subtitle`      | 14px, altura 20px, Nunito 600                     | texto cinza sob o título (com `text-ink-subtle`)                                                          |
+| `text-caption`       | 13px, altura 18px, Nunito 700                     | legendas, metadados e badges                                                                              |
+| `text-section-label` | 12px, Nunito 800, caixa alta, `0.06em`            | rótulos de seção, como "CUSTOS INVISÍVEIS"; nunca em texto corrido                                        |
+| `text-nav`           | 10px, altura 12px, Nunito 700 (a marca pede 12px) | rótulo da barra inferior do celular, com oito itens (FE-08); sobe para 12px quando a FE-57 agrupar o menu |
+
+O peso de cada token vale quando não há um `font-*` explícito, que sempre vence. Nada abaixo de 12px, com uma exceção provisória: o `text-nav`, até a FE-57.
 
 `text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva o nome do produto como manda a [marca](marca.md#nome): **Doce Fatia** (as telas ainda dizem "LucroAI" até a FE-54).
 
@@ -160,7 +167,7 @@ Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tab
 | `dialog.tsx`, `drawer.tsx`           | `Dialog`, `DialogClose`, `Drawer`, `ResponsiveDialog`                       | `title` obrigatório; `trigger`, ou controle com `open` e `onOpenChange`; `footer`; o `Drawer` (`side="bottom"`, padrão) sobe de baixo no celular e fica à direita a partir de `lg`; o `ResponsiveDialog` (FE-17) é Drawer de baixo no celular e Dialog a partir de `md`, como o `FormDialog` |
 | `confirm-dialog.tsx`                 | `ConfirmDialog`                                                             | ver [Confirmação](#confirmação-de-exclusão-e-de-ações); entregue na FE-04, com a `consequence` opcional da FE-06                                                                                                                                                                             |
 | `tabs.tsx`                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                            | "Registrar / Histórico" em Vendas; dê `aria-label` ao `TabsList`                                                                                                                                                                                                                             |
-| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                          | `Card` com `title` vira seção com rótulo em caixa alta; `variant="resumo"` tem cantos de 14px. `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                                                                                                        |
+| `card.tsx`, `stat-card.tsx`          | `Card`, `StatCard`                                                          | `Card` com `title` vira seção com rótulo em caixa alta; cantos de 20px e `tabular-nums` (o `variant="resumo"` saiu na FE-53). `StatCard`: `title`, `value`, `detail`, `detailTone` e `icon` (painel)                                                                                         |
 | `badge.tsx`                          | `Badge`, `StatusEstoqueBadge`, `StatusVendaBadge`, `TipoGastoBadge`         | sempre com cor e texto; `StatusVenda` e `TipoGasto` e os rótulos vêm de `shared/api/contracts/enums.ts`; `StatusEstoque` fica aqui, porque é calculado no cliente (FE-13)                                                                                                                    |
 | `progress-bar.tsx`                   | `ProgressBar`                                                               | `<progress>` nativo; `value` de 0 a 1 (limitado), `aria-label` obrigatório, `tone` (`accent` ou a cor do status) e `valueText`                                                                                                                                                               |
 | `toast.tsx`                          | `ToastProvider`, `useToast`                                                 | `toast.success(texto)`, `toast.error(texto)`, `toast.info(texto)`; some em 4 s, como o `SnackBar`; o provider fica no layout de `(app)` (desde a FE-08) e em `/design-system`                                                                                                                |
@@ -289,12 +296,12 @@ Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): títul
 
 Oito destinos fixos, na ordem do mobile (`main_screen.dart`), em `features/navegacao/menu.ts` (existe desde a FE-08): Home (`/`), Insumos, Receitas, Custos, Vendas, Estoque, Produção (`/producoes`) e Gastos (`/gastos-indiretos`). `getItemAtivo(pathname)` marca também as subtelas (`/receitas/nova` marca Receitas); telas fora do menu, como `/simulacao`, não marcam nenhum.
 
-| Onde                     | Como                                                                                                                                                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Celular (< 768px)        | barra inferior fixa (`MenuNavegacao variante="inferior"`), fundo `bg` com borda superior `surface-alt` (`app_bottom_nav.dart`), oito colunas iguais com ícone de 22px e rótulo `text-nav` (10px) sem quebrar, 64px de altura e `env(safe-area-inset-bottom)` |
-| Celular, cabeçalho       | logo (leva à Home) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                |
-| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens e o `UserMenu` no rodapé                                                                                                                                                |
-| Os dois                  | item ativo em `accent-strong` (no lateral, sobre `surface-alt`) com `aria-current="page"`; inativos em `ink-muted`; links reais (`<a>`), sem pré-carregamento; atalho "Pular para o conteúdo" antes do menu                                                  |
+| Onde                     | Como                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Celular (< 768px)        | barra inferior fixa (`MenuNavegacao variante="inferior"`), fundo `bg` com borda superior `surface-alt` (`app_bottom_nav.dart`), oito colunas iguais com ícone de 22px e rótulo `text-nav` (10px) sem quebrar, 64px de altura e `env(safe-area-inset-bottom)`. Com 12px (FE-53), "Insumos", "Receitas" e "Produção" (47 a 53px) não cabem na coluna de 45px em 360px; o rótulo fica em 10px até a FE-57 agrupar o menu |
+| Celular, cabeçalho       | logo (leva à Home) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                                                                                                                                                                         |
+| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens e o `UserMenu` no rodapé                                                                                                                                                                                                                                                                                                         |
+| Os dois                  | item ativo em `accent-strong` (no lateral, sobre `surface-alt`) com `aria-current="page"`; inativos em `ink-muted`; links reais (`<a>`), sem pré-carregamento; atalho "Pular para o conteúdo" antes do menu                                                                                                                                                                                                           |
 
 O `next dev` mostra o indicador dele em cima, à esquerda (`devIndicators` no `next.config.ts`): na posição padrão, ele cobria o item Home da barra.
 
@@ -378,6 +385,6 @@ O painel (evolução mensal) e a simulação (lucro projetado vs atual) usam **S
 - Status nunca depende só da cor: o Badge traz cor **e** texto; lucro negativo leva o sinal `-`.
 - Campo tem `<label>` associado, e o erro é anunciado e ligado ao campo.
 - Elementos semânticos: `button` para ação, `a` para navegação, `table` para dados tabulares no desktop, um `h1` por tela.
-- Alvos de toque de pelo menos 44px no celular.
+- Alvos de toque de pelo menos 48px (`min-h-12`), em qualquer largura ([Forma e profundidade](#forma-e-profundidade)).
 - Sem rolagem horizontal da página em 360, 390, 768 e 1280px. A barra inferior com oito itens usa rótulos pequenos (9 a 11px, como o mobile), sem quebrar.
 - Respeite `prefers-reduced-motion` nas animações de Dialog, Drawer e Toast.
