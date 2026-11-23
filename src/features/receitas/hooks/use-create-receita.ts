@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReceita } from '../api/receitas.api';
+import { alertasKeys } from '@/features/alertas/api/alertas.queries';
 import { receitasKeys } from '../api/receitas.queries';
 
 /**
@@ -11,7 +12,11 @@ export function useCreateReceita() {
 
   return useMutation({
     mutationFn: createReceita,
+    // `alertas`: a receita nova pode usar um insumo com preço defasado (FE-47).
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: receitasKeys.all }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: receitasKeys.all }),
+        queryClient.invalidateQueries({ queryKey: alertasKeys.all }),
+      ]),
   });
 }

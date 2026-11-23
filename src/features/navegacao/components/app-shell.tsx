@@ -9,6 +9,11 @@ const LOGO_LABEL = 'LucroAI, página inicial';
 type AppShellProps = {
   /** Nome, empresa e "Sair": vem de `features/auth`, composto pelo layout. */
   userMenu: ReactNode;
+  /**
+   * Indicador de avisos (FE-47), de `features/alertas`, composto pelo layout.
+   * Aparece no topo do menu lateral e no cabeçalho do celular.
+   */
+  avisos?: ReactNode;
   children: ReactNode;
 };
 
@@ -18,7 +23,7 @@ type AppShellProps = {
  * Flutter: barra inferior fixa com os oito destinos e um cabeçalho com a logo e
  * o botão da conta.
  */
-export function AppShell({ userMenu, children }: AppShellProps) {
+export function AppShell({ userMenu, avisos, children }: AppShellProps) {
   return (
     <div className="flex min-h-dvh">
       <a
@@ -28,14 +33,17 @@ export function AppShell({ userMenu, children }: AppShellProps) {
         Pular para o conteúdo
       </a>
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-bg p-4 md:flex">
-        <Link
-          href="/"
-          prefetch={false}
-          aria-label={LOGO_LABEL}
-          className="self-start rounded-sm px-3 pt-1"
-        >
-          <Logo size="compacto" />
-        </Link>
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href="/"
+            prefetch={false}
+            aria-label={LOGO_LABEL}
+            className="rounded-sm px-3 pt-1"
+          >
+            <Logo size="compacto" />
+          </Link>
+          {avisos}
+        </div>
         <MenuNavegacao variante="lateral" />
         <div className="mt-auto border-t border-border px-1 pt-4">
           {userMenu}
@@ -51,7 +59,10 @@ export function AppShell({ userMenu, children }: AppShellProps) {
           >
             <Logo size="compacto" />
           </Link>
-          <MenuContaCelular>{userMenu}</MenuContaCelular>
+          <div className="flex items-center gap-1">
+            {avisos}
+            <MenuContaCelular>{userMenu}</MenuContaCelular>
+          </div>
         </header>
         {/* No celular, o espaço de baixo é da barra fixa (64px) e da área segura do aparelho. */}
         <main

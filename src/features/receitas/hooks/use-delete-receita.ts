@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/shared/api/errors';
 import { deleteReceita } from '../api/receitas.api';
+import { alertasKeys } from '@/features/alertas/api/alertas.queries';
 import { receitasKeys } from '../api/receitas.queries';
 
 /**
@@ -10,8 +11,12 @@ import { receitasKeys } from '../api/receitas.queries';
  */
 export function useDeleteReceita() {
   const queryClient = useQueryClient();
+  // `alertas`: as receitas afetadas pelo preço defasado e o preço delas (FE-47).
   const invalidar = () =>
-    queryClient.invalidateQueries({ queryKey: receitasKeys.all });
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: receitasKeys.all }),
+      queryClient.invalidateQueries({ queryKey: alertasKeys.all }),
+    ]);
 
   return useMutation({
     mutationFn: deleteReceita,
