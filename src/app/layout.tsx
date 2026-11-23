@@ -9,8 +9,10 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.NEXT_PUBLIC_APP_URL),
-  // Cada tela define `metadata.title`: a aba mostra "Insumos | LucroAI".
-  title: { default: 'LucroAI', template: '%s | LucroAI' },
+  // Cada tela define `metadata.title`: a aba mostra "Insumos | Doce Fatia".
+  title: { default: 'Doce Fatia', template: '%s | Doce Fatia' },
+  description:
+    'Calcule o preço justo dos seus doces e veja quanto sobra pra você.',
 };
 
 // `cover` faz o navegador informar a área segura do aparelho

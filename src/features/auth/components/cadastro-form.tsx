@@ -183,7 +183,7 @@ export function CadastroForm() {
           data-lpignore="true"
           maxLength={256}
           required
-          hint="Você recebe esse código da equipe do LucroAI"
+          hint="Você recebe esse código da equipe do Doce Fatia"
           error={erros.token_cadastro}
           trailing={
             <IconButton

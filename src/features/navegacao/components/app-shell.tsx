@@ -4,7 +4,7 @@ import { Logo } from '@/shared/ui/logo';
 import { MenuContaCelular } from './menu-conta-celular';
 import { MenuNavegacao } from './menu-navegacao';
 
-const LOGO_LABEL = 'LucroAI, página inicial';
+const LOGO_LABEL = 'Doce Fatia, página inicial';
 
 type AppShellProps = {
   /** Nome, empresa e "Sair": vem de `features/auth`, composto pelo layout. */

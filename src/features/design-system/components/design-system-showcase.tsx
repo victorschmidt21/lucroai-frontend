@@ -312,7 +312,7 @@ export function DesignSystemShowcase() {
           <Logo />
           <PageHeader
             title="Design system"
-            subtitle="Tokens e componentes base do LucroAI"
+            subtitle="Tokens e componentes base do Doce Fatia"
             actions={
               <Button>
                 <IconAdicionar className="size-5" />

@@ -4,48 +4,48 @@ import { entrar, excessoHorizontal } from './support/sessao';
 
 // Os oito destinos de src/features/navegacao/menu.ts, com o título de cada tela.
 const DESTINOS = [
-  { rotulo: 'Home', rota: '/', titulo: 'LucroAI', aba: 'LucroAI' },
+  { rotulo: 'Home', rota: '/', titulo: 'Doce Fatia', aba: 'Doce Fatia' },
   {
     rotulo: 'Insumos',
     rota: '/insumos',
     titulo: 'Insumos',
-    aba: 'Insumos | LucroAI',
+    aba: 'Insumos | Doce Fatia',
   },
   {
     rotulo: 'Receitas',
     rota: '/receitas',
     titulo: 'Receitas',
-    aba: 'Receitas | LucroAI',
+    aba: 'Receitas | Doce Fatia',
   },
   {
     rotulo: 'Custos',
     rota: '/custos',
     titulo: 'Cálculo Real',
-    aba: 'Cálculo Real | LucroAI',
+    aba: 'Cálculo Real | Doce Fatia',
   },
   {
     rotulo: 'Vendas',
     rota: '/vendas',
     titulo: 'Vendas',
-    aba: 'Vendas | LucroAI',
+    aba: 'Vendas | Doce Fatia',
   },
   {
     rotulo: 'Estoque',
     rota: '/estoque',
     titulo: 'Estoque',
-    aba: 'Estoque | LucroAI',
+    aba: 'Estoque | Doce Fatia',
   },
   {
     rotulo: 'Produção',
     rota: '/producoes',
     titulo: 'Produções',
-    aba: 'Produções | LucroAI',
+    aba: 'Produções | Doce Fatia',
   },
   {
     rotulo: 'Gastos',
     rota: '/gastos-indiretos',
     titulo: 'Gastos Indiretos',
-    aba: 'Gastos Indiretos | LucroAI',
+    aba: 'Gastos Indiretos | Doce Fatia',
   },
 ];
 
@@ -219,7 +219,7 @@ test('mostra o 404 dentro do layout, com o menu', async ({ page }) => {
     await expect(
       page.getByRole('heading', { name: 'Página não encontrada' }),
     ).toBeVisible();
-    await expect(page).toHaveTitle('Página não encontrada | LucroAI');
+    await expect(page).toHaveTitle('Página não encontrada | Doce Fatia');
     await expect(menuLateral(page)).toBeVisible();
     await expect(menuLateral(page).locator('[aria-current]')).toHaveCount(
       marcados,
