@@ -12,7 +12,7 @@ import type { ItemCarrinho } from '../schemas/item-venda.schema';
 import { subtotalItem, totalCarrinho } from '../vendas.calculos';
 
 const MENSAGEM_ESTOQUE_INSUFICIENTE =
-  'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções.';
+  'Estoque insuficiente para registrar a venda. Anote a fornada do produto em Fornadas.';
 
 type Props = {
   itens: readonly ItemCarrinho[];
@@ -105,7 +105,7 @@ function ErroAoRegistrar({ erro }: { erro: unknown }) {
       <span>
         {MENSAGEM_ESTOQUE_INSUFICIENTE}{' '}
         <Link href="/producoes" className="font-semibold text-accent underline">
-          Ir para Produções
+          Ir para Fornadas
         </Link>
       </span>
     </Alert>

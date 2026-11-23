@@ -9,6 +9,7 @@ import {
   subtotalItem,
   totalCarrinho,
   totalDaVenda,
+  mensagemVendaAnotada,
 } from './vendas.calculos';
 
 describe('subtotalItem', () => {
@@ -173,5 +174,17 @@ describe('descreverLucroReal', () => {
 
   it('sem lucro real (venda antiga) mostra o traço', () => {
     expect(descreverLucroReal(null)).toEqual({ texto: '—', prejuizo: false });
+  });
+});
+
+describe('mensagemVendaAnotada', () => {
+  it('diz quanto o mês já soma', () => {
+    expect(mensagemVendaAnotada(1234.5)).toBe(
+      'Venda anotada! O mês já soma R$ 1.234,50.',
+    );
+  });
+
+  it('sem o total do mês, só a primeira frase', () => {
+    expect(mensagemVendaAnotada(null)).toBe('Venda anotada!');
   });
 });

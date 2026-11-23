@@ -4,7 +4,10 @@ import {
   contarEstoqueBaixo,
   evolucaoMensal,
   inicioDosSeisMeses,
+  descreverSobraDoMes,
   pontoEquilibrioDoPainel,
+  porCadaCemReais,
+  rotuloAcabando,
   produtosMaisRentaveis,
   tendenciaMensal,
   vendasDoMes,
@@ -257,17 +260,17 @@ describe('pontoEquilibrioDoPainel', () => {
   it('mostra o valor por mês da API', () => {
     expect(pontoEquilibrioDoPainel({ valor: 4524.36, motivo: null })).toEqual({
       valor: 'R$ 4.524,36',
-      detalhe: 'em vendas por mês',
+      detalhe: 'por mês',
       tom: 'muted',
     });
   });
 
-  it('sem vendas, avisa os últimos 30 dias', () => {
+  it('sem vendas, diz que ainda não vendeu', () => {
     expect(
       pontoEquilibrioDoPainel({ valor: null, motivo: 'SEM_VENDAS' }),
     ).toEqual({
       valor: '—',
-      detalhe: 'sem vendas nos últimos 30 dias',
+      detalhe: 'Ainda sem vendas este mês',
       tom: 'muted',
     });
   });
@@ -277,8 +280,52 @@ describe('pontoEquilibrioDoPainel', () => {
       pontoEquilibrioDoPainel({ valor: null, motivo: 'MARGEM_NEGATIVA' }),
     ).toEqual({
       valor: '—',
-      detalhe: 'as vendas não cobrem o custo',
+      detalhe: 'Com os preços de hoje, você paga para vender.',
       tom: 'danger',
     });
+  });
+});
+
+describe('porCadaCemReais', () => {
+  it('arredonda a margem para inteiro', () => {
+    expect(porCadaCemReais(12.4)).toBe('R$ 12 de cada R$ 100');
+    expect(porCadaCemReais(12.5)).toBe('R$ 13 de cada R$ 100');
+    expect(porCadaCemReais(0)).toBe('R$ 0 de cada R$ 100');
+  });
+
+  it('margem negativa não usa a frase', () => {
+    expect(porCadaCemReais(-0.2)).toBeNull();
+    expect(porCadaCemReais(-15)).toBeNull();
+  });
+});
+
+describe('descreverSobraDoMes', () => {
+  it('com lucro, diz quanto fica de cada R$ 100, em verde', () => {
+    expect(descreverSobraDoMes({ faturamento: 200, margem: 23.6 })).toEqual({
+      detalhe: 'R$ 24 de cada R$ 100',
+      tom: 'success',
+    });
+  });
+
+  it('com prejuízo, diz que ficou abaixo do custo, em vermelho', () => {
+    expect(descreverSobraDoMes({ faturamento: 200, margem: -5 })).toEqual({
+      detalhe: 'As vendas ficaram abaixo do custo',
+      tom: 'danger',
+    });
+  });
+
+  it('sem vendas no mês, diz que ainda não vendeu', () => {
+    expect(descreverSobraDoMes({ faturamento: 0, margem: 0 })).toEqual({
+      detalhe: 'Ainda sem vendas este mês',
+      tom: 'muted',
+    });
+  });
+});
+
+describe('rotuloAcabando', () => {
+  it('concorda com a quantidade', () => {
+    expect(rotuloAcabando(1)).toBe('ingrediente acabando');
+    expect(rotuloAcabando(0)).toBe('ingredientes acabando');
+    expect(rotuloAcabando(3)).toBe('ingredientes acabando');
   });
 });

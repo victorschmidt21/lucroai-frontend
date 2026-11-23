@@ -106,16 +106,48 @@ export type ResultadoDaSimulacao = {
   pontoEquilibrio: string | null;
 };
 
+/** Preço sugerido no canal e o lucro por unidade dele, para o aviso de prejuízo. */
+export type SugestaoDePreco = { preco: number; lucroPorUnidade: number };
+
+/**
+ * Sugestão para o aviso de prejuízo (FE-57): o preço sugerido pela API no canal
+ * simulado, quando existe e deixa lucro.
+ */
+export function sugestaoDoCanal(
+  precos: readonly PrecoCanal[],
+  canalId: number,
+): SugestaoDePreco | null {
+  const preco = precos.find((p) => p.canalId === canalId);
+  const lucro = preco?.composicao?.lucro.valor;
+  if (!preco || preco.preco === null || lucro === undefined || lucro <= 0) {
+    return null;
+  }
+  return { preco: preco.preco, lucroPorUnidade: lucro };
+}
+
+/** Aviso quando o preço não paga o custo (FE-57): o problema e o caminho. */
+export function avisoDePrejuizo(
+  perdaPorUnidade: number,
+  sugestao: SugestaoDePreco | null,
+) {
+  const inicio = 'Com esse preço você paga para vender.';
+  return sugestao
+    ? `${inicio} Que tal ${formatMoeda(sugestao.preco)}? Assim sobram ${formatMoeda(sugestao.lucroPorUnidade)} por unidade.`
+    : `${inicio} Você perde ${formatMoeda(perdaPorUnidade)} em cada unidade.`;
+}
+
 /**
  * Textos do resultado de `POST /receitas/:id/simular` (FE-45), sem recalcular
- * nada: tudo vem da API. Com prejuízo por unidade, mostra o aviso e esconde o
- * ponto de equilíbrio (critério da issue), mesmo que a API devolva unidades.
+ * nada: tudo vem da API. Com prejuízo por unidade, mostra o aviso (com o preço
+ * sugerido no canal, quando houver) e esconde a frase das contas do mês
+ * (critério da FE-45), mesmo que a API devolva unidades.
  */
 export function formatarResultadoDaSimulacao(
   resultado: Pick<
     SimulacaoCenario,
     'lucroPorUnidade' | 'lucroReal' | 'lucroMes' | 'pontoEquilibrio'
   >,
+  sugestao: SugestaoDePreco | null = null,
 ): ResultadoDaSimulacao {
   const prejuizo = resultado.lucroPorUnidade < 0;
   const { unidades } = resultado.pontoEquilibrio;
@@ -124,7 +156,7 @@ export function formatarResultadoDaSimulacao(
   if (!prejuizo && unidades !== null) {
     pontoEquilibrio =
       unidades === 0
-        ? 'Você não tem contas do mês cadastradas em Gastos: qualquer venda já ajuda no lucro.'
+        ? 'Você não tem contas do mês cadastradas: qualquer venda já ajuda no lucro.'
         : `Para pagar as contas do mês, você precisa vender ${formatNumero(unidades)} ${unidades === 1 ? 'unidade' : 'unidades'}.`;
   }
 
@@ -134,8 +166,16 @@ export function formatarResultadoDaSimulacao(
     lucroMes: formatMoeda(resultado.lucroMes),
     prejuizo,
     aviso: prejuizo
-      ? `Este preço não cobre o custo: você perde ${formatMoeda(-resultado.lucroPorUnidade)} em cada unidade vendida.`
+      ? avisoDePrejuizo(-resultado.lucroPorUnidade, sugestao)
       : null,
     pontoEquilibrio,
   };
+}
+
+/**
+ * Canal sem preço possível (`preco: null`): as taxas e o lucro já passam de
+ * 100% do preço. Diz o que fazer, sem jargão (FE-57).
+ */
+export function avisoSemPrecoPossivel(percentuais: number) {
+  return `Não existe preço que pague tudo: as taxas e o lucro já somam ${formatMargem(percentuais)} do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.`;
 }

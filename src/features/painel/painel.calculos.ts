@@ -3,7 +3,11 @@ import type { ResumoVendas } from '@/shared/api/contracts/sales';
 import { formatMoeda } from '@/shared/format/moeda';
 import { isBaixoEstoque } from '@/shared/domain/estoque';
 import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
-import { formatPercentual, fracaoParaPercentual } from '@/shared/format/numero';
+import {
+  formatNumero,
+  formatPercentual,
+  fracaoParaPercentual,
+} from '@/shared/format/numero';
 
 /*
  * Painel (docs/business-rules.md#painel). Origem: dashboard_page.dart
@@ -248,8 +252,9 @@ export type PontoEquilibrioDoPainel = {
 };
 
 /**
- * Card "Para pagar as contas" (FE-45): o ponto de equilíbrio da empresa, em
- * reais por mês, como a API devolve (`GET /vendas/resumo`), sem recalcular.
+ * Card "Para pagar as contas do mês, venda" (FE-45, textos da FE-57): o ponto de
+ * equilíbrio da empresa, em reais por mês, como a API devolve
+ * (`GET /vendas/resumo`), sem recalcular.
  */
 export function pontoEquilibrioDoPainel(
   ponto: ResumoVendas['pontoEquilibrio'],
@@ -257,20 +262,54 @@ export function pontoEquilibrioDoPainel(
   if (ponto.valor !== null) {
     return {
       valor: formatMoeda(ponto.valor),
-      detalhe: 'em vendas por mês',
+      detalhe: 'por mês',
       tom: 'muted',
     };
   }
   if (ponto.motivo === 'MARGEM_NEGATIVA') {
     return {
       valor: '—',
-      detalhe: 'as vendas não cobrem o custo',
+      detalhe: 'Com os preços de hoje, você paga para vender.',
       tom: 'danger',
     };
   }
   return {
     valor: '—',
-    detalhe: 'sem vendas nos últimos 30 dias',
+    detalhe: 'Ainda sem vendas este mês',
     tom: 'muted',
   };
+}
+
+/**
+ * Margem em linguagem de cozinha (FE-57): "R$ X de cada R$ 100", com a margem
+ * (em pontos percentuais) arredondada a inteiro. Margem negativa não usa a
+ * frase: devolve `null`, e a tela diz que a venda ficou abaixo do custo.
+ */
+export function porCadaCemReais(margem: number): string | null {
+  if (margem < 0) return null;
+  return `R$ ${formatNumero(Math.round(margem))} de cada R$ 100`;
+}
+
+export type SobraDoMes = {
+  detalhe: string;
+  tom: 'success' | 'danger' | 'muted';
+};
+
+/** Detalhe do card "Sobrou pra você" (FE-57). */
+export function descreverSobraDoMes({
+  faturamento,
+  margem,
+}: Pick<Indicadores, 'faturamento' | 'margem'>): SobraDoMes {
+  if (faturamento === 0) {
+    return { detalhe: 'Ainda sem vendas este mês', tom: 'muted' };
+  }
+  const frase = porCadaCemReais(margem);
+  return frase
+    ? { detalhe: frase, tom: 'success' }
+    : { detalhe: 'As vendas ficaram abaixo do custo', tom: 'danger' };
+}
+
+/** "1 ingrediente acabando" / "N ingredientes acabando" (FE-57), sem o número. */
+export function rotuloAcabando(quantidade: number) {
+  return quantidade === 1 ? 'ingrediente acabando' : 'ingredientes acabando';
 }

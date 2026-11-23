@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { useSyncExternalStore } from 'react';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatNumero, formatPercentual } from '@/shared/format/numero';
+import { formatNumero } from '@/shared/format/numero';
 import { buttonClasses } from '@/shared/ui/button';
 import { cn } from '@/shared/ui/cn';
 import { EmptyState } from '@/shared/ui/empty-state';
@@ -36,10 +36,13 @@ import {
 import {
   calcularIndicadores,
   contarEstoqueBaixo,
+  descreverSobraDoMes,
   evolucaoMensal,
   inicioDosSeisMeses,
   pontoEquilibrioDoPainel,
+  porCadaCemReais,
   produtosMaisRentaveis,
+  rotuloAcabando,
   tendenciaMensal,
   vendasDoMes,
   type ProdutoRentavel,
@@ -121,10 +124,10 @@ function bloco({
 }
 
 const ACOES_RAPIDAS = [
-  { rotulo: 'Novo Insumo', href: '/insumos?novo=1', Icone: IconInsumos },
-  { rotulo: 'Nova Receita', href: '/receitas/nova', Icone: IconReceitas },
-  { rotulo: 'Produção', href: '/producoes?novo=1', Icone: IconProducao },
-  { rotulo: 'Gastos', href: '/gastos-indiretos?novo=1', Icone: IconGastos },
+  { rotulo: 'Novo ingrediente', href: '/insumos?novo=1', Icone: IconInsumos },
+  { rotulo: 'Nova receita', href: '/receitas/nova', Icone: IconReceitas },
+  { rotulo: 'Nova fornada', href: '/producoes?novo=1', Icone: IconProducao },
+  { rotulo: 'Novo gasto', href: '/gastos-indiretos?novo=1', Icone: IconGastos },
 ] as const;
 
 /**
@@ -173,7 +176,8 @@ export function PainelTela({ empresa }: { empresa: string }) {
       >
         {bloco({
           rotulo: 'Carregando indicadores',
-          titulo: 'Não foi possível carregar os indicadores.',
+          titulo:
+            'Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo.',
           queries: [vendas, receitas],
           pronto: dados !== null,
           classe: 'col-span-2 lg:col-span-3',
@@ -184,6 +188,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
               dados.receitas,
               dados.hoje,
             );
+            const sobra = descreverSobraDoMes(ind);
             return (
               <>
                 <StatCard
@@ -194,10 +199,10 @@ export function PainelTela({ empresa }: { empresa: string }) {
                   icon={<IconDinheiro />}
                 />
                 <StatCard
-                  title="Lucro líquido"
+                  title="Sobrou pra você"
                   value={formatMoeda(ind.lucro)}
-                  detail={`Margem ${formatPercentual(ind.margem)}`}
-                  detailTone={ind.lucro >= 0 ? 'success' : 'danger'}
+                  detail={sobra.detalhe}
+                  detailTone={sobra.tom}
                   icon={<IconTendencia />}
                 />
                 <StatCard
@@ -218,16 +223,15 @@ export function PainelTela({ empresa }: { empresa: string }) {
           classe: 'col-span-2 lg:col-span-1',
           conteudo: () => {
             const baixo = contarEstoqueBaixo(estoques.data ?? []);
-            const detalhe = baixo === 1 ? 'Item crítico' : 'Itens críticos';
             return (
               <Link
                 href="/estoque?baixo=1"
                 className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&>div]:h-full [&>div]:hover:border-border-strong"
               >
                 <StatCard
-                  title="Estoque baixo"
+                  title="Despensa"
                   value={formatNumero(baixo)}
-                  detail={detalhe}
+                  detail={rotuloAcabando(baixo)}
                   detailTone={baixo === 0 ? 'success' : 'danger'}
                   icon={<IconAlerta />}
                 />
@@ -240,7 +244,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
       <Secao titulo="Contas do mês">
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
           {bloco({
-            rotulo: 'Carregando o ponto de equilíbrio',
+            rotulo: 'Carregando quanto vender para pagar as contas',
             titulo:
               'Não foi possível carregar quanto vender para pagar as contas.',
             queries: [resumo],
@@ -254,7 +258,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
               return (
                 <StatCard
                   className="col-span-2"
-                  title="Para pagar as contas"
+                  title="Para pagar as contas do mês, venda"
                   value={ponto.valor}
                   detail={ponto.detalhe}
                   detailTone={ponto.tom}
@@ -375,8 +379,9 @@ function ProdutosRentaveis({ produtos }: { produtos: ProdutoRentavel[] }) {
               {produto.nome}
             </p>
             <p className="truncate text-small text-ink-muted">
-              {rotuloUnidades(produto.quantidade)} - margem{' '}
-              {formatPercentual(produto.margem)}
+              {`${rotuloUnidades(produto.quantidade)} - ${
+                porCadaCemReais(produto.margem) ?? 'abaixo do custo'
+              }`}
             </p>
           </div>
           <p

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
 import { canaisOptions } from '@/features/configuracoes/api/configuracoes.queries';
@@ -15,10 +15,13 @@ import { Button, buttonClasses } from '@/shared/ui/button';
 import { Dialog, ResponsiveDialog } from '@/shared/ui/dialog';
 import { useToast } from '@/shared/ui/toast';
 import { useAtualizarStatusVenda } from '../hooks/use-atualizar-status-venda';
+import { vendasListOptions } from '../api/vendas.queries';
 import { useVerificarEstoqueParaVenda } from '../hooks/use-verificar-estoque-para-venda';
 import {
   descreverLucroReal,
+  mensagemVendaAnotada,
   nomeDoCanal,
+  resumirVendas,
   subtotalItem,
 } from '../vendas.calculos';
 
@@ -67,6 +70,7 @@ function Conteudo({
   onOcupado: (ocupado: boolean) => void;
 }) {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const receitas = useQuery(receitasListOptions());
   const canais = useQuery(canaisOptions());
   const atualizar = useAtualizarStatusVenda();
@@ -87,21 +91,35 @@ function Conteudo({
     );
   }
 
+  /** Total das vendas concluídas do mês, para o toast; `null` se a busca falhar. */
+  async function totalDoMes() {
+    const hoje = new Date();
+    const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    try {
+      const doMes = await queryClient.fetchQuery(
+        vendasListOptions({ dataInicio: inicio.toISOString() }),
+      );
+      return resumirVendas(doMes).totalVendido;
+    } catch {
+      return null;
+    }
+  }
+
   async function mudarStatus(
     status: 'CONCLUIDA' | 'CANCELADA',
-    mensagem: string,
+    mensagem: () => Promise<string> | string,
   ) {
     try {
       // A API baixa o produto acabado na mesma transação: o status devolvido é o real.
       const atualizada = await atualizar.mutateAsync({ id: venda.id, status });
-      toast.success(mensagem);
+      toast.success(await mensagem());
       setVenda(atualizada);
     } catch (error) {
       // 422 `ESTOQUE_INSUFICIENTE`: a venda continua pendente e abre o mesmo
       // diálogo da conferência. Os outros erros ficam em `atualizar.error`.
       if (isEstoqueInsuficiente(error)) {
         setEstoqueInsuficiente(
-          `${getErrorMessage(error)}. Registre uma produção antes de concluir.`,
+          `${getErrorMessage(error)}. Anote uma fornada antes de concluir.`,
         );
       }
     }
@@ -116,7 +134,9 @@ function Conteudo({
         setEstoqueInsuficiente(erro);
         return;
       }
-      await mudarStatus('CONCLUIDA', 'Venda concluída com sucesso.');
+      await mudarStatus('CONCLUIDA', async () =>
+        mensagemVendaAnotada(await totalDoMes()),
+      );
     } finally {
       setVerificando(false);
       onOcupado(false);
@@ -126,7 +146,7 @@ function Conteudo({
   async function cancelar() {
     onOcupado(true);
     try {
-      await mudarStatus('CANCELADA', 'Venda cancelada.');
+      await mudarStatus('CANCELADA', () => 'Venda cancelada.');
     } finally {
       onOcupado(false);
     }
@@ -219,7 +239,7 @@ function Conteudo({
         footer={
           <>
             <Link href="/producoes" className={buttonClasses('secundario')}>
-              Ir para Produções
+              Ir para Fornadas
             </Link>
             <Button onClick={() => setEstoqueInsuficiente(null)}>
               Entendido
