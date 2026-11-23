@@ -1,0 +1,12 @@
+{
+  "sub": 7,
+  "email": "ana@padariadaana.com.br",
+  "nome": "Ana Souza",
+  "empresa": {
+    "id": 7,
+    "nome": "Padaria da Ana",
+    "cnpj": null,
+    "segmento": "Padaria"
+  },
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjcsImVtYWlsIjoiYW5hQHBhZGFyaWFkYWFuYS5jb20uYnIiLCJub21lIjoiQW5hIFNvdXphIiwiZW1wcmVzYSI6eyJpZCI6Nywibm9tZSI6IlBhZGFyaWEgZGEgQW5hIiwiY25waiI6bnVsbCwic2VnbWVudG8iOiJQYWRhcmlhIn0sImlhdCI6MTc5NDk0NzQ0NiwiZXhwIjoxNzk0OTYxODQ2fQ.assinatura-de-teste"
+}

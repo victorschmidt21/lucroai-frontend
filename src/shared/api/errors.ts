@@ -14,12 +14,16 @@ export const MENSAGEM_CONTRATO_INVALIDO = 'Resposta inesperada do servidor.';
 export const MENSAGEM_GENERICA =
   'Não foi possível concluir a ação. Tente novamente.';
 
+/** Erro de um campo no 400 `DADOS_INVALIDOS` (mensagens do class-validator, em inglês). */
+export type DetalheDeErro = { field: string; messages: string[] };
+
 type ApiErrorOptions = {
   statusCode: number;
   /** Texto pronto para a tela; sem ele, vem de `mensagemPorStatus`. */
   message?: string;
   mensagens?: readonly string[];
   code?: string;
+  details?: readonly DetalheDeErro[];
 };
 
 /** Único formato de erro da API que chega às telas. O `message` é sempre exibível. */
@@ -33,12 +37,21 @@ export class ApiError extends Error {
    * `AllExceptionsFilter` da API. Falta em rede, timeout e corpo fora do formato.
    */
   readonly code?: string;
+  /** Campos recusados no 400 `DADOS_INVALIDOS`; vazio nos outros erros. */
+  readonly details: readonly DetalheDeErro[];
 
-  constructor({ statusCode, message, mensagens = [], code }: ApiErrorOptions) {
+  constructor({
+    statusCode,
+    message,
+    mensagens = [],
+    code,
+    details = [],
+  }: ApiErrorOptions) {
     super(message ?? mensagemPorStatus(statusCode, mensagens));
     this.statusCode = statusCode;
     this.mensagens = mensagens;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -124,6 +137,11 @@ const corpoDeErroSchema = z.object({
   statusCode: z.number().optional(),
   code: z.string().optional(),
   message: z.union([z.string(), z.array(z.string())]).optional(),
+  // Lista fora do formato é ignorada, sem invalidar o resto do erro.
+  details: z
+    .array(z.object({ field: z.string(), messages: z.array(z.string()) }))
+    .optional()
+    .catch(undefined),
 });
 
 /**
@@ -137,11 +155,11 @@ export function apiErrorFromResponse(statusCode: number, corpo: unknown) {
     return new ApiError({ statusCode });
   }
 
-  const { message, code } = resultado.data;
+  const { message, code, details } = resultado.data;
   const mensagens =
     message === undefined ? [] : Array.isArray(message) ? message : [message];
 
-  return new ApiError({ statusCode, mensagens, code });
+  return new ApiError({ statusCode, mensagens, code, details });
 }
 
 /** O erro é um `ApiError` com este `code` estável da API. */

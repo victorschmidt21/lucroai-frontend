@@ -34,6 +34,7 @@ Como ler:
 | [Configurações de custo e formas de venda](#configurações-de-custo-e-formas-de-venda) | FE-41        |
 | [Estoque negativo e avisos ao entrar](#estoque-negativo-e-avisos-ao-entrar)           | FE-47        |
 | [Login e mensagens de erro gerais](#login-e-mensagens-de-erro-gerais)                 | FE-05, FE-07 |
+| [Criar conta com token de cadastro](#criar-conta-com-token-de-cadastro)               | FE-48        |
 
 ## Convenções de número, moeda e data
 
@@ -963,6 +964,35 @@ Como a web aplica (FE-07, `features/auth/`):
 - `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Verifique o servidor e tente novamente.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
 - `?expirada=1` mostra "Sessão expirada. Faça login novamente." num aviso (`role="status"`) acima dos campos, que some quando há erro de login.
 - Depois de entrar, a web vai para o `redirect` (só caminho interno) ou para `/`.
+- Abaixo do botão "Entrar": "Ainda não tem conta? **Criar conta**", com link para `/cadastro` (FE-48).
+
+## Criar conta com token de cadastro
+
+FE-48. Não existe no mobile. Backend: `POST /auth/empresa` (BE-06, BE-36), `create-empresa.dto.ts`. Tela `/cadastro`, no layout e no card do login, só sem sessão (com sessão, o `proxy.ts` leva a `/`).
+
+| Situação                                         | Texto                                                                                                                                         |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cabeçalho                                        | "Criar conta" e "Cadastre sua empresa para começar a usar o LucroAI"                                                                          |
+| Grupos                                           | "Sua empresa" e "Seu acesso"                                                                                                                  |
+| Campos                                           | "Nome da empresa", "CNPJ (opcional)", "Segmento (opcional)", "Seu nome", "E-mail", "Senha", "Confirmar senha", "Token de cadastro"            |
+| Dicas                                            | senha: "Pelo menos 6 caracteres"; token: "Você recebe esse código da equipe do LucroAI"                                                       |
+| Vazios                                           | "Informe o nome da empresa", "Informe seu nome", "Informe seu e-mail", "Informe uma senha", "Confirme a senha", "Informe o token de cadastro" |
+| E-mail inválido / senha curta                    | "Informe um e-mail válido" / "A senha precisa ter pelo menos 6 caracteres"                                                                    |
+| Texto acima do limite                            | "Use até 100 caracteres" (empresa) ou "Use até 18/80 caracteres"                                                                              |
+| Senhas diferentes                                | "As senhas não conferem" (na confirmação)                                                                                                     |
+| 403 `TOKEN_CADASTRO_INVALIDO`                    | "Token de cadastro inválido", no campo do token, que é limpo                                                                                  |
+| 409 `EMAIL_JA_CADASTRADO` / `CNPJ_JA_CADASTRADO` | "E-mail já cadastrado" no e-mail / "CNPJ já cadastrado" no CNPJ                                                                               |
+| 429                                              | "Muitas tentativas. Aguarde um minuto e tente de novo."                                                                                       |
+| 400 `DADOS_INVALIDOS`                            | um texto em português em cada campo do `details` (o do class-validator vem em inglês)                                                         |
+| Outros erros (5xx, rede)                         | "Não foi possível criar a conta. Tente novamente."                                                                                            |
+| Botões e links                                   | "Criar conta"; "Já tem conta? **Entrar**", para o login; "Mostrar token" / "Ocultar token"                                                    |
+
+Como a web aplica (`features/auth/`):
+
+- `cadastroFormSchema` (`schemas/cadastro-form.schema.ts`): obrigatórios o nome da empresa, o seu nome (opcional no backend, exigido pela issue), o e-mail, a senha (mínimo 6), a confirmação e o token; CNPJ e segmento são opcionais e, vazios, não vão no corpo (`toCadastroBody`). Os textos são aparados; a senha e o token, não. A confirmação só é comparada quando os outros campos estão válidos. Com erro, o foco vai para o primeiro campo inválido.
+- `getCadastroErro(error)` decide o campo de cada erro da API pelo `code` e, sem ele, pelo status (409 sem `code` vai para o e-mail).
+- O token de cadastro é um campo de senha com "Mostrar token", sem autocompletar; ele só vai no corpo do `POST /api/auth/cadastro` (nunca na URL, no `localStorage` nem em log).
+- Com sucesso, o BFF grava o cookie da sessão e a web abre o painel (`/`) já logado.
 
 ## Diferenças intencionais em relação ao mobile
 

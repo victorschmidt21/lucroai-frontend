@@ -17,18 +17,20 @@ O navegador nunca fala direto com a API. O Next atua como BFF (_backend for fron
 Navegador ── cookie httpOnly ──► Next (/api/auth, /api/backend/<caminho>) ── Authorization: Bearer ──► API
 ```
 
-| Rota do Next            | O que faz                                                                  | Rota do backend             |
-| ----------------------- | -------------------------------------------------------------------------- | --------------------------- |
-| `POST /api/auth/login`  | autentica, lê o `access_token` e grava o cookie                            | `POST {API_URL}/auth/login` |
-| `POST /api/auth/logout` | apaga o cookie (o backend não tem logout)                                  | —                           |
-| `GET /api/auth/sessao`  | devolve os dados do usuário e da empresa decodificados do JWT, sem o token | —                           |
+| Rota do Next              | O que faz                                                                            | Rota do backend               |
+| ------------------------- | ------------------------------------------------------------------------------------ | ----------------------------- |
+| `POST /api/auth/login`    | autentica, lê o `access_token` e grava o cookie                                      | `POST {API_URL}/auth/login`   |
+| `POST /api/auth/cadastro` | cria a empresa com o token de cadastro, lê o `access_token` e grava o cookie (FE-48) | `POST {API_URL}/auth/empresa` |
+| `POST /api/auth/logout`   | apaga o cookie (o backend não tem logout)                                            | —                             |
+| `GET /api/auth/sessao`    | devolve os dados do usuário e da empresa decodificados do JWT, sem o token           | —                             |
 
-Os três ficam em `src/app/api/auth/<rota>/route.ts`. O login responde `204` sem corpo (o token só vai para o cookie) e repassa o status de erro do backend (`401` com credenciais erradas); falha de rede ou token ilegível vira `502`. A sessão responde `UsuarioAtual` (`id`, `nome`, `email`, `empresa`, `expiraEm`) ou `401`, apagando um cookie vencido.
+Os quatro ficam em `src/app/api/auth/<rota>/route.ts`. O login e o cadastro respondem `204` sem corpo (o token só vai para o cookie) e repassa o status de erro do backend (`401` com credenciais erradas); falha de rede ou token ilegível vira `502`. A sessão responde `UsuarioAtual` (`id`, `nome`, `email`, `empresa`, `expiraEm`) ou `401`, apagando um cookie vencido.
 | `/api/backend/[...path]` | injeta o token e repassa a chamada à API | as rotas de [api-integration.md](api-integration.md#rotas-usadas-pela-web) |
 
 O contrato do backend (monolito, `src/modules/auth/` e `docs/api.md`):
 
 - `POST /auth/login` com `{ email, senha }` devolve `{ access_token }`. Credenciais erradas: `401` `CREDENCIAIS_INVALIDAS` "Credenciais inválidas"; mais de 10 tentativas por minuto: `429` `MUITAS_REQUISICOES`.
+- `POST /auth/empresa` (BE-36) exige o `token_cadastro`, igual ao `CADASTRO_EMPRESA_TOKEN` do servidor; ausente ou errado: `403` `TOKEN_CADASTRO_INVALIDO`. Devolve o payload do JWT mais o `access_token`. O token de cadastro só passa pelo corpo do `POST` ao BFF: nunca vai para a URL, o `localStorage`, o `sessionStorage` nem log, e o campo é limpo depois do `403`. O BFF repassa o `details` do `400` para o formulário marcar os campos.
 - O token é um JWT **de 4 horas**, assinado com `JWT_SECRET`, com o payload `{ sub, email, nome, empresa: { id, nome, cnpj, segmento }, iat, exp }`.
 - **Não há refresh token, logout nem `/auth/me`.**
 
@@ -55,16 +57,16 @@ O Route Handler `src/app/api/backend/[...path]/route.ts` é a única porta do na
 7. Em `401`, apaga o cookie e devolve `401`. Sem cookie, ou com o `exp` vencido, responde `401` (e apaga o cookie) sem chamar a API.
 8. API fora do ar vira `502` `SERVICO_INDISPONIVEL`, no formato de erro da API (`{ statusCode, code, message }`).
 9. Não registra corpo, headers, query string nem o token em log.
-10. Bloqueia também `POST /auth/login` e `POST /auth/empresa` pelo proxy: o login passa por `/api/auth/login`, que não devolve o token ao navegador.
+10. Bloqueia também `POST /auth/login` e `POST /auth/empresa` pelo proxy: o login passa por `/api/auth/login` e o cadastro por `/api/auth/cadastro`, que não devolvem o token ao navegador.
 
 ## Proteção de rotas
 
 São duas camadas, com papéis diferentes:
 
-| Camada     | Arquivo                        | O que faz                                                                                                                               |
-| ---------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Otimista   | `src/proxy.ts`                 | lê só o cookie, sem chamar a API: sem cookie ou com `exp` vencido, redireciona para `/login?redirect=...`; com sessão, tira de `/login` |
-| Definitiva | layout de `(app)`, no servidor | `getUsuarioAtual()`; sem sessão válida, redireciona para o login (existe desde a FE-08)                                                 |
+| Camada     | Arquivo                        | O que faz                                                                                                                                                |
+| ---------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Otimista   | `src/proxy.ts`                 | lê só o cookie, sem chamar a API: sem cookie ou com `exp` vencido, redireciona para `/login?redirect=...`; com sessão, tira de `/login` e de `/cadastro` |
+| Definitiva | layout de `(app)`, no servidor | `getUsuarioAtual()`; sem sessão válida, redireciona para o login (existe desde a FE-08)                                                                  |
 
 - `src/proxy.ts` substitui o `middleware.ts`, porque a convenção antiga está depreciada no Next 16 (ver `node_modules/next/dist/docs/01-app/01-getting-started/16-proxy.md`). Ele roda em toda rota, inclusive em pré-carregamentos, e não deve fazer buscas lentas. Não o use como única proteção.
 - O `matcher` dele exclui `/api`, `/_next` e arquivos estáticos. Rotas de API respondem `401`, sem redirecionar.
