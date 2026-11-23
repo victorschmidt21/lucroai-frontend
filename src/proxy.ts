@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { lerSessao } from '@/shared/auth/jwt';
 import {
+  CADASTRO_PATH,
   CURRENT_PATH_HEADER,
+  DEFAULT_PATH,
   getLoginPath,
   getSafeRedirect,
   LOGIN_PATH,
@@ -35,6 +37,13 @@ export function proxy(request: NextRequest) {
   if (pathname === LOGIN_PATH) {
     return temSessao
       ? redirecionar(request, getSafeRedirect(searchParams.get('redirect')))
+      : NextResponse.next();
+  }
+
+  // Quem já entrou não cria outra conta: vai para o painel.
+  if (pathname === CADASTRO_PATH) {
+    return temSessao
+      ? redirecionar(request, DEFAULT_PATH)
       : NextResponse.next();
   }
 

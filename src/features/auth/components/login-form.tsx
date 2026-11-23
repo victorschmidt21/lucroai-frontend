@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useRef, useState, type FormEvent } from 'react';
 import { z } from 'zod';
 import { MENSAGEM_SESSAO_EXPIRADA } from '@/shared/api/errors';
 import { navigateTo } from '@/shared/auth/navigation';
+import { CADASTRO_PATH } from '@/shared/auth/session-paths';
 import { Alert } from '@/shared/ui/alert';
 import { Button, IconButton } from '@/shared/ui/button';
 import {
@@ -107,6 +109,15 @@ export function LoginForm({
       >
         Entrar
       </Button>
+      <p className="text-center text-body text-ink-muted">
+        Ainda não tem conta?{' '}
+        <Link
+          href={CADASTRO_PATH}
+          className="rounded-sm font-bold text-accent underline-offset-4 hover:underline"
+        >
+          Criar conta
+        </Link>
+      </p>
     </form>
   );
 }

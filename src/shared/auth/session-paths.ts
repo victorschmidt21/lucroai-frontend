@@ -5,6 +5,8 @@ export const SESSION_COOKIE = 'lucroai_sessao';
 export const CURRENT_PATH_HEADER = 'x-lucroai-path';
 
 export const LOGIN_PATH = '/login';
+/** Criar conta com o token de cadastro (FE-48): só sem sessão, como o login. */
+export const CADASTRO_PATH = '/cadastro';
 export const DEFAULT_PATH = '/';
 
 /** `?expirada=1` no login mostra "Sessão expirada. Faça login novamente.". */
