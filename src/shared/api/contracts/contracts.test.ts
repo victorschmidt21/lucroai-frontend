@@ -14,6 +14,7 @@ import {
   makeGastosDoSeed,
 } from '@/test/factories/gasto-indireto.factory';
 import {
+  makeAlertas,
   makeCompraInsumo,
   makeInsumo,
   makeInsumosDoSeed,
@@ -37,6 +38,7 @@ import {
 } from '@/test/factories/venda.factory';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
+import alertas from '@/test/fixtures/catalog/alertas.json';
 import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
@@ -60,6 +62,7 @@ import vendas from '@/test/fixtures/sales/vendas.json';
 import { unwrap } from '../request';
 import { jwtPayloadSchema, loginResponseSchema } from './auth';
 import {
+  alertasSchema,
   compraInsumoSchema,
   gastoIndiretoSchema,
   insumoSchema,
@@ -124,6 +127,23 @@ const CASOS: Caso[] = [
     fixture: comprasInsumo,
     factory: [makeCompraInsumo(), makeCompraInsumo({ id: 2 })],
     invalida: [{ ...makeCompraInsumo(), observacao: undefined }],
+  },
+  {
+    nome: 'alertas',
+    schema: alertasSchema,
+    fixture: alertas,
+    factory: makeAlertas(),
+    invalida: { ...makeAlertas(), precoDefasado: undefined },
+  },
+  {
+    nome: 'alertas sem itens',
+    schema: alertasSchema,
+    fixture: { estoqueNegativo: [], precoDefasado: [] },
+    factory: makeAlertas({ estoqueNegativo: [], precoDefasado: [] }),
+    invalida: {
+      estoqueNegativo: [{ id: 1, nome: 'Farinha', saldo: -1, unidade: 'kg' }],
+      precoDefasado: [],
+    },
   },
   {
     nome: 'lista de gastos indiretos',
@@ -200,6 +220,13 @@ const CASOS: Caso[] = [
     fixture: estoque,
     factory: makeEstoque({ id: 0, dataAlteracao: null }),
     invalida: { ...makeEstoque(), dataAlteracao: 'ontem' },
+  },
+  {
+    nome: 'estoque negativo',
+    schema: estoqueSchema,
+    fixture: { ...estoque, quantidadeDisponivel: -500, estoqueNegativo: true },
+    factory: makeEstoque({ quantidadeDisponivel: -0.5, estoqueNegativo: true }),
+    invalida: { ...makeEstoque(), estoqueNegativo: undefined },
   },
   {
     nome: 'lista de estoque dos insumos',

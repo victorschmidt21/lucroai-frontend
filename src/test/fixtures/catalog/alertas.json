@@ -1,0 +1,40 @@
+{
+  "estoqueNegativo": [
+    {
+      "id": 269,
+      "nome": "Teste FE-47",
+      "saldo": -500,
+      "unidade": "G"
+    }
+  ],
+  "precoDefasado": [
+    {
+      "id": 258,
+      "nome": "Manteiga sem Sal",
+      "unidade": "G",
+      "custoMedio": 0.024,
+      "custoReposicao": 0.03,
+      "aumentoPercentual": 0.25,
+      "receitas": [
+        {
+          "id": 99,
+          "nome": "Quindim",
+          "precoSugerido": 2.8952,
+          "precoComCustoMedio": 2.8791
+        },
+        {
+          "id": 98,
+          "nome": "Brigadeiro Gourmet",
+          "precoSugerido": 0.8077,
+          "precoComCustoMedio": 0.8035
+        },
+        {
+          "id": 97,
+          "nome": "Bolo de Chocolate",
+          "precoSugerido": 3.0385,
+          "precoComCustoMedio": 2.9662
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { http, HttpResponse, type DefaultBodyType, type PathParams } from 'msw';
 import type { LoginResponse } from '@/shared/api/contracts/auth';
 import type {
+  Alertas,
   CompraInsumo,
   GastoIndireto,
   Insumo,
@@ -55,6 +56,7 @@ export type RotasDaApi = {
   'PATCH /insumos/:id': Insumo;
   'DELETE /insumos/:id': undefined;
   'GET /insumos/:id/compras': CompraInsumo[];
+  'GET /alertas': Alertas;
   'POST /insumos/:id/compras': CompraInsumo;
   'GET /gastos-indiretos': GastoIndireto[];
   'GET /gastos-indiretos/:id': GastoIndireto;

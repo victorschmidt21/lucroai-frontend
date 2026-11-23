@@ -1,4 +1,8 @@
-import type { CompraInsumo, Insumo } from '@/shared/api/contracts/catalog';
+import type {
+  Alertas,
+  CompraInsumo,
+  Insumo,
+} from '@/shared/api/contracts/catalog';
 
 /** Farinha de Trigo do seed "Padaria Pão Feliz" (5 kg por R$ 15,00, custo 3/kg). */
 export function makeInsumo(overrides: Partial<Insumo> = {}): Insumo {
@@ -76,6 +80,34 @@ export function makeCompraInsumo(
     custoUnitario: 3,
     observacao: null,
     dataCompra: '2026-06-01T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+/** `GET /alertas` (BE-32): a farinha com saldo negativo e a manteiga 25% mais cara. */
+export function makeAlertas(overrides: Partial<Alertas> = {}): Alertas {
+  return {
+    estoqueNegativo: [
+      { id: 1, nome: 'Farinha de Trigo', saldo: -0.5, unidade: 'KG' },
+    ],
+    precoDefasado: [
+      {
+        id: 3,
+        nome: 'Manteiga sem Sal',
+        unidade: 'G',
+        custoMedio: 0.024,
+        custoReposicao: 0.03,
+        aumentoPercentual: 0.25,
+        receitas: [
+          {
+            id: 1,
+            nome: 'Bolo de Chocolate',
+            precoSugerido: 3.0385,
+            precoComCustoMedio: 2.9662,
+          },
+        ],
+      },
+    ],
     ...overrides,
   };
 }

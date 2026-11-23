@@ -249,6 +249,7 @@ function estoqueDe(insumo) {
     insumoId: insumo.id,
     quantidadeDisponivel: insumo.quantidadeDisponivel,
     quantidadeMinima: insumo.quantidadeMinima,
+    estoqueNegativo: insumo.quantidadeDisponivel < 0,
     dataAlteracao: insumo.dataCriacao,
   };
 }
@@ -407,6 +408,11 @@ const routes = {
   ),
   'POST /insumos': autenticada((_req, _url, body) => criarInsumo(body)),
   'GET /gastos-indiretos': autenticada(() => [200, []]),
+  // Aviso ao entrar (FE-47): sem alertas, para nenhum e2e ver o aviso.
+  'GET /alertas': autenticada(() => [
+    200,
+    { estoqueNegativo: [], precoDefasado: [] },
+  ]),
   // Configuração do seed (FE-44: o formulário de receita lê a base de rateio e o lucro padrão).
   'GET /configuracao-custos': autenticada(() => [
     200,

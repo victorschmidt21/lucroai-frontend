@@ -99,3 +99,51 @@ export type CreateGastoIndiretoBody = {
 
 /** `update-gasto-indireto.dto.ts` (`PUT`, com todos os campos opcionais). */
 export type UpdateGastoIndiretoBody = Partial<CreateGastoIndiretoBody>;
+
+// Alertas (BE-32). Origem: `src/modules/alertas/application/dto/alertas.dto.ts`.
+
+/** Insumo com saldo abaixo de zero. */
+export const alertaEstoqueNegativoSchema = z.object({
+  id: z.number().int(),
+  nome: z.string(),
+  /** Saldo do estoque, abaixo de zero, na unidade do insumo. */
+  saldo: z.number(),
+  unidade: unidadeMedidaSchema,
+});
+
+export type AlertaEstoqueNegativo = z.infer<typeof alertaEstoqueNegativoSchema>;
+
+/** Receita que usa um insumo com preço defasado, com o preço no Balcão (4 casas). */
+export const receitaAfetadaSchema = z.object({
+  id: z.number().int(),
+  nome: z.string(),
+  /** Novo preço sugerido, com o custo de reposição; `null` com percentuais ≥ 100%. */
+  precoSugerido: z.number().nullable(),
+  /** O mesmo preço com o custo médio dos insumos (o preço de antes). */
+  precoComCustoMedio: z.number().nullable(),
+});
+
+export type ReceitaAfetada = z.infer<typeof receitaAfetadaSchema>;
+
+/** Insumo cuja reposição subiu mais de 10% sobre o custo médio. */
+export const alertaPrecoDefasadoSchema = z.object({
+  id: z.number().int(),
+  nome: z.string(),
+  unidade: unidadeMedidaSchema,
+  custoMedio: z.number(),
+  custoReposicao: z.number(),
+  /** `custoReposicao ÷ custoMedio − 1`, fração com 4 casas (0,25 = 25%). */
+  aumentoPercentual: z.number(),
+  /** Receitas que usam o insumo (vazia se nenhuma usa). */
+  receitas: z.array(receitaAfetadaSchema),
+});
+
+export type AlertaPrecoDefasado = z.infer<typeof alertaPrecoDefasadoSchema>;
+
+/** `GET /alertas`: sem alerta, as duas listas vêm vazias. */
+export const alertasSchema = z.object({
+  estoqueNegativo: z.array(alertaEstoqueNegativoSchema),
+  precoDefasado: z.array(alertaPrecoDefasadoSchema),
+});
+
+export type Alertas = z.infer<typeof alertasSchema>;

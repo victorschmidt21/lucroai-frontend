@@ -3,5 +3,6 @@
   "insumoId": 50,
   "quantidadeDisponivel": 6.5,
   "quantidadeMinima": 2,
+  "estoqueNegativo": false,
   "dataAlteracao": "2026-11-20T16:42:11.061Z"
 }

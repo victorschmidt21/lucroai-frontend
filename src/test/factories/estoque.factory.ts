@@ -11,6 +11,7 @@ export function makeEstoque(overrides: Partial<Estoque> = {}): Estoque {
     insumoId: 1,
     quantidadeDisponivel: 10,
     quantidadeMinima: 2,
+    estoqueNegativo: false,
     dataAlteracao: '2026-06-01T09:00:00.000Z',
     ...overrides,
   };
