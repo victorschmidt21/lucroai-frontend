@@ -32,6 +32,7 @@ Como ler:
 | [Simulação interativa](#simulação-interativa)                                         | FE-21        |
 | [Painel](#painel)                                                                     | FE-22        |
 | [Configurações de custo e formas de venda](#configurações-de-custo-e-formas-de-venda) | FE-41        |
+| [Estoque negativo e avisos ao entrar](#estoque-negativo-e-avisos-ao-entrar)           | FE-47        |
 | [Login e mensagens de erro gerais](#login-e-mensagens-de-erro-gerais)                 | FE-05, FE-07 |
 
 ## Convenções de número, moeda e data
@@ -340,7 +341,8 @@ O mobile lista `GET /insumos` e, para cada insumo, `GET /estoque/insumos/:id`, e
 
 ```text
 isBaixoEstoque = quantidadeDisponivel < quantidadeMinima
-percentual     = quantidadeMinima > 0 ? quantidadeDisponivel / quantidadeMinima × 100 : 100
+percentual     = quantidadeMinima > 0 ? quantidadeDisponivel / quantidadeMinima × 100
+               : quantidadeDisponivel < 0 ? 0 : 100     // saldo negativo com mínimo 0: 0 (FE-47)
 status         = isBaixoEstoque ? 'Crítico' : percentual < 50 ? 'Baixo' : 'Adequado'
 barra          = clamp(percentual / 100, 0, 1)
 ```
@@ -911,6 +913,30 @@ A soma dos percentuais não é barrada: o backend devolve o canal sem preço (`P
 | Toasts dos canais    | "Forma de venda criada.", "Forma de venda atualizada.", "Forma de venda excluída."                                                                                                                                                                             |
 | Confirmação          | "Excluir forma de venda" / `Deseja excluir "<nome>"? As vendas já feitas nela continuam no histórico.`                                                                                                                                                         |
 | Erros                | "Não foi possível carregar as configurações." / "Não foi possível carregar as formas de venda."                                                                                                                                                                |
+
+## Estoque negativo e avisos ao entrar
+
+FE-47, só na web. Backend: BE-32 (`estoqueNegativo` em `Insumo` e `Estoque`, e `GET /alertas`; [Alertas](https://github.com/victorschmidt21/lucroai-backend/blob/main/docs/business-rules.md#alertas)). O estoque negativo **continua permitido** (decisão de 2026-11-21: produzir sem ter registrado a compra é comum no começo); a tela só avisa. Nada é recalculado na tela: o `estoqueNegativo`, o aumento e os preços vêm da API.
+
+### Indicação visual
+
+- Lista de insumos: o item com `estoqueNegativo` mostra, abaixo do nome, o selo "Estoque negativo" (Badge `critico`) e "Saldo: &lt;quantidade&gt;" em `danger`. No detalhe ("Compras e preços"), "Em estoque" fica em `danger`, com "Estoque negativo: registre a compra para acertar o saldo e o custo.".
+- Estoque: o cartão mostra o selo "Estoque negativo" ao lado do status (que é Crítico) e "Disponível" em `danger`.
+- Cor **e** texto: o selo sempre acompanha o vermelho.
+
+### Aviso ao entrar
+
+Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver itens, abre o diálogo "Avisos":
+
+| Lista             | Texto                                                                                              | Cada item                                                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `estoqueNegativo` | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
+| `precoDefasado`   | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
+
+- Sem preço possível (`precoSugerido: null`): "Sem preço sugerido: os percentuais passam de 100%.". Insumo sem receita: "Nenhum produto usa este ingrediente.".
+- Seguir um link ou "Fechar" fecha o aviso.
+- **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
+- **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
 
 ## Login e mensagens de erro gerais
 

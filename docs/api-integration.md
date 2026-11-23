@@ -26,6 +26,7 @@ Corpo e resposta com os nomes exatos do contrato.
 | `DELETE /insumos/:id`                      | —                                                                                                                                                                | vazio (204)                                     | FE-09                             |
 | `GET /insumos/:id/compras`                 | —                                                                                                                                                                | `CompraInsumo[]` (mais recentes primeiro)       | FE-43                             |
 | `POST /insumos/:id/compras`                | `{ quantidade, valorTotal, observacao? }`                                                                                                                        | `CompraInsumo` (201)                            | FE-43                             |
+| `GET /alertas`                             | —                                                                                                                                                                | `Alertas` (estoque negativo e preço defasado)   | FE-47                             |
 | `GET /gastos-indiretos`                    | —                                                                                                                                                                | `GastoIndireto[]`                               | FE-10, FE-15                      |
 | `GET /gastos-indiretos/:id`                | —                                                                                                                                                                | `GastoIndireto`                                 | —                                 |
 | `POST /gastos-indiretos`                   | `{ descricao, valor, tipo }` (FE-42)                                                                                                                             | `GastoIndireto`                                 | FE-10                             |
@@ -68,7 +69,7 @@ Conferidas nos DTOs do monolito (`src/modules/<modulo>/application/dto/`) e nas 
 | `Receita`             | `id`, `empresaId`, `nome`, `rendimento` (inteiro), `unidadeRendimento`, `custoProducao`, `custoUnitario`, `precoSugerido` (os três omitidos sem valor; o `margemLucro` legado não é lido desde a FE-45), `dataCriacao`, `itens: [{ insumoId, quantidade, custoCalculado (omitido sem valor) }]`                            | `receitas/domain/models/receita.entity.ts` e o repositório Prisma |
 | `ReceitaCusto`        | `quantidade_lotes`, `total_unidades`, `custo_invisivel`, `custo_total_producao`, `custo_por_unidade` (**snake_case**, ao contrário do OVERVIEW)                                                                                                                                                                            | `custos/application/dto/receita-custo.dto.ts`                     |
 | `SimulacaoCenario`    | `canalId`, `canal`, `custoUnitario`, `custoSemGastosMensais`, `percentuaisSemLucro`, `precoVenda`, `volume`, `margemContribuicao`, `lucroPorUnidade`, `lucroReal`, `lucroMes`, `gastosMensais`, `pontoEquilibrio: { unidades, motivo }` (FE-45; os legados `lucroEstimado`, `margemProjetada` e `breakEven` não são lidos) | `simulacao-cenario-resultado.dto.ts`                              |
-| `Estoque`             | `id` (nunca 0 no monolito), `insumoId`, `quantidadeDisponivel` (pode ser negativa), `quantidadeMinima`, `dataAlteracao` (`null` sem alteração)                                                                                                                                                                             | `estoque/application/dto/estoque.dto.ts`                          |
+| `Estoque`             | `id` (nunca 0 no monolito), `insumoId`, `quantidadeDisponivel` (pode ser negativa), `quantidadeMinima`, `estoqueNegativo` (FE-47), `dataAlteracao` (`null` sem alteração)                                                                                                                                                  | `estoque/application/dto/estoque.dto.ts`                          |
 | `MovimentacaoEstoque` | `id`, `insumoId`, `tipo` (`ENTRADA \| SAIDA`), `origem` (`COMPRA \| PRODUCAO`), `quantidade`, `referenciaId` (`null`), `observacao` (`null`, FE-39), `dataMovimentacao`                                                                                                                                                    | `movimentacao-estoque.dto.ts`                                     |
 | `EstoqueProduto`      | `receitaId`, `quantidadeDisponivel`, `dataAlteracao`; um por receita que já teve produção (FE-39)                                                                                                                                                                                                                          | `estoque/application/dto/estoque-produto.dto.ts`                  |
 | `Producao`            | `id`, `receitaId`, `empresaId`, `quantidade` (lotes), `totalUnidades` (FE-39), `custoTotal` (`null`), `custoUnitario` (`null`), `dataProducao`, `rateios: [{ gastoIndiretoId, descricao (FE-39), valorRateado }]`                                                                                                          | `producoes/domain/models/producao.entity.ts`                      |
@@ -332,6 +333,9 @@ Toda mutação invalida, no `onSuccess`, o que ela pode ter alterado **no sistem
 | registrar venda                                  | `vendas`                          | histórico, painel e simulação                                                                                           |
 | concluir ou cancelar venda                       | `vendas`, `estoque`               | histórico, painel e a baixa do produto acabado (também no erro, que indica tela desatualizada)                          |
 | simular cenário ou custo de N lotes              | nada                              | não grava                                                                                                               |
+| criar, editar ou excluir receita; configuração   | também `alertas` (FE-47)          | as receitas afetadas por um insumo mais caro e o preço novo delas                                                       |
+
+Os alertas (`GET /alertas`, FE-47) ficam em `alertasKeys.all = ['insumos', 'alertas']`, debaixo da raiz `insumos`: toda mutação que já invalida `insumos` (insumo, compra, entrada de estoque e produção) os atualiza também.
 
 ```ts
 // src/features/producoes/hooks/use-create-producao.ts (FE-15)
@@ -365,7 +369,7 @@ Nenhuma rota pagina nem busca por texto. As listas vêm inteiras e são pequenas
 
 | Tela      | Search params                                                                | Onde filtra                               |
 | --------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
-| Insumos   | `q`, `novo=1`                                                                | cliente                                   |
+| Insumos   | `q`, `novo=1`, `compra=<id>` (FE-47)                                         | cliente                                   |
 | Receitas  | `q`                                                                          | cliente                                   |
 | Gastos    | `novo=1`                                                                     | —                                         |
 | Estoque   | `baixo=1`                                                                    | cliente                                   |
@@ -373,7 +377,7 @@ Nenhuma rota pagina nem busca por texto. As listas vêm inteiras e são pequenas
 | Vendas    | `aba=registrar\|historico`, `dataInicio`, `dataFim` (`YYYY-MM-DD`), `status` | backend (com a conversão de datas abaixo) |
 | Simulação | `receitaId`                                                                  | cliente                                   |
 
-`novo=1` abre o formulário de criação ao carregar a página (ações rápidas do painel); ao fechar, remova o parâmetro com `router.replace`.
+`novo=1` abre o formulário de criação ao carregar a página (ações rápidas do painel); ao fechar, remova o parâmetro com `router.replace`. Do mesmo jeito, `compra=<id>` (link do aviso de estoque negativo, FE-47) abre o detalhe do insumo com "Registrar compra".
 
 ## Tipos de dados
 
@@ -399,7 +403,7 @@ Encontradas na análise dos microsserviços. Cada uma diz o que a web faz. Desde
 7. **Resolvida.** ~~Filtro de data das vendas~~: a API só aceita data e hora ISO 8601 completas, comparadas como instantes, que é o que a web já envia (início e fim do dia local).
 8. **Resolvida.** ~~Filtros inválidos derrubam o serviço~~: a API responde `400` `DADOS_INVALIDOS`. A web continua validando os search params com Zod.
 9. **Resolvida.** ~~Venda concluída sem estoque continua `CONCLUIDA`~~: a conclusão baixa o produto acabado na mesma transação; sem saldo, `422` `ESTOQUE_INSUFICIENTE` e a venda continua `PENDENTE`. A web não reconsulta mais a venda depois de concluir e abre o diálogo "Estoque insuficiente" também com esse erro (FE-39); a conferência antes de concluir fica só para dar a mensagem com o nome da receita.
-10. **Produção não confere o estoque de insumos** (mantida no monolito). A baixa aceita saldo negativo (`prisma-estoque.repository.ts`, `aplicarMovimentacao`). → A web não bloqueia, mas mostra o status Crítico no estoque.
+10. **Produção não confere o estoque de insumos** (mantida no monolito). A baixa aceita saldo negativo (`prisma-estoque.repository.ts`, `aplicarMovimentacao`). → A web não bloqueia (decisão de produto de 2026-11-21): mostra o status Crítico e o selo "Estoque negativo" (`estoqueNegativo`, BE-32) e avisa ao entrar (`GET /alertas`, FE-47).
 11. **Resolvida.** ~~`POST /producoes` não confere a empresa da receita nem dos gastos~~: receita ou gasto de outra empresa → `404`.
 12. **Resolvida.** ~~Sem limite de tamanho do nome do insumo~~: `@MaxLength(80)`. O formulário continua limitando a 80.
 13. **Resolvida.** ~~Exclusão de insumo não confere uso em receitas~~: `409` `INSUMO_EM_USO`, cuja mensagem a tela de insumos mostra.
