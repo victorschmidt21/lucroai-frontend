@@ -184,7 +184,7 @@ export function Combobox({
           role="listbox"
           aria-label={label}
           hidden={!aberto || filtradas.length === 0}
-          className="absolute inset-x-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-md border border-border-strong bg-surface-raised py-1 shadow-elevacao"
+          className="absolute inset-x-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-surface-raised py-1 shadow-elevacao"
         >
           {filtradas.map((option, indice) => {
             const escolhida = option.value === value;
@@ -201,8 +201,8 @@ export function Combobox({
                 onMouseMove={() => setAtiva(indice)}
                 className={cn(
                   'flex min-h-12 cursor-pointer items-center justify-between gap-2 px-4 text-body text-ink',
-                  indice === ativa && 'bg-surface-alt',
-                  escolhida && 'font-semibold text-accent',
+                  indice === ativa && 'bg-accent-soft',
+                  escolhida && 'font-extrabold',
                 )}
               >
                 {option.label}
@@ -212,7 +212,7 @@ export function Combobox({
           })}
         </ul>
         {aberto && filtradas.length === 0 ? (
-          <output className="absolute inset-x-0 top-full z-30 mt-1 rounded-md border border-border-strong bg-surface-raised px-4 py-3 text-body text-ink-muted shadow-elevacao">
+          <output className="absolute inset-x-0 top-full z-30 mt-1 rounded-md border border-border bg-surface-raised px-4 py-3 text-body text-ink-muted shadow-elevacao">
             {emptyMessage}
           </output>
         ) : null}

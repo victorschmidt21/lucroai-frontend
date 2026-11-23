@@ -111,6 +111,9 @@ const TEXTO: [string, string][] = [
   ['accent-strong', 'bg'],
   ['accent-strong', 'surface-alt'],
   ['ink', 'accent-soft'],
+  // Botão secundário no hover (FE-55) e o Toast invertido.
+  ['accent', 'accent-soft'],
+  ['bg', 'ink'],
   ['highlight-ink', 'surface'],
   ['success', 'surface'],
   ['warning', 'surface'],

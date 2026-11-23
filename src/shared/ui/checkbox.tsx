@@ -30,7 +30,7 @@ export function Checkbox({
             type="checkbox"
             className={cn(
               'peer size-5 cursor-pointer appearance-none rounded-[4px] border-2 border-border-field bg-surface transition-colors duration-150 not-disabled:hover:border-ink checked:border-accent checked:bg-accent not-disabled:checked:hover:border-accent',
-              'disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger',
+              'disabled:cursor-default disabled:opacity-50 aria-invalid:border-danger',
               className,
             )}
             {...controlProps}
@@ -53,7 +53,7 @@ export function Checkbox({
         </label>
       </div>
       {hint ? (
-        <p id={hintId} className="text-small text-ink-muted">
+        <p id={hintId} className="text-caption font-normal text-ink-muted">
           {hint}
         </p>
       ) : null}

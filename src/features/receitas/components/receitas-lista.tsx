@@ -6,7 +6,11 @@ import { useState } from 'react';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatQuantidade } from '@/shared/format/numero';
-import { buttonClasses, IconButton } from '@/shared/ui/button';
+import {
+  buttonClasses,
+  IconButton,
+  iconButtonClasses,
+} from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
   IconAdicionar,
@@ -19,7 +23,7 @@ import { useToast } from '@/shared/ui/toast';
 import { receitasListOptions } from '../api/receitas.queries';
 import { useDeleteReceita } from '../hooks/use-delete-receita';
 
-const ACAO_DE_LINHA = buttonClasses('fantasma', undefined, 'icone');
+const ACAO_DE_LINHA = iconButtonClasses();
 
 /**
  * Tela de receitas. Origem: receitas_page.dart, receita_card.dart e

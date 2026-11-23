@@ -43,9 +43,9 @@ describe('Button', () => {
 
   it.each([
     ['primario', 'bg-accent'],
-    ['secundario', 'bg-surface'],
+    ['secundario', 'bg-transparent'],
     ['perigo', 'bg-danger-strong'],
-    ['fantasma', 'bg-transparent'],
+    ['fantasma', 'bg-accent-soft'],
   ] as const)('aplica a variante %s', (variant, classe) => {
     render(<Button variant={variant}>Ação</Button>);
 
@@ -83,7 +83,7 @@ describe('Button', () => {
     );
   });
 
-  it('IconButton é redondo, fantasma e nomeado pelo aria-label', async () => {
+  it('IconButton é um círculo de 48px nomeado pelo aria-label', async () => {
     const onClick = vi.fn<() => void>();
     render(
       <IconButton aria-label="Editar Farinha de Trigo" onClick={onClick}>
@@ -94,7 +94,7 @@ describe('Button', () => {
       name: 'Editar Farinha de Trigo',
     });
 
-    expect(botao).toHaveClass('rounded-full', 'bg-transparent');
+    expect(botao).toHaveClass('rounded-full', 'size-12', 'bg-surface-alt');
     botao.focus();
     await userEvent.keyboard('{Enter}');
     expect(onClick).toHaveBeenCalledOnce();
