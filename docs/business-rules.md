@@ -812,14 +812,28 @@ vendas7dias  = número de faturáveis com dataVenda ≥ agora − 7 dias
 estoqueBaixo = número de insumos com isBaixoEstoque
 ```
 
-| Indicador (FE-57) | Detalhe                                                                                                                                                                          | Ação                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| Faturamento       | "Período atual"                                                                                                                                                                  | —                         |
-| Sobrou pra você   | "R$ X de cada R$ 100" (margem arredondada a inteiro), verde; margem negativa: "As vendas ficaram abaixo do custo", vermelho; sem faturamento no mês: "Ainda sem vendas este mês" | —                         |
-| Vendas            | "Últimos 7 dias"                                                                                                                                                                 | —                         |
-| Despensa          | o número e "ingrediente acabando" (1) ou "ingredientes acabando"                                                                                                                 | leva a `/estoque?baixo=1` |
+### Layout (FE-58)
 
-Funções puras (FE-57): `porCadaCemReais(margem)` (`R$ <round(margem)> de cada R$ 100`; `null` com margem negativa), `descreverSobraDoMes` e `rotuloAcabando`. Erro do bloco: "Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo.".
+O lucro do mês é o herói da tela. No celular, uma coluna nesta ordem; a partir de `lg`, duas colunas, com a saudação no topo: herói, cards e contas do mês à esquerda; "O que mais deu lucro", "Evolução mensal" e "Ações rápidas" à direita. Cada bloco tem `Skeleton` no próprio formato e `ErrorState` compacto. Em 360px, a saudação e o herói cabem na primeira tela, sem rolar.
+
+1. **Saudação** (`h1`, Fredoka 600 de 22px): `saudacao(nome)` dá "Oi, {primeiro nome}!" (`primeiroNome`: primeira palavra de `usuario.nome`, do JWT) ou "Oi!" sem nome. Embaixo, em `ink-muted`, `textoFechamentoDoMes(hoje)`: "Faltam N dias para fechar o mês", "Falta 1 dia para fechar o mês" ou "Último dia do mês" (`diasParaFecharOMes` = último dia do mês − dia de hoje).
+2. **Herói** (`StatCard` `heroi`, com o símbolo da marca em marca d'água), pelo `estadoDoHeroi` (textos em `heroiDoMes`):
+
+| Estado       | Quando                      | Título                            | Fundo         | Extra                                                  |
+| ------------ | --------------------------- | --------------------------------- | ------------- | ------------------------------------------------------ |
+| `sem-vendas` | `faturamento == 0`          | "Ainda sem vendas este mês"       | Amora         | botão "Anotar uma venda" → `/vendas`                   |
+| `negativo`   | `lucro < 0`                 | "Este mês ainda está no vermelho" | `danger-soft` | link "Ver como ajustar os preços" → `/simulacao`       |
+| `positivo`   | o resto (inclusive lucro 0) | "Sobrou pra você este mês"        | Amora         | chip "R$ X de cada R$ 100" (`porCadaCemReais(margem)`) |
+
+O valor é sempre `formatMoeda(lucro)`.
+
+3. **Cards** (2 colunas): "Você vendeu" (`faturamento`, "Este mês") e "Pedidos na semana" (`vendas7dias`, "Últimos 7 dias"). Ocupando as 2 colunas, "Estoque", que leva a `/estoque?baixo=1`: `rotuloAcabando(n)` ("1 ingrediente acabando" / "N ingredientes acabando") e os nomes em chip `warning-soft`, até 3, depois "+N" (`ingredientesAcabando`, na ordem de `GET /insumos`, com "Ingrediente #<id>" sem o insumo; `chipsAcabando`). Sem itens acabando: "Estoque em dia", com ponto `success`. Erro do estoque: "Não foi possível carregar o estoque.".
+4. **Contas do mês** (ver abaixo).
+5. **"O que mais deu lucro"** (ver [Produtos mais rentáveis](#produtos-mais-rentáveis)): cada linha com o ícone de receita em quadrado `surface-alt`, nome 700 e valor `success` (ou `danger`) com `tabular-nums`.
+6. **Evolução mensal**: barras `accent-soft`, o mês atual em `accent`, rótulos `ink-muted`, a partir do zero; o valor em R$ no tooltip de cada barra e na tabela `sr-only`.
+7. **Ações rápidas**: "Nova receita" (primária, a única Amora cheia da tela) → `/receitas/nova` e "Anotar venda" (secundária) → `/vendas`.
+
+Erro do herói e dos cards de venda: "Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo.".
 
 O mobile usa sempre o `custoUnitario` atual da receita. A web prefere o snapshot do item de venda, que é o custo no momento da venda (`services/sales-service/src/modules/integracao/OVERVIEW.md`), e cai para o da receita quando o snapshot é `null`.
 
@@ -838,7 +852,7 @@ Título "Evolução mensal", subtítulo "Receita dos últimos 6 meses". A tendê
 
 ### Produtos mais rentáveis
 
-Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
+Seção "O que mais deu lucro" (FE-58). Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
 
 - **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - R$ X de cada R$ 100` (`porCadaCemReais`; com margem negativa, `N un - abaixo do custo`). O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
 - **Sem vendas:** desde a FE-45, usa o lucro por unidade do preço do Balcão calculado pela API (`precos[balcao].composicao.lucro`): `lucro = lucro.valor`, `margem = lucro.fracao × 100`, só as receitas com `lucro > 0` (sem preço possível, a receita fica fora). Linha: `sem vendas no período - R$ X de cada R$ 100` (o `unitsLabel` do mobile sem vendas).
@@ -846,28 +860,25 @@ Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
 
 ### Contas do mês (ponto de equilíbrio da empresa)
 
-FE-45. `GET /vendas/resumo` (BE-31): o faturamento por mês que paga os gastos `MENSAL`, com o mix das vendas `CONCLUIDA` dos últimos 30 dias, calculado pelo backend. Seção "Contas do mês", com um card "Para pagar as contas do mês, venda" (`pontoEquilibrioDoPainel`, textos da FE-57):
+FE-45. `GET /vendas/resumo` (BE-31): o faturamento por mês que paga os gastos `MENSAL`, com o mix das vendas `CONCLUIDA` dos últimos 30 dias, calculado pelo backend. Desde a FE-58, um cartão com o título, uma `ProgressBar` do quanto o faturamento do mês já cobriu e uma frase (`pontoEquilibrioDoPainel(ponto, faturamento)`, textos da FE-57):
 
-| Resposta                                   | Valor                | Detalhe                                                    |
-| ------------------------------------------ | -------------------- | ---------------------------------------------------------- |
-| `pontoEquilibrio.valor` presente           | `formatMoeda(valor)` | "por mês"                                                  |
-| `valor: null`, `motivo: "SEM_VENDAS"`      | "—"                  | "Ainda sem vendas este mês"                                |
-| `valor: null`, `motivo: "MARGEM_NEGATIVA"` | "—"                  | "Com os preços de hoje, você paga para vender." (vermelho) |
+```text
+progresso = valor <= 0 ? 1 : min(faturamento / valor, 1)   (faturamento do mês, dos indicadores)
+```
+
+| Resposta                                   | Título                                    | Barra       | Frase                                                                                                                |
+| ------------------------------------------ | ----------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `pontoEquilibrio.valor` presente           | "Para pagar as contas do mês, venda R$ X" | `progresso` | "Você já vendeu R$ Y este mês"; com `progresso` 1, "Contas do mês pagas. O que vender agora sobra pra você." (verde) |
+| `valor: null`, `motivo: "SEM_VENDAS"`      | "Para pagar as contas do mês"             | —           | "Ainda sem vendas este mês"                                                                                          |
+| `valor: null`, `motivo: "MARGEM_NEGATIVA"` | "Para pagar as contas do mês"             | —           | "Com os preços de hoje, você paga para vender." (vermelho)                                                           |
+
+O valor vem da API sem recalcular; só a fração da barra é calculada na tela.
 
 A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e custos, e é buscado de novo cada vez que o painel abre, em vez de ser invalidado por cada mutação desses módulos. Erro do bloco: "Não foi possível carregar quanto vender para pagar as contas.".
 
 ### Cabeçalho e ações rápidas
 
-Cabeçalho "Doce Fatia", "Seu painel financeiro", nome da empresa (do JWT) e atalho para `/simulacao`.
-
-| Ação (FE-57)     | Destino                    |
-| ---------------- | -------------------------- |
-| Novo ingrediente | `/insumos?novo=1`          |
-| Nova receita     | `/receitas/nova`           |
-| Nova fornada     | `/producoes?novo=1`        |
-| Novo gasto       | `/gastos-indiretos?novo=1` |
-
-`?novo=1` abre o formulário de criação ao carregar a listagem.
+Desde a FE-58, o cabeçalho é a saudação, e as ações rápidas são só "Nova receita" (primária) e "Anotar venda" (secundária); ver [Layout](#layout-fe-58). Saíram o título "Doce Fatia", "Seu painel financeiro", o nome da empresa (que continua no menu da conta), o atalho "Simulação" (o herói no vermelho leva a `/simulacao`) e as ações "Novo ingrediente", "Nova fornada" e "Novo gasto", para a tela ter uma ação primária só ([marca.md](marca.md#checklist-de-revisão-de-tela)).
 
 ## Configurações de custo e formas de venda
 
