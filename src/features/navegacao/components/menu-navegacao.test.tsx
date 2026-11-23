@@ -63,7 +63,8 @@ describe.each(['lateral', 'inferior'] as const)(
 
       const ativo = screen.getByRole('link', { name: 'Receitas' });
       expect(ativo).toHaveAttribute('aria-current', 'page');
-      expect(ativo).toHaveClass('text-accent-strong');
+      expect(ativo).toHaveClass('text-ink');
+      expect(ativo.querySelector('svg')).toHaveClass('text-accent');
       expect(screen.getByRole('link', { name: 'Home' })).toHaveClass(
         'text-ink-muted',
       );

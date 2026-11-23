@@ -56,16 +56,23 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
         </p>
       )}
 
-      {/* "Registrar entrada" e "Definir mínimo" precisam do saldo atual; o histórico, não. */}
+      {/*
+       * "Registrar entrada" e "Definir mínimo" precisam do saldo atual; o histórico,
+       * não. Sem `primario` no cartão: a tela tem uma ação primária só (FE-55).
+       */}
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
         {estoque ? (
           <>
-            <Button size="compacto" onClick={() => setEntradaAberta(true)}>
+            <Button
+              variant="secundario"
+              size="compacto"
+              onClick={() => setEntradaAberta(true)}
+            >
               <IconAdicionar className="size-4" />
               Registrar entrada
             </Button>
             <Button
-              variant="secundario"
+              variant="fantasma"
               size="compacto"
               onClick={() => setMinimoAberto(true)}
             >
@@ -75,7 +82,7 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
           </>
         ) : null}
         <Button
-          variant="secundario"
+          variant="fantasma"
           size="compacto"
           onClick={() => setHistoricoAberto(true)}
         >
