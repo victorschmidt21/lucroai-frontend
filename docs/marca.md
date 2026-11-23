@@ -3,7 +3,7 @@
 Manual de marca do produto (antes chamado LucroAI). Fonte: proposta de 2026-11-22, aprovada pela pessoa responsável.
 Implementação: issues FE-50 a FE-60 (épico "E9 Marca Doce Fatia").
 
-> **Status:** referência (FE-50). O código ainda segue o visual antigo até cada issue do épico ser entregue: tema claro (FE-51), modo noite (FE-52), tipografia, raios e toque (FE-53), nome e logo (FE-54), componentes (FE-55), ícones (FE-56), linguagem (FE-57), painel (FE-58), estados vazios (FE-59) e card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
+> **Status:** referência (FE-50). O tema claro com a paleta Confeitaria **existe** desde a FE-51 (`src/app/globals.css`). O resto do código segue o visual antigo até cada issue do épico ser entregue: modo noite (FE-52), tipografia, raios e toque (FE-53), nome e logo (FE-54), componentes (FE-55), ícones (FE-56), linguagem (FE-57), painel (FE-58), estados vazios (FE-59) e card de conquista (FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
 
 ## Nome
 
@@ -66,7 +66,7 @@ A marca não é: infantil, "tudo rosa por ser para mulheres", banco ou contador,
 
 Proporção numa tela: 60% Chantilly/Merengue, 25% Forma, 10% Amora, 5% Damasco e status.
 
-Rosa é tempero, não base. Todo par de texto passa de 4,5:1 (medido em `tokens.test.ts`, criado na FE-51).
+Rosa é tempero, não base. Todo par de texto passa de 4,5:1 (medido em `src/shared/ui/tokens.test.ts` desde a FE-51).
 
 Status sempre com cor, ponto e texto. "Cancelada" é neutra (Cacau 2 sobre Merengue), para não parecer erro.
 

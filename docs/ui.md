@@ -2,7 +2,7 @@
 
 > **Marca:** o visual e os textos seguem a marca **Doce Fatia**, descrita em [marca.md](marca.md). Leia-o antes de mexer em interface ou texto.
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; os valores das tabelas de tokens e de contraste abaixo ainda são os do tema escuro e mudam nas FE-51 e FE-52.
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite chega na FE-52.
 
 ## Princípios
 
@@ -14,70 +14,76 @@
 
 ## Tokens
 
-Extraídos de `lib/main.dart` e das telas do mobile. Ficam em variáveis CSS (`:root`) e no tema do Tailwind em `src/app/globals.css`; nas telas, use só as utilidades geradas (`bg-surface`, `text-ink-muted`, `border-border`). As cores, sombras, raios e tamanhos de texto prontos do Tailwind foram removidos do tema: `bg-orange-500`, `text-white`, `shadow-md` e `text-sm` não geram estilo. O teste `src/shared/ui/sem-cores-fixas.test.ts` falha se aparecer cor fixa (hex, `rgb()`, paleta do Tailwind) fora de `globals.css`.
+Paleta **Confeitaria** da marca, em tema claro (FE-51, [marca.md](marca.md#cores-paleta-confeitaria)). Os nomes vêm do tema escuro antigo, para as telas não mudarem. Ficam em variáveis CSS (`:root`) e no tema do Tailwind em `src/app/globals.css`; nas telas, use só as utilidades geradas (`bg-surface`, `text-ink-muted`, `border-border-field`). As cores, sombras, raios e tamanhos de texto prontos do Tailwind foram removidos do tema: `bg-orange-500`, `text-white`, `shadow-md` e `text-sm` não geram estilo. O teste `src/shared/ui/sem-cores-fixas.test.ts` falha se aparecer cor fixa (hex, `rgb()`, paleta do Tailwind) fora de `globals.css`.
 
-| Token            | Valor                         | Uso                                                       |
-| ---------------- | ----------------------------- | --------------------------------------------------------- |
-| `bg`             | #050505                       | fundo da página e da barra inferior                       |
-| `bg-alt`         | #0A0A0A                       | fundo de telas internas (cálculo real, estoque)           |
-| `surface`        | #111111                       | cartões                                                   |
-| `surface-alt`    | #171717                       | campos e cartões internos; hover de botões                |
-| `surface-raised` | #1A1A1A                       | Dialog, Drawer, Toast, lista do Combobox                  |
-| `border`         | #272727                       | borda de campo e de cartão                                |
-| `border-strong`  | #2B2B2B                       | divisores de destaque, trilho da `ProgressBar`            |
-| `ink`            | #FFFFFF                       | texto principal                                           |
-| `ink-muted`      | #8A8A8A                       | rótulos, texto secundário e status Cancelada              |
-| `ink-subtle`     | **#858585** (mobile: #7C7C7C) | subtítulo do `PageHeader`, placeholder, trilho do Slider  |
-| `accent`         | #FF6B3D                       | cor primária: valores em destaque, foco, aba ativa, links |
-| `accent-strong`  | #E85D33                       | botão primário, item ativo do menu, SegmentedControl      |
-| `on-accent`      | **#000000**                   | texto e ícone sobre `accent` e `accent-strong`            |
-| `success`        | #4CAF50                       | lucro positivo, status Adequado e Concluída               |
-| `warning`        | #FFB000                       | status Baixo e Pendente                                   |
-| `danger`         | #FF5252                       | erro, lucro negativo, status Crítico                      |
-| `danger-strong`  | #E53935                       | botão de perigo                                           |
-| `on-danger`      | **#000000**                   | texto sobre `danger-strong`                               |
-| `overlay`        | preto com 87%                 | fundo atrás de Dialog e Drawer (`Colors.black87`)         |
+| Token            | Valor (nome na marca)    | Uso                                                                       |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------- |
+| `bg`             | #FFF8F3 (Chantilly)      | fundo da página e da barra inferior                                       |
+| `bg-alt`         | #FFF8F3                  | mesmo valor de `bg`, mantido por compatibilidade                          |
+| `surface`        | #FFFFFF (Forma)          | cartões, botão secundário                                                 |
+| `surface-alt`    | #FBEEE7 (Merengue)       | campos, áreas agrupadas, hover, badge "Cancelada"                         |
+| `surface-raised` | #FFFFFF                  | Dialog, Drawer, Toast, lista do Combobox (a diferença vem da sombra)      |
+| `border`         | #EBD8CF                  | borda de cartão                                                           |
+| `border-strong`  | #D9C0B5                  | divisores, trilho da `ProgressBar`                                        |
+| `border-field`   | #9C8279 (Borda de campo) | borda de campo, Checkbox, `SegmentedControl`, chip e botão secundário     |
+| `ink`            | #3A2530 (Cacau)          | texto principal (nunca preto puro)                                        |
+| `ink-muted`      | #7A5F69 (Cacau 2)        | rótulos, texto secundário e status Cancelada                              |
+| `ink-subtle`     | #7A5F69                  | subtítulo do `PageHeader`, placeholder, trilho do Slider                  |
+| `accent`         | #A3326E (Amora)          | cor primária: botão primário, valores em destaque, foco, aba ativa, links |
+| `accent-strong`  | #8A285C (Amora forte)    | hover e pressionado da primária, item ativo do menu                       |
+| `on-accent`      | #FFFFFF                  | texto e ícone sobre `accent` e `accent-strong`                            |
+| `accent-soft`    | #FADCE9 (Amora suave)    | `ToggleChip` selecionado, Badge `destaque`                                |
+| `highlight`      | #F08A5D (Damasco)        | decorativo (fatia do símbolo, ilustração); **nunca texto nem botão**      |
+| `highlight-ink`  | #B04E25                  | texto em Damasco                                                          |
+| `success`        | #2A6F46 (Pistache)       | lucro positivo, status Adequado e Concluída                               |
+| `success-soft`   | #DDF1E3                  | fundo dos status Adequado e Concluída                                     |
+| `warning`        | #8A5A00 (Caramelo)       | status Baixo e Pendente                                                   |
+| `warning-soft`   | #FCEBC6                  | fundo dos status Baixo e Pendente                                         |
+| `danger`         | #B8342A (Cereja)         | erro, prejuízo, status Crítico                                            |
+| `danger-strong`  | #9E2B22                  | botão de perigo                                                           |
+| `on-danger`      | #FFFFFF                  | texto sobre `danger` e `danger-strong`                                    |
+| `danger-soft`    | #FBE1DC                  | fundo do status Crítico                                                   |
+| `overlay`        | `rgb(58 37 48 / 0.45)`   | fundo atrás de Dialog e Drawer, em tom Cacau                              |
 
 ### Contraste
 
 Medido em `src/shared/ui/tokens.test.ts`, que lê `globals.css` e calcula a razão do WCAG para cada par usado. Token ou combinação nova entra nesse teste. No navegador, o `axe` do `e2e/design-system.spec.ts` confere o contraste da página `/design-system` inteira.
 
-| Combinação                                                          | Contraste                                | Decisão                                                                                    |
-| ------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `ink-muted` sobre `surface`                                         | 5,47:1                                   | ok; passa de 4,5:1 em todos os fundos                                                      |
-| `ink-subtle` original (#7C7C7C) sobre `surface-raised`              | 4,17:1                                   | **reprovado**: o token foi clareado para #858585, o cinza do painel e das vendas no mobile |
-| `ink-subtle` (#858585) sobre `surface-raised`                       | 4,72:1                                   | ok em todos os fundos                                                                      |
-| `accent` sobre `bg`                                                 | 7,20:1                                   | ok em qualquer tamanho e em todos os fundos; é a cor do foco                               |
-| branco sobre `accent-strong` / `accent`                             | 3,47:1 / 2,83:1                          | **reprovado**: o mobile usa texto branco nos botões laranja; a web usa preto               |
-| preto sobre `accent-strong`                                         | 6,04:1                                   | ok: `on-accent` é preto                                                                    |
-| branco sobre `danger-strong`                                        | 4,23:1                                   | **reprovado**                                                                              |
-| preto sobre `danger-strong`                                         | 4,97:1                                   | ok: `on-danger` é preto                                                                    |
-| `accent-strong` sobre `bg` (item ativo do menu)                     | 5,87:1                                   | ok sobre `bg` e `bg-alt`                                                                   |
-| texto do status sobre 12% da própria cor (como o `venda_card.dart`) | Cancelada: 4,30:1 sobre `surface-raised` | **reprovado**: o Badge usa 8% de fundo, que passa em todos os fundos                       |
-| `accent-strong` sobre 20% dele (FilterChip do mobile)               | 3,89:1                                   | **reprovado**: o `ToggleChip` selecionado usa texto `accent` (4,77:1 ou mais)              |
-| `danger`, `success`, `warning` sobre `surface`                      | ≥ 4,5:1                                  | ok como texto                                                                              |
+| Combinação                                          | Contraste       | Onde                                                                |
+| --------------------------------------------------- | --------------- | ------------------------------------------------------------------- |
+| `ink` sobre `bg`                                    | 13,43:1         | texto principal                                                     |
+| `ink-muted` sobre `surface-alt`                     | 5,04:1          | pior caso do texto secundário; passa em todos os fundos             |
+| `accent` sobre `surface` / `surface-alt`            | 6,48:1 / 5,71:1 | link, valor em destaque e foco (`outline: 2px solid var(--accent)`) |
+| `on-accent` sobre `accent` / `accent-strong`        | 6,48:1 / 8,27:1 | botão primário e o hover dele                                       |
+| `ink` sobre `accent-soft`                           | 11,08:1         | `ToggleChip` selecionado                                            |
+| `highlight-ink` sobre `surface`                     | 5,30:1          | texto em Damasco; o próprio `highlight` não atinge 4,5:1            |
+| `success` sobre `success-soft`                      | 5,13:1          | badges Adequado e Concluída                                         |
+| `warning` sobre `warning-soft`                      | 5,03:1          | badges Baixo e Pendente                                             |
+| `danger` sobre `danger-soft`                        | 4,75:1          | badge Crítico e "Estoque negativo"                                  |
+| `on-danger` sobre `danger-strong`                   | 7,44:1          | botão de perigo                                                     |
+| `border-field` sobre `surface` (não textual, ≥ 3:1) | 3,57:1          | borda de campo, Checkbox e `SegmentedControl`                       |
 
-A borda dos campos (`border` sobre `surface-alt`, 1,2:1) segue o mobile e não atinge os 3:1 de contraste não textual. O campo é identificado pelo rótulo visível acima dele e pelo fundo; no foco, a borda fica `accent`.
+A borda de cartão (`border`) é decorativa e não precisa de 3:1: o cartão se separa pelo fundo. Campos, Checkbox e controles de seleção usam `border-field`, que passa de 3:1 sobre `surface`, `surface-alt` e `bg`.
 
 ### Status
 
-Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](business-rules.md#enumerações-e-rótulos). Cada status tem um token próprio (`status-critico`, `status-pendente` etc.), que aponta para o semântico:
+Badges usam sempre cor **e** texto, com os rótulos de [business-rules.md](business-rules.md#enumerações-e-rótulos). Cada status tem um token próprio (`status-critico`, `status-pendente` etc.), que aponta para o semântico; o fundo do Badge é o `*-soft` correspondente:
 
-| Domínio | Valor       | Texto     | Token              | Aponta para |
-| ------- | ----------- | --------- | ------------------ | ----------- |
-| Estoque | crítico     | Crítico   | `status-critico`   | `danger`    |
-| Estoque | baixo       | Baixo     | `status-baixo`     | `warning`   |
-| Estoque | adequado    | Adequado  | `status-adequado`  | `success`   |
-| Venda   | `PENDENTE`  | Pendente  | `status-pendente`  | `warning`   |
-| Venda   | `CONCLUIDA` | Concluída | `status-concluida` | `success`   |
-| Venda   | `CANCELADA` | Cancelada | `status-cancelada` | `ink-muted` |
+| Domínio | Valor       | Texto     | Token              | Aponta para | Fundo do Badge |
+| ------- | ----------- | --------- | ------------------ | ----------- | -------------- |
+| Estoque | crítico     | Crítico   | `status-critico`   | `danger`    | `danger-soft`  |
+| Estoque | baixo       | Baixo     | `status-baixo`     | `warning`   | `warning-soft` |
+| Estoque | adequado    | Adequado  | `status-adequado`  | `success`   | `success-soft` |
+| Venda   | `PENDENTE`  | Pendente  | `status-pendente`  | `warning`   | `warning-soft` |
+| Venda   | `CONCLUIDA` | Concluída | `status-concluida` | `success`   | `success-soft` |
+| Venda   | `CANCELADA` | Cancelada | `status-cancelada` | `ink-muted` | `surface-alt`  |
 
-O mobile pinta "Cancelada" com #E53935; a web segue a issue e usa `ink-muted`, para uma venda cancelada não parecer um erro.
+"Cancelada" é neutra (Cacau 2 sobre Merengue), para uma venda cancelada não parecer um erro.
 
 ### Forma e profundidade
 
 - **Cantos arredondados**, diferente da Urbizzi: `rounded-md` (12px) em cartões, campos e botões (padrão), `rounded-sm` (8px) em badges e chips, `rounded-lg` (14px) em cartões de resumo e no `StatCard`, `rounded-xl` (18px) no Dialog e no Drawer (o `Dialog` de cadastro do mobile usa 18px). `rounded-full` em `IconButton`, `SegmentedControl` e Spinner.
-- **Sem gradientes.** Sombra (`shadow-elevacao`) só onde o mobile usa elevação: Dialog, Drawer, Toast e a lista do Combobox.
+- **Sem gradientes.** Sombra (`shadow-elevacao`, quente, em tom Cacau) só em Dialog, Drawer, Toast e a lista do Combobox.
 - Separação entre áreas por fundo e borda (`surface` com `border`).
 
 ### Tipografia
