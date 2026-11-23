@@ -3,7 +3,11 @@ import type { ResumoVendas } from '@/shared/api/contracts/sales';
 import { formatMoeda } from '@/shared/format/moeda';
 import { isBaixoEstoque } from '@/shared/domain/estoque';
 import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
-import { formatPercentual, fracaoParaPercentual } from '@/shared/format/numero';
+import {
+  formatNumero,
+  formatPercentual,
+  fracaoParaPercentual,
+} from '@/shared/format/numero';
 
 /*
  * Painel (docs/business-rules.md#painel). Origem: dashboard_page.dart
@@ -131,11 +135,38 @@ export function calcularIndicadores(
   };
 }
 
-/** Insumos abaixo do mínimo (o status Crítico do estoque). */
-export function contarEstoqueBaixo(
-  saldos: readonly { quantidadeDisponivel: number; quantidadeMinima: number }[],
+/**
+ * Nomes dos insumos abaixo do mínimo (o status Crítico do estoque), na ordem de
+ * `GET /insumos`. Um saldo sem insumo na lista usa "Ingrediente #<id>".
+ */
+export function ingredientesAcabando(
+  saldos: readonly {
+    insumoId: number;
+    quantidadeDisponivel: number;
+    quantidadeMinima: number;
+  }[],
+  insumos: readonly { id: number; nome: string }[],
 ) {
-  return saldos.filter(isBaixoEstoque).length;
+  const nomes = new Map(insumos.map((insumo) => [insumo.id, insumo.nome]));
+  const ordem = new Map(insumos.map((insumo, indice) => [insumo.id, indice]));
+  return saldos
+    .filter(isBaixoEstoque)
+    .toSorted(
+      (a, b) =>
+        (ordem.get(a.insumoId) ?? Infinity) -
+        (ordem.get(b.insumoId) ?? Infinity),
+    )
+    .map(
+      (saldo) => nomes.get(saldo.insumoId) ?? `Ingrediente #${saldo.insumoId}`,
+    );
+}
+
+/** Até `limite` nomes em chip; o resto vira "+N". */
+export function chipsAcabando(nomes: readonly string[], limite = 3) {
+  return {
+    visiveis: nomes.slice(0, limite),
+    resto: Math.max(nomes.length - limite, 0),
+  };
 }
 
 export type PontoMensal = { rotulo: string; ano: number; valor: number };
@@ -242,35 +273,129 @@ export function produtosMaisRentaveis(
 }
 
 export type PontoEquilibrioDoPainel = {
-  valor: string;
+  titulo: string;
+  /** Fração já vendida no mês (0 a 1); `null` sem o valor da API. */
+  progresso: number | null;
   detalhe: string;
-  tom: 'muted' | 'danger';
+  tom: 'muted' | 'danger' | 'success';
 };
 
 /**
- * Card "Para pagar as contas" (FE-45): o ponto de equilíbrio da empresa, em
- * reais por mês, como a API devolve (`GET /vendas/resumo`), sem recalcular.
+ * Bloco "Para pagar as contas do mês, venda R$ X" (FE-45, textos da FE-57,
+ * FE-58): o ponto de equilíbrio da empresa, em reais por mês, como a API devolve
+ * (`GET /vendas/resumo`), sem recalcular, e o quanto o faturamento do mês já
+ * cobriu dele (`faturamento ÷ valor`, até 1; valor 0 conta como pago).
  */
 export function pontoEquilibrioDoPainel(
   ponto: ResumoVendas['pontoEquilibrio'],
+  faturamento: number,
 ): PontoEquilibrioDoPainel {
   if (ponto.valor !== null) {
+    const progresso =
+      ponto.valor <= 0
+        ? 1
+        : Math.min(Math.max(faturamento / ponto.valor, 0), 1);
     return {
-      valor: formatMoeda(ponto.valor),
-      detalhe: 'em vendas por mês',
-      tom: 'muted',
+      titulo: `Para pagar as contas do mês, venda ${formatMoeda(ponto.valor)}`,
+      progresso,
+      detalhe:
+        progresso >= 1
+          ? 'Contas do mês pagas. O que vender agora sobra pra você.'
+          : `Você já vendeu ${formatMoeda(faturamento)} este mês`,
+      tom: progresso >= 1 ? 'success' : 'muted',
     };
   }
+  const titulo = 'Para pagar as contas do mês';
   if (ponto.motivo === 'MARGEM_NEGATIVA') {
     return {
-      valor: '—',
-      detalhe: 'as vendas não cobrem o custo',
+      titulo,
+      progresso: null,
+      detalhe: 'Com os preços de hoje, você paga para vender.',
       tom: 'danger',
     };
   }
   return {
-    valor: '—',
-    detalhe: 'sem vendas nos últimos 30 dias',
+    titulo,
+    progresso: null,
+    detalhe: 'Ainda sem vendas este mês',
     tom: 'muted',
   };
+}
+
+/**
+ * Margem em linguagem de cozinha (FE-57): "R$ X de cada R$ 100", com a margem
+ * (em pontos percentuais) arredondada a inteiro. Margem negativa não usa a
+ * frase: devolve `null`, e a tela diz que a venda ficou abaixo do custo.
+ */
+export function porCadaCemReais(margem: number): string | null {
+  if (margem < 0) return null;
+  return `R$ ${formatNumero(Math.round(margem))} de cada R$ 100`;
+}
+
+export type EstadoDoHeroi = 'positivo' | 'negativo' | 'sem-vendas';
+
+/** Estado do herói do painel (FE-58): sem faturamento no mês, lucro < 0 ou o resto. */
+export function estadoDoHeroi({
+  faturamento,
+  lucro,
+}: Pick<Indicadores, 'faturamento' | 'lucro'>): EstadoDoHeroi {
+  if (faturamento === 0) return 'sem-vendas';
+  return lucro < 0 ? 'negativo' : 'positivo';
+}
+
+export type HeroiDoMes = {
+  estado: EstadoDoHeroi;
+  titulo: string;
+  /** Chip "R$ X de cada R$ 100", só com lucro. */
+  detalhe: string | null;
+};
+
+/** Textos do herói "Sobrou pra você este mês" (FE-57, FE-58). */
+export function heroiDoMes(
+  indicadores: Pick<Indicadores, 'faturamento' | 'lucro' | 'margem'>,
+): HeroiDoMes {
+  const estado = estadoDoHeroi(indicadores);
+  if (estado === 'sem-vendas') {
+    return { estado, titulo: 'Ainda sem vendas este mês', detalhe: null };
+  }
+  if (estado === 'negativo') {
+    return { estado, titulo: 'Este mês ainda está no vermelho', detalhe: null };
+  }
+  return {
+    estado,
+    titulo: 'Sobrou pra você este mês',
+    detalhe: porCadaCemReais(indicadores.margem),
+  };
+}
+
+/** "1 ingrediente acabando" / "N ingredientes acabando" (FE-57). */
+export function rotuloAcabando(quantidade: number) {
+  return quantidade === 1
+    ? '1 ingrediente acabando'
+    : `${formatNumero(quantidade)} ingredientes acabando`;
+}
+
+/** Primeira palavra do nome do usuário; `null` sem nome. */
+export function primeiroNome(nome: string | null) {
+  return nome?.trim().split(/\s+/)[0] || null;
+}
+
+/** "Oi, {primeiro nome}!" ou "Oi!" (FE-58). */
+export function saudacao(nome: string | null) {
+  const primeiro = primeiroNome(nome);
+  return primeiro ? `Oi, ${primeiro}!` : 'Oi!';
+}
+
+/** Dias de `hoje` até o último dia do mês (0 no último dia). */
+export function diasParaFecharOMes(hoje: Date) {
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+  return ultimoDia.getDate() - hoje.getDate();
+}
+
+/** "Faltam N dias para fechar o mês", "Falta 1 dia…" ou "Último dia do mês". */
+export function textoFechamentoDoMes(hoje: Date) {
+  const dias = diasParaFecharOMes(hoje);
+  if (dias === 0) return 'Último dia do mês';
+  if (dias === 1) return 'Falta 1 dia para fechar o mês';
+  return `Faltam ${dias} dias para fechar o mês`;
 }

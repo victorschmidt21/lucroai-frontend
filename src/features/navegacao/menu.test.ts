@@ -1,33 +1,56 @@
 import { describe, expect, it } from 'vitest';
-import { getItemAtivo, ITENS_MENU } from './menu';
+import {
+  getItemAtivo,
+  ITENS_BARRA_INFERIOR,
+  ITENS_MAIS,
+  ITENS_MENU,
+} from './menu';
 
 describe('ITENS_MENU', () => {
-  it('tem os oito destinos na ordem do mobile', () => {
+  it('tem os oito destinos na ordem do mobile, com os nomes de cozinha', () => {
     expect(ITENS_MENU.map(({ label, href }) => [label, href])).toEqual([
-      ['Home', '/'],
-      ['Insumos', '/insumos'],
+      ['Início', '/'],
+      ['Ingredientes', '/insumos'],
       ['Receitas', '/receitas'],
       ['Custos', '/custos'],
       ['Vendas', '/vendas'],
       ['Estoque', '/estoque'],
-      ['Produção', '/producoes'],
-      ['Gastos', '/gastos-indiretos'],
+      ['Fornadas', '/producoes'],
+      ['Contas do mês', '/gastos-indiretos'],
+    ]);
+  });
+});
+
+describe('barra inferior', () => {
+  it('mostra Início, Receitas, Vendas e Estoque, e o resto vai para "Mais"', () => {
+    expect(ITENS_BARRA_INFERIOR.map(({ label }) => label)).toEqual([
+      'Início',
+      'Receitas',
+      'Vendas',
+      'Estoque',
+    ]);
+    expect(ITENS_MAIS.map(({ label, href }) => [label, href])).toEqual([
+      ['Ingredientes', '/insumos'],
+      ['Custos', '/custos'],
+      ['Fornadas', '/producoes'],
+      ['Contas do mês', '/gastos-indiretos'],
+      ['Ajustes de preço', '/configuracoes'],
     ]);
   });
 });
 
 describe('getItemAtivo', () => {
   it.each([
-    ['/', 'Home'],
-    ['/insumos', 'Insumos'],
+    ['/', 'Início'],
+    ['/insumos', 'Ingredientes'],
     ['/receitas/nova', 'Receitas'],
     ['/receitas/3/editar', 'Receitas'],
     ['/custos', 'Custos'],
     ['/vendas', 'Vendas'],
     ['/estoque', 'Estoque'],
-    ['/producoes', 'Produção'],
-    ['/gastos-indiretos', 'Gastos'],
-    ['/configuracoes', 'Configurações de custo'],
+    ['/producoes', 'Fornadas'],
+    ['/gastos-indiretos', 'Contas do mês'],
+    ['/configuracoes', 'Ajustes de preço'],
   ])('em %s, é %s', (pathname, label) => {
     expect(getItemAtivo(pathname)?.label).toBe(label);
   });

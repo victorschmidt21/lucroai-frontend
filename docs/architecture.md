@@ -7,7 +7,7 @@ Objetivos:
 - **Previsibilidade**: toda funcionalidade tem a mesma forma. Quem conhece uma conhece todas (inclusive a IA).
 - **Isolamento**: cada funcionalidade é dona das suas telas, chamadas, regras de formulário e cálculos.
 - **Contrato único**: os tipos da API ficam em um só lugar (`src/shared/api/contracts/`), validados em tempo de execução.
-- **Paridade com o mobile**: toda tela, regra e texto do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)).
+- **Paridade funcional com o mobile**: toda tela e regra do app Flutter tem equivalente aqui ([business-rules.md](business-rules.md)). O visual e a voz dos textos seguem a marca Doce Fatia ([marca.md](marca.md)), não o mobile.
 
 > **Status:** existem a base da FE-01 (`src/app` com layout raiz, página provisória e `GET /api/health`; `src/shared/config`; `src/instrumentation*.ts`) o design system da FE-04 (`src/app/globals.css`, `src/shared/ui/`, `/design-system` e `src/test/a11y.ts`), a camada de API da FE-05 (`src/shared/api/`, `src/shared/format/` e os utilitários de teste de `src/test/`), os blocos de listagem e formulário da FE-06 (`ListPage`, `Form`, `FormDialog`, campos numéricos, `numero-br.ts` e `/design-system/listagem`) a sessão da FE-07 (`src/proxy.ts`, `/login` em `(auth)`, `src/app/api/auth/`, o proxy `src/app/api/backend/`, `src/shared/auth/` e `src/features/auth/`) o layout autenticado da FE-08 (`src/app/(app)/`, com as rotas do menu provisórias, o 404 e o erro dentro do layout, e `src/features/navegacao/`) e a primeira tela completa, insumos, da FE-09 (`src/features/insumos/` e `/insumos`, o [exemplo completo](#exemplo-completo-funcionalidade-insumos)). Todo o resto deste documento está marcado como **previsto**, com a issue que o entrega. Os exemplos mostram a forma que o código deve ter; ao implementar uma issue, atualize este arquivo no mesmo PR se o resultado for diferente e troque "previsto" por "existe".
 
@@ -19,9 +19,9 @@ src/
 ├── instrumentation-node.ts       # existe
 ├── proxy.ts                      # existe (FE-07): redirecionamento otimista por sessão
 ├── app/                          # só rotas: páginas finas que compõem funcionalidades
-│   ├── layout.tsx                # existe: layout raiz, com a Roboto
-│   ├── fonts.ts                  # existe: Roboto via next/font
-│   ├── icon.svg                  # existe: favicon
+│   ├── layout.tsx                # existe: layout raiz, com Fredoka e Nunito
+│   ├── fonts.ts                  # existe: Fredoka e Nunito via next/font
+│   ├── icon.svg                  # existe: favicon (símbolo Doce Fatia, FE-54)
 │   ├── globals.css               # existe: tokens do LucroAI (FE-04)
 │   ├── design-system/            # existe: catálogo do design system e, em listagem/, o exemplo da FE-06; só em desenvolvimento
 │   ├── not-found.tsx, error.tsx  # existe (FE-08): 404 e erro fora do layout de (app)
@@ -177,11 +177,11 @@ O layout de `(app)` (existe desde a FE-08) confere a sessão com `getUsuarioAtua
 
 Páginas de status (FE-08, com a `StatusPage` de `shared/ui/`):
 
-| Arquivo                                            | Quando                                                                                                                                                         |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| LucroAI") |
-| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar novamente" (`retry`)                                                                                  |
-| `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                      |
+| Arquivo                                            | Quando                                                                                                                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| Doce Fatia") |
+| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar de novo" (`retry`)                                                                                       |
+| `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                         |
 
 Sem sessão, rota inexistente também leva ao login (o `src/proxy.ts` age antes). Erros de dados da API não chegam a essas páginas: ficam no `ErrorState` de cada bloco.
 
@@ -538,7 +538,7 @@ Client Component que compõe `ListPage`, `InsumoFormDialog` e `ConfirmDialog`:
 - `abrirNovo` (de `?novo=1`) abre a criação ao carregar; ao fechar, o parâmetro sai da URL com `router.replace(hrefComFiltros(pathname, searchParams, { novo: null }), { scroll: false })`, mantendo a busca.
 - A exclusão usa `ConfirmDialog` com "Excluir insumo", `Deseja excluir "<nome>"?` e "Excluir"; o `onConfirm` chama `mutateAsync`, mostra "Insumo excluído com sucesso." e fecha. Se o backend recusar, o diálogo continua aberto com a mensagem dele.
 
-`ListPage` cuida de: `PageHeader`, busca com debounce gravando `q` na URL, filtro sem acentos pelo `searchField`, contagem de resultados, cartões no celular e tabela no desktop, e os estados de carregamento, vazio, vazio por busca e erro com "Tentar novamente".
+`ListPage` cuida de: `PageHeader`, busca com debounce gravando `q` na URL, filtro sem acentos pelo `searchField`, contagem de resultados, cartões no celular e tabela no desktop, e os estados de carregamento, vazio, vazio por busca e erro com "Tentar de novo".
 
 ### `src/app/(app)/insumos/page.tsx`
 

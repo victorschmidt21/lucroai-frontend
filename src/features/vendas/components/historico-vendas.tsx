@@ -32,7 +32,8 @@ import {
 } from '@/shared/ui/date-picker';
 import { EmptyState } from '@/shared/ui/empty-state';
 import { ErrorState } from '@/shared/ui/error-state';
-import { IconMostrar } from '@/shared/ui/icons/acoes';
+import { IconAdicionar, IconMostrar } from '@/shared/ui/icons/acoes';
+import { IlustracaoSacola } from '@/shared/ui/ilustracoes';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { vendasListOptions } from '../api/vendas.queries';
@@ -123,6 +124,8 @@ export function HistoricoVendas({ filtros, onConfirmar }: Props) {
         periodo={periodo}
         status={filtros.status}
         onConfirmar={onConfirmar}
+        // Volta à aba "Registrar", que é a padrão (sem `aba` na URL).
+        onAnotarVenda={() => alterarFiltros({ aba: null })}
       />
     </div>
   );
@@ -157,10 +160,12 @@ function ListaDeVendas({
   periodo,
   status,
   onConfirmar,
+  onAnotarVenda,
 }: {
   periodo: Periodo;
   status?: StatusVenda;
   onConfirmar: (venda: Venda) => void;
+  onAnotarVenda: () => void;
 }) {
   // O backend lê as datas com `new Date()`: vão o início e o fim do dia local
   // em ISO, senão o último dia fica de fora (lacuna 7).
@@ -207,7 +212,7 @@ function ListaDeVendas({
 
   return (
     <>
-      <Card variant="resumo">
+      <Card>
         <dl className="grid grid-cols-3 gap-3">
           <Metrica
             rotulo="Total vendido"
@@ -225,7 +230,17 @@ function ListaDeVendas({
       </Card>
 
       {vendas.length === 0 ? (
-        <EmptyState title="Nenhuma venda encontrada no período." />
+        <EmptyState
+          title="Nenhuma venda encontrada no período."
+          description="Anote as vendas do dia para ver quanto sobrou pra você."
+          ilustracao={<IlustracaoSacola />}
+          action={
+            <Button onClick={onAnotarVenda}>
+              <IconAdicionar className="size-5" />
+              Anotar venda
+            </Button>
+          }
+        />
       ) : (
         <DataTable
           label="Vendas"

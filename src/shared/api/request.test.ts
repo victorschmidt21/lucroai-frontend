@@ -51,7 +51,9 @@ describe('unwrap', () => {
 
     expect(erro).toBeInstanceOf(ContratoInvalidoError);
     const contrato = erro as ContratoInvalidoError;
-    expect(contrato.message).toBe('Resposta inesperada do servidor.');
+    expect(contrato.message).toBe(
+      'O sistema respondeu algo inesperado. Tente de novo em instantes.',
+    );
     expect(contrato.issues[0]?.path).toEqual(['custoUnitario']);
     expect(contrato.detalhes).toContain('custoUnitario');
     expect(String(contrato)).toContain('custoUnitario');

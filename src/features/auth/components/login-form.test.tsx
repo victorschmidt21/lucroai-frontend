@@ -130,7 +130,7 @@ describe('LoginForm', () => {
     await preencher('joao@padariapaofeliz.com.br', '123456');
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Não foi possível entrar. Verifique o servidor e tente novamente.',
+      'Não foi possível entrar. Confira a internet e tente de novo.',
     );
   });
 

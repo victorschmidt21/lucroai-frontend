@@ -11,23 +11,15 @@ import { buttonClasses } from '@/shared/ui/button';
 import { cn } from '@/shared/ui/cn';
 import { EmptyState } from '@/shared/ui/empty-state';
 import { ErrorState } from '@/shared/ui/error-state';
-import {
-  IconAlerta,
-  IconDinheiro,
-  IconSeta,
-  IconSimular,
-  IconTendencia,
-} from '@/shared/ui/icons/acoes';
-import {
-  IconGastos,
-  IconInsumos,
-  IconProducao,
-  IconReceitas,
-  IconVendas,
-} from '@/shared/ui/icons/menu';
+import { IconAdicionar, IconSeta } from '@/shared/ui/icons/acoes';
+import { IconEstoque, IconReceitas, IconVendas } from '@/shared/ui/icons/menu';
+import { IlustracaoSacola } from '@/shared/ui/ilustracoes';
+import { Logo } from '@/shared/ui/logo';
+import { ProgressBar } from '@/shared/ui/progress-bar';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { StatCard } from '@/shared/ui/stat-card';
 import { estoqueInsumosOptions } from '@/features/estoque/api/estoque.queries';
+import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import {
   resumoVendasOptions,
@@ -35,12 +27,18 @@ import {
 } from '@/features/vendas/api/vendas.queries';
 import {
   calcularIndicadores,
-  contarEstoqueBaixo,
+  chipsAcabando,
   evolucaoMensal,
+  heroiDoMes,
+  ingredientesAcabando,
   inicioDosSeisMeses,
   pontoEquilibrioDoPainel,
+  porCadaCemReais,
   produtosMaisRentaveis,
+  rotuloAcabando,
+  saudacao,
   tendenciaMensal,
+  textoFechamentoDoMes,
   vendasDoMes,
   type ProdutoRentavel,
 } from '../painel.calculos';
@@ -83,7 +81,7 @@ type QueryDoBloco = {
   refetch: () => unknown;
 };
 
-/** Estado de um bloco: erro (com "Tentar novamente"), Skeleton ou o conteúdo. */
+/** Estado de um bloco: erro compacto (com "Tentar de novo"), Skeleton ou o conteúdo. */
 function bloco({
   rotulo,
   titulo,
@@ -100,12 +98,14 @@ function bloco({
   conteudo: () => ReactNode;
   /** Posição no grid, nos estados de erro e carregamento. */
   classe?: string;
+  /** Altura do Skeleton, no formato do bloco. */
   altura?: string;
 }) {
   const falhas = queries.filter((q) => q.isError);
   if (falhas.length > 0) {
     return (
       <ErrorState
+        compacto
         className={classe}
         title={titulo}
         message={getErrorMessage(falhas[0].error)}
@@ -115,24 +115,30 @@ function bloco({
     );
   }
   if (!pronto) {
-    return <Skeleton aria-label={rotulo} className={cn(altura, classe)} />;
+    return (
+      <Skeleton
+        aria-label={rotulo}
+        className={cn('rounded-lg', altura, classe)}
+      />
+    );
   }
   return conteudo();
 }
 
-const ACOES_RAPIDAS = [
-  { rotulo: 'Novo Insumo', href: '/insumos?novo=1', Icone: IconInsumos },
-  { rotulo: 'Nova Receita', href: '/receitas/nova', Icone: IconReceitas },
-  { rotulo: 'Produção', href: '/producoes?novo=1', Icone: IconProducao },
-  { rotulo: 'Gastos', href: '/gastos-indiretos?novo=1', Icone: IconGastos },
-] as const;
+const ERRO_NUMEROS =
+  'Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo.';
+
+const LINK_CLASSES =
+  'inline-flex min-h-12 items-center gap-1 rounded-full font-bold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
 /**
- * Painel (FE-22). Origem: dashboard_page.dart. Sem rota de painel no backend:
- * vendas dos últimos 6 meses, receitas e o saldo de cada insumo, com os cálculos
- * de `painel.calculos.ts`. Cada bloco tem o próprio carregamento e erro.
+ * Painel (FE-22, redesenhado na FE-58). Sem rota de painel no backend: vendas
+ * dos últimos 6 meses, receitas, insumos e o saldo de cada um, com os cálculos
+ * de `painel.calculos.ts`. O lucro do mês é o herói; cada bloco tem o próprio
+ * carregamento e erro. No celular, uma coluna na ordem do código; a partir de
+ * `lg`, herói e cards à esquerda e as listas à direita.
  */
-export function PainelTela({ empresa }: { empresa: string }) {
+export function PainelTela({ nome }: { nome: string | null }) {
   const agora = useAgora();
   // Só no navegador; o início dos seis meses só muda na virada do mês.
   const hoje = agora ? paraData(agora) : null;
@@ -143,6 +149,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
     enabled: inicio !== null,
   });
   const receitas = useQuery(receitasListOptions());
+  const insumos = useQuery(insumosListOptions());
   const estoques = useQuery(estoqueInsumosOptions());
   const resumo = useQuery(resumoVendasOptions());
 
@@ -150,182 +157,287 @@ export function PainelTela({ empresa }: { empresa: string }) {
     hoje && vendas.data && receitas.data
       ? { hoje, vendas: vendas.data, receitas: receitas.data }
       : null;
+  const indicadores = dados
+    ? calcularIndicadores(dados.vendas, dados.receitas, dados.hoje)
+    : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-heading font-extrabold text-ink">LucroAI</h1>
-          <p className="text-subtitle text-ink-subtle">Seu painel financeiro</p>
-          <p className="text-body font-semibold wrap-anywhere text-ink-muted">
-            {empresa}
-          </p>
-        </div>
-        <Link href="/simulacao" className={buttonClasses('secundario')}>
-          <IconSimular className="size-4" />
-          Simulação
-        </Link>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-display text-ink">{saudacao(nome)}</h1>
+        <p className="min-h-6 text-body text-ink-muted">
+          {hoje ? textoFechamentoDoMes(hoje) : null}
+        </p>
       </header>
 
-      <section
-        aria-label="Indicadores"
-        className="grid grid-cols-2 gap-2.5 lg:grid-cols-4"
-      >
-        {bloco({
-          rotulo: 'Carregando indicadores',
-          titulo: 'Não foi possível carregar os indicadores.',
-          queries: [vendas, receitas],
-          pronto: dados !== null,
-          classe: 'col-span-2 lg:col-span-3',
-          conteudo: () => {
-            if (!dados) return null;
-            const ind = calcularIndicadores(
-              dados.vendas,
-              dados.receitas,
-              dados.hoje,
-            );
-            return (
-              <>
-                <StatCard
-                  title="Faturamento"
-                  value={formatMoeda(ind.faturamento)}
-                  detail="Período atual"
-                  detailTone="success"
-                  icon={<IconDinheiro />}
-                />
-                <StatCard
-                  title="Lucro líquido"
-                  value={formatMoeda(ind.lucro)}
-                  detail={`Margem ${formatPercentual(ind.margem)}`}
-                  detailTone={ind.lucro >= 0 ? 'success' : 'danger'}
-                  icon={<IconTendencia />}
-                />
-                <StatCard
-                  title="Vendas"
-                  value={formatNumero(ind.vendasUltimos7Dias)}
-                  detail="Últimos 7 dias"
-                  icon={<IconVendas />}
-                />
-              </>
-            );
-          },
-        })}
-        {bloco({
-          rotulo: 'Carregando estoque',
-          titulo: 'Não foi possível carregar o estoque.',
-          queries: [estoques],
-          pronto: Boolean(estoques.data),
-          classe: 'col-span-2 lg:col-span-1',
-          conteudo: () => {
-            const baixo = contarEstoqueBaixo(estoques.data ?? []);
-            const detalhe = baixo === 1 ? 'Item crítico' : 'Itens críticos';
-            return (
-              <Link
-                href="/estoque?baixo=1"
-                className="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&>div]:h-full [&>div]:hover:border-border-strong"
-              >
-                <StatCard
-                  title="Estoque baixo"
-                  value={formatNumero(baixo)}
-                  detail={detalhe}
-                  detailTone={baixo === 0 ? 'success' : 'danger'}
-                  icon={<IconAlerta />}
-                />
-              </Link>
-            );
-          },
-        })}
-      </section>
-
-      <Secao titulo="Contas do mês">
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <div className="flex min-w-0 flex-col gap-5">
           {bloco({
-            rotulo: 'Carregando o ponto de equilíbrio',
+            rotulo: 'Carregando quanto sobrou este mês',
+            titulo: ERRO_NUMEROS,
+            queries: [vendas, receitas],
+            pronto: indicadores !== null,
+            altura: 'h-44',
+            conteudo: () =>
+              indicadores ? <Heroi indicadores={indicadores} /> : null,
+          })}
+
+          <section
+            aria-label="Indicadores"
+            className="grid grid-cols-2 gap-2.5"
+          >
+            {bloco({
+              rotulo: 'Carregando vendas',
+              titulo: ERRO_NUMEROS,
+              queries: [vendas, receitas],
+              pronto: indicadores !== null,
+              classe: 'col-span-2',
+              conteudo: () =>
+                indicadores ? (
+                  <>
+                    <StatCard
+                      title="Você vendeu"
+                      value={formatMoeda(indicadores.faturamento)}
+                      detail="Este mês"
+                    />
+                    <StatCard
+                      title="Pedidos na semana"
+                      value={formatNumero(indicadores.vendasUltimos7Dias)}
+                      detail="Últimos 7 dias"
+                    />
+                  </>
+                ) : null,
+            })}
+            {bloco({
+              rotulo: 'Carregando estoque',
+              titulo: 'Não foi possível carregar o estoque.',
+              queries: [estoques, insumos],
+              pronto: Boolean(estoques.data && insumos.data),
+              classe: 'col-span-2',
+              altura: 'h-24',
+              conteudo: () => (
+                <CardEstoque
+                  nomes={ingredientesAcabando(
+                    estoques.data ?? [],
+                    insumos.data ?? [],
+                  )}
+                />
+              ),
+            })}
+          </section>
+
+          {bloco({
+            rotulo: 'Carregando quanto vender para pagar as contas',
             titulo:
               'Não foi possível carregar quanto vender para pagar as contas.',
-            queries: [resumo],
-            pronto: Boolean(resumo.data),
-            classe: 'col-span-2',
-            conteudo: () => {
-              if (!resumo.data) return null;
-              const ponto = pontoEquilibrioDoPainel(
-                resumo.data.pontoEquilibrio,
-              );
-              return (
-                <StatCard
-                  className="col-span-2"
-                  title="Para pagar as contas"
-                  value={ponto.valor}
-                  detail={ponto.detalhe}
-                  detailTone={ponto.tom}
-                  icon={<IconGastos />}
+            queries: [resumo, vendas, receitas],
+            pronto: Boolean(resumo.data) && indicadores !== null,
+            altura: 'h-28',
+            conteudo: () =>
+              resumo.data && indicadores ? (
+                <ContasDoMes
+                  ponto={pontoEquilibrioDoPainel(
+                    resumo.data.pontoEquilibrio,
+                    indicadores.faturamento,
+                  )}
                 />
-              );
-            },
+              ) : null,
           })}
         </div>
-      </Secao>
 
-      <Secao titulo="Evolução mensal">
-        {bloco({
-          rotulo: 'Carregando evolução mensal',
-          titulo: 'Não foi possível carregar a evolução mensal.',
-          queries: [vendas],
-          pronto: dados !== null,
-          altura: 'h-52',
-          conteudo: () => {
-            if (!dados) return null;
-            const pontos = evolucaoMensal(dados.vendas, dados.hoje);
-            return (
-              <GraficoEvolucao
-                pontos={pontos}
-                tendencia={tendenciaMensal(pontos.map((p) => p.valor))}
-              />
-            );
-          },
-        })}
-      </Secao>
-
-      <Secao titulo="Ações rápidas">
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-          {ACOES_RAPIDAS.map(({ rotulo, href, Icone }) => (
-            <Link key={href} href={href} className={buttonClasses('primario')}>
-              <Icone className="size-4" />
-              {rotulo}
-            </Link>
-          ))}
-        </div>
-      </Secao>
-
-      <Secao
-        titulo="Produtos mais rentáveis"
-        acao={
-          <Link
-            href="/vendas?aba=historico"
-            className="inline-flex min-h-11 items-center gap-1 text-small font-bold text-accent hover:underline lg:min-h-8"
+        <div className="flex min-w-0 flex-col gap-5">
+          <Secao
+            titulo="O que mais deu lucro"
+            acao={
+              <Link
+                href="/vendas?aba=historico"
+                className={cn(LINK_CLASSES, 'text-small text-accent')}
+              >
+                Ver tudo
+                <IconSeta className="size-4" />
+              </Link>
+            }
           >
-            Ver tudo
-            <IconSeta className="size-4" />
-          </Link>
-        }
-      >
-        {bloco({
-          rotulo: 'Carregando produtos mais rentáveis',
-          titulo: 'Não foi possível carregar os produtos mais rentáveis.',
-          queries: [vendas, receitas],
-          pronto: dados !== null,
-          conteudo: () =>
-            dados ? (
-              <ProdutosRentaveis
-                produtos={produtosMaisRentaveis(
-                  vendasDoMes(dados.vendas, dados.hoje),
-                  dados.receitas,
-                )}
-              />
-            ) : null,
-        })}
-      </Secao>
+            {bloco({
+              rotulo: 'Carregando o que mais deu lucro',
+              titulo: 'Não foi possível carregar o que mais deu lucro.',
+              queries: [vendas, receitas],
+              pronto: dados !== null,
+              altura: 'h-48',
+              conteudo: () =>
+                dados ? (
+                  <ProdutosRentaveis
+                    produtos={produtosMaisRentaveis(
+                      vendasDoMes(dados.vendas, dados.hoje),
+                      dados.receitas,
+                    )}
+                  />
+                ) : null,
+            })}
+          </Secao>
+
+          <Secao titulo="Evolução mensal">
+            {bloco({
+              rotulo: 'Carregando evolução mensal',
+              titulo: 'Não foi possível carregar a evolução mensal.',
+              queries: [vendas],
+              pronto: dados !== null,
+              altura: 'h-56',
+              conteudo: () => {
+                if (!dados) return null;
+                const pontos = evolucaoMensal(dados.vendas, dados.hoje);
+                return (
+                  <GraficoEvolucao
+                    pontos={pontos}
+                    tendencia={tendenciaMensal(pontos.map((p) => p.valor))}
+                  />
+                );
+              },
+            })}
+          </Secao>
+
+          <Secao titulo="Ações rápidas">
+            <div className="grid gap-2.5 min-[400px]:grid-cols-2">
+              <Link href="/receitas/nova" className={buttonClasses('primario')}>
+                <IconReceitas className="size-4" />
+                Nova receita
+              </Link>
+              <Link href="/vendas" className={buttonClasses('secundario')}>
+                <IconVendas className="size-4" />
+                Anotar venda
+              </Link>
+            </div>
+          </Secao>
+        </div>
+      </div>
     </div>
+  );
+}
+
+/** Herói (FE-58): o lucro do mês, com os três estados de `heroiDoMes`. */
+function Heroi({
+  indicadores,
+}: {
+  indicadores: ReturnType<typeof calcularIndicadores>;
+}) {
+  const heroi = heroiDoMes(indicadores);
+  const negativo = heroi.estado === 'negativo';
+
+  return (
+    <StatCard
+      variant="heroi"
+      heroiTone={negativo ? 'danger' : 'accent'}
+      title={heroi.titulo}
+      value={formatMoeda(indicadores.lucro)}
+      detail={heroi.detalhe ?? undefined}
+      decoration={
+        <Logo
+          variante="simbolo"
+          tom={negativo ? 'normal' : 'sobre-cor'}
+          className="[&_svg]:size-32"
+        />
+      }
+    >
+      {negativo ? (
+        <Link
+          href="/simulacao"
+          className={cn(LINK_CLASSES, 'text-ink underline')}
+        >
+          Ver como ajustar os preços
+          <IconSeta className="size-4" />
+        </Link>
+      ) : null}
+      {heroi.estado === 'sem-vendas' ? (
+        <Link
+          href="/vendas"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-on-accent bg-surface px-5 py-2 font-bold text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-accent"
+        >
+          <IconVendas className="size-4" />
+          Anotar uma venda
+        </Link>
+      ) : null}
+    </StatCard>
+  );
+}
+
+/** Card "Estoque" (FE-58): os ingredientes acabando em chips, ou "Estoque em dia". */
+function CardEstoque({ nomes }: { nomes: string[] }) {
+  const { visiveis, resto } = chipsAcabando(nomes);
+
+  return (
+    <Link
+      href="/estoque?baixo=1"
+      className="col-span-2 flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-surface p-4 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-caption text-ink-muted">Estoque</span>
+        <IconEstoque className="size-[18px] text-accent" />
+      </span>
+      {nomes.length === 0 ? (
+        <span className="flex items-center gap-2 text-body font-bold text-ink">
+          <span
+            aria-hidden="true"
+            className="size-2.5 rounded-full bg-success"
+          />
+          Estoque em dia
+        </span>
+      ) : (
+        <>
+          <span className="text-body font-bold text-ink">
+            {rotuloAcabando(nomes.length)}
+          </span>
+          <span className="flex flex-wrap gap-1.5">
+            {visiveis.map((nome) => (
+              <span
+                key={nome}
+                className="max-w-full truncate rounded-full bg-warning-soft px-2.5 py-0.5 text-caption text-warning"
+              >
+                {nome}
+              </span>
+            ))}
+            {resto > 0 ? (
+              <span className="rounded-full bg-warning-soft px-2.5 py-0.5 text-caption text-warning">
+                +{formatNumero(resto)}
+              </span>
+            ) : null}
+          </span>
+        </>
+      )}
+    </Link>
+  );
+}
+
+/** "Para pagar as contas do mês, venda R$ X" com o quanto já foi vendido (FE-45, FE-58). */
+function ContasDoMes({
+  ponto,
+}: {
+  ponto: ReturnType<typeof pontoEquilibrioDoPainel>;
+}) {
+  return (
+    <section
+      aria-label="Contas do mês"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+    >
+      <h2 className="text-body font-bold text-ink">{ponto.titulo}</h2>
+      {ponto.progresso !== null ? (
+        <ProgressBar
+          aria-label="Quanto já vendeu para pagar as contas do mês"
+          value={ponto.progresso}
+          tone={ponto.progresso >= 1 ? 'adequado' : 'accent'}
+          valueText={formatPercentual(ponto.progresso * 100)}
+        />
+      ) : null}
+      <p
+        className={cn(
+          'text-small',
+          ponto.tom === 'danger' && 'text-danger',
+          ponto.tom === 'success' && 'text-success',
+          ponto.tom === 'muted' && 'text-ink-muted',
+        )}
+      >
+        {ponto.detalhe}
+      </p>
+    </section>
   );
 }
 
@@ -340,7 +452,7 @@ function Secao({
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex min-h-12 items-center justify-between gap-2">
         <h2 className="text-section-label text-ink-muted">{titulo}</h2>
         {acao}
       </div>
@@ -359,7 +471,17 @@ function rotuloUnidades(quantidade: number | null) {
 function ProdutosRentaveis({ produtos }: { produtos: ProdutoRentavel[] }) {
   if (produtos.length === 0) {
     return (
-      <EmptyState title="Cadastre receitas e registre vendas para ver rentabilidade." />
+      <EmptyState
+        title="Crie uma receita e anote as vendas para ver o que mais deu lucro."
+        ilustracao={<IlustracaoSacola />}
+        action={
+          // Secundária: "Nova receita" das ações rápidas já é a primária da tela.
+          <Link href="/receitas/nova" className={buttonClasses('secundario')}>
+            <IconAdicionar className="size-5" />
+            Criar receita
+          </Link>
+        }
+      />
     );
   }
 
@@ -370,18 +492,25 @@ function ProdutosRentaveis({ produtos }: { produtos: ProdutoRentavel[] }) {
           key={produto.receitaId}
           className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3.5"
         >
+          <span
+            aria-hidden="true"
+            className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-alt text-accent"
+          >
+            <IconReceitas className="size-5" />
+          </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="truncate text-body font-extrabold text-ink">
+            <p className="truncate text-body font-bold text-ink">
               {produto.nome}
             </p>
             <p className="truncate text-small text-ink-muted">
-              {rotuloUnidades(produto.quantidade)} - margem{' '}
-              {formatPercentual(produto.margem)}
+              {`${rotuloUnidades(produto.quantidade)} - ${
+                porCadaCemReais(produto.margem) ?? 'abaixo do custo'
+              }`}
             </p>
           </div>
           <p
             className={cn(
-              'text-body font-extrabold tabular-nums',
+              'text-body font-bold tabular-nums',
               produto.lucro >= 0 ? 'text-success' : 'text-danger',
             )}
           >

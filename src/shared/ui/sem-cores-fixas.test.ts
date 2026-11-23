@@ -3,8 +3,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { expect, it } from 'vitest';
 
-// Critério da FE-04: nenhuma cor fixa fora de `src/app/globals.css`.
+// Critério da FE-04: nenhuma cor fixa fora de `src/app/globals.css`. O manifesto
+// do app (FE-54) é a exceção: o navegador lê as cores dele antes do CSS.
 const SRC = join(process.cwd(), 'src');
+const EXCECOES = ['globals.css', 'manifest.ts'].map((nome) =>
+  join(SRC, 'app', nome),
+);
 
 function arquivos(pasta: string): string[] {
   return readdirSync(pasta, { withFileTypes: true }).flatMap((entrada) => {
@@ -14,7 +18,7 @@ function arquivos(pasta: string): string[] {
 
     return /\.(ts|tsx|css)$/.test(entrada.name) &&
       !/\.test\.tsx?$/.test(entrada.name) &&
-      !caminho.endsWith('globals.css')
+      !EXCECOES.includes(caminho)
       ? [caminho]
       : [];
   });

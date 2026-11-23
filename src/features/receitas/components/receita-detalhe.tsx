@@ -15,6 +15,7 @@ import { PageHeader } from '@/shared/ui/page-header';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { receitaDetailOptions } from '../api/receitas.queries';
 import {
+  avisoSemPrecoPossivel,
   montarBarraDoPreco,
   type ParteDaBarra,
   type ParteDaBarraId,
@@ -171,7 +172,7 @@ function Detalhe({ receita }: { receita: Receita }) {
             <p className="text-body text-ink-muted">
               Nenhuma forma de venda ativa.{' '}
               <Link href="/configuracoes" className="text-accent underline">
-                Ative uma em Configurações
+                Ative uma em Ajustes de preço
               </Link>
               .
             </p>
@@ -199,9 +200,7 @@ function PrecoDoCanal({ preco }: { preco: PrecoCanal }) {
       {preco.preco === null || preco.composicao === null ? (
         <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/8 p-3 text-body text-ink">
           <IconAlerta className="shrink-0 text-warning" />
-          <p>
-            {`Sem preço possível: as taxas e o lucro somam 100% ou mais (${formatMargem(preco.percentuais)}).`}
-          </p>
+          <p>{avisoSemPrecoPossivel(preco.percentuais)}</p>
         </div>
       ) : (
         <>

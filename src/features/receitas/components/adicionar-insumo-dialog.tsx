@@ -31,7 +31,11 @@ export function AdicionarInsumoDialog({
   onAdicionar,
 }: Props) {
   return (
-    <Dialog title="Adicionar insumo" open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      title="Adicionar ingrediente"
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       {/* O Radix desmonta o conteúdo ao fechar: cada abertura começa limpa. */}
       <ConteudoAdicionar
         disponiveis={disponiveis}
@@ -91,7 +95,7 @@ function ConteudoAdicionar({
   return (
     <>
       <Combobox
-        label="Insumo"
+        label="Ingrediente"
         options={disponiveis.map((insumo) => ({
           value: String(insumo.id),
           label: insumo.nome,
@@ -110,7 +114,7 @@ function ConteudoAdicionar({
         }
         hint={
           escolhido
-            ? `Na unidade do insumo (${UNIDADE_MEDIDA_ROTULOS[escolhido.unidade]}).`
+            ? `Na unidade do ingrediente (${UNIDADE_MEDIDA_ROTULOS[escolhido.unidade]}).`
             : undefined
         }
         error={erros.quantidade}

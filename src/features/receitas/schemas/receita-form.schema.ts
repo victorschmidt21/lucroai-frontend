@@ -27,7 +27,7 @@ const MAIOR_QUE_ZERO = 'Informe um valor maior que zero';
 const VALOR_INVALIDO = 'Valor inválido';
 export const PERCENTUAL_INVALIDO = 'Informe um percentual de 0 a 99';
 const INVALIDO = 'Inválido';
-const INSUMO_REPETIDO = 'Insumo repetido';
+const INSUMO_REPETIDO = 'Ingrediente repetido';
 
 /** `@MaxLength(80)` de `create-receita.dto.ts`. */
 export const NOME_MAX = 80;

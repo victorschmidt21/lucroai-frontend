@@ -40,6 +40,8 @@ type ListPageProps<Row> = {
   emptyTitle: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
+  /** Ilustração "spot" do vazio sem cadastro (`shared/ui/ilustracoes`, FE-59). */
+  emptyIlustracao?: ReactNode;
   /** "Não foi possível carregar os insumos." */
   errorTitle: string;
   /** Filtro extra, como `baixo=1` no estoque. */
@@ -59,7 +61,7 @@ function ListaCarregando({ label }: { label: string }) {
       {LINHAS_DO_ESQUELETO.map((largura) => (
         <span
           key={largura}
-          className="flex flex-col gap-2 rounded-md border border-border bg-surface p-4"
+          className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4"
         >
           <span
             className={`block h-4 animate-pulse rounded-sm bg-surface-alt motion-reduce:animate-none ${largura}`}
@@ -90,6 +92,7 @@ export function ListPage<Row>({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  emptyIlustracao,
   errorTitle,
   filter,
   filterEmptyTitle = 'Nenhum resultado para os filtros.',
@@ -136,6 +139,7 @@ export function ListPage<Row>({
           title={emptyTitle}
           description={emptyDescription}
           action={emptyAction}
+          ilustracao={emptyIlustracao}
         />
       );
     } else if (linhas.length === 0 && termo) {

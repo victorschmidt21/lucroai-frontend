@@ -71,7 +71,7 @@ export type OrigemMovimentacao = z.infer<typeof origemMovimentacaoSchema>;
 
 export const ORIGEM_MOVIMENTACAO_ROTULOS: Record<OrigemMovimentacao, string> = {
   COMPRA: 'Compra',
-  PRODUCAO: 'Produção',
+  PRODUCAO: 'Fornada',
 };
 
 /** `BaseRateio` do `schema.prisma` do monolito (BE-24): o que a capacidade mensal conta. */

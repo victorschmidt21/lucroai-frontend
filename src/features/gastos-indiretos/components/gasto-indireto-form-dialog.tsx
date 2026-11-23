@@ -45,7 +45,7 @@ export function GastoIndiretoFormDialog({ open, onOpenChange, gasto }: Props) {
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={gasto ? 'Editar gasto' : 'Novo gasto indireto'}
+      title={gasto ? 'Editar gasto' : 'Novo gasto'}
       description="Este gasto entra no custo de todas as receitas."
       schema={gastoIndiretoFormSchema}
       defaultValues={

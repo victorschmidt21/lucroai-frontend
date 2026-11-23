@@ -3,24 +3,30 @@ import { cn } from './cn';
 
 // `not-disabled:` em vez de `enabled:`: `:enabled` nunca casa com `<a>`, e o link
 // com aparência de botão ficaria sem hover.
+// Visual Doce Fatia (FE-55, docs/ui.md#componentes-srcsharedui). Borda de 2px em
+// todas as variantes, para terem a mesma altura que o `secundario`.
 const VARIANT_CLASSES = {
-  // ElevatedButton laranja do mobile; o texto é preto pelo contraste (docs/ui.md).
+  // Ação primária em Amora; `accent-strong` no hover. Uma por tela.
   primario:
-    'border-accent-strong bg-accent-strong text-on-accent not-disabled:hover:border-accent not-disabled:hover:bg-accent',
+    'border-accent bg-accent text-on-accent not-disabled:hover:border-accent-strong not-disabled:hover:bg-accent-strong',
+  // Contorno Amora sobre fundo transparente; `accent-soft` no hover (5,09:1).
   secundario:
-    'border-border-strong bg-surface-alt text-ink not-disabled:hover:border-ink-subtle',
+    'border-accent bg-transparent text-accent not-disabled:hover:bg-accent-soft',
   perigo:
     'border-danger-strong bg-danger-strong text-on-danger not-disabled:hover:border-danger not-disabled:hover:bg-danger',
+  // "Suave": fundo `accent-soft` e texto `ink`; o hover acende a borda.
   fantasma:
-    'border-transparent bg-transparent text-ink not-disabled:hover:bg-surface-alt',
+    'border-transparent bg-accent-soft text-ink not-disabled:hover:border-accent',
+  // Base do `IconButton`: círculo Merengue com ícone `ink`.
+  icone:
+    'border-transparent bg-surface-alt text-ink not-disabled:hover:bg-accent-soft',
 };
 
-// 44px no toque; a partir de `lg`, 40px. O mobile usa 46px nos botões de formulário.
+// Pílula com 48px de altura em qualquer tela (área de toque da marca, FE-53).
 const SIZE_CLASSES = {
-  padrao: 'min-h-11 rounded-md px-4 py-2 lg:min-h-10',
-  compacto: 'min-h-11 rounded-sm px-3 py-1 md:min-h-8',
-  // IconButton do Material: redondo.
-  icone: 'size-11 rounded-full lg:size-10',
+  padrao: 'min-h-12 rounded-full px-5 py-2',
+  compacto: 'min-h-12 rounded-full px-4 py-1',
+  icone: 'size-12 rounded-full',
 };
 
 export type ButtonVariant = keyof typeof VARIANT_CLASSES;
@@ -40,8 +46,8 @@ export function buttonClasses(
   size: ButtonSize = 'padrao',
 ) {
   return cn(
-    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border text-body font-semibold transition-colors duration-150',
-    'disabled:cursor-not-allowed disabled:opacity-50',
+    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 border-2 text-body font-extrabold transition-colors duration-150',
+    'disabled:cursor-default disabled:opacity-50',
     SIZE_CLASSES[size],
     VARIANT_CLASSES[variant],
     className,
@@ -82,10 +88,12 @@ type IconButtonProps = Omit<ButtonProps, 'size' | 'aria-label'> & {
   'aria-label': string;
 };
 
-/** Botão só com ícone, como as ações por linha das listagens. */
-export function IconButton({
-  variant = 'fantasma',
-  ...props
-}: IconButtonProps) {
+/** Aparência de `IconButton` para um link, como as ações por linha das receitas. */
+export function iconButtonClasses(className?: string) {
+  return buttonClasses('icone', className, 'icone');
+}
+
+/** Botão só com ícone: círculo de 48px, como as ações por linha das listagens. */
+export function IconButton({ variant = 'icone', ...props }: IconButtonProps) {
   return <Button variant={variant} size="icone" {...props} />;
 }

@@ -13,6 +13,11 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onValueChange: (value: T) => void;
   className?: string;
+  /**
+   * Cada opção com a largura do próprio texto, em vez de larguras iguais: para
+   * rótulos de tamanhos diferentes caberem em 360px, como "Igual ao celular".
+   */
+  larguraDoTexto?: boolean;
 };
 
 /**
@@ -24,6 +29,7 @@ export function SegmentedControl<T extends string>({
   value,
   onValueChange,
   className,
+  larguraDoTexto = false,
   ...props
 }: SegmentedControlProps<T>) {
   return (
@@ -36,7 +42,8 @@ export function SegmentedControl<T extends string>({
         if (opcao) onValueChange(opcao.value);
       }}
       className={cn(
-        'inline-flex max-w-full overflow-hidden rounded-full border border-ink-subtle',
+        // Trilho Merengue em pílula; a opção ativa é uma pílula `surface` com sombra (FE-55).
+        'inline-flex max-w-full gap-1 rounded-full bg-surface-alt p-1',
         className,
       )}
       {...props}
@@ -46,13 +53,14 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           value={option.value}
           className={cn(
-            'group inline-flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 px-4 text-body font-medium whitespace-nowrap text-ink transition-colors duration-150 lg:min-h-10',
-            'not-first:border-l not-first:border-ink-subtle hover:bg-surface-alt',
-            'data-[state=on]:bg-accent-strong data-[state=on]:text-on-accent',
-            'focus-visible:-outline-offset-4',
+            // O rótulo quebra em duas linhas quando não cabe (texto de 16px em 360px, FE-53).
+            'group inline-flex min-h-12 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-full py-1.5 text-center text-body font-semibold text-balance text-ink-muted transition-colors duration-150',
+            larguraDoTexto ? 'flex-auto px-3' : 'flex-1 px-4',
+            'hover:text-ink',
+            'data-[state=on]:bg-surface data-[state=on]:font-extrabold data-[state=on]:text-ink data-[state=on]:shadow-elevacao',
           )}
         >
-          <IconCheck className="hidden size-4 group-data-[state=on]:block" />
+          <IconCheck className="hidden size-4 shrink-0 group-data-[state=on]:block" />
           {option.label}
         </ToggleGroup.Item>
       ))}

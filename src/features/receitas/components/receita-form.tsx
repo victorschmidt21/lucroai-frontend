@@ -76,7 +76,7 @@ export function ReceitaFormPagina({ receitaId }: Props) {
         title={
           edicao
             ? 'Não foi possível carregar a receita.'
-            : 'Não foi possível carregar os insumos.'
+            : 'Não consegui buscar seus ingredientes agora.'
         }
         message={getErrorMessage(comErro[0]?.error)}
         retrying={comErro.some((query) => query.isFetching)}
@@ -89,7 +89,7 @@ export function ReceitaFormPagina({ receitaId }: Props) {
     conteudo = (
       <div className="flex flex-col gap-4">
         <Skeleton aria-label="Carregando receita" className="h-12" />
-        <Skeleton aria-label="Carregando insumos" className="h-40" />
+        <Skeleton aria-label="Carregando ingredientes" className="h-40" />
       </div>
     );
   } else {
@@ -193,7 +193,7 @@ function ReceitaForm({
 }
 
 function nomeDoInsumo(insumo: Insumo | undefined, insumoId: number) {
-  return insumo?.nome ?? `Insumo #${insumoId}`;
+  return insumo?.nome ?? `Ingrediente #${insumoId}`;
 }
 
 function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
@@ -210,9 +210,11 @@ function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
   const todosAdicionados = disponiveis.length === 0 && insumos.length > 0;
 
   return (
-    <Card title="Insumos">
+    <Card title="Ingredientes e embalagens">
       {fields.length === 0 ? (
-        <p className="text-body text-ink-muted">Nenhum insumo adicionado.</p>
+        <p className="text-body text-ink-muted">
+          Nenhum ingrediente adicionado.
+        </p>
       ) : (
         <ul className="flex flex-col gap-2">
           {fields.map((field, indice) => {
@@ -267,7 +269,9 @@ function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
         onClick={() => setAdicionando(true)}
       >
         <IconAdicionar className="size-5" />
-        {todosAdicionados ? 'Todos os insumos adicionados' : 'Adicionar insumo'}
+        {todosAdicionados
+          ? 'Todos os ingredientes adicionados'
+          : 'Adicionar ingrediente'}
       </Button>
       <AdicionarInsumoDialog
         open={adicionando}

@@ -31,7 +31,7 @@ function requiredHttpUrl(name: string) {
 }
 
 /**
- * Variáveis disponíveis somente no servidor: a URL base da API do LucroAI (o
+ * Variáveis disponíveis somente no servidor: a URL base da API do Doce Fatia (o
  * monolito `lucroai-backend`), que não usa prefixo de versão nas rotas.
  */
 export const serverEnvSchema = z.object({

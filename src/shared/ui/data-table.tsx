@@ -44,14 +44,17 @@ export function DataTable<Row>({
       // A região precisa receber foco para ser rolada pelo teclado (WCAG 2.1.1).
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
-      className="md:overflow-x-auto md:rounded-md md:border md:border-border md:bg-surface"
+      className="tabular-nums md:overflow-x-auto md:rounded-lg md:border md:border-border md:bg-surface"
     >
       <table
         role="table"
         aria-label={label}
         className="block w-full border-collapse md:table"
       >
-        <thead role="rowgroup" className="hidden md:table-header-group">
+        <thead
+          role="rowgroup"
+          className="hidden bg-surface-alt md:table-header-group"
+        >
           <tr role="row" className="border-b border-border">
             {columns.map(({ id, header, align, acoes }) => (
               <th
@@ -59,7 +62,7 @@ export function DataTable<Row>({
                 role="columnheader"
                 scope="col"
                 className={cn(
-                  'px-4 py-3 text-left text-small font-semibold whitespace-nowrap text-ink-muted',
+                  'text-section-label px-4 py-3 text-left whitespace-nowrap text-ink-muted',
                   (align === 'right' || acoes) && 'text-right',
                   acoes && 'w-px',
                 )}
@@ -77,7 +80,7 @@ export function DataTable<Row>({
             <tr
               key={getRowKey(row)}
               role="row"
-              className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-border bg-surface p-4 md:table-row md:rounded-none md:border-0 md:border-b md:bg-transparent md:p-0 md:last:border-b-0 md:hover:bg-surface-alt"
+              className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg border border-border bg-surface p-4 md:table-row md:rounded-none md:border-0 md:border-b md:bg-transparent md:p-0 md:last:border-b-0 md:hover:bg-surface-alt"
             >
               {columns.map(({ id, header, cell, align, acoes }) => {
                 const isTitulo = id === tituloId;

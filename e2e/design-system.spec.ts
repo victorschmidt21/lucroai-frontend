@@ -83,7 +83,7 @@ test.describe('em desenvolvimento', () => {
     await expect(primario).toHaveCSS('outline-color', 'rgb(255, 107, 61)');
   });
 
-  test('tema escuro, cantos arredondados e Roboto servida pelo próprio app', async ({
+  test('tema claro, botões em pílula e Fredoka e Nunito servidas pelo próprio app', async ({
     page,
   }) => {
     const externas: string[] = [];
@@ -98,11 +98,11 @@ test.describe('em desenvolvimento', () => {
 
     await expect(page.locator('body')).toHaveCSS(
       'background-color',
-      'rgb(5, 5, 5)',
+      'rgb(255, 248, 243)',
     );
     await expect(page.getByRole('button', { name: 'Primário' })).toHaveCSS(
-      'border-top-left-radius',
-      '12px',
+      'min-height',
+      '48px',
     );
     expect(externas).toEqual([]);
 
@@ -114,7 +114,9 @@ test.describe('em desenvolvimento', () => {
         .join(),
     );
 
-    expect(carregadas).toMatch(/Roboto/);
+    expect(carregadas).toMatch(/Fredoka/);
+    expect(carregadas).toMatch(/Nunito/);
+    expect(carregadas).not.toMatch(/Roboto/);
   });
 
   for (const [nome, largura] of [

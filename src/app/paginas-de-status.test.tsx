@@ -33,9 +33,9 @@ describe('erro', () => {
     render(<Pagina retry={retry} />);
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Tente novamente em instantes.',
+      'Tente de novo em instantes.',
     );
-    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    await user.click(screen.getByRole('button', { name: 'Tentar de novo' }));
 
     expect(retry).toHaveBeenCalledOnce();
   });

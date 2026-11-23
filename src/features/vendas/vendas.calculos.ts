@@ -1,7 +1,7 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
 import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
 import { toDataSemHora } from '@/shared/format/data';
-import { arredondarCentavos } from '@/shared/format/moeda';
+import { arredondarCentavos, formatMoeda } from '@/shared/format/moeda';
 import { formatMargem } from '@/shared/format/numero';
 
 /*
@@ -139,4 +139,15 @@ export function descreverLucroReal(lucroReal: number | null) {
       : formatMargem(lucroReal),
     prejuizo,
   };
+}
+
+/**
+ * Toast ao concluir a venda (FE-57): "Venda anotada! O mês já soma R$ X.", com o
+ * total das vendas concluídas do mês. Sem o total (a busca falhou), só a
+ * primeira frase.
+ */
+export function mensagemVendaAnotada(totalDoMes: number | null) {
+  return totalDoMes === null
+    ? 'Venda anotada!'
+    : `Venda anotada! O mês já soma ${formatMoeda(totalDoMes)}.`;
 }

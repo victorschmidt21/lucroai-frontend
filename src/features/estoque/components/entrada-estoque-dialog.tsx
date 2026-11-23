@@ -55,7 +55,7 @@ export function EntradaEstoqueDialog({
     >
       <dl className="grid grid-cols-2 gap-3 rounded-md border border-border bg-surface-alt p-3">
         <div className="col-span-2 flex flex-col gap-0.5">
-          <dt className="text-small text-ink-muted">Insumo</dt>
+          <dt className="text-small text-ink-muted">Ingrediente</dt>
           <dd className="font-semibold wrap-anywhere">{insumo.nome}</dd>
         </div>
         <div className="flex flex-col gap-0.5">

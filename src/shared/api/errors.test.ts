@@ -51,9 +51,7 @@ describe('apiErrorFromResponse', () => {
       message: 'Bad Request',
     });
 
-    expect(erro.message).toBe(
-      'Não foi possível concluir a ação. Tente novamente.',
-    );
+    expect(erro.message).toBe('Não deu para concluir agora. Tente de novo.');
   });
 
   it('401: sessão expirada, mesmo com outra mensagem do backend', () => {
@@ -76,19 +74,19 @@ describe('apiErrorFromResponse', () => {
     expect(erro.code).toBe('INSUMO_NAO_ENCONTRADO');
   });
 
-  it('404 com a mensagem padrão do NestJS: "Registro não encontrado."', () => {
+  it('404 com a mensagem padrão do NestJS: "Não encontrei esse item. Ele pode ter sido excluído."', () => {
     expect(
       apiErrorFromResponse(404, {
         statusCode: 404,
         message: 'Cannot GET /naoexiste',
       }).message,
-    ).toBe('Registro não encontrado.');
+    ).toBe('Não encontrei esse item. Ele pode ter sido excluído.');
     expect(
       apiErrorFromResponse(404, {
         statusCode: 404,
         message: 'Not Found',
       }).message,
-    ).toBe('Registro não encontrado.');
+    ).toBe('Não encontrei esse item. Ele pode ter sido excluído.');
   });
 
   it('409: mostra a mensagem do backend', () => {
@@ -104,21 +102,23 @@ describe('apiErrorFromResponse', () => {
 
   it.each([500, 502, 503])('%i: erro no servidor', (status) => {
     expect(apiErrorFromResponse(status, erro500).message).toBe(
-      'Erro no servidor. Tente novamente.',
+      'O sistema falhou agora. Tente de novo em instantes.',
     );
   });
 
   it('corpo fora do formato da API usa o texto do status', () => {
     const erro = apiErrorFromResponse(502, '<html>Bad Gateway</html>');
 
-    expect(erro.message).toBe('Erro no servidor. Tente novamente.');
+    expect(erro.message).toBe(
+      'O sistema falhou agora. Tente de novo em instantes.',
+    );
     expect(erro.mensagens).toEqual([]);
     expect(erro.code).toBeUndefined();
   });
 
   it('corpo vazio num 403 usa o texto genérico', () => {
     expect(apiErrorFromResponse(403, undefined).message).toBe(
-      'Não foi possível concluir a ação. Tente novamente.',
+      'Não deu para concluir agora. Tente de novo.',
     );
   });
 });
@@ -144,7 +144,9 @@ describe('ApiNetworkError', () => {
     expect(erro).toBeInstanceOf(ApiError);
     expect(erro.statusCode).toBe(0);
     expect(erro.isTimeout).toBe(false);
-    expect(erro.message).toBe('Sem conexão com o servidor.');
+    expect(erro.message).toBe(
+      'Sem conexão. Confira a internet e tente de novo.',
+    );
   });
 
   it('marca o timeout', () => {
@@ -164,15 +166,17 @@ describe('getErrorMessage', () => {
       z.string().safeParse(1).error as z.ZodError,
     );
 
-    expect(getErrorMessage(erro)).toBe('Resposta inesperada do servidor.');
+    expect(getErrorMessage(erro)).toBe(
+      'O sistema respondeu algo inesperado. Tente de novo em instantes.',
+    );
   });
 
   it('nunca expõe a mensagem de uma exceção do JavaScript', () => {
     expect(getErrorMessage(new TypeError('x is undefined'))).toBe(
-      'Não foi possível concluir a ação. Tente novamente.',
+      'Não deu para concluir agora. Tente de novo.',
     );
     expect(getErrorMessage('qualquer coisa')).toBe(
-      'Não foi possível concluir a ação. Tente novamente.',
+      'Não deu para concluir agora. Tente de novo.',
     );
   });
 });

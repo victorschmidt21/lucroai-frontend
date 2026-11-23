@@ -21,7 +21,8 @@ type SliderProps = {
 
 /**
  * Controle deslizante da simulação (`_SliderCard` de simulacao_page.dart): título,
- * valor em laranja, trilho de 8px e os limites embaixo. Radix Slider: setas,
+ * valor em Amora, trilho `border-strong` de 8px, polegar de 24px com borda
+ * `surface` (FE-55) e os limites embaixo. Radix Slider: setas,
  * Page Up/Down, Home e End.
  */
 export function Slider({
@@ -66,14 +67,14 @@ export function Slider({
         disabled={disabled}
         className="relative flex h-11 w-full touch-none items-center select-none data-disabled:opacity-50"
       >
-        <RadixSlider.Track className="relative h-2 grow overflow-hidden rounded-full bg-ink-subtle">
+        <RadixSlider.Track className="relative h-2 grow overflow-hidden rounded-full bg-border-strong">
           <RadixSlider.Range className="absolute h-full rounded-full bg-accent" />
         </RadixSlider.Track>
         <RadixSlider.Thumb
           aria-labelledby={labelId}
           aria-describedby={hint ? hintId : undefined}
           aria-valuetext={formatValue(value)}
-          className="block size-5 cursor-grab rounded-full bg-accent transition-shadow duration-150 hover:ring-8 hover:ring-accent/15"
+          className="block size-6 cursor-grab rounded-full border-[3px] border-surface bg-accent shadow-elevacao transition-shadow duration-150 hover:ring-8 hover:ring-accent-soft"
         />
       </RadixSlider.Root>
       <div

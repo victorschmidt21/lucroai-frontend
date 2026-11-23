@@ -31,7 +31,10 @@ import {
   useSimularCenario,
   useSimularReceitaCusto,
 } from '../hooks/use-simulacao-receita';
-import { formatarResultadoDaSimulacao } from '../receitas.calculos';
+import {
+  formatarResultadoDaSimulacao,
+  sugestaoDoCanal,
+} from '../receitas.calculos';
 import {
   custoLotesFormSchema,
   precoDoCanalNoCampo,
@@ -179,7 +182,7 @@ function CenarioCard({ receita }: { receita: Receita }) {
         {simular.isError ? (
           <Alert>{mensagemDeErro(simular.error)}</Alert>
         ) : simular.data ? (
-          <ResultadoCenario resultado={simular.data} />
+          <ResultadoCenario resultado={simular.data} precos={receita.precos} />
         ) : null}
       </div>
     </>
@@ -210,8 +213,17 @@ function Indicador({
   );
 }
 
-function ResultadoCenario({ resultado }: { resultado: SimulacaoCenario }) {
-  const textos = formatarResultadoDaSimulacao(resultado);
+function ResultadoCenario({
+  resultado,
+  precos,
+}: {
+  resultado: SimulacaoCenario;
+  precos: Receita['precos'];
+}) {
+  const textos = formatarResultadoDaSimulacao(
+    resultado,
+    sugestaoDoCanal(precos, resultado.canalId),
+  );
   const tom = textos.prejuizo ? 'text-danger' : 'text-success';
 
   return (

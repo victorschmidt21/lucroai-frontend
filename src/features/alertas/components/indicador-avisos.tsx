@@ -1,7 +1,7 @@
 'use client';
 
 import { IconButton } from '@/shared/ui/button';
-import { IconAlerta } from '@/shared/ui/icons/acoes';
+import { IconAvisos } from '@/shared/ui/icons/acoes';
 import { useAvisos } from './avisos-provider';
 
 /**
@@ -19,7 +19,7 @@ export function IndicadorAvisos() {
       onClick={abrir}
       className="relative text-warning"
     >
-      <IconAlerta />
+      <IconAvisos />
       <span
         aria-hidden="true"
         className="absolute top-0.5 right-0.5 flex min-w-4 items-center justify-center rounded-full bg-danger-strong px-1 text-caption leading-4 font-bold text-on-danger"

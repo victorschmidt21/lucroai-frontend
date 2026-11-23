@@ -148,10 +148,10 @@ describe('ListPage', () => {
       await screen.findByText('Não foi possível carregar os insumos.'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Erro no servidor. Tente novamente.'),
+      screen.getByText('O sistema falhou agora. Tente de novo em instantes.'),
     ).toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     );
 
     expect(await screen.findByText('3 insumos')).toBeInTheDocument();

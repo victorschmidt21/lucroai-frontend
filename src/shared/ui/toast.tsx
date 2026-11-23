@@ -25,10 +25,11 @@ export type ToastApi = {
 
 const ToastContext = createContext<ToastApi | null>(null);
 
+// Ícone em círculo na cor do tipo, com o traço em `bg` (FE-55).
 const VARIANTES: Record<ToastVariant, { icone: IconComponent; cor: string }> = {
-  sucesso: { icone: IconSucesso, cor: 'text-success' },
-  erro: { icone: IconErro, cor: 'text-danger' },
-  info: { icone: IconInfo, cor: 'text-accent' },
+  sucesso: { icone: IconSucesso, cor: 'bg-success' },
+  erro: { icone: IconErro, cor: 'bg-danger' },
+  info: { icone: IconInfo, cor: 'bg-accent' },
 };
 
 /** Mesmo tempo do `SnackBar` do Flutter. */
@@ -79,15 +80,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   );
                 }
               }}
-              className="flex animate-subir items-center gap-3 rounded-md border border-border-strong bg-surface-raised py-3 pr-2 pl-4 text-ink shadow-elevacao"
+              // Invertido (`bg-ink` e texto `bg`), para se destacar da tela nos dois temas.
+              className="flex animate-subir items-center gap-3 rounded-lg bg-ink py-2 pr-2 pl-3 text-bg shadow-elevacao"
             >
-              <Icone className={cn('shrink-0', cor)} />
+              <span
+                className={cn(
+                  'flex size-8 shrink-0 items-center justify-center rounded-full text-bg',
+                  cor,
+                )}
+              >
+                <Icone className="size-5" />
+              </span>
               <RadixToast.Description className="min-w-0 grow text-body">
                 {texto}
               </RadixToast.Description>
               <RadixToast.Close
                 aria-label="Fechar notificação"
-                className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-ink-muted transition-colors duration-150 hover:bg-surface-alt hover:text-ink"
+                className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full text-bg transition-colors duration-150 hover:bg-bg/15 focus-visible:outline-bg"
               >
                 <IconFechar className="size-4" />
               </RadixToast.Close>

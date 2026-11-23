@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentType, type ReactNode } from 'react';
 import { Alert } from '@/shared/ui/alert';
 import {
   Badge,
@@ -9,7 +9,12 @@ import {
   StatusEstoqueBadge,
   StatusVendaBadge,
 } from '@/shared/ui/badge';
-import { Button, buttonClasses, IconButton } from '@/shared/ui/button';
+import {
+  Button,
+  buttonClasses,
+  IconButton,
+  type ButtonVariant,
+} from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Chip, ToggleChip } from '@/shared/ui/chip';
@@ -19,11 +24,21 @@ import { DateRangePicker, type Periodo } from '@/shared/ui/date-picker';
 import { Dialog, DialogClose } from '@/shared/ui/dialog';
 import { Drawer } from '@/shared/ui/drawer';
 import { EmptyState } from '@/shared/ui/empty-state';
+import {
+  IlustracaoCaderno,
+  IlustracaoContas,
+  IlustracaoDespensa,
+  IlustracaoForno,
+  IlustracaoSacola,
+  IlustracaoSemConexao,
+  type IlustracaoProps,
+} from '@/shared/ui/ilustracoes';
 import { ErrorState } from '@/shared/ui/error-state';
 import {
   IconAdicionar,
   IconAlerta,
   IconAtualizar,
+  IconAvisos,
   IconBusca,
   IconCalendario,
   IconCheck,
@@ -43,6 +58,7 @@ import {
 } from '@/shared/ui/icons/acoes';
 import type { IconComponent } from '@/shared/ui/icons/icone';
 import {
+  IconConfiguracoes,
   IconCustos,
   IconEstoque,
   IconGastos,
@@ -59,6 +75,7 @@ import { PageHeader } from '@/shared/ui/page-header';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { Select } from '@/shared/ui/select';
+import { SeletorAparencia } from '@/shared/ui/seletor-aparencia';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Slider } from '@/shared/ui/slider';
 import { Spinner } from '@/shared/ui/spinner';
@@ -67,36 +84,79 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
 import { ToastProvider, useToast } from '@/shared/ui/toast';
 
+const ILUSTRACOES: [string, ComponentType<IlustracaoProps>][] = [
+  ['Despensa', IlustracaoDespensa],
+  ['Caderno', IlustracaoCaderno],
+  ['Forno', IlustracaoForno],
+  ['Sacola', IlustracaoSacola],
+  ['Contas', IlustracaoContas],
+  ['Sem conexão', IlustracaoSemConexao],
+];
+
 const CORES = [
-  { nome: 'bg', classe: 'bg-bg', uso: 'fundo da página' },
-  { nome: 'bg-alt', classe: 'bg-bg-alt', uso: 'fundo de telas internas' },
-  { nome: 'surface', classe: 'bg-surface', uso: 'cartões' },
-  { nome: 'surface-alt', classe: 'bg-surface-alt', uso: 'campos' },
+  { nome: 'bg', classe: 'bg-bg', uso: 'fundo da página (Chantilly)' },
+  { nome: 'bg-alt', classe: 'bg-bg-alt', uso: 'igual a bg' },
+  { nome: 'surface', classe: 'bg-surface', uso: 'cartões (Forma)' },
+  { nome: 'surface-alt', classe: 'bg-surface-alt', uso: 'campos (Merengue)' },
   {
     nome: 'surface-raised',
     classe: 'bg-surface-raised',
     uso: 'Dialog, Drawer, Toast',
   },
-  { nome: 'border', classe: 'bg-border', uso: 'bordas' },
+  { nome: 'border', classe: 'bg-border', uso: 'borda de cartão' },
   { nome: 'border-strong', classe: 'bg-border-strong', uso: 'divisores' },
-  { nome: 'ink', classe: 'bg-ink', uso: 'texto principal' },
+  { nome: 'border-field', classe: 'bg-border-field', uso: 'borda de campo' },
+  { nome: 'ink', classe: 'bg-ink', uso: 'texto principal (Cacau)' },
   { nome: 'ink-muted', classe: 'bg-ink-muted', uso: 'texto secundário' },
   { nome: 'ink-subtle', classe: 'bg-ink-subtle', uso: 'subtítulos' },
-  { nome: 'accent', classe: 'bg-accent', uso: 'destaque e foco' },
-  { nome: 'accent-strong', classe: 'bg-accent-strong', uso: 'botão primário' },
-  { nome: 'on-accent', classe: 'bg-on-accent', uso: 'texto sobre laranja' },
+  { nome: 'accent', classe: 'bg-accent', uso: 'ações e foco (Amora)' },
+  { nome: 'accent-strong', classe: 'bg-accent-strong', uso: 'hover da ação' },
+  { nome: 'on-accent', classe: 'bg-on-accent', uso: 'texto sobre Amora' },
+  { nome: 'accent-soft', classe: 'bg-accent-soft', uso: 'chip selecionado' },
+  { nome: 'highlight', classe: 'bg-highlight', uso: 'Damasco, decorativo' },
+  {
+    nome: 'highlight-ink',
+    classe: 'bg-highlight-ink',
+    uso: 'texto em Damasco',
+  },
   { nome: 'success', classe: 'bg-success', uso: 'Adequado, Concluída' },
+  { nome: 'success-soft', classe: 'bg-success-soft', uso: 'fundo do status' },
   { nome: 'warning', classe: 'bg-warning', uso: 'Baixo, Pendente' },
+  { nome: 'warning-soft', classe: 'bg-warning-soft', uso: 'fundo do status' },
   { nome: 'danger', classe: 'bg-danger', uso: 'erro, Crítico' },
   { nome: 'danger-strong', classe: 'bg-danger-strong', uso: 'botão de perigo' },
-  { nome: 'on-danger', classe: 'bg-on-danger', uso: 'texto sobre vermelho' },
+  { nome: 'on-danger', classe: 'bg-on-danger', uso: 'texto sobre Cereja' },
+  { nome: 'danger-soft', classe: 'bg-danger-soft', uso: 'fundo do status' },
 ];
 
 const RAIOS = [
-  { nome: 'radius-sm (8px)', classe: 'rounded-sm', uso: 'badges e chips' },
-  { nome: 'radius-md (12px)', classe: 'rounded-md', uso: 'cartões e campos' },
-  { nome: 'radius-lg (14px)', classe: 'rounded-lg', uso: 'resumos' },
-  { nome: 'radius-xl (18px)', classe: 'rounded-xl', uso: 'Dialog e Drawer' },
+  { nome: 'radius-sm (10px)', classe: 'rounded-sm', uso: 'itens pequenos' },
+  { nome: 'radius-md (14px)', classe: 'rounded-md', uso: 'campos' },
+  { nome: 'radius-lg (20px)', classe: 'rounded-lg', uso: 'cartões e estados' },
+  { nome: 'radius-xl (24px)', classe: 'rounded-xl', uso: 'Dialog e Drawer' },
+  { nome: 'rounded-full', classe: 'rounded-full', uso: 'botões e chips' },
+];
+
+/*
+ * Hover e foco simulados com `!`, para ver todos os estados lado a lado (FE-55).
+ * As classes repetem as de `button.tsx` e `label.tsx`: se mudarem lá, mude aqui.
+ */
+const HOVER_DO_BOTAO: Record<ButtonVariant, string> = {
+  primario: 'border-accent-strong! bg-accent-strong!',
+  secundario: 'bg-accent-soft!',
+  perigo: 'border-danger! bg-danger!',
+  fantasma: 'border-accent!',
+  icone: 'bg-accent-soft!',
+};
+const FOCO_SIMULADO = 'outline-2 outline-offset-2 outline-accent';
+const HOVER_DO_CAMPO = 'border-ink!';
+const FOCO_DO_CAMPO = 'border-accent! ring-4 ring-accent-soft';
+
+const VARIANTES_DE_BOTAO: [ButtonVariant, string][] = [
+  ['primario', 'Primário'],
+  ['secundario', 'Secundário'],
+  ['fantasma', 'Suave'],
+  ['perigo', 'Perigo'],
 ];
 
 const ICONES_MENU: [string, IconComponent][] = [
@@ -108,6 +168,7 @@ const ICONES_MENU: [string, IconComponent][] = [
   ['Estoque', IconEstoque],
   ['Produção', IconProducao],
   ['Gastos', IconGastos],
+  ['Configurações', IconConfiguracoes],
 ];
 
 const ICONES_ACOES: [string, IconComponent][] = [
@@ -125,6 +186,7 @@ const ICONES_ACOES: [string, IconComponent][] = [
   ['Check', IconCheck],
   ['Sucesso', IconSucesso],
   ['Info', IconInfo],
+  ['Avisos', IconAvisos],
   ['Alerta', IconAlerta],
   ['Erro', IconErro],
   ['Vazio', IconVazio],
@@ -158,6 +220,126 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
       <h2 className="text-section-label text-ink-muted">{titulo}</h2>
       {children}
     </section>
+  );
+}
+
+function Estado({ nome, children }: { nome: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-start gap-1.5">
+      {children}
+      <span className="text-caption text-ink-muted">{nome}</span>
+    </div>
+  );
+}
+
+/** Padrão, hover, foco, erro ou carregando e desabilitado, lado a lado. */
+function EstadosDosComponentes() {
+  return (
+    <div className="flex flex-col gap-6">
+      {VARIANTES_DE_BOTAO.map(([variant, nome]) => (
+        <div key={variant} className="flex flex-col gap-2">
+          <p className="text-small font-extrabold text-ink">{nome}</p>
+          <div className="flex flex-wrap gap-4">
+            <Estado nome="Padrão">
+              <Button variant={variant}>{nome}</Button>
+            </Estado>
+            <Estado nome="Hover">
+              <Button variant={variant} className={HOVER_DO_BOTAO[variant]}>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Foco">
+              <Button variant={variant} className={FOCO_SIMULADO}>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Carregando">
+              <Button variant={variant} loading>
+                {nome}
+              </Button>
+            </Estado>
+            <Estado nome="Desabilitado">
+              <Button variant={variant} disabled>
+                {nome}
+              </Button>
+            </Estado>
+          </div>
+        </div>
+      ))}
+      <div className="flex flex-col gap-2">
+        <p className="text-small font-extrabold text-ink">IconButton</p>
+        <div className="flex flex-wrap gap-4">
+          <Estado nome="Padrão">
+            <IconButton aria-label="Editar (padrão)">
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Hover">
+            <IconButton
+              aria-label="Editar (hover)"
+              className={HOVER_DO_BOTAO.icone}
+            >
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Foco">
+            <IconButton aria-label="Editar (foco)" className={FOCO_SIMULADO}>
+              <IconEditar />
+            </IconButton>
+          </Estado>
+          <Estado nome="Desabilitado">
+            <IconButton aria-label="Editar (desabilitado)" disabled>
+              <IconEditar />
+            </IconButton>
+          </Estado>
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Input label="Campo (padrão)" placeholder="Farinha de Trigo" />
+        <Input
+          label="Campo (hover)"
+          defaultValue="Farinha de Trigo"
+          className={HOVER_DO_CAMPO}
+        />
+        <Input
+          label="Campo (foco)"
+          defaultValue="Farinha de Trigo"
+          className={FOCO_DO_CAMPO}
+        />
+        <Input
+          label="Campo (erro)"
+          defaultValue=""
+          error="Informe o nome do insumo"
+        />
+        <Input
+          label="Campo (desabilitado)"
+          defaultValue="Farinha de Trigo"
+          disabled
+        />
+        <Input
+          label="Campo (com dica)"
+          hint="Como aparece nas listagens."
+          defaultValue="Farinha de Trigo"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-small font-extrabold text-ink">Chip</p>
+        <div className="flex flex-wrap gap-4">
+          <Estado nome="Padrão">
+            <ToggleChip>Aluguel</ToggleChip>
+          </Estado>
+          <Estado nome="Hover">
+            <ToggleChip className="border-accent! text-ink!">Gás</ToggleChip>
+          </Estado>
+          <Estado nome="Selecionado">
+            <ToggleChip defaultSelected>Energia</ToggleChip>
+          </Estado>
+          <Estado nome="Desabilitado">
+            <ToggleChip disabled>Internet</ToggleChip>
+          </Estado>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -298,10 +480,14 @@ export function DesignSystemShowcase() {
     <ToastProvider>
       <main className="mx-auto flex max-w-5xl flex-col gap-12 px-4 py-6 sm:px-8">
         <div className="flex flex-col gap-6">
-          <Logo />
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <Logo />
+            {/* Os componentes nos dois temas: troque aqui (FE-55). */}
+            <SeletorAparencia />
+          </div>
           <PageHeader
             title="Design system"
-            subtitle="Tokens e componentes base do LucroAI"
+            subtitle="Tokens e componentes base do Doce Fatia"
             actions={
               <Button>
                 <IconAdicionar className="size-5" />
@@ -339,7 +525,7 @@ export function DesignSystemShowcase() {
             <p className="text-section-label text-ink-muted">
               Custos invisíveis (section-label)
             </p>
-            <p className="text-body">body: Roboto Regular para textos.</p>
+            <p className="text-body">body: Nunito Regular para textos.</p>
             <p className="text-small text-ink-muted">small: texto de apoio.</p>
             <p className="text-caption text-ink-muted">
               caption: legendas e metadados.
@@ -348,7 +534,8 @@ export function DesignSystemShowcase() {
               Pesos: <span className="font-normal">400</span>{' '}
               <span className="font-medium">500</span>{' '}
               <span className="font-semibold">600</span>{' '}
-              <span className="font-bold">700</span>
+              <span className="font-bold">700</span>{' '}
+              <span className="font-extrabold">800</span>
             </p>
           </div>
         </Secao>
@@ -374,7 +561,7 @@ export function DesignSystemShowcase() {
                 key={nome}
                 className="flex flex-col items-center gap-1 text-ink-muted"
               >
-                <Icone className="size-[22px]" />
+                <Icone className="size-6" />
                 <span className="text-caption">{nome}</span>
               </li>
             ))}
@@ -397,7 +584,7 @@ export function DesignSystemShowcase() {
             <Button>Primário</Button>
             <Button variant="secundario">Secundário</Button>
             <Button variant="perigo">Perigo</Button>
-            <Button variant="fantasma">Fantasma</Button>
+            <Button variant="fantasma">Suave</Button>
             <Button disabled>Desabilitado</Button>
             <Button loading>Salvando</Button>
           </div>
@@ -419,6 +606,10 @@ export function DesignSystemShowcase() {
           </div>
         </Secao>
 
+        <Secao titulo="Estados dos componentes">
+          <EstadosDosComponentes />
+        </Secao>
+
         <Secao titulo="Campos">
           <ExemploDeCampos />
           <Alert>Não foi possível salvar o insumo.</Alert>
@@ -430,6 +621,14 @@ export function DesignSystemShowcase() {
 
         <Secao titulo="Cartões">
           <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+            <StatCard
+              variant="heroi"
+              className="col-span-2 lg:col-span-4"
+              title="Sobrou pra você"
+              value="R$ 1.234,56"
+              detail="Variante heroi (FE-58)"
+              icon={<IconTendencia />}
+            />
             <StatCard
               title="Faturamento"
               value="R$ 1.234,56"
@@ -464,8 +663,10 @@ export function DesignSystemShowcase() {
                 Cartão com rótulo de seção, como no cálculo real.
               </p>
             </Card>
-            <Card variant="resumo">
-              <p className="text-small text-ink-muted">Total vendido</p>
+            <Card variant="destaque">
+              <p className="text-small text-ink-muted">
+                Total vendido (destaque)
+              </p>
               <p className="text-title text-accent">R$ 3.480,00</p>
             </Card>
           </div>
@@ -561,6 +762,23 @@ export function DesignSystemShowcase() {
               description="Cadastre o primeiro insumo para começar."
               action={<Button>Cadastrar insumo</Button>}
             />
+            <EmptyState
+              title="Sua despensa está vazia"
+              description="Com a prop ilustracao (FE-59)."
+              ilustracao={<IlustracaoDespensa />}
+              action={<Button>Adicionar ingrediente</Button>}
+            />
+            <ul
+              aria-label="Ilustrações"
+              className="flex flex-wrap gap-4 rounded-lg bg-surface p-4"
+            >
+              {ILUSTRACOES.map(([nome, Ilustracao]) => (
+                <li key={nome} className="flex flex-col items-center gap-1">
+                  <Ilustracao />
+                  <span className="text-small text-ink-muted">{nome}</span>
+                </li>
+              ))}
+            </ul>
             <ErrorState
               title="Não foi possível carregar os insumos."
               message="Verifique sua conexão."

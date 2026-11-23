@@ -242,7 +242,7 @@ describe('registrar venda', OPCOES, () => {
     expect(carrinho().getByText('0 itens')).toBeInTheDocument();
   });
 
-  it('com estoque insuficiente, mantém o carrinho e leva a Produções', async () => {
+  it('com estoque insuficiente, mantém o carrinho e leva a Fornadas', async () => {
     server.use(
       mockApiErro(
         'POST /vendas',
@@ -260,10 +260,10 @@ describe('registrar venda', OPCOES, () => {
 
     const alerta = await carrinho().findByRole('alert');
     expect(alerta).toHaveTextContent(
-      'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções.',
+      'Estoque insuficiente para registrar a venda. Anote a fornada do produto em Fornadas.',
     );
     expect(
-      within(alerta).getByRole('link', { name: 'Ir para Produções' }),
+      within(alerta).getByRole('link', { name: 'Ir para Fornadas' }),
     ).toHaveAttribute('href', '/producoes');
     expect(carrinho().getByText('1 item')).toBeInTheDocument();
     expect(carrinho().getByText('50 × R$ 0,46')).toBeInTheDocument();

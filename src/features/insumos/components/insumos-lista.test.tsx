@@ -26,7 +26,9 @@ function renderLista(props: { abrirNovo?: boolean } = {}) {
 }
 
 function nomes() {
-  return within(screen.getByRole('table', { name: 'Insumos' }))
+  return within(
+    screen.getByRole('table', { name: 'Ingredientes e embalagens' }),
+  )
     .getAllByRole('row')
     .slice(1)
     .map((linha) => within(linha).getAllByRole('cell')[0]?.textContent);
@@ -71,13 +73,18 @@ describe('estados', OPCOES, () => {
     renderLista();
 
     expect(
-      screen.getByRole('status', { name: 'Carregando insumos' }),
+      screen.getByRole('status', {
+        name: 'Carregando ingredientes e embalagens',
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Insumos' }),
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Ingredientes e embalagens',
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Gerencie quantidade, valor pago e custo unitário'),
+      screen.getByText('O que você compra para produzir'),
     ).toBeInTheDocument();
   });
 
@@ -87,11 +94,14 @@ describe('estados', OPCOES, () => {
     renderLista();
 
     expect(
-      await screen.findByText('Nenhum insumo encontrado.'),
+      await screen.findByText('Sua despensa está vazia'),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Novo insumo' })).toHaveLength(
-      2,
-    );
+    expect(
+      screen.getByRole('button', { name: 'Novo ingrediente' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Adicionar ingrediente' }),
+    ).toBeInTheDocument();
   });
 
   it('mostra o erro e tenta de novo', async () => {
@@ -111,13 +121,13 @@ describe('estados', OPCOES, () => {
     renderLista();
 
     expect(
-      await screen.findByText('Não foi possível carregar os insumos.'),
+      await screen.findByText('Não consegui buscar seus ingredientes agora.'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Erro no servidor. Tente novamente.'),
+      screen.getByText('O sistema falhou agora. Tente de novo em instantes.'),
     ).toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     );
     expect(await screen.findByText('Farinha de Trigo')).toBeInTheDocument();
   });
@@ -129,7 +139,7 @@ describe('lista', OPCOES, () => {
 
     renderLista();
 
-    expect(await screen.findByText('12 insumos')).toBeInTheDocument();
+    expect(await screen.findByText('12 ingredientes')).toBeInTheDocument();
     expect(nomes().slice(0, 3)).toEqual([
       'Açúcar Cristal',
       'Cacau em Pó 100%',
@@ -151,17 +161,17 @@ describe('busca', OPCOES, () => {
 
     renderLista();
 
-    expect(await screen.findByText('1 insumo')).toBeInTheDocument();
+    expect(await screen.findByText('1 ingrediente')).toBeInTheDocument();
     expect(nomes()).toEqual(['Açúcar Cristal']);
   });
 
   it('grava q na URL ao digitar e mostra o vazio da busca', async () => {
     server.use(mockApi('GET /insumos', makeInsumosDoSeed()));
     renderLista();
-    await screen.findByText('12 insumos');
+    await screen.findByText('12 ingredientes');
 
     await userEvent.type(
-      screen.getByRole('searchbox', { name: 'Buscar insumo' }),
+      screen.getByRole('searchbox', { name: 'Buscar ingrediente' }),
       'chocolate',
     );
 
@@ -172,10 +182,10 @@ describe('busca', OPCOES, () => {
     ]);
 
     await userEvent.clear(
-      screen.getByRole('searchbox', { name: 'Buscar insumo' }),
+      screen.getByRole('searchbox', { name: 'Buscar ingrediente' }),
     );
     await userEvent.type(
-      screen.getByRole('searchbox', { name: 'Buscar insumo' }),
+      screen.getByRole('searchbox', { name: 'Buscar ingrediente' }),
       'polvilho{Enter}',
     );
     expect(
@@ -193,7 +203,7 @@ describe('mutações', OPCOES, () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Editar Farinha de Trigo' }),
     );
-    const dialog = screen.getByRole('dialog', { name: 'Editar insumo' });
+    const dialog = screen.getByRole('dialog', { name: 'Editar ingrediente' });
     const valorPago = within(dialog).getByRole('textbox', {
       name: 'Valor pago',
     });
@@ -205,7 +215,7 @@ describe('mutações', OPCOES, () => {
     );
 
     expect(
-      await screen.findByText('Insumo atualizado com sucesso.'),
+      await screen.findByText('Ingrediente atualizado.'),
     ).toBeInTheDocument();
     expect(await screen.findByText('R$ 3,6000/kg')).toBeInTheDocument();
     expect(screen.getByText('R$ 18,00')).toBeInTheDocument();
@@ -217,19 +227,19 @@ describe('mutações', OPCOES, () => {
       makeInsumo({ id: 2, nome: 'Ovos', unidade: 'UN' }),
     ]);
     renderLista();
-    await screen.findByText('2 insumos');
+    await screen.findByText('2 ingredientes');
 
     await userEvent.click(screen.getByRole('button', { name: 'Excluir Ovos' }));
-    const dialog = screen.getByRole('dialog', { name: 'Excluir insumo' });
+    const dialog = screen.getByRole('dialog', { name: 'Excluir ingrediente' });
     expect(dialog).toHaveAccessibleDescription('Deseja excluir "Ovos"?');
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Excluir' }),
     );
 
     expect(
-      await screen.findByText('Insumo excluído com sucesso.'),
+      await screen.findByText('Ingrediente excluído.'),
     ).toBeInTheDocument();
-    expect(await screen.findByText('1 insumo')).toBeInTheDocument();
+    expect(await screen.findByText('1 ingrediente')).toBeInTheDocument();
     expect(nomes()).toEqual(['Farinha de Trigo']);
   });
 
@@ -244,12 +254,12 @@ describe('mutações', OPCOES, () => {
       ),
     );
     renderLista();
-    await screen.findByText('1 insumo');
+    await screen.findByText('1 ingrediente');
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Excluir Farinha de Trigo' }),
     );
-    const dialog = screen.getByRole('dialog', { name: 'Excluir insumo' });
+    const dialog = screen.getByRole('dialog', { name: 'Excluir ingrediente' });
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Excluir' }),
     );
@@ -257,13 +267,15 @@ describe('mutações', OPCOES, () => {
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
       'Insumo usado em receita',
     );
-    expect(screen.getByRole('dialog', { name: 'Excluir insumo' })).toBe(dialog);
+    expect(screen.getByRole('dialog', { name: 'Excluir ingrediente' })).toBe(
+      dialog,
+    );
   });
 
   it('cancela a exclusão sem chamar a API', async () => {
     server.use(mockApi('GET /insumos', [makeInsumo()]));
     renderLista();
-    await screen.findByText('1 insumo');
+    await screen.findByText('1 ingrediente');
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Excluir Farinha de Trigo' }),
@@ -272,7 +284,7 @@ describe('mutações', OPCOES, () => {
 
     await waitFor(() =>
       expect(
-        screen.queryByRole('dialog', { name: 'Excluir insumo' }),
+        screen.queryByRole('dialog', { name: 'Excluir ingrediente' }),
       ).not.toBeInTheDocument(),
     );
     expect(nomes()).toEqual(['Farinha de Trigo']);
@@ -286,7 +298,9 @@ describe('novo=1', OPCOES, () => {
 
     renderLista({ abrirNovo: true });
 
-    const dialog = await screen.findByRole('dialog', { name: 'Novo insumo' });
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Novo ingrediente',
+    });
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Cancelar' }),
     );
@@ -297,12 +311,12 @@ describe('novo=1', OPCOES, () => {
   it('abre o cadastro pelo botão do cabeçalho', async () => {
     server.use(mockApi('GET /insumos', [makeInsumo()]));
     renderLista();
-    await screen.findByText('1 insumo');
+    await screen.findByText('1 ingrediente');
 
     await userEvent.click(
-      screen.getAllByRole('button', { name: 'Novo insumo' })[0]!,
+      screen.getAllByRole('button', { name: 'Novo ingrediente' })[0]!,
     );
-    const dialog = screen.getByRole('dialog', { name: 'Novo insumo' });
+    const dialog = screen.getByRole('dialog', { name: 'Novo ingrediente' });
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Cancelar' }),
     );

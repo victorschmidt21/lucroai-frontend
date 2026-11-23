@@ -4,7 +4,7 @@ import { Logo } from '@/shared/ui/logo';
 import { MenuContaCelular } from './menu-conta-celular';
 import { MenuNavegacao } from './menu-navegacao';
 
-const LOGO_LABEL = 'LucroAI, página inicial';
+const LOGO_LABEL = 'Doce Fatia, página inicial';
 
 type AppShellProps = {
   /** Nome, empresa e "Sair": vem de `features/auth`, composto pelo layout. */
@@ -32,7 +32,7 @@ export function AppShell({ userMenu, avisos, children }: AppShellProps) {
       >
         Pular para o conteúdo
       </a>
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-bg p-4 md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-surface p-4 md:flex">
         <div className="flex items-center justify-between gap-2">
           <Link
             href="/"
@@ -75,7 +75,7 @@ export function AppShell({ userMenu, avisos, children }: AppShellProps) {
           </div>
         </main>
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-surface-alt bg-bg pb-[env(safe-area-inset-bottom)] md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
         <MenuNavegacao variante="inferior" />
       </div>
     </div>

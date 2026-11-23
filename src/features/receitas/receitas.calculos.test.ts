@@ -8,8 +8,11 @@ import {
 } from '@/test/factories/receita.factory';
 import {
   calcularCustoItem,
+  avisoDePrejuizo,
+  avisoSemPrecoPossivel,
   formatarResultadoDaSimulacao,
   montarBarraDoPreco,
+  sugestaoDoCanal,
 } from './receitas.calculos';
 
 describe('calcularCustoItem', () => {
@@ -152,7 +155,7 @@ describe('formatarResultadoDaSimulacao', () => {
       lucroMes: '-R$ 88,85',
       prejuizo: true,
       aviso:
-        'Este preço não cobre o custo: você perde R$ 0,09 em cada unidade vendida.',
+        'Com esse preço você paga para vender. Você perde R$ 0,09 em cada unidade.',
       pontoEquilibrio: null,
     });
   });
@@ -185,7 +188,7 @@ describe('formatarResultadoDaSimulacao', () => {
         }),
       ).pontoEquilibrio,
     ).toBe(
-      'Você não tem contas do mês cadastradas em Gastos: qualquer venda já ajuda no lucro.',
+      'Você não tem contas do mês cadastradas: qualquer venda já ajuda no lucro.',
     );
   });
 
@@ -195,5 +198,61 @@ describe('formatarResultadoDaSimulacao', () => {
     );
     expect(textos.prejuizo).toBe(false);
     expect(textos.aviso).toBeNull();
+  });
+});
+
+describe('avisoDePrejuizo', () => {
+  it('sugere o preço do canal e quanto sobra por unidade', () => {
+    expect(
+      avisoDePrejuizo(0.0889, { preco: 0.4667, lucroPorUnidade: 0.07 }),
+    ).toBe(
+      'Com esse preço você paga para vender. Que tal R$ 0,47? Assim sobram R$ 0,07 por unidade.',
+    );
+  });
+
+  it('sem sugestão, diz quanto perde em cada unidade', () => {
+    expect(avisoDePrejuizo(0.0889, null)).toBe(
+      'Com esse preço você paga para vender. Você perde R$ 0,09 em cada unidade.',
+    );
+  });
+
+  it('o resultado da simulação usa a sugestão no aviso', () => {
+    expect(
+      formatarResultadoDaSimulacao(
+        makeSimulacaoCenario({ lucroPorUnidade: -0.1 }),
+        { preco: 5, lucroPorUnidade: 0.75 },
+      ).aviso,
+    ).toBe(
+      'Com esse preço você paga para vender. Que tal R$ 5,00? Assim sobram R$ 0,75 por unidade.',
+    );
+  });
+});
+
+describe('sugestaoDoCanal', () => {
+  it('usa o preço e o lucro por unidade do canal simulado', () => {
+    const balcao = makePrecoCanal();
+    expect(sugestaoDoCanal([balcao], balcao.canalId)).toEqual({
+      preco: balcao.preco,
+      lucroPorUnidade: balcao.composicao?.lucro.valor,
+    });
+  });
+
+  it('sem preço possível, sem lucro ou com outro canal, não sugere', () => {
+    const balcao = makePrecoCanal();
+    expect(sugestaoDoCanal([balcao], balcao.canalId + 99)).toBeNull();
+    expect(
+      sugestaoDoCanal(
+        [makePrecoCanal({ preco: null, composicao: null })],
+        balcao.canalId,
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('avisoSemPrecoPossivel', () => {
+  it('diz o percentual e o que fazer', () => {
+    expect(avisoSemPrecoPossivel(1.05)).toBe(
+      'Não existe preço que pague tudo: as taxas e o lucro já somam 105,0% do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.',
+    );
   });
 });

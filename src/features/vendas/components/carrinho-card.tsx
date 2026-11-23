@@ -12,7 +12,7 @@ import type { ItemCarrinho } from '../schemas/item-venda.schema';
 import { subtotalItem, totalCarrinho } from '../vendas.calculos';
 
 const MENSAGEM_ESTOQUE_INSUFICIENTE =
-  'Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções.';
+  'Estoque insuficiente para registrar a venda. Anote a fornada do produto em Fornadas.';
 
 type Props = {
   itens: readonly ItemCarrinho[];
@@ -37,7 +37,7 @@ export function CarrinhoCard({
   return (
     <section
       aria-labelledby={tituloId}
-      className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4 text-ink"
+      className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-ink"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id={tituloId} className="text-body font-semibold">
@@ -105,7 +105,7 @@ function ErroAoRegistrar({ erro }: { erro: unknown }) {
       <span>
         {MENSAGEM_ESTOQUE_INSUFICIENTE}{' '}
         <Link href="/producoes" className="font-semibold text-accent underline">
-          Ir para Produções
+          Ir para Fornadas
         </Link>
       </span>
     </Alert>

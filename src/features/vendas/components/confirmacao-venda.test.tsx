@@ -89,6 +89,13 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     const corpos: UpdateVendaStatusBody[] = [];
     mockEstoque();
     mockPatch(corpos);
+    server.use(
+      mockApi('GET /vendas', [
+        makeVenda({ id: 6, status: 'CONCLUIDA', total: 100 }),
+        makeVenda({ id: 7, status: 'CONCLUIDA', total: 45 }),
+        makeVenda({ id: 8, status: 'CANCELADA', total: 30 }),
+      ]),
+    );
     const { dialogo } = renderConfirmacao();
 
     await userEvent.click(
@@ -96,7 +103,7 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     );
 
     expect(
-      await screen.findByText('Venda concluída com sucesso.'),
+      await screen.findByText('Venda anotada! O mês já soma R$ 145,00.'),
     ).toBeInTheDocument();
     expect(corpos).toEqual([{ status: 'CONCLUIDA' }]);
     expect(await within(dialogo).findByText('Concluída')).toBeInTheDocument();
@@ -122,10 +129,10 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
       name: 'Estoque insuficiente',
     });
     expect(aviso).toHaveTextContent(
-      'Estoque insuficiente para "Brigadeiro Gourmet": disponível 0, solicitado 20. Registre uma produção antes de concluir.',
+      'Estoque insuficiente para "Brigadeiro Gourmet": disponível 0, solicitado 20. Anote uma fornada antes de concluir.',
     );
     expect(
-      within(aviso).getByRole('link', { name: 'Ir para Produções' }),
+      within(aviso).getByRole('link', { name: 'Ir para Fornadas' }),
     ).toHaveAttribute('href', '/producoes');
 
     await userEvent.click(
@@ -145,6 +152,8 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
     mockEstoque();
     server.use(
       mockApiErro('GET /estoque/produtos', 500, 'Erro interno do servidor'),
+      // Sem o total do mês, o toast fica só com a primeira frase.
+      mockApiErro('GET /vendas', 500, 'Erro interno do servidor'),
     );
     mockPatch(corpos);
     const { dialogo } = renderConfirmacao();
@@ -153,9 +162,7 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
       within(dialogo).getByRole('button', { name: 'Concluir venda' }),
     );
 
-    expect(
-      await screen.findByText('Venda concluída com sucesso.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Venda anotada!')).toBeInTheDocument();
     expect(corpos).toEqual([{ status: 'CONCLUIDA' }]);
   });
 
@@ -179,7 +186,7 @@ describe('ConfirmacaoVenda', { timeout: 20_000 }, () => {
       name: 'Estoque insuficiente',
     });
     expect(aviso).toHaveTextContent(
-      'Estoque insuficiente para a receita 3: disponível 5, solicitado 20. Registre uma produção antes de concluir.',
+      'Estoque insuficiente para a receita 3: disponível 5, solicitado 20. Anote uma fornada antes de concluir.',
     );
     expect(within(dialogo).getByText('Pendente')).toBeInTheDocument();
   });

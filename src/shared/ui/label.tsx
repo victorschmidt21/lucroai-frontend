@@ -10,7 +10,7 @@ type LabelProps = ComponentProps<'label'> & {
 export function Label({ required, className, children, ...props }: LabelProps) {
   return (
     <label
-      className={cn('text-body font-medium text-ink-muted', className)}
+      className={cn('text-small font-extrabold text-ink', className)}
       {...props}
     >
       {children}
@@ -100,7 +100,7 @@ export function FieldLayout({
       </Label>
       {children}
       {hint ? (
-        <p id={hintId} className="text-small text-ink-muted">
+        <p id={hintId} className="text-caption font-normal text-ink-muted">
           {hint}
         </p>
       ) : null}
@@ -110,12 +110,14 @@ export function FieldLayout({
 }
 
 /**
- * Campo do mobile (`InputDecoration` de insumos_page.dart): fundo `surface-alt`,
- * borda `border`, cantos de 12px e borda laranja no foco. Texto de 16px, para o
- * iOS não ampliar a tela ao focar.
+ * Campo (FE-55): fundo `surface`, borda de 2px `border-field` (3:1 não textual),
+ * cantos de 14px. No foco, borda `accent` e anel de 4px `accent-soft`, no lugar do
+ * contorno global; com erro, borda `danger`. Texto de 16px, para o iOS não ampliar
+ * a tela ao focar. `focus:` e não `focus-visible:`, para o campo de data também
+ * mostrar o foco quando o Tab passa pelo botão do calendário (FE-23).
  */
 export const CONTROL_CLASSES =
-  'w-full rounded-md border border-border bg-surface-alt px-4 py-2 text-field text-ink transition-colors duration-150 placeholder:text-ink-subtle not-disabled:hover:border-ink-subtle focus-visible:border-accent focus-visible:outline-offset-0 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger';
+  'w-full rounded-md border-2 border-border-field bg-surface px-4 py-2 text-field text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-ink-subtle not-disabled:hover:border-ink focus:border-accent focus:ring-4 focus:ring-accent-soft focus:outline-none disabled:cursor-default disabled:opacity-50 aria-invalid:border-danger';
 
-/** 48px no toque e 44px a partir de `lg`, perto dos 46px do mobile. */
-export const CONTROL_HEIGHT_CLASSES = 'min-h-12 lg:min-h-11';
+/** 48px de altura em qualquer tela (área de toque da marca, FE-53). */
+export const CONTROL_HEIGHT_CLASSES = 'min-h-12';

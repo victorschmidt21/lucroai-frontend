@@ -199,7 +199,7 @@ describe('ConfirmDialog', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Excluir' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Não foi possível concluir a ação. Tente novamente.',
+      'Não deu para concluir agora. Tente de novo.',
     );
   });
 

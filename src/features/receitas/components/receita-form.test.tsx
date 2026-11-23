@@ -37,12 +37,14 @@ function renderPagina({
 
 async function adicionarInsumo(nome: string, quantidade: string) {
   await userEvent.click(
-    await screen.findByRole('button', { name: 'Adicionar insumo' }),
+    await screen.findByRole('button', { name: 'Adicionar ingrediente' }),
   );
   const dialog = await screen.findByRole('dialog', {
-    name: 'Adicionar insumo',
+    name: 'Adicionar ingrediente',
   });
-  const combobox = within(dialog).getByRole('combobox', { name: 'Insumo' });
+  const combobox = within(dialog).getByRole('combobox', {
+    name: 'Ingrediente',
+  });
   await userEvent.click(combobox);
   await userEvent.click(within(dialog).getByRole('option', { name: nome }));
   await userEvent.type(
@@ -64,7 +66,7 @@ describe('nova receita', OPCOES, () => {
     renderPagina();
 
     expect(
-      await screen.findByText('Nenhum insumo adicionado.'),
+      await screen.findByText('Nenhum ingrediente adicionado.'),
     ).toBeInTheDocument();
 
     await adicionarInsumo('Farinha de Trigo', '0,5');
@@ -81,7 +83,9 @@ describe('nova receita', OPCOES, () => {
     await userEvent.click(
       screen.getByRole('button', { name: 'Remover Farinha de Trigo' }),
     );
-    expect(screen.getByText('Nenhum insumo adicionado.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Nenhum ingrediente adicionado.'),
+    ).toBeInTheDocument();
   });
 
   it('não oferece de novo um insumo já adicionado', async () => {
@@ -91,13 +95,13 @@ describe('nova receita', OPCOES, () => {
     await adicionarInsumo('Açúcar Cristal', '1');
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Adicionar insumo' }),
+      screen.getByRole('button', { name: 'Adicionar ingrediente' }),
     );
     const dialog = await screen.findByRole('dialog', {
-      name: 'Adicionar insumo',
+      name: 'Adicionar ingrediente',
     });
     await userEvent.click(
-      within(dialog).getByRole('combobox', { name: 'Insumo' }),
+      within(dialog).getByRole('combobox', { name: 'Ingrediente' }),
     );
     expect(
       within(dialog)
@@ -119,7 +123,7 @@ describe('nova receita', OPCOES, () => {
     );
 
     const botao = await screen.findByRole('button', {
-      name: 'Todos os insumos adicionados',
+      name: 'Todos os ingredientes adicionados',
     });
     expect(botao).toBeDisabled();
   });
@@ -267,10 +271,10 @@ describe('editar receita', OPCOES, () => {
       screen.getByRole('textbox', { name: 'Lucro desta receita' }),
     ).toHaveValue('20');
     // Insumo que saiu do catálogo.
-    expect(screen.getByText('Insumo #99')).toBeInTheDocument();
+    expect(screen.getByText('Ingrediente #99')).toBeInTheDocument();
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Remover Insumo #99' }),
+      screen.getByRole('button', { name: 'Remover Ingrediente #99' }),
     );
     await userEvent.click(screen.getByRole('button', { name: 'Atualizar' }));
 

@@ -39,17 +39,17 @@ export function Modal({
         <RadixDialog.Trigger asChild>{trigger}</RadixDialog.Trigger>
       ) : null}
       <RadixDialog.Portal>
-        {/* `barrierColor: Colors.black87`, como os diálogos do mobile. */}
+        {/* Fundo `overlay` em tom Cacau (FE-55); título em Fredoka (`text-display`). */}
         <RadixDialog.Overlay className="fixed inset-0 z-40 animate-surgir bg-overlay" />
         <RadixDialog.Content
           {...(description ? {} : { 'aria-describedby': undefined })}
           className={cn(
-            'fixed z-50 flex flex-col gap-4 overflow-y-auto border border-border bg-surface-raised p-5 text-ink shadow-elevacao',
+            'fixed z-50 flex flex-col gap-4 overflow-y-auto bg-surface-raised p-5 text-ink shadow-elevacao',
             contentClassName,
           )}
         >
           <div className="flex items-start justify-between gap-4">
-            <RadixDialog.Title className="pt-2 text-title">
+            <RadixDialog.Title className="pt-2 text-display">
               {title}
             </RadixDialog.Title>
             <RadixDialog.Close asChild>
@@ -75,7 +75,7 @@ export function Modal({
   );
 }
 
-/** Diálogo centralizado, como o `Dialog` de cadastro do mobile (cantos de 18px). */
+/** Diálogo centralizado, como o `Dialog` de cadastro do mobile (cantos de 24px). */
 export function Dialog({
   size = 'padrao',
   ...props

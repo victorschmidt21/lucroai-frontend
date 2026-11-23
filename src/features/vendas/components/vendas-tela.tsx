@@ -80,7 +80,7 @@ export function VendasTela({ busca }: Props) {
         actions={
           <Link href="/producoes" className={buttonClasses('secundario')}>
             <IconProducao className="size-5" />
-            Produção
+            Fornadas
           </Link>
         }
       />

@@ -80,7 +80,7 @@ São duas camadas, com papéis diferentes:
 O backend é multiempresa: cada módulo filtra pelo `empresa.id` do token, e recurso de outra empresa responde `404`.
 
 1. **O `empresaId` vem só do token.** Nunca o coloque em URL, query string, corpo ou estado do cliente para mandar ao backend. Os DTOs não o aceitam, e o `ValidationPipe` rejeita campos extras.
-2. Ids nas rotas da tela (`/receitas/[receitaId]`) são de registros da própria empresa; um id de outra empresa responde `404`, tratado como "Registro não encontrado.".
+2. Ids nas rotas da tela (`/receitas/[receitaId]`) são de registros da própria empresa; um id de outra empresa responde `404`, tratado como "Não encontrei esse item. Ele pode ter sido excluído.".
 3. O nome da empresa exibido no painel e no menu vem do payload do JWT.
 4. Lacuna conhecida: `POST /producoes` não confere se a receita e os gastos são da empresa do token (ver [api-integration.md](api-integration.md#lacunas-do-backend), item 11). A web só oferece receitas e gastos listados para a própria empresa, mas a correção é do backend.
 

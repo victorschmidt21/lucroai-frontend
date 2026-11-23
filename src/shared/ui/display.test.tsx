@@ -23,7 +23,7 @@ import { StatCard } from './stat-card';
 
 describe('Badge', () => {
   it.each([
-    ['critico', 'Crítico', 'text-status-critico'],
+    ['critico', 'Acabando', 'text-status-critico'],
     ['baixo', 'Baixo', 'text-status-baixo'],
     ['adequado', 'Adequado', 'text-status-adequado'],
   ] as const)('estoque %s tem cor e texto', (status, texto, classe) => {
@@ -68,12 +68,12 @@ describe('Card', () => {
     );
 
     expect(screen.getByRole('region', { name: 'Rendimento' })).toHaveClass(
-      'rounded-md',
+      'rounded-lg',
     );
   });
 
-  it('sem título, é um bloco; o resumo tem cantos de 14px', () => {
-    render(<Card variant="resumo">Total vendido</Card>);
+  it('sem título, é um bloco com cantos de 20px', () => {
+    render(<Card>Total vendido</Card>);
 
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
     expect(screen.getByText('Total vendido')).toHaveClass('rounded-lg');
@@ -102,6 +102,54 @@ describe('StatCard', () => {
     render(<StatCard title="Vendas" value="12" />);
 
     expect(screen.getByText('12')).toBeInTheDocument();
+  });
+
+  it('na variante heroi, fica sobre Amora com o valor de 36px', () => {
+    render(
+      <StatCard
+        variant="heroi"
+        title="Sobrou pra você"
+        value="R$ 1.234,56"
+        detail="De cada R$ 100, R$ 32 ficam com você"
+        detailTone="danger"
+      />,
+    );
+
+    const valor = screen.getByText('R$ 1.234,56');
+    expect(valor).toHaveClass('text-display-lg', 'tabular-nums');
+    expect(valor.parentElement).toHaveClass('bg-accent', 'text-on-accent');
+    expect(screen.getByText('Sobrou pra você')).toHaveClass('text-on-accent');
+    // O tom do detalhe não vale sobre Amora: o chip fica em `surface` com `success`.
+    expect(
+      screen.getByText('De cada R$ 100, R$ 32 ficam com você'),
+    ).toHaveClass('bg-surface', 'text-success');
+  });
+
+  it('na variante heroi com tom danger, fica sobre danger-soft com texto ink', () => {
+    render(
+      <StatCard
+        variant="heroi"
+        heroiTone="danger"
+        title="Este mês ainda está no vermelho"
+        value="-R$ 10,00"
+      >
+        <button type="button">Ver como ajustar os preços</button>
+      </StatCard>,
+    );
+
+    const valor = screen.getByText('-R$ 10,00');
+    expect(valor.parentElement).toHaveClass('bg-danger-soft', 'text-ink');
+    expect(
+      screen.getByRole('button', { name: 'Ver como ajustar os preços' }),
+    ).toBeInTheDocument();
+  });
+
+  it('na variante padrao, fica sobre surface com o valor em display', () => {
+    render(<StatCard title="Vendas" value="12" />);
+
+    const valor = screen.getByText('12');
+    expect(valor).toHaveClass('text-display');
+    expect(valor.parentElement).toHaveClass('bg-surface');
   });
 });
 
@@ -176,6 +224,36 @@ describe('estados', () => {
     ).toBeInTheDocument();
   });
 
+  it('EmptyState mostra a ilustracao no lugar do ícone, escondida do leitor', () => {
+    const { container } = render(
+      <EmptyState
+        title="Nenhum insumo encontrado."
+        icon={<svg data-testid="icone" />}
+        ilustracao={<svg data-testid="ilustracao" />}
+      />,
+    );
+
+    const ilustracao = screen.getByTestId('ilustracao');
+    expect(ilustracao.parentElement).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.queryByTestId('icone')).not.toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass(
+      'border-dashed',
+      'rounded-lg',
+    );
+  });
+
+  it('EmptyState sem ilustracao mostra o ícone', () => {
+    render(
+      <EmptyState
+        title="Nenhum insumo encontrado."
+        icon={<svg data-testid="icone" />}
+      />,
+    );
+
+    expect(screen.getByTestId('icone')).toBeInTheDocument();
+    expect(document.querySelector('[data-ilustracao]')).not.toBeInTheDocument();
+  });
+
   it('ErrorState anuncia o erro e tenta de novo', async () => {
     const onRetry = vi.fn<() => void>();
     render(
@@ -191,7 +269,7 @@ describe('estados', () => {
     );
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     );
 
     expect(onRetry).toHaveBeenCalledOnce();
@@ -207,7 +285,7 @@ describe('estados', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     ).toBeDisabled();
   });
 
@@ -235,7 +313,7 @@ describe('PageHeader e Logo', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText('Gerencie quantidade, valor pago e custo unitário'),
-    ).toHaveClass('text-ink-subtle');
+    ).toHaveClass('text-ink-muted');
     expect(
       screen.getByRole('button', { name: 'Novo insumo' }),
     ).toBeInTheDocument();
@@ -250,17 +328,50 @@ describe('PageHeader e Logo', () => {
   it.each([
     ['padrao', 'text-heading'],
     ['compacto', 'text-title'],
-  ] as const)('Logo %s escreve LucroAI', (size, classe) => {
+  ] as const)('Logo %s é uma imagem chamada Doce Fatia', (size, classe) => {
     render(<Logo size={size} />);
 
-    expect(screen.getByText('LucroAI')).toHaveClass(classe);
+    const logo = screen.getByRole('img', { name: 'Doce Fatia' });
+    expect(logo).toHaveClass(classe);
+    expect(logo.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('Logo completo traz o logotipo; só o símbolo, não', () => {
+    const { rerender } = render(<Logo />);
+
+    expect(screen.getByRole('img', { name: 'Doce Fatia' })).toHaveTextContent(
+      'Doce Fatia',
+    );
+    expect(screen.getByText('Doce')).toHaveClass('text-accent', 'font-medium');
+    expect(screen.getByText('Fatia')).toHaveClass('text-ink', 'font-semibold');
+
+    rerender(<Logo variante="simbolo" />);
+
+    expect(screen.getByRole('img', { name: 'Doce Fatia' })).toHaveTextContent(
+      '',
+    );
+    expect(screen.queryByText('Doce')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['normal', 'fill-accent', 'fill-bg', 'text-accent'],
+    ['sobre-cor', 'fill-on-accent', 'fill-accent', 'text-on-accent'],
+  ] as const)('Logo no tom %s', (tom, bolo, confeitos, doce) => {
+    const { container } = render(<Logo tom={tom} />);
+    const parte = (nome: string) =>
+      container.querySelector(`[data-parte="${nome}"]`);
+
+    expect(parte('bolo')).toHaveClass(bolo);
+    expect(parte('fatia')).toHaveClass('fill-highlight');
+    expect(parte('confeitos')).toHaveClass(confeitos);
+    expect(screen.getByText('Doce')).toHaveClass(doce);
   });
 });
 
 describe('ícones', () => {
   const icones = Object.entries({ ...menu, ...acoes });
 
-  it('tem os oito ícones do menu do mobile e o das configurações', () => {
+  it('tem os oito ícones do menu do mobile, o das configurações e o "Mais"', () => {
     expect(Object.keys(menu).toSorted()).toEqual([
       'IconConfiguracoes',
       'IconCustos',
@@ -268,20 +379,27 @@ describe('ícones', () => {
       'IconGastos',
       'IconHome',
       'IconInsumos',
+      'IconMais',
       'IconProducao',
       'IconReceitas',
       'IconVendas',
     ]);
   });
 
-  it.each(icones)('%s é decorativo e aceita classe', (_nome, Icone) => {
-    const { container } = render(<Icone className="text-accent" />);
-    const svg = container.querySelector('svg');
+  it.each(icones)(
+    '%s é decorativo, em contorno de 2px e aceita classe',
+    (_nome, Icone) => {
+      const { container } = render(<Icone className="text-accent" />);
+      const svg = container.querySelector('svg');
 
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg).toHaveClass('text-accent', 'size-5');
-    expect(svg?.querySelector('path')?.getAttribute('d')).toMatch(/^M/);
-  });
+      expect(svg).toHaveAttribute('aria-hidden', 'true');
+      expect(svg).toHaveClass('text-accent', 'size-5');
+      expect(svg).toHaveAttribute('fill', 'none');
+      expect(svg).toHaveAttribute('stroke', 'currentColor');
+      expect(svg).toHaveAttribute('stroke-width', '2');
+      expect(svg).toHaveAttribute('stroke-linecap', 'round');
+    },
+  );
 });
 
 it('os componentes de exibição não têm violações de acessibilidade', async () => {

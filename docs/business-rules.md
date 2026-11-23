@@ -8,7 +8,7 @@ Como ler:
 
 - **Quem decide é o backend.** Quando o backend calcula e grava um valor (custo da receita, preço sugerido, rateio, total da venda, lucro real da venda), a tela mostra o valor devolvido. O cálculo no cliente serve só para **prévia** enquanto o usuário digita, e precisa repetir as fórmulas e os arredondamentos do backend descritos aqui.
 - **Quando o backend não tem o dado**, o cliente calcula (painel, estoque, simulação interativa, cálculo real). Essas fórmulas viram **funções puras** testadas à parte (ver [architecture.md](architecture.md#regras-de-negócio-no-cliente)).
-- **Textos.** A coluna "Web" é o texto a usar. O mobile escreve muitos textos sem acento ("Descricao", "Calculo Real"); a web corrige a acentuação, e só ela. Mudanças de sentido estão em [Diferenças intencionais](#diferenças-intencionais-em-relação-ao-mobile).
+- **Textos.** A coluna "Web" é o texto a usar. Desde a FE-57, ela segue a linguagem de cozinha de [marca.md](marca.md#voz-e-tom): "Ingredientes e embalagens" (insumos), "Fornadas" (produções), "Contas do mês" (gastos indiretos), "Ajustes de preço" (configurações de custo), "Acabando" (estoque crítico), "Sobrou pra você" (lucro líquido), "R$ X de cada R$ 100" (margem) e "Para pagar as contas do mês, venda R$ X" (ponto de equilíbrio). Os títulos das seções abaixo continuam com os nomes do código. O mobile escreve muitos textos sem acento ("Descricao", "Calculo Real"); a web corrige a acentuação, e só ela. Mudanças de sentido estão em [Diferenças intencionais](#diferenças-intencionais-em-relação-ao-mobile).
 - Fórmulas usam a notação do código: `Σ` é soma, `round2(x)` é o arredondamento do backend descrito em [Arredondamento](#arredondamento).
 
 ## Sumário
@@ -133,12 +133,12 @@ Origem: `lib/features/vendas/presentation/widgets/venda_card.dart` (`_statusLabe
 
 ### Movimentação de estoque
 
-| Campo    | Valor      | Rótulo   |
-| -------- | ---------- | -------- |
-| `tipo`   | `ENTRADA`  | Entrada  |
-| `tipo`   | `SAIDA`    | Saída    |
-| `origem` | `COMPRA`   | Compra   |
-| `origem` | `PRODUCAO` | Produção |
+| Campo    | Valor      | Rótulo  |
+| -------- | ---------- | ------- |
+| `tipo`   | `ENTRADA`  | Entrada |
+| `tipo`   | `SAIDA`    | Saída   |
+| `origem` | `COMPRA`   | Compra  |
+| `origem` | `PRODUCAO` | Fornada |
 
 Origem: `lib/features/estoques/domain/entities/movimentacao_estoque.dart` (`tipoLabel`, `origemLabel`).
 
@@ -168,19 +168,19 @@ Exemplo do seed: farinha, 5 kg por R$ 15,00 → `R$ 3,0000/kg`; manteiga, 500 g 
 
 ### Textos
 
-| Onde                    | Mobile                                                                                         | Web                                                                                            |
-| ----------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Título e subtítulo      | "Insumos" / "Gerencie quantidade, valor pago e custo unitario"                                 | "Insumos" / "Gerencie quantidade, valor pago e custo unitário"                                 |
-| Ação primária           | —                                                                                              | "Novo insumo"                                                                                  |
-| Busca                   | "Buscar insumo..."                                                                             | "Buscar insumo"                                                                                |
-| Linha da lista          | `<quantidade> <unidade> - R$ <valorPago>` e `R$ <custo>/<unidade>`                             | igual, com os formatadores                                                                     |
-| Título do formulário    | "Novo insumo" / "Editar insumo"                                                                | igual                                                                                          |
-| Prévia                  | "Custo unitario: R$ X/un"                                                                      | "Custo unitário: R$ X/un" (com a unidade escolhida)                                            |
-| Botões                  | "Cancelar", "Salvar" / "Atualizar"                                                             | igual                                                                                          |
-| Confirmação de exclusão | "Excluir insumo" / `Deseja excluir "<nome>"?`                                                  | igual; botão "Excluir"                                                                         |
-| Toasts                  | "Insumo criado com sucesso.", "Insumo atualizado com sucesso.", "Insumo excluido com sucesso." | "Insumo criado com sucesso.", "Insumo atualizado com sucesso.", "Insumo excluído com sucesso." |
-| Vazio                   | "Nenhum insumo encontrado."                                                                    | igual                                                                                          |
-| Erro                    | "Nao foi possivel carregar os insumos."                                                        | "Não foi possível carregar os insumos."                                                        |
+| Onde                    | Mobile                                                                                         | Web                                                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo      | "Insumos" / "Gerencie quantidade, valor pago e custo unitario"                                 | "Ingredientes e embalagens" / "O que você compra para produzir" (FE-57)                                                                                                         |
+| Ação primária           | —                                                                                              | "Novo ingrediente" (FE-57)                                                                                                                                                      |
+| Busca                   | "Buscar insumo..."                                                                             | "Buscar ingrediente"; contagem "1 ingrediente" / "N ingredientes"                                                                                                               |
+| Linha da lista          | `<quantidade> <unidade> - R$ <valorPago>` e `R$ <custo>/<unidade>`                             | igual, com os formatadores                                                                                                                                                      |
+| Título do formulário    | "Novo insumo" / "Editar insumo"                                                                | "Novo ingrediente" / "Editar ingrediente"                                                                                                                                       |
+| Prévia                  | "Custo unitario: R$ X/un"                                                                      | "Custo unitário: R$ X/un" (com a unidade escolhida)                                                                                                                             |
+| Botões                  | "Cancelar", "Salvar" / "Atualizar"                                                             | igual                                                                                                                                                                           |
+| Confirmação de exclusão | "Excluir insumo" / `Deseja excluir "<nome>"?`                                                  | "Excluir ingrediente" / `Deseja excluir "<nome>"?`; botão "Excluir"                                                                                                             |
+| Toasts                  | "Insumo criado com sucesso.", "Insumo atualizado com sucesso.", "Insumo excluido com sucesso." | "Ingrediente cadastrado.", "Ingrediente atualizado.", "Ingrediente excluído." (FE-57)                                                                                           |
+| Vazio                   | "Nenhum insumo encontrado."                                                                    | "Sua despensa está vazia" / "Comece pelo ingrediente que você mais usa, como leite condensado." (FE-57), com a ilustração da despensa e o botão "Adicionar ingrediente" (FE-59) |
+| Erro                    | "Nao foi possivel carregar os insumos."                                                        | "Não consegui buscar seus ingredientes agora.", com "Tentar de novo"                                                                                                            |
 
 ### Ordem e busca
 
@@ -215,7 +215,7 @@ FE-10. Origem: `lib/features/gastos_indiretos/presentation/pages/gastos_indireto
 totalContasDoMes = Σ gasto.valor, só dos gastos MENSAL
 ```
 
-`calcularTotalContasDoMes` (FE-42). Os outros tipos têm outra unidade (reais por unidade, percentual da venda) e ficam fora da soma. O cartão "Contas do mês" mostra também a contagem: "1 conta" ou "N contas".
+`calcularTotalContasDoMes` (FE-42). Os outros tipos têm outra unidade (reais por unidade, percentual da venda) e ficam fora da soma. O cartão "Total por mês" ("Contas do mês" até a FE-57, quando a tela passou a se chamar assim) mostra também a contagem: "1 conta" ou "N contas".
 
 ### Valor na lista
 
@@ -236,19 +236,19 @@ O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `perc
 
 ### Textos
 
-| Onde                 | Mobile                                                                                                                      | Web                                                                                                                         |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Gastos Indiretos" / "Contas e custos que entram no preço das receitas" (FE-42, sem "rateio")                               |
-| Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                       |
-| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Contas do mês", "1 conta" / "N contas" (FE-42)                                                                             |
-| Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                  |
-| Título do formulário | "Novo gasto indireto" / "Editar gasto"                                                                                      | igual                                                                                                                       |
-| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | "Este gasto entra no custo de todas as receitas." (FE-42)                                                                   |
-| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Tipo" e o valor conforme o tipo ([`TipoGasto`](#tipogasto)); colunas "Descrição", "Tipo", "Valor"             |
-| Confirmação          | "Excluir gasto" / `Deseja excluir "<descrição>"?\nIsso afetara o custo de todas as receitas.`                               | "Excluir gasto" / `Deseja excluir "<descrição>"? Isso afetará o custo de todas as receitas.`                                |
-| Toasts               | — (o mobile só mostra erros)                                                                                                | "Gasto criado com sucesso.", "Gasto atualizado com sucesso.", "Gasto excluído com sucesso."                                 |
-| Vazio                | "Nenhum gasto cadastrado" / "Adicione agua, energia, gas, aluguel e outros custos para calcular o custo real das receitas." | "Nenhum gasto cadastrado" / "Adicione água, energia, gás, aluguel e outros custos para calcular o custo real das receitas." |
-| Erro                 | "Nao foi possivel carregar os gastos."                                                                                      | "Não foi possível carregar os gastos."                                                                                      |
+| Onde                 | Mobile                                                                                                                      | Web                                                                                                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Contas do mês" / "Gás, luz, internet, aluguel e outros custos que entram no preço" (FE-57)                                                                                              |
+| Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                                                                                    |
+| Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Total por mês", "1 conta" / "N contas" (FE-42; "Total por mês" desde a FE-57)                                                                                                           |
+| Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                                                                               |
+| Título do formulário | "Novo gasto indireto" / "Editar gasto"                                                                                      | "Novo gasto" / "Editar gasto" (FE-57)                                                                                                                                                    |
+| Apoio do formulário  | "Este gasto será rateado em todas as receitas."                                                                             | "Este gasto entra no custo de todas as receitas." (FE-42)                                                                                                                                |
+| Rótulos              | "Descricao", "Valor (R$)", "Metodo de rateio"                                                                               | "Descrição", "Tipo" e o valor conforme o tipo ([`TipoGasto`](#tipogasto)); colunas "Descrição", "Tipo", "Valor"                                                                          |
+| Confirmação          | "Excluir gasto" / `Deseja excluir "<descrição>"?\nIsso afetara o custo de todas as receitas.`                               | "Excluir gasto" / `Deseja excluir "<descrição>"? Isso afetará o custo de todas as receitas.`                                                                                             |
+| Toasts               | — (o mobile só mostra erros)                                                                                                | "Gasto criado com sucesso.", "Gasto atualizado com sucesso.", "Gasto excluído com sucesso."                                                                                              |
+| Vazio                | "Nenhum gasto cadastrado" / "Adicione agua, energia, gas, aluguel e outros custos para calcular o custo real das receitas." | "Nenhuma conta do mês ainda" / "Adicione gás, luz, internet, aluguel e o que mais você paga, para o preço cobrir tudo.", com a ilustração das contas e o botão "Adicionar conta" (FE-59) |
+| Erro                 | "Nao foi possivel carregar os gastos."                                                                                      | "Não foi possível carregar os gastos."                                                                                                                                                   |
 
 ## Receitas: listagem
 
@@ -259,15 +259,15 @@ FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `l
 - `custoProducao`, `custoUnitario` e `precoSugerido` podem **não vir** na resposta (o backend omite o campo quando é `null`; sem preço possível no Balcão, não há `precoSugerido`): exiba `—`.
 - Ações: Editar (`/receitas/[receitaId]/editar`), Simular (`/receitas/[receitaId]/simular`, FE-20) e Excluir.
 
-| Onde               | Mobile                                                                 | Web                                                                    |
-| ------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Gerencie insumos, rendimento, custo e preço automáticos" |
-| Ação primária      | —                                                                      | "Nova receita"                                                         |
-| Busca              | "Buscar receita..."                                                    | "Buscar receita"                                                       |
-| Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                                  |
-| Toast              | —                                                                      | "Receita excluída com sucesso."                                        |
-| Vazio              | "Nenhuma receita encontrada."                                          | igual                                                                  |
-| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar novamente"       |
+| Onde               | Mobile                                                                 | Web                                                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Receitas" / "Gerencie insumos, rendimento, margem e custo automatico" | "Receitas" / "Quanto custa e quanto cobrar por cada uma" (FE-57)                                                                                                        |
+| Ação primária      | —                                                                      | "Nova receita"                                                                                                                                                          |
+| Busca              | "Buscar receita..."                                                    | "Buscar receita"                                                                                                                                                        |
+| Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                                                                                                                                   |
+| Toast              | —                                                                      | "Receita excluída com sucesso."                                                                                                                                         |
+| Vazio              | "Nenhuma receita encontrada."                                          | "Seu caderno de receitas está vazio" / "Crie a primeira receita e descubra quanto custa e quanto cobrar.", com a ilustração do caderno e o link "Criar receita" (FE-59) |
+| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar de novo"                                                                                                          |
 
 ## Receitas: formulário e custo
 
@@ -308,8 +308,8 @@ A web não envia o `margem_lucro` legado (markup): o campo "Margem de lucro (%)"
 - "Custo de 1 unidade": `custo.unitario`, com Ingredientes, Contas do mês, Gastos por unidade (só se > 0), Embalagem, Perdas e "Custo do lote (<rendimento>)" (`custoProducao`), mais "Lucro desta receita: <x%> de cada R$ 1,00 vendido", com "(padrão da empresa)" quando a receita não tem lucro próprio.
 - "Preço sugerido por canal": um cartão por item de `precos` (canais **ativos**, Balcão primeiro), lado a lado, com o preço (`formatMoeda`) e "Para onde vai cada R$ 1,00".
 - A barra (`montarBarraDoPreco`, `receitas.calculos.ts`) usa a `composicao` da API, só somando partes: Ingredientes (`ingredientes`), Contas do mês (`gastosMensais`), Embalagem e perdas (`embalagem + gastosPorUnidade + perdas`), Imposto, "Taxa da maquininha" no Balcão ou "Taxa do <canal>" nos outros (`taxaCanal`), Gastos em % da venda (`gastosPercentuais`) e Lucro. Parte com fração 0 não aparece, menos o lucro. A legenda mostra cada fração como reais de cada R$ 1,00 e em % (`R$ 0,15 (15,0%)`); a barra é só visual.
-- Canal sem preço: "Sem preço possível: as taxas e o lucro somam 100% ou mais (<percentuais>)."
-- Sem canal ativo: "Nenhuma forma de venda ativa. Ative uma em Configurações."
+- Canal sem preço (`avisoSemPrecoPossivel`, FE-57): "Não existe preço que pague tudo: as taxas e o lucro já somam <percentuais> do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço."
+- Sem canal ativo: "Nenhuma forma de venda ativa. Ative uma em Ajustes de preço."
 - Exemplo do seed (Pão Francês, 28 un, 0,2 fornada por lote, perda de 5%, lucro padrão de 15%): custo de R$ 0,38 por unidade, R$ 0,46 no Balcão e R$ 0,55 no iFood, com lucro de 15,0% nos dois.
 
 ### Textos
@@ -317,13 +317,13 @@ A web não envia o `margem_lucro` legado (markup): o campo "Margem de lucro (%)"
 | Onde                           | Mobile                                                              | Web                                                                                                                                                                                                                                                               |
 | ------------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Título                         | "Nova receita" / "Editar receita"                                   | igual                                                                                                                                                                                                                                                             |
-| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"   | "Nome", "Rende quantas unidades boas?", "Unidade", "Insumos"                                                                                                                                                                                                      |
+| Rótulos                        | "Nome", "Rendimento", "Unidade", "Margem de lucro (%)", "Insumos"   | "Nome", "Rende quantas unidades boas?", "Unidade", "Ingredientes e embalagens" (FE-57)                                                                                                                                                                            |
 | Ficha técnica (FE-44)          | —                                                                   | cartão "Custos e lucro": "Quantas fornadas um lote ocupa?" (ou "Quantos minutos de forno um lote ocupa?", conforme a `baseRateio`), "Embalagem por unidade", "Quanto costuma sobrar ou estragar?", "Lucro desta receita"                                          |
 | Textos de apoio (FE-44)        | —                                                                   | "Por lote, sem contar as que sobram ou estragam."; "Divide as contas do mês entre as receitas. Padrão: 1."; "Caixa, pote ou saquinho de cada unidade."; "Das unidades de cada lote. Vazio é 0%."; "De cada R$ 1,00 vendido. Vazio usa o padrão (<lucro padrão>)." |
-| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)  | igual                                                                                                                                                                                                                                                             |
-| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar" | igual, com a unidade do insumo ao lado da quantidade                                                                                                                                                                                                              |
-| Insumo fora do catálogo        | "Insumo #<id>"                                                      | igual                                                                                                                                                                                                                                                             |
-| Lista vazia                    | "Nenhum insumo adicionado."                                         | igual                                                                                                                                                                                                                                                             |
+| Botão de adicionar             | "Adicionar insumo" / "Todos os insumos adicionados" (desabilitado)  | "Adicionar ingrediente" / "Todos os ingredientes adicionados" (desabilitado) (FE-57)                                                                                                                                                                              |
+| Diálogo de adicionar           | "Adicionar insumo", "Insumo", "Quantidade", "Cancelar", "Adicionar" | "Adicionar ingrediente", "Ingrediente", "Quantidade", "Cancelar", "Adicionar", com "Na unidade do ingrediente (<unidade>)."                                                                                                                                       |
+| Insumo fora do catálogo        | "Insumo #<id>"                                                      | "Ingrediente #<id>"                                                                                                                                                                                                                                               |
+| Lista vazia                    | "Nenhum insumo adicionado."                                         | "Nenhum ingrediente adicionado."                                                                                                                                                                                                                                  |
 | Botão                          | "Salvar" / "Atualizar"                                              | igual; depois de salvar, abre o detalhe da receita                                                                                                                                                                                                                |
 | Toasts                         | —                                                                   | "Receita criada com sucesso." / "Receita atualizada com sucesso."                                                                                                                                                                                                 |
 | Sair com alterações não salvas | —                                                                   | ConfirmDialog "Descartar alterações?" / "As alterações não salvas serão perdidas." / "Descartar"                                                                                                                                                                  |
@@ -344,39 +344,39 @@ O mobile lista `GET /insumos` e, para cada insumo, `GET /estoque/insumos/:id`, e
 isBaixoEstoque = quantidadeDisponivel < quantidadeMinima
 percentual     = quantidadeMinima > 0 ? quantidadeDisponivel / quantidadeMinima × 100
                : quantidadeDisponivel < 0 ? 0 : 100     // saldo negativo com mínimo 0: 0 (FE-47)
-status         = isBaixoEstoque ? 'Crítico' : percentual < 50 ? 'Baixo' : 'Adequado'
+status         = isBaixoEstoque ? 'Acabando' : percentual < 50 ? 'Baixo' : 'Adequado'   // 'Crítico' até a FE-57
 barra          = clamp(percentual / 100, 0, 1)
 ```
 
-- Como `Baixo` exige `percentual < 50`, e isso já implica `quantidadeDisponivel < quantidadeMinima`, o status **Baixo nunca aparece** com a regra atual do mobile: tudo abaixo do mínimo é Crítico. A web reproduz a regra como está (critério da FE-13: "confere com o mobile") e mantém o ramo, que fica testado.
+- Como `Baixo` exige `percentual < 50`, e isso já implica `quantidadeDisponivel < quantidadeMinima`, o status **Baixo nunca aparece** com a regra atual do mobile: tudo abaixo do mínimo é Acabando (o antigo Crítico). A web reproduz a regra como está (critério da FE-13: "confere com o mobile") e mantém o ramo, que fica testado.
 - Mínimo 0 (todo insumo criado pela API nasce com `quantidadeMinima = 0`) dá percentual 100 e status Adequado. O mínimo é definido no cartão, em "Definir mínimo" (FE-39, abaixo).
 - O percentual é exibido sem casas (`toStringAsFixed(0)`): `86%`.
 - `isBaixoEstoque` também é usado pelo painel (FE-22): as fórmulas ficam em `src/shared/domain/estoque.ts`. Como o ramo Baixo é inalcançável com números reais, ele é testado por `classificarStatusEstoque(baixoEstoque, percentual)`.
 
 | Status   | Token     | Condição          |
 | -------- | --------- | ----------------- |
-| Crítico  | `danger`  | `isBaixoEstoque`  |
+| Acabando | `danger`  | `isBaixoEstoque`  |
 | Baixo    | `warning` | `percentual < 50` |
 | Adequado | `success` | demais casos      |
 
 ### Textos
 
-| Onde               | Mobile                                                       | Web                                                                                                                              |
-| ------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | igual                                                                                                                            |
-| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                                                       |
-| Busca              | "Buscar insumos..."                                          | "Buscar insumos", pelo nome e sem acentos, em `?q=`; sem resultado, "Nenhum resultado para "<termo>"" com "Limpar busca" (FE-23) |
-| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)                                                |
-| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                            |
-| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | igual; `baixo=1` na URL                                                                                                          |
-| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | igual, com link para `/insumos`                                                                                                  |
-| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                                                                 |
-| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)      |
+| Onde               | Mobile                                                       | Web                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Estoque" / "Acompanhe disponibilidade e alertas"            | "Estoque" / "O que tem na sua despensa" (FE-57)                                                                                                                                 |
+| Ação               | "Atualizar"                                                  | igual (refaz as consultas)                                                                                                                                                      |
+| Busca              | "Buscar insumos..."                                          | "Buscar ingredientes", pelo nome e sem acentos, em `?q=`; sem resultado, "Nenhum resultado para "<termo>"" com "Limpar busca" (FE-23)                                           |
+| Cartão             | "Disponível", "Mínimo", `<quantidade> <unidade>` com 2 casas | "Disponível", "Mínimo", "Atualizado em dd/mm/aaaa" (a data não aparece no mobile)                                                                                               |
+| Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                                                                           |
+| Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | "Status": "Todos" / "Acabando"; chip "Acabando" e "Limpar" (FE-57); `baixo=1` na URL                                                                                            |
+| Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | "Sua despensa está vazia" / "Comece cadastrando os ingredientes que você compra.", com a ilustração da despensa e o link "Adicionar ingrediente" para `/insumos?novo=1` (FE-59) |
+| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Não consegui buscar o estoque agora." / "Tentar de novo"                                                                                                                       |
+| Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)                                                     |
 
-O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item sem saldo continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
+O filtro "Acabando" (o "Baixo" do mobile) mostra os itens com `isBaixoEstoque`. Na web, um item sem saldo continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
 
-- Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum insumo está abaixo do estoque mínimo.", com "Limpar filtro".
-- A ação do vazio é o link "Novo insumo" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
+- Vazio por filtro (só na web): "Nenhum estoque encontrado" / "Nenhum ingrediente acabando.", com "Limpar filtro".
+- A ação do vazio é o link "Adicionar ingrediente" (`/insumos?novo=1`), no lugar do "Atualizar" do mobile, que continua no cabeçalho.
 - O percentual aparece com `formatNumero(percentual, 0)` + `%` (`500%`) e as quantidades com `formatQuantidade` (`10 kg`), em vez das 2 casas fixas do mobile.
 - Ações do cartão (FE-14): "Registrar entrada" (só com o saldo carregado, porque o diálogo mostra a quantidade atual) e "Histórico", que abre a gaveta de movimentações. No mobile, tocar no cartão ou no menu ⋮ abre a entrada; a web usa botões visíveis.
 
@@ -387,23 +387,23 @@ FE-14. Origem: `lib/features/estoques/presentation/widgets/registrar_entrada_mod
 - Corpo: `{ quantidade, observacao? }`, com `quantidade > 0` e a observação opcional, aparada e com até 200 caracteres ("Use até 200 caracteres"); vazia não é enviada (`toRegistrarEntradaBody`). O campo "Observação" (dica "Ex.: Compra de reposição, NF 4521") existe desde a FE-39 (lacuna 22, resolvida), e o histórico mostra a observação abaixo da data.
 - Prévia do saldo: `saldoAposEntrada(quantidadeDisponivel, quantidade)` = `quantidadeDisponivel + quantidade`, arredondado a 6 casas para tirar o ruído de ponto flutuante (`entrada-estoque.schema.ts`). Com o campo vazio ou inválido, a prévia mostra o saldo atual.
 - Depois da entrada, a web invalida `estoque` (saldo, status, histórico e painel) e `insumos`. A API grava tudo na mesma transação, então não há mais a segunda revalidação 2 s depois.
-- Histórico: gaveta "Histórico" (o mobile busca as movimentações, mas não tem tela), com `GET /estoque/insumos/:id/movimentacoes`, já ordenado da mais recente para a mais antiga. Cada item: ícone de seta (para baixo em Entrada, verde; para cima em Saída, vermelha), tipo, origem, data `dd/mm/aaaa` e quantidade com sinal e unidade: `+` em Entrada, `−` em Saída. Referência: em `PRODUCAO`, "Produção #<referenciaId>" (ex.: "Produção #12"); em `COMPRA`, sem referência.
-- **Definir mínimo** (FE-39, só na web; lacuna 14, resolvida): botão "Definir mínimo" no cartão (com o saldo carregado), que abre "Definir Estoque Mínimo" com o nome do insumo, o disponível, o campo "Estoque mínimo" (começa com o mínimo atual, aceita 0; dica "Abaixo deste valor, o insumo aparece como Crítico."; erro "Digite uma quantidade válida") e "Salvar". Envia `PATCH /estoque/insumos/:id/minimo` com `{ quantidadeMinima }` (`estoque-minimo.schema.ts`), mostra "Estoque mínimo atualizado com sucesso." e invalida `estoque` e `insumos`.
+- Histórico: gaveta "Histórico" (o mobile busca as movimentações, mas não tem tela), com `GET /estoque/insumos/:id/movimentacoes`, já ordenado da mais recente para a mais antiga. Cada item: ícone de seta (para baixo em Entrada, verde; para cima em Saída, vermelha), tipo, origem, data `dd/mm/aaaa` e quantidade com sinal e unidade: `+` em Entrada, `−` em Saída. Referência: em `PRODUCAO`, "Fornada #<referenciaId>" (ex.: "Fornada #12", FE-57); em `COMPRA`, sem referência.
+- **Definir mínimo** (FE-39, só na web; lacuna 14, resolvida): botão "Definir mínimo" no cartão (com o saldo carregado), que abre "Definir Estoque Mínimo" com o nome do insumo, o disponível, o campo "Estoque mínimo" (começa com o mínimo atual, aceita 0; dica "Abaixo deste valor, o ingrediente aparece como Acabando."; erro "Digite uma quantidade válida") e "Salvar". Envia `PATCH /estoque/insumos/:id/minimo` com `{ quantidadeMinima }` (`estoque-minimo.schema.ts`), mostra "Estoque mínimo atualizado com sucesso." e invalida `estoque` e `insumos`.
 - Não existe endpoint para corrigir o saldo (`atualizarEstoque` lança `UnsupportedError` no mobile). Não crie essa ação.
 
-| Onde            | Mobile                                                         | Web                                                    |
-| --------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| Título          | "Registrar Entrada"                                            | igual                                                  |
-| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | igual                                                  |
-| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"             |
-| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                               |
-| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>"         |
-| Botão           | "Confirmar Entrada"                                            | igual                                                  |
-| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."           |
-| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo                    |
-| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."                     |
-| Histórico       | —                                                              | título "Histórico", com o nome do insumo               |
-| Histórico, erro | —                                                              | "Erro ao carregar o histórico", com "Tentar novamente" |
+| Onde            | Mobile                                                         | Web                                                  |
+| --------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| Título          | "Registrar Entrada"                                            | igual                                                |
+| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | "Ingrediente", "Quantidade Atual", "Mínimo"          |
+| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"           |
+| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                             |
+| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>"       |
+| Botão           | "Confirmar Entrada"                                            | igual                                                |
+| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."         |
+| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo                  |
+| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."                   |
+| Histórico       | —                                                              | título "Histórico", com o nome do insumo             |
+| Histórico, erro | —                                                              | "Erro ao carregar o histórico", com "Tentar de novo" |
 
 ## Produções e rateio
 
@@ -427,31 +427,31 @@ valorRateado  = round2(valor × usoPorLote × lotes ÷ capacidadeMensal), só do
 | "Todos" (padrão)  | `{ receita_id, quantidade }`, **sem** `gasto_indireto_ids`: o backend rateia todos os gastos da empresa |
 | Seleção de gastos | `{ receita_id, quantidade, gasto_indireto_ids: [ids] }`                                                 |
 
-Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _gastosSelecionados`). Com "Todos" desmarcado e nenhum gasto escolhido, o mobile envia `[]` (nenhum rateio); a web faz o mesmo, mostrando "Nenhum gasto será rateado." na prévia.
+Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _gastosSelecionados`). Com "Todos" desmarcado e nenhum gasto escolhido, o mobile envia `[]` (nenhum rateio); a web faz o mesmo, mostrando "Nenhuma conta do mês entra nesta fornada." na prévia.
 
 ### Validações e textos
 
-| Onde               | Mobile                                                                                   | Web                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Título e subtítulo | "Produções" / "Registre e acompanhe suas produções"                                      | igual                                                                         |
-| Ação primária      | "Nova Produção"                                                                          | igual                                                                         |
-| Linha              | nome da receita ou "Receita #<id>"; "N lote(s) · dd/mm/aaaa"; custo total; `R$ X/un`     | igual: "1 lote" / "N lotes"                                                   |
-| Formulário         | "Registrar Produção" / "Informe quantos lotes foram produzidos"                          | igual                                                                         |
-| Receita            | "Receita", obrigatória: "Selecione uma receita"                                          | igual                                                                         |
-| Lotes              | "Quantidade de lotes", inteiro > 0: "Informe a quantidade de lotes"                      | igual                                                                         |
-| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | "Contas do mês": chip "Todos" e um chip por conta do mês (FE-15, FE-42)       |
-| Botão              | "Registrar Produção"                                                                     | igual                                                                         |
-| Sucesso            | "Produção registrada com sucesso"                                                        | "Produção registrada com sucesso."                                            |
-| Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma produção registrada" / "Registre sua primeira produção", com o botão |
-| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Erro ao carregar produções", com "Tentar novamente"                          |
-| Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                |
-| Vazio no filtro    | —                                                                                        | "Nenhuma produção registrada para esta receita"                               |
-| Prévia             | —                                                                                        | "Total de unidades", "Rateio estimado" por gasto e "Total do rateio"          |
-| Detalhe            | —                                                                                        | Drawer com os custos, o total de unidades e os rateios (abaixo)               |
+| Onde               | Mobile                                                                                   | Web                                                                                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Produções" / "Registre e acompanhe suas produções"                                      | "Fornadas" / "O que você produziu" (FE-57)                                                                                                                |
+| Ação primária      | "Nova Produção"                                                                          | "Nova fornada"                                                                                                                                            |
+| Linha              | nome da receita ou "Receita #<id>"; "N lote(s) · dd/mm/aaaa"; custo total; `R$ X/un`     | igual: "1 lote" / "N lotes"                                                                                                                               |
+| Formulário         | "Registrar Produção" / "Informe quantos lotes foram produzidos"                          | "Anotar fornada" / "Informe quantos lotes foram produzidos"                                                                                               |
+| Receita            | "Receita", obrigatória: "Selecione uma receita"                                          | igual                                                                                                                                                     |
+| Lotes              | "Quantidade de lotes", inteiro > 0: "Informe a quantidade de lotes"                      | igual                                                                                                                                                     |
+| Gastos             | "Gastos indiretos", interruptor "Todos" e um chip por gasto                              | "Contas do mês": chip "Todos" e um chip por conta do mês (FE-15, FE-42)                                                                                   |
+| Botão              | "Registrar Produção"                                                                     | "Anotar fornada"                                                                                                                                          |
+| Sucesso            | "Produção registrada com sucesso"                                                        | "Fornada anotada."                                                                                                                                        |
+| Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma fornada anotada" / "Anote a primeira fornada para o estoque e o custo baterem.", com a ilustração do forno e o botão "Registrar fornada" (FE-59) |
+| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Não consegui buscar suas fornadas agora.", com "Tentar de novo"                                                                                          |
+| Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                                                                                            |
+| Vazio no filtro    | —                                                                                        | "Nenhuma fornada desta receita"                                                                                                                           |
+| Prévia             | —                                                                                        | "Total de unidades", "Parte das contas do mês nesta fornada" por conta e "Total das contas"; sem conta, "Nenhuma conta do mês entra nesta fornada."       |
+| Detalhe            | —                                                                                        | Drawer com os custos, o total de unidades e os rateios (abaixo)                                                                                           |
 
 Chips de gastos (web): escolher um gasto desmarca "Todos" e fica só com os gastos escolhidos; marcar "Todos" limpa a seleção. O formulário já vem com a receita do filtro da lista.
 
-Detalhe (web): "Total de unidades", "Custo total", "Custo unitário" e "Rateio dos gastos indiretos" (descrição gravada do gasto; sem rateio, "Nenhum gasto rateado."). O total de unidades e a descrição de cada rateio são os gravados pela API na produção (`totalUnidades` e `rateios[].descricao`; lacuna 23, resolvida na FE-39).
+Detalhe (web): "Total de unidades", "Custo total", "Custo unitário" e "Parte das contas do mês" (descrição gravada do gasto; sem rateio, "Nenhuma conta do mês nesta fornada."); coluna "Fornada" na lista e erro "Não consegui buscar a fornada agora.". O total de unidades e a descrição de cada rateio são os gravados pela API na produção (`totalUnidades` e `rateios[].descricao`; lacuna 23, resolvida na FE-39).
 
 O backend **não** bloqueia produção com estoque de insumo insuficiente: o saldo fica negativo (ver [lacunas](api-integration.md#lacunas-do-backend)). Mesmo assim, a tela mostra no formulário qualquer erro devolvido.
 
@@ -474,25 +474,25 @@ total    = Σ subtotal                       // o backend grava round2(Σ quanti
 
 ### Validações e textos
 
-| Onde                  | Mobile                                                                                      | Web                                       |
-| --------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Título e subtítulo    | "Vendas" / "Registre vendas e acompanhe o histórico"                                        | igual                                     |
-| Abas                  | "Registrar" / "Historico"                                                                   | "Registrar" / "Histórico"                 |
-| Atalho                | "Produção"                                                                                  | igual, para `/producoes`                  |
-| Cartão                | "Adicionar produto"                                                                         | igual                                     |
-| Produto               | "Produto/Receita": "Selecione um produto"                                                   | igual                                     |
-| Quantidade            | "Quantidade" > 0: "Informe a quantidade" (aceitava decimal)                                 | igual, só inteiro                         |
-| Preço                 | "Preço unitário real" > 0: "Informe o preço"                                                | igual, 2 casas                            |
-| Botão                 | "Adicionar ao carrinho"                                                                     | igual                                     |
-| Carrinho              | "Carrinho", "N item(ns)" ("1 item" / "N itens"); linha `qtd × R$ preço` e subtotal; "Total" | igual                                     |
-| Registrar             | "Registrar Venda", desabilitado com carrinho vazio ou durante o envio                       | igual                                     |
-| Sessão expirada (401) | "Sessão expirada. Faça login novamente."                                                    | tratado pelo cliente da API (FE-05/FE-07) |
-| Estoque insuficiente  | "Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções."    | igual, com link para `/producoes`         |
-| Outros erros          | mensagem do backend                                                                         | `getErrorMessage(error)`                  |
+| Onde                  | Mobile                                                                                      | Web                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Título e subtítulo    | "Vendas" / "Registre vendas e acompanhe o histórico"                                        | igual                                                                                                              |
+| Abas                  | "Registrar" / "Historico"                                                                   | "Registrar" / "Histórico"                                                                                          |
+| Atalho                | "Produção"                                                                                  | "Fornadas", para `/producoes` (FE-57)                                                                              |
+| Cartão                | "Adicionar produto"                                                                         | igual                                                                                                              |
+| Produto               | "Produto/Receita": "Selecione um produto"                                                   | igual                                                                                                              |
+| Quantidade            | "Quantidade" > 0: "Informe a quantidade" (aceitava decimal)                                 | igual, só inteiro                                                                                                  |
+| Preço                 | "Preço unitário real" > 0: "Informe o preço"                                                | igual, 2 casas                                                                                                     |
+| Botão                 | "Adicionar ao carrinho"                                                                     | igual                                                                                                              |
+| Carrinho              | "Carrinho", "N item(ns)" ("1 item" / "N itens"); linha `qtd × R$ preço` e subtotal; "Total" | igual                                                                                                              |
+| Registrar             | "Registrar Venda", desabilitado com carrinho vazio ou durante o envio                       | igual                                                                                                              |
+| Sessão expirada (401) | "Sessão expirada. Faça login novamente."                                                    | tratado pelo cliente da API (FE-05/FE-07)                                                                          |
+| Estoque insuficiente  | "Estoque insuficiente para registrar a venda. Cadastre a produção do item em Produções."    | "Estoque insuficiente para registrar a venda. Anote a fornada do produto em Fornadas.", com link para `/producoes` |
+| Outros erros          | mensagem do backend                                                                         | `getErrorMessage(error)`                                                                                           |
 
 Na web (FE-16):
 
-- Os erros do registro aparecem num `Alert` dentro do cartão do carrinho (o mobile usa `SnackBar`), e o carrinho é mantido. No estoque insuficiente, o `Alert` traz o link "Ir para Produções" (a ação "Produção" do `SnackBar`).
+- Os erros do registro aparecem num `Alert` dentro do cartão do carrinho (o mobile usa `SnackBar`), e o carrinho é mantido. No estoque insuficiente, o `Alert` traz o link "Ir para Fornadas" (a ação "Produção" do `SnackBar`).
 - Carrinho vazio: o cartão continua visível, com "0 itens", "Adicione produtos para registrar a venda." e "Registrar Venda" desabilitado (o mobile esconde o cartão).
 - O carrinho fica no componente da tela, não na aba: trocar de aba não o descarta; recarregar, sim.
 - Depois de registrar, a tela abre a confirmação (FE-17); o Toast provisório "Venda #<id> registrada como pendente." saiu.
@@ -533,9 +533,9 @@ O saldo de produto acabado vem da API, `GET /estoque/produtos` (lacuna 6, resolv
 
 Para cada receita da venda, se `disponivel < quantidade solicitada`, **não conclui** e mostra o diálogo "Estoque insuficiente":
 
-> Estoque insuficiente para "<receita>": disponível X, solicitado Y. Registre uma produção antes de concluir.
+> Estoque insuficiente para "<receita>": disponível X, solicitado Y. Anote uma fornada antes de concluir.
 
-X e Y com `formatNumero`. O nome usa `Receita #<id>` quando a receita não está na lista. Botões: "Entendido" e o link "Ir para Produções".
+X e Y com `formatNumero`. O nome usa `Receita #<id>` quando a receita não está na lista. Botões: "Entendido" e o link "Ir para Fornadas".
 
 Se a consulta de receitas ou de estoque falhar, a tela segue com a conclusão e deixa a API validar: o `422` `ESTOQUE_INSUFICIENTE` abre o mesmo diálogo.
 
@@ -548,13 +548,13 @@ Diferenças em relação ao mobile, registradas como decisão:
 
 ### Textos
 
-| Onde   | Mobile                                                                                                        | Web                                                                                       |
-| ------ | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Título | "Confirmar venda" / "Revise os itens antes de concluir"                                                       | igual                                                                                     |
-| Item   | nome ou "Produto #<id>"; `qtd × R$ preço`; subtotal; `X% margem` (`margemRealizada × 100`, 1 casa, se houver) | "Lucro real X%" (`lucroReal × 100`, 1 casa, se houver; FE-46) e "Onde vendeu" com o canal |
-| Total  | "Total"                                                                                                       | igual                                                                                     |
-| Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente)                           |
-| Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | igual                                                                                     |
+| Onde   | Mobile                                                                                                        | Web                                                                                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título | "Confirmar venda" / "Revise os itens antes de concluir"                                                       | igual                                                                                                                                                          |
+| Item   | nome ou "Produto #<id>"; `qtd × R$ preço`; subtotal; `X% margem` (`margemRealizada × 100`, 1 casa, se houver) | "Lucro real X%" (`lucroReal × 100`, 1 casa, se houver; FE-46) e "Onde vendeu" com o canal                                                                      |
+| Total  | "Total"                                                                                                       | igual                                                                                                                                                          |
+| Ações  | "Concluir Venda", "Cancelar Venda"                                                                            | "Concluir venda", "Cancelar venda" e "Fechar" (mantém pendente)                                                                                                |
+| Toasts | "Venda concluída com sucesso.", "Venda cancelada."                                                            | "Venda anotada! O mês já soma R$ X." (total das vendas `CONCLUIDA` do mês, `mensagemVendaAnotada`; sem o total, "Venda anotada!") e "Venda cancelada." (FE-57) |
 
 Depois de concluir, a tela refaz `GET /vendas/:id` e mostra o status devolvido. Na web: `ConfirmacaoVenda`, `useVerificarEstoqueParaVenda` e `useAtualizarStatusVenda` (`features/vendas/`); o histórico (FE-18) abre o mesmo componente com a venda `PENDENTE`.
 
@@ -601,12 +601,12 @@ lucroReal = 1 − percentuais do canal sem o lucro − custoUnitario / precoUnit
 - Sem `lucroReal` (vendas antigas): `—`. Sem `canalId` (vendas antigas ou canal excluído): "Não informado"; canal fora da lista: "Canal #<id>" (`nomeDoCanal`).
 - Exemplo do seed: Quindim no iFood a R$ 3,69 com custo R$ 2,3326 → `21,6%`, já descontada a comissão de 15,2%.
 
-| Onde   | Mobile                                    | Web                                                                    |
-| ------ | ----------------------------------------- | ---------------------------------------------------------------------- |
-| Filtro | "Data inicial", "Data final"              | igual; status opcional ("Todos", "Pendente", "Concluída", "Cancelada") |
-| Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                              |
-| Vazio  | "Nenhuma venda encontrada no período."    | igual                                                                  |
-| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar novamente"                                          |
+| Onde   | Mobile                                    | Web                                                                                                                                                        |
+| ------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Filtro | "Data inicial", "Data final"              | igual; status opcional ("Todos", "Pendente", "Concluída", "Cancelada")                                                                                     |
+| Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                                                                                                                  |
+| Vazio  | "Nenhuma venda encontrada no período."    | igual, com "Anote as vendas do dia para ver quanto sobrou pra você.", a ilustração da sacola e o botão "Anotar venda", que volta à aba "Registrar" (FE-59) |
+| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar de novo"                                                                                                                                |
 
 Na web (FE-18):
 
@@ -634,17 +634,17 @@ Campo vazio conta como 0 (`_parseBR`); nenhum resultado pode virar `NaN`. No res
 
 ### Validações e textos
 
-| Seção / campo          | Mobile                                                                                            | Web                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Título e subtítulo     | "Calculo Real" / "Custo verdadeiro incluindo custos invisiveis"                                   | "Cálculo Real" / "Custo verdadeiro incluindo custos invisíveis"                        |
-| IDENTIFICAÇÃO          | "Nome da simulacao", obrigatório: "Informe um nome"                                               | "Nome da simulação": "Informe um nome"                                                 |
-| CUSTO DOS INGREDIENTES | "Custo dos ingredientes" ≥ 0                                                                      | igual                                                                                  |
-| CUSTOS INVISÍVEIS      | "Energia", "Agua", "Gas", "Horas", "Valor/hora mao de obra", todos ≥ 0: "Informe um valor valido" | "Energia", "Água", "Gás", "Horas", "Valor/hora mão de obra": "Informe um valor válido" |
-| RENDIMENTO             | "Unidades produzidas", inteiro > 0, padrão 1: "Informe um rendimento maior que zero"              | igual                                                                                  |
-| Resultado              | "CUSTO POR UNIDADE"; "Custo Total"; "Custos Invisiveis" (só o %, 1 casa)                          | "CUSTO POR UNIDADE"; "Custo Total"; "Custos Invisíveis" (valor e %)                    |
-| Ações                  | "Novo" (limpa e volta o rendimento para 1), "Salvar" (valida e guarda)                            | igual                                                                                  |
-| Toast                  | "Simulacao salva."                                                                                | "Simulação salva."                                                                     |
-| SIMULAÇÕES SALVAS      | `N un - total R$ X`, "Abrir" (recarrega os campos); vazio: "Nenhuma simulacao salva."             | igual; vazio: "Nenhuma simulação salva."                                               |
+| Seção / campo          | Mobile                                                                                            | Web                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Título e subtítulo     | "Calculo Real" / "Custo verdadeiro incluindo custos invisiveis"                                   | "Quanto custa de verdade" / "O custo de cada unidade, com o que não aparece na receita" (FE-57) |
+| IDENTIFICAÇÃO          | "Nome da simulacao", obrigatório: "Informe um nome"                                               | "Nome da simulação": "Informe um nome"                                                          |
+| CUSTO DOS INGREDIENTES | "Custo dos ingredientes" ≥ 0                                                                      | igual                                                                                           |
+| CUSTOS INVISÍVEIS      | "Energia", "Agua", "Gas", "Horas", "Valor/hora mao de obra", todos ≥ 0: "Informe um valor valido" | "Energia", "Água", "Gás", "Horas", "Valor/hora mão de obra": "Informe um valor válido"          |
+| RENDIMENTO             | "Unidades produzidas", inteiro > 0, padrão 1: "Informe um rendimento maior que zero"              | igual                                                                                           |
+| Resultado              | "CUSTO POR UNIDADE"; "Custo Total"; "Custos Invisiveis" (só o %, 1 casa)                          | "CUSTO POR UNIDADE"; "Custo Total"; "Custos Invisíveis" (valor e %)                             |
+| Ações                  | "Novo" (limpa e volta o rendimento para 1), "Salvar" (valida e guarda)                            | igual                                                                                           |
+| Toast                  | "Simulacao salva."                                                                                | "Simulação salva."                                                                              |
+| SIMULAÇÕES SALVAS      | `N un - total R$ X`, "Abrir" (recarrega os campos); vazio: "Nenhuma simulacao salva."             | igual; vazio: "Nenhuma simulação salva."                                                        |
 
 No mobile, os registros ficam numa lista estática em memória e somem ao fechar o app. Na web, ficam no estado do cliente e podem ir para `localStorage` (com `try/catch`), porque não são dados pessoais nem sensíveis (ver [security.md](security.md#o-que-nunca-guardar-no-navegador)).
 
@@ -684,15 +684,15 @@ Trocar "Onde vende" põe no campo de preço o sugerido daquele canal (vazio se o
 
 Funções puras em `features/receitas/receitas.calculos.ts` (`formatarResultadoDaSimulacao`).
 
-| Onde                | Texto                                                                                                                                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Título e subtítulo  | "Simulação de cenário" / "Quanto você lucra cobrando este preço?", com o nome da receita                                                                                                                     |
-| Blocos e botão      | "Parâmetros", "Resultado"; "Simular"                                                                                                                                                                         |
-| Destaque            | "Lucro no mês" (`lucroMes`), verde se o lucro por unidade ≥ 0, vermelho se < 0                                                                                                                               |
-| Demais              | "Lucro por unidade", "Lucro real (do preço)" (`lucroReal × 100`, 1 casa), "Preço (<canal>)", "Custo por unidade", "Unidades por mês" (`N un.`), "Contas do mês" (`gastosMensais`)                            |
-| Ponto de equilíbrio | "Para pagar as contas do mês, você precisa vender N unidades." ("1 unidade" no singular); com 0 (sem gastos `MENSAL`): "Você não tem contas do mês cadastradas em Gastos: qualquer venda já ajuda no lucro." |
-| Aviso (vermelho)    | com `lucroPorUnidade < 0`: "Este preço não cobre o custo: você perde R$ X em cada unidade vendida."                                                                                                          |
-| Erro                | mensagem do backend ou "Erro ao simular."                                                                                                                                                                    |
+| Onde                | Texto                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Título e subtítulo  | "Simulação de cenário" / "Quanto você lucra cobrando este preço?", com o nome da receita                                                                                                                                                                                                                                                                  |
+| Blocos e botão      | "Parâmetros", "Resultado"; "Simular"                                                                                                                                                                                                                                                                                                                      |
+| Destaque            | "Lucro no mês" (`lucroMes`), verde se o lucro por unidade ≥ 0, vermelho se < 0                                                                                                                                                                                                                                                                            |
+| Demais              | "Lucro por unidade", "Lucro real (do preço)" (`lucroReal × 100`, 1 casa), "Preço (<canal>)", "Custo por unidade", "Unidades por mês" (`N un.`), "Contas do mês" (`gastosMensais`)                                                                                                                                                                         |
+| Ponto de equilíbrio | "Para pagar as contas do mês, você precisa vender N unidades." ("1 unidade" no singular); com 0 (sem gastos `MENSAL`): "Você não tem contas do mês cadastradas: qualquer venda já ajuda no lucro."                                                                                                                                                        |
+| Aviso (vermelho)    | com `lucroPorUnidade < 0` (`avisoDePrejuizo`, FE-57): "Com esse preço você paga para vender. Que tal R$ Y? Assim sobram R$ Z por unidade.", com Y e Z do preço sugerido no canal (`sugestaoDoCanal`: `precos[].preco` e `composicao.lucro.valor`); sem preço sugerido com lucro, "Com esse preço você paga para vender. Você perde R$ X em cada unidade." |
+| Erro                | mensagem do backend ou "Erro ao simular."                                                                                                                                                                                                                                                                                                                 |
 
 Com o aviso, o ponto de equilíbrio **não** aparece, mesmo quando a API devolve unidades (preço entre o custo sem as contas do mês e o custo inteiro): critério da FE-45, "preço abaixo do custo mostra o aviso e nenhum ponto de equilíbrio". Com `MARGEM_NEGATIVA` o lucro por unidade também é negativo, então só o aviso aparece.
 
@@ -715,7 +715,7 @@ A simulação não grava nada: mutação sem invalidação.
 
 FE-21. Origem: `lib/features/simulacao/presentation/pages/simulacao_page.dart` (`_ScenarioBase.fromReceita`, `_priceRangeFor`, `_volumeRangeFor`, `_buildSimulationContent`, `_ProjectionChartCard`, `_VolumePreviewCard`). Funções puras em `features/simulacao/simulacao.calculos.ts`. **Desde a FE-45** o lucro vem de `POST /receitas/:id/simular` (no Balcão, com o imposto, a maquininha e os gastos % da venda): as fórmulas locais de lucro e margem saíram.
 
-Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas carregadas no histórico, que por padrão é o mês atual). Sem receitas: "Cadastre uma receita para simular cenários.". A receita selecionada fica em `receitaId` na URL; sem ela, usa a primeira da lista.
+Dados: `GET /receitas` e `GET /vendas` do mês atual (o mobile usa as vendas carregadas no histórico, que por padrão é o mês atual). Sem receitas: "Cadastre uma receita para simular cenários.", com a ilustração do caderno e o link "Criar receita" (FE-59). A receita selecionada fica em `receitaId` na URL; sem ela, usa a primeira da lista.
 
 ### Base da receita
 
@@ -765,7 +765,7 @@ margemProjetada = resposta.lucroReal × 100
 diferenca       = lucroProjetado − lucroAtual
 ```
 
-Enquanto a primeira resposta não chega, o bloco do preço mostra um Skeleton; nos ajustes seguintes fica o resultado anterior até chegar o novo. Erro: "Não foi possível simular." com "Tentar novamente".
+Enquanto a primeira resposta não chega, o bloco do preço mostra um Skeleton; nos ajustes seguintes fica o resultado anterior até chegar o novo. Erro: "Não foi possível simular." com "Tentar de novo".
 
 Cenários de volume, com o preço e o lucro por unidade da API:
 
@@ -779,15 +779,15 @@ O mobile chama o cenário do meio de "Simulado" e, como usa os volumes como chav
 
 ### Textos
 
-| Onde               | Mobile                                                                                                                                                | Web                                                                                      |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Título e subtítulo | "Simulacao" / "Projete preco, custo e volume antes de agir"                                                                                           | "Simulação" / "Projete preço, custo e volume antes de agir"                              |
-| Produto            | "Produto"; "Custo unitario", "Preco atual", "Volume atual no periodo" (`N unidades`)                                                                  | "Produto"; "Custo unitário", "Preço atual", "Volume atual no período"                    |
-| Controles          | "Preco de venda" ("Atual: R$ X"); "Variacao de custo" ("Custo projetado: R$ X", "-50%", "+100%"); "Volume projetado" (`N un.`, "Volume atual: N un.") | "Preço de venda"; "Variação de custo"; "Volume projetado", com os mesmos textos de apoio |
-| Resultado          | "PRECO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                                                                              | "PREÇO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Lucro real" (FE-45)     |
-| Gráfico            | "Lucro projetado vs atual"; diferença com sinal; "Atual" / "Projetado", `X% margem`                                                                   | igual, com "Diferença: +R$ X" e tabela equivalente para leitor de tela                   |
-| Cenários           | "Simulacao de volume"; `N unidades`; receita; "Lucro: R$ X"                                                                                           | "Simulação de volume"; mesmos textos                                                     |
-| Ação               | —                                                                                                                                                     | "Restaurar"                                                                              |
+| Onde               | Mobile                                                                                                                                                | Web                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Título e subtítulo | "Simulacao" / "Projete preco, custo e volume antes de agir"                                                                                           | "Simulação" / "Projete preço, custo e volume antes de agir"                                   |
+| Produto            | "Produto"; "Custo unitario", "Preco atual", "Volume atual no periodo" (`N unidades`)                                                                  | "Produto"; "Custo unitário", "Preço atual", "Volume atual no período"                         |
+| Controles          | "Preco de venda" ("Atual: R$ X"); "Variacao de custo" ("Custo projetado: R$ X", "-50%", "+100%"); "Volume projetado" (`N un.`, "Volume atual: N un.") | "Preço de venda"; "Variação de custo"; "Volume projetado", com os mesmos textos de apoio      |
+| Resultado          | "PRECO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Margem"                                                                              | "PREÇO SIMULADO", "Lucro: R$ X por unidade", "Lucro projetado", "Lucro real" (FE-45)          |
+| Gráfico            | "Lucro projetado vs atual"; diferença com sinal; "Atual" / "Projetado", `X% margem`                                                                   | igual, com `X% do preço` (FE-57), "Diferença: +R$ X" e tabela equivalente para leitor de tela |
+| Cenários           | "Simulacao de volume"; `N unidades`; receita; "Lucro: R$ X"                                                                                           | "Simulação de volume"; mesmos textos                                                          |
+| Ação               | —                                                                                                                                                     | "Restaurar"                                                                                   |
 
 A variação de custo é exibida com sinal e sem casas (`+20%`, `-10%`).
 
@@ -812,12 +812,28 @@ vendas7dias  = número de faturáveis com dataVenda ≥ agora − 7 dias
 estoqueBaixo = número de insumos com isBaixoEstoque
 ```
 
-| Indicador     | Detalhe                                  | Ação                      |
-| ------------- | ---------------------------------------- | ------------------------- |
-| Faturamento   | "Período atual"                          | —                         |
-| Lucro líquido | "Margem X%" (1 casa), verde se lucro ≥ 0 | —                         |
-| Vendas        | "Últimos 7 dias"                         | —                         |
-| Estoque baixo | "Item crítico" (1) ou "Itens críticos"   | leva a `/estoque?baixo=1` |
+### Layout (FE-58)
+
+O lucro do mês é o herói da tela. No celular, uma coluna nesta ordem; a partir de `lg`, duas colunas, com a saudação no topo: herói, cards e contas do mês à esquerda; "O que mais deu lucro", "Evolução mensal" e "Ações rápidas" à direita. Cada bloco tem `Skeleton` no próprio formato e `ErrorState` compacto. Em 360px, a saudação e o herói cabem na primeira tela, sem rolar.
+
+1. **Saudação** (`h1`, Fredoka 600 de 22px): `saudacao(nome)` dá "Oi, {primeiro nome}!" (`primeiroNome`: primeira palavra de `usuario.nome`, do JWT) ou "Oi!" sem nome. Embaixo, em `ink-muted`, `textoFechamentoDoMes(hoje)`: "Faltam N dias para fechar o mês", "Falta 1 dia para fechar o mês" ou "Último dia do mês" (`diasParaFecharOMes` = último dia do mês − dia de hoje).
+2. **Herói** (`StatCard` `heroi`, com o símbolo da marca em marca d'água), pelo `estadoDoHeroi` (textos em `heroiDoMes`):
+
+| Estado       | Quando                      | Título                            | Fundo         | Extra                                                  |
+| ------------ | --------------------------- | --------------------------------- | ------------- | ------------------------------------------------------ |
+| `sem-vendas` | `faturamento == 0`          | "Ainda sem vendas este mês"       | Amora         | botão "Anotar uma venda" → `/vendas`                   |
+| `negativo`   | `lucro < 0`                 | "Este mês ainda está no vermelho" | `danger-soft` | link "Ver como ajustar os preços" → `/simulacao`       |
+| `positivo`   | o resto (inclusive lucro 0) | "Sobrou pra você este mês"        | Amora         | chip "R$ X de cada R$ 100" (`porCadaCemReais(margem)`) |
+
+O valor é sempre `formatMoeda(lucro)`.
+
+3. **Cards** (2 colunas): "Você vendeu" (`faturamento`, "Este mês") e "Pedidos na semana" (`vendas7dias`, "Últimos 7 dias"). Ocupando as 2 colunas, "Estoque", que leva a `/estoque?baixo=1`: `rotuloAcabando(n)` ("1 ingrediente acabando" / "N ingredientes acabando") e os nomes em chip `warning-soft`, até 3, depois "+N" (`ingredientesAcabando`, na ordem de `GET /insumos`, com "Ingrediente #<id>" sem o insumo; `chipsAcabando`). Sem itens acabando: "Estoque em dia", com ponto `success`. Erro do estoque: "Não foi possível carregar o estoque.".
+4. **Contas do mês** (ver abaixo).
+5. **"O que mais deu lucro"** (ver [Produtos mais rentáveis](#produtos-mais-rentáveis)): cada linha com o ícone de receita em quadrado `surface-alt`, nome 700 e valor `success` (ou `danger`) com `tabular-nums`.
+6. **Evolução mensal**: barras `accent-soft`, o mês atual em `accent`, rótulos `ink-muted`, a partir do zero; o valor em R$ no tooltip de cada barra e na tabela `sr-only`.
+7. **Ações rápidas**: "Nova receita" (primária, a única Amora cheia da tela) → `/receitas/nova` e "Anotar venda" (secundária) → `/vendas`.
+
+Erro do herói e dos cards de venda: "Não consegui buscar seus números agora. Confira a internet e toque em Tentar de novo.".
 
 O mobile usa sempre o `custoUnitario` atual da receita. A web prefere o snapshot do item de venda, que é o custo no momento da venda (`services/sales-service/src/modules/integracao/OVERVIEW.md`), e cai para o da receita quando o snapshot é `null`.
 
@@ -836,40 +852,37 @@ Título "Evolução mensal", subtítulo "Receita dos últimos 6 meses". A tendê
 
 ### Produtos mais rentáveis
 
-Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
+Seção "O que mais deu lucro" (FE-58). Top 3 por lucro, decrescente, com "Ver tudo" → `/vendas?aba=historico`.
 
-- **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - margem X%`. O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
-- **Sem vendas:** desde a FE-45, usa o lucro por unidade do preço do Balcão calculado pela API (`precos[balcao].composicao.lucro`): `lucro = lucro.valor`, `margem = lucro.fracao × 100`, só as receitas com `lucro > 0` (sem preço possível, a receita fica fora). Linha: `sem vendas no período - margem X%` (o `unitsLabel` do mobile sem vendas).
-- **Vazio:** "Cadastre receitas e registre vendas para ver rentabilidade.".
+- **Com vendas** (nas faturáveis do mês): agrupa os itens por receita, somando quantidade, receita (`quantidade × preço`) e lucro (mesmo `lucroItem` acima); `margem = receita == 0 ? 0 : lucro / receita × 100`. Linha: `N un - R$ X de cada R$ 100` (`porCadaCemReais`; com margem negativa, `N un - abaixo do custo`). O mobile agrupa pelo nome e escreve `N unidades`; a web agrupa por `receitaId`, usa o nome atual da receita (ou "Receita #<id>") e escreve `N un`.
+- **Sem vendas:** desde a FE-45, usa o lucro por unidade do preço do Balcão calculado pela API (`precos[balcao].composicao.lucro`): `lucro = lucro.valor`, `margem = lucro.fracao × 100`, só as receitas com `lucro > 0` (sem preço possível, a receita fica fora). Linha: `sem vendas no período - R$ X de cada R$ 100` (o `unitsLabel` do mobile sem vendas).
+- **Vazio:** "Crie uma receita e anote as vendas para ver o que mais deu lucro." (FE-59; antes, "Cadastre receitas e registre vendas para ver rentabilidade."), com a ilustração da sacola e o link secundário "Criar receita" (a primária da tela é "Nova receita", das ações rápidas).
 
 ### Contas do mês (ponto de equilíbrio da empresa)
 
-FE-45. `GET /vendas/resumo` (BE-31): o faturamento por mês que paga os gastos `MENSAL`, com o mix das vendas `CONCLUIDA` dos últimos 30 dias, calculado pelo backend. Seção "Contas do mês", com um card "Para pagar as contas" (`pontoEquilibrioDoPainel`):
+FE-45. `GET /vendas/resumo` (BE-31): o faturamento por mês que paga os gastos `MENSAL`, com o mix das vendas `CONCLUIDA` dos últimos 30 dias, calculado pelo backend. Desde a FE-58, um cartão com o título, uma `ProgressBar` do quanto o faturamento do mês já cobriu e uma frase (`pontoEquilibrioDoPainel(ponto, faturamento)`, textos da FE-57):
 
-| Resposta                                   | Valor                | Detalhe                                   |
-| ------------------------------------------ | -------------------- | ----------------------------------------- |
-| `pontoEquilibrio.valor` presente           | `formatMoeda(valor)` | "em vendas por mês"                       |
-| `valor: null`, `motivo: "SEM_VENDAS"`      | "—"                  | "sem vendas nos últimos 30 dias"          |
-| `valor: null`, `motivo: "MARGEM_NEGATIVA"` | "—"                  | "as vendas não cobrem o custo" (vermelho) |
+```text
+progresso = valor <= 0 ? 1 : min(faturamento / valor, 1)   (faturamento do mês, dos indicadores)
+```
+
+| Resposta                                   | Título                                    | Barra       | Frase                                                                                                                |
+| ------------------------------------------ | ----------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `pontoEquilibrio.valor` presente           | "Para pagar as contas do mês, venda R$ X" | `progresso` | "Você já vendeu R$ Y este mês"; com `progresso` 1, "Contas do mês pagas. O que vender agora sobra pra você." (verde) |
+| `valor: null`, `motivo: "SEM_VENDAS"`      | "Para pagar as contas do mês"             | —           | "Ainda sem vendas este mês"                                                                                          |
+| `valor: null`, `motivo: "MARGEM_NEGATIVA"` | "Para pagar as contas do mês"             | —           | "Com os preços de hoje, você paga para vender." (vermelho)                                                           |
+
+O valor vem da API sem recalcular; só a fração da barra é calculada na tela.
 
 A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e custos, e é buscado de novo cada vez que o painel abre, em vez de ser invalidado por cada mutação desses módulos. Erro do bloco: "Não foi possível carregar quanto vender para pagar as contas.".
 
 ### Cabeçalho e ações rápidas
 
-Cabeçalho "LucroAI", "Seu painel financeiro", nome da empresa (do JWT) e atalho para `/simulacao`.
-
-| Ação         | Destino                    |
-| ------------ | -------------------------- |
-| Novo Insumo  | `/insumos?novo=1`          |
-| Nova Receita | `/receitas/nova`           |
-| Produção     | `/producoes?novo=1`        |
-| Gastos       | `/gastos-indiretos?novo=1` |
-
-`?novo=1` abre o formulário de criação ao carregar a listagem.
+Desde a FE-58, o cabeçalho é a saudação, e as ações rápidas são só "Nova receita" (primária) e "Anotar venda" (secundária); ver [Layout](#layout-fe-58). Saíram o título "Doce Fatia", "Seu painel financeiro", o nome da empresa (que continua no menu da conta), o atalho "Simulação" (o herói no vermelho leva a `/simulacao`) e as ações "Novo ingrediente", "Nova fornada" e "Novo gasto", para a tela ter uma ação primária só ([marca.md](marca.md#checklist-de-revisão-de-tela)).
 
 ## Configurações de custo e formas de venda
 
-FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, no menu lateral e na gaveta "Conta" do celular (a barra inferior só tem os oito destinos do mobile).
+FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, "Ajustes de preço" desde a FE-57, no menu lateral e na gaveta "Mais" da barra inferior do celular.
 
 A interface não usa termos técnicos (markup, rateio, custo fixo ou variável, margem de contribuição): fala em "contas do mês", "fornadas", "lucro em cada venda" e "formas de venda".
 
@@ -899,7 +912,7 @@ A soma dos percentuais não é barrada: o backend devolve o canal sem preço (`P
 
 | Onde                 | Web                                                                                                                                                                                                                                                            |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Menu, título e aba   | "Configurações de custo"                                                                                                                                                                                                                                       |
+| Menu, título e aba   | "Ajustes de preço" (FE-57)                                                                                                                                                                                                                                     |
 | Subtítulo            | "Conte como o seu negócio funciona: o preço sugerido das receitas usa estas respostas."                                                                                                                                                                        |
 | Cartão do formulário | "Como o seu negócio funciona"                                                                                                                                                                                                                                  |
 | Base (`baseRateio`)  | "Como você quer dividir as contas do mês?": "Por fornadas" (`FORNADAS`, padrão) / "Por minutos de forno" (`MINUTOS`), com o apoio "Aluguel, luz, gás e as outras contas do mês são divididos pelas fornadas (ou pelos minutos de forno) que cada receita usa." |
@@ -907,7 +920,7 @@ A soma dos percentuais não é barrada: o backend devolve o canal sem preço (`P
 | Lucro                | "Quanto você quer de lucro em cada venda?"; apoio "De cada R$ 1,00 vendido, quanto fica para você. Ex.: 15% são R$ 0,15."                                                                                                                                      |
 | Imposto              | "Você paga imposto sobre as vendas?"; apoio "Se é informal ou MEI, deixe 0."                                                                                                                                                                                   |
 | Maquininha           | "Taxa da maquininha"; apoio "Quanto a maquininha de cartão cobra nas vendas do balcão."                                                                                                                                                                        |
-| Toast                | "Configurações salvas."                                                                                                                                                                                                                                        |
+| Toast                | "Ajustes salvos."                                                                                                                                                                                                                                              |
 | Cartão dos canais    | "Onde você vende"; "Cada forma de venda ativa ganha um preço sugerido nas receitas, já com a comissão dela."                                                                                                                                                   |
 | Linha do canal       | nome, status "Ativo" / "Desativado", "Comissão: 15,2%"; no Balcão, "A taxa da maquininha entra no preço do balcão."; ações "Ativar"/"Desativar", "Editar", "Excluir"                                                                                           |
 | Ação e formulário    | "Nova forma de venda" / "Editar forma de venda"; apoio "A comissão é a parte de cada venda que fica com o aplicativo ou o parceiro."; "Nome" (exemplo "Ex.: Rappi, encomendas, feira") e "Comissão" ("Se não paga comissão, deixe 0.")                         |
@@ -922,7 +935,7 @@ FE-47, só na web. Backend: BE-32 (`estoqueNegativo` em `Insumo` e `Estoque`, e 
 ### Indicação visual
 
 - Lista de insumos: o item com `estoqueNegativo` mostra, abaixo do nome, o selo "Estoque negativo" (Badge `critico`) e "Saldo: &lt;quantidade&gt;" em `danger`. No detalhe ("Compras e preços"), "Em estoque" fica em `danger`, com "Estoque negativo: registre a compra para acertar o saldo e o custo.".
-- Estoque: o cartão mostra o selo "Estoque negativo" ao lado do status (que é Crítico) e "Disponível" em `danger`.
+- Estoque: o cartão mostra o selo "Estoque negativo" ao lado do status (que é Acabando) e "Disponível" em `danger`.
 - Cor **e** texto: o selo sempre acompanha o vermelho.
 
 ### Aviso ao entrar
@@ -934,7 +947,7 @@ Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver ite
 | `estoqueNegativo` | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
 | `precoDefasado`   | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
 
-- Sem preço possível (`precoSugerido: null`): "Sem preço sugerido: os percentuais passam de 100%.". Insumo sem receita: "Nenhum produto usa este ingrediente.".
+- Sem preço possível (`precoSugerido: null`): "Sem preço que pague tudo: as taxas e o lucro passam de 100%." (FE-57). Insumo sem receita: "Nenhum produto usa este ingrediente.".
 - Seguir um link ou "Fechar" fecha o aviso.
 - **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
 - **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
@@ -948,20 +961,20 @@ FE-05 e FE-07. Origem: `lib/features/auth/presentation/pages/login_page.dart`, `
 | E-mail vazio / inválido | "Informe seu e-mail" / "Informe um e-mail válido"                  |
 | Senha vazia             | "Informe sua senha"                                                |
 | Login 401               | "E-mail ou senha inválidos"                                        |
-| Login, outros erros     | "Não foi possível entrar. Verifique o servidor e tente novamente." |
+| Login, outros erros     | "Não foi possível entrar. Confira a internet e tente de novo."     |
 | Login, botão do olho    | "Mostrar senha" / "Ocultar senha" (nome acessível do botão)        |
-| Login, cabeçalho        | "LucroAI" e "Entre para acessar os dados da sua empresa"           |
+| Login, cabeçalho        | logo Doce Fatia e "Seu doce, seu preço justo." (FE-54)             |
 | 401 em qualquer serviço | "Sessão expirada. Faça login novamente." (leva ao login)           |
-| 404                     | "Registro não encontrado."                                         |
+| 404                     | "Não encontrei esse item. Ele pode ter sido excluído."             |
 | 409                     | mensagem do backend ("CNPJ já cadastrado", "E-mail já cadastrado") |
 | 400                     | mensagens de validação do backend, juntas                          |
-| Rede ou timeout (10 s)  | "Sem conexão com o servidor."                                      |
-| 5xx                     | "Erro no servidor. Tente novamente."                               |
+| Rede ou timeout (10 s)  | "Sem conexão. Confira a internet e tente de novo."                 |
+| 5xx                     | "O sistema falhou agora. Tente de novo em instantes."              |
 
 Como a web aplica (FE-07, `features/auth/`):
 
 - `loginFormSchema` (`schemas/login-form.schema.ts`): o e-mail é aparado e conferido com `z.email()`, o mesmo critério do `@IsEmail()` do backend (o mobile só confere o `@`); a senha não é aparada. Com erro, o foco vai para o primeiro campo inválido.
-- `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Verifique o servidor e tente novamente.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
+- `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Confira a internet e tente de novo.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
 - `?expirada=1` mostra "Sessão expirada. Faça login novamente." num aviso (`role="status"`) acima dos campos, que some quando há erro de login.
 - Depois de entrar, a web vai para o `redirect` (só caminho interno) ou para `/`.
 - Abaixo do botão "Entrar": "Ainda não tem conta? **Criar conta**", com link para `/cadastro` (FE-48).
@@ -972,10 +985,10 @@ FE-48. Não existe no mobile. Backend: `POST /auth/empresa` (BE-06, BE-36), `cre
 
 | Situação                                         | Texto                                                                                                                                         |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cabeçalho                                        | "Criar conta" e "Cadastre sua empresa para começar a usar o LucroAI"                                                                          |
+| Cabeçalho                                        | "Criar conta" e "Cadastre sua empresa para começar a usar o Doce Fatia"                                                                       |
 | Grupos                                           | "Sua empresa" e "Seu acesso"                                                                                                                  |
 | Campos                                           | "Nome da empresa", "CNPJ (opcional)", "Segmento (opcional)", "Seu nome", "E-mail", "Senha", "Confirmar senha", "Token de cadastro"            |
-| Dicas                                            | senha: "Pelo menos 6 caracteres"; token: "Você recebe esse código da equipe do LucroAI"                                                       |
+| Dicas                                            | senha: "Pelo menos 6 caracteres"; token: "Você recebe esse código da equipe do Doce Fatia"                                                    |
 | Vazios                                           | "Informe o nome da empresa", "Informe seu nome", "Informe seu e-mail", "Informe uma senha", "Confirme a senha", "Informe o token de cadastro" |
 | E-mail inválido / senha curta                    | "Informe um e-mail válido" / "A senha precisa ter pelo menos 6 caracteres"                                                                    |
 | Texto acima do limite                            | "Use até 100 caracteres" (empresa) ou "Use até 18/80 caracteres"                                                                              |
@@ -984,7 +997,7 @@ FE-48. Não existe no mobile. Backend: `POST /auth/empresa` (BE-06, BE-36), `cre
 | 409 `EMAIL_JA_CADASTRADO` / `CNPJ_JA_CADASTRADO` | "E-mail já cadastrado" no e-mail / "CNPJ já cadastrado" no CNPJ                                                                               |
 | 429                                              | "Muitas tentativas. Aguarde um minuto e tente de novo."                                                                                       |
 | 400 `DADOS_INVALIDOS`                            | um texto em português em cada campo do `details` (o do class-validator vem em inglês)                                                         |
-| Outros erros (5xx, rede)                         | "Não foi possível criar a conta. Tente novamente."                                                                                            |
+| Outros erros (5xx, rede)                         | "Não foi possível criar a conta. Tente de novo."                                                                                              |
 | Botões e links                                   | "Criar conta"; "Já tem conta? **Entrar**", para o login; "Mostrar token" / "Ocultar token"                                                    |
 
 Como a web aplica (`features/auth/`):
@@ -998,21 +1011,22 @@ Como a web aplica (`features/auth/`):
 
 Resumo do que a web faz diferente, de propósito. Cada item está detalhado na seção da tela e entra na matriz de paridade da FE-23.
 
-| Tela                 | Diferença                                                                                                                                                                                 | Motivo                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Todas                | textos com acentuação correta                                                                                                                                                             | FE-02                                            |
-| Todas                | busca ignora acentos                                                                                                                                                                      | FE-05                                            |
-| Navegação            | menu lateral no desktop; no celular, cabeçalho com a logo e o botão "Conta" (nome, empresa e "Sair"), que o mobile não tem; rótulos da barra com 10px (mobile: 9px); 404 dentro do layout | FE-08                                            |
-| Login                | e-mail conferido com `z.email()` (o mobile só exige `@`); erro num `Alert` no formulário; volta à página de destino e avisa a sessão expirada                                             | FE-07 e backend `@IsEmail()`                     |
-| Campos numéricos     | aceitam separador de milhar (`1.234,56`); ao sair do campo, mostram o valor lido no formato brasileiro (`1234.5` vira `1.234,50` no dinheiro)                                             | FE-06                                            |
-| Formulários          | erro da API num `Alert` no topo do formulário, que continua aberto, e não num SnackBar                                                                                                    | FE-06 ([ui.md](ui.md#toasts-depois-de-mutações)) |
-| Insumos              | custo unitário com 4 casas fixas                                                                                                                                                          | FE-05                                            |
-| Receitas             | rendimento só inteiro                                                                                                                                                                     | backend `@IsInt`                                 |
-| Estoque              | mostra a data da última alteração; erro isolado por cartão                                                                                                                                | FE-13                                            |
-| Entrada de estoque   | prévia do saldo; gaveta "Histórico"; "Definir mínimo" (FE-39)                                                                                                                             | só na web                                        |
-| Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                                                                                        | backend `@IsInt` e `maxDecimalPlaces: 2`         |
-| Confirmação de venda | saldo de produto acabado da API e soma de itens da mesma receita                                                                                                                          | correção do cálculo (FE-39)                      |
-| Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                                                                  | lacuna do backend com `dataFim`                  |
-| Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                                                                                            | FE-19                                            |
-| Simulação            | cenário do meio chamado "Base"; sempre três cenários; receita num `Select`; cada controle tem um campo para digitar; faixa de preço nunca com `max < min`                                 | FE-21                                            |
-| Painel               | lucro com o snapshot de custo do item; seis meses reais no gráfico; vendas de 7 dias sobre os seis meses carregados                                                                       | FE-22                                            |
+| Tela                 | Diferença                                                                                                                                                                                                                                                                          | Motivo                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Todas                | textos com acentuação correta                                                                                                                                                                                                                                                      | FE-02                                            |
+| Todas                | linguagem de cozinha no lugar dos termos técnicos (Ingredientes, Fornadas, Contas do mês, Ajustes de preço, Acabando, Sobrou pra você), mensagens de erro que dizem o que fazer e "Tentar de novo"                                                                                 | FE-57 ([marca.md](marca.md#voz-e-tom))           |
+| Todas                | busca ignora acentos                                                                                                                                                                                                                                                               | FE-05                                            |
+| Navegação            | menu lateral no desktop; no celular, cabeçalho com a logo e o botão "Conta" (nome, empresa e "Sair"), que o mobile não tem; barra inferior com Início, Receitas, Vendas, Estoque e "Mais" (gaveta com o resto), rótulos de 12px (mobile: oito itens com 9px); 404 dentro do layout | FE-08, FE-57                                     |
+| Login                | e-mail conferido com `z.email()` (o mobile só exige `@`); erro num `Alert` no formulário; volta à página de destino e avisa a sessão expirada                                                                                                                                      | FE-07 e backend `@IsEmail()`                     |
+| Campos numéricos     | aceitam separador de milhar (`1.234,56`); ao sair do campo, mostram o valor lido no formato brasileiro (`1234.5` vira `1.234,50` no dinheiro)                                                                                                                                      | FE-06                                            |
+| Formulários          | erro da API num `Alert` no topo do formulário, que continua aberto, e não num SnackBar                                                                                                                                                                                             | FE-06 ([ui.md](ui.md#toasts-depois-de-mutações)) |
+| Insumos              | custo unitário com 4 casas fixas                                                                                                                                                                                                                                                   | FE-05                                            |
+| Receitas             | rendimento só inteiro                                                                                                                                                                                                                                                              | backend `@IsInt`                                 |
+| Estoque              | mostra a data da última alteração; erro isolado por cartão                                                                                                                                                                                                                         | FE-13                                            |
+| Entrada de estoque   | prévia do saldo; gaveta "Histórico"; "Definir mínimo" (FE-39)                                                                                                                                                                                                                      | só na web                                        |
+| Vendas               | quantidade só inteira; preço arredondado a 2 casas                                                                                                                                                                                                                                 | backend `@IsInt` e `maxDecimalPlaces: 2`         |
+| Confirmação de venda | saldo de produto acabado da API e soma de itens da mesma receita                                                                                                                                                                                                                   | correção do cálculo (FE-39)                      |
+| Histórico de vendas  | filtro de período enviado como início e fim do dia local                                                                                                                                                                                                                           | lacuna do backend com `dataFim`                  |
+| Cálculo real         | simulações podem sobreviver ao recarregamento (`localStorage`)                                                                                                                                                                                                                     | FE-19                                            |
+| Simulação            | cenário do meio chamado "Base"; sempre três cenários; receita num `Select`; cada controle tem um campo para digitar; faixa de preço nunca com `max < min`                                                                                                                          | FE-21                                            |
+| Painel               | lucro com o snapshot de custo do item; seis meses reais no gráfico; vendas de 7 dias sobre os seis meses carregados                                                                                                                                                                | FE-22                                            |

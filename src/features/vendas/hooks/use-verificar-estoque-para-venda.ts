@@ -21,7 +21,7 @@ export function mensagemEstoqueInsuficiente(
     `Estoque insuficiente para "${nome}": ` +
     `disponível ${formatNumero(disponivel)}, ` +
     `solicitado ${formatNumero(solicitado)}. ` +
-    'Registre uma produção antes de concluir.'
+    'Anote uma fornada antes de concluir.'
   );
 }
 

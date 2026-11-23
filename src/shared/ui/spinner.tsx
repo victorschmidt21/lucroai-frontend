@@ -5,7 +5,7 @@ type SpinnerProps = {
   className?: string;
 };
 
-/** `CircularProgressIndicator` laranja do mobile, para ações curtas. */
+/** `CircularProgressIndicator` do mobile, em Amora, para ações curtas. */
 export function Spinner({ label = 'Carregando', className }: SpinnerProps) {
   return (
     <output

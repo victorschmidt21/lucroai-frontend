@@ -222,7 +222,7 @@ O navegador fala só com o Next. O Route Handler `src/app/api/backend/[...path]/
 3. monta a URL a partir da variável de ambiente `API_URL`, nunca de algo vindo da requisição;
 4. injeta `Authorization: Bearer <token do cookie>` e repassa método, query, corpo e status;
 5. em `401`, apaga o cookie e devolve `401`, para o cliente levar ao login; sem sessão em vigor, responde `401` sem chamar a API;
-6. com a API fora do ar, `502` ("Erro no servidor. Tente novamente." na tela).
+6. com a API fora do ar, `502` ("O sistema falhou agora. Tente de novo em instantes." na tela).
 
 Detalhes de segurança em [security.md](security.md#proxy-bff).
 
@@ -255,25 +255,25 @@ class ApiError extends Error {
   code?: string; // "INSUMO_NAO_ENCONTRADO", "ESTOQUE_INSUFICIENTE"...
 }
 
-// Rede ou timeout: um ApiError com statusCode 0 e "Sem conexão com o servidor.".
+// Rede ou timeout: um ApiError com statusCode 0 e "Sem conexão. Confira a internet e tente de novo.".
 class ApiNetworkError extends ApiError {
   isTimeout: boolean;
 }
 ```
 
-Resposta fora do contrato vira `ContratoInvalidoError`, com a lista de problemas do Zod para o teste (`issues`, `detalhes` e o `ZodError` em `cause`) e a mensagem "Resposta inesperada do servidor." para a tela.
+Resposta fora do contrato vira `ContratoInvalidoError`, com a lista de problemas do Zod para o teste (`issues`, `detalhes` e o `ZodError` em `cause`) e a mensagem "O sistema respondeu algo inesperado. Tente de novo em instantes." para a tela.
 
-Como o `message` é montado (`apiErrorFromResponse`): `401`, `5xx` e rede têm texto fixo; nos outros status, as mensagens do backend vêm juntas, separadas por `; `, desde que não sejam as mensagens padrão em inglês do NestJS (`Not Found`, `Cannot GET /x`, `Bad Request` etc., que o monolito já não repassa); sem mensagem própria, `404` usa "Registro não encontrado." e os demais, "Não foi possível concluir a ação. Tente novamente." (também o texto de `getErrorMessage` para qualquer erro que não seja da API). Mostre qualquer erro com `getErrorMessage(error)`, que também cobre o que não é `ApiError`.
+Como o `message` é montado (`apiErrorFromResponse`): `401`, `5xx` e rede têm texto fixo; nos outros status, as mensagens do backend vêm juntas, separadas por `; `, desde que não sejam as mensagens padrão em inglês do NestJS (`Not Found`, `Cannot GET /x`, `Bad Request` etc., que o monolito já não repassa); sem mensagem própria, `404` usa "Não encontrei esse item. Ele pode ter sido excluído." e os demais, "Não deu para concluir agora. Tente de novo." (também o texto de `getErrorMessage` para qualquer erro que não seja da API). Mostre qualquer erro com `getErrorMessage(error)`, que também cobre o que não é `ApiError`.
 
-| HTTP     | Situação                                      | `message` do `ApiError` (tela)                                         | Na interface                                               |
-| -------- | --------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- |
-| 400      | validação (`DADOS_INVALIDOS`)                 | "Os dados enviados são inválidos"; o schema Zod deve ter barrado antes | `Alert` no formulário                                      |
-| 400, 422 | regra de negócio (`code` próprio)             | a mensagem do backend                                                  | `Alert` ou Toast; `ESTOQUE_INSUFICIENTE` abre o diálogo    |
-| 401      | token ausente, inválido ou expirado           | "Sessão expirada. Faça login novamente."                               | o `QueryClient` leva a `/login?redirect=<rota>&expirada=1` |
-| 404      | registro inexistente ou de outra empresa      | "Registro não encontrado." (ou a mensagem do backend, se em português) | estado de não encontrado; em lista, recarrega              |
-| 409      | duplicado ou em uso (`INSUMO_EM_USO`...)      | a mensagem do backend                                                  | no formulário ou no diálogo de exclusão                    |
-| 500, 503 | erro interno ou serviço dependente fora do ar | "Erro no servidor. Tente novamente."                                   | `ErrorState` com "Tentar novamente"                        |
-| 0        | rede ou timeout                               | "Sem conexão com o servidor."                                          | `ErrorState` com "Tentar novamente"                        |
+| HTTP     | Situação                                      | `message` do `ApiError` (tela)                                                                     | Na interface                                               |
+| -------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 400      | validação (`DADOS_INVALIDOS`)                 | "Os dados enviados são inválidos"; o schema Zod deve ter barrado antes                             | `Alert` no formulário                                      |
+| 400, 422 | regra de negócio (`code` próprio)             | a mensagem do backend                                                                              | `Alert` ou Toast; `ESTOQUE_INSUFICIENTE` abre o diálogo    |
+| 401      | token ausente, inválido ou expirado           | "Sessão expirada. Faça login novamente."                                                           | o `QueryClient` leva a `/login?redirect=<rota>&expirada=1` |
+| 404      | registro inexistente ou de outra empresa      | "Não encontrei esse item. Ele pode ter sido excluído." (ou a mensagem do backend, se em português) | estado de não encontrado; em lista, recarrega              |
+| 409      | duplicado ou em uso (`INSUMO_EM_USO`...)      | a mensagem do backend                                                                              | no formulário ou no diálogo de exclusão                    |
+| 500, 503 | erro interno ou serviço dependente fora do ar | "O sistema falhou agora. Tente de novo em instantes."                                              | `ErrorState` com "Tentar de novo"                          |
+| 0        | rede ou timeout                               | "Sem conexão. Confira a internet e tente de novo."                                                 | `ErrorState` com "Tentar de novo"                          |
 
 Regras:
 

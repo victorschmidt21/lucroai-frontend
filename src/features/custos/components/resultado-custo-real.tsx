@@ -10,7 +10,7 @@ export function ResultadoCustoRealCard({
   resultado: ResultadoCustoReal;
 }) {
   return (
-    <Card variant="resumo" className="items-center py-6 text-center">
+    <Card className="items-center py-6 text-center">
       <h2 className="text-section-label text-ink-muted">Custo por unidade</h2>
       <p className="text-display-lg wrap-anywhere text-accent tabular-nums">
         {formatMoeda(resultado.custoPorUnidade)}

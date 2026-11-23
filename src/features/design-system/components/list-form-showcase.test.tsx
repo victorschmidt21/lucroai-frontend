@@ -162,7 +162,7 @@ describe('exemplo de listagem', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Editar insumo' });
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(
-      'Erro no servidor. Tente novamente.',
+      'O sistema falhou agora. Tente de novo em instantes.',
     );
   });
 

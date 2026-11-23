@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatNumeroEditavel, parseNumeroBR } from '@/shared/format/numero-br';
+import { Card } from '@/shared/ui/card';
 import { NumberInput } from '@/shared/ui/number-input';
 import { Slider } from '@/shared/ui/slider';
 import { limitarNaFaixa, type Faixa } from '../simulacao.calculos';
@@ -54,7 +55,7 @@ export function ControleSimulacao({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
+    <Card>
       <Slider
         label={label}
         value={value}
@@ -85,6 +86,6 @@ export function ControleSimulacao({
           }}
         />
       </div>
-    </div>
+    </Card>
   );
 }

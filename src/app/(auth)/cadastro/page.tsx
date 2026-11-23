@@ -11,7 +11,7 @@ export default function CadastroPage() {
       <header className="flex flex-col gap-2 text-center">
         <h1 className="text-display-lg text-ink">Criar conta</h1>
         <p className="text-body text-ink-muted">
-          Cadastre sua empresa para começar a usar o LucroAI
+          Cadastre sua empresa para começar a usar o Doce Fatia
         </p>
       </header>
       <Card className="p-5">

@@ -4,11 +4,12 @@ import { getErrorMessage } from '@/shared/api/errors';
 import { useUsuarioAtual } from '@/shared/auth/use-usuario-atual';
 import { Button } from '@/shared/ui/button';
 import { IconSair } from '@/shared/ui/icons/acoes';
+import { SeletorAparencia } from '@/shared/ui/seletor-aparencia';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useLogout } from '../hooks/use-logout';
 
 /**
- * Menu do usuário: nome, e-mail, nome da empresa (do payload do JWT, via
+ * Menu do usuário: nome, e-mail, nome da empresa, aparência (FE-52) (do payload do JWT, via
  * `GET /api/auth/sessao`) e "Sair". Fica no rodapé do menu lateral do layout de
  * `(app)` (FE-08). Sem sessão, a query recebe 401 e o `QueryClient` leva ao login.
  */
@@ -34,6 +35,8 @@ export function UserMenu() {
           </span>
         </div>
       ) : null}
+      {/* Atalho da aparência (FE-52); a escolha também fica em /configuracoes. */}
+      <SeletorAparencia variante="lista" />
       {logout.error ? (
         <p role="alert" className="text-small text-danger">
           {getErrorMessage(logout.error)}

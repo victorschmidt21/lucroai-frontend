@@ -9,7 +9,7 @@ export const MENSAGEM_CNPJ_JA_CADASTRADO = 'CNPJ já cadastrado';
 export const MENSAGEM_MUITAS_TENTATIVAS =
   'Muitas tentativas. Aguarde um minuto e tente de novo.';
 export const MENSAGEM_ERRO_CADASTRO =
-  'Não foi possível criar a conta. Tente novamente.';
+  'Não foi possível criar a conta. Tente de novo.';
 export const MENSAGEM_SENHAS_DIFERENTES = 'As senhas não conferem';
 
 const textoOpcional = (maximo: number, mensagem: string) =>

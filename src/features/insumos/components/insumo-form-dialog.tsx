@@ -42,7 +42,7 @@ export function InsumoFormDialog({ open, onOpenChange, insumo }: Props) {
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={insumo ? 'Editar insumo' : 'Novo insumo'}
+      title={insumo ? 'Editar ingrediente' : 'Novo ingrediente'}
       schema={insumoFormSchema}
       defaultValues={insumo ? toInsumoFormInput(insumo) : insumoFormVazio}
       submitLabel={insumo ? 'Atualizar' : 'Salvar'}
@@ -53,10 +53,10 @@ export function InsumoFormDialog({ open, onOpenChange, insumo }: Props) {
             id: insumo.id,
             body: toUpdateInsumoBody(values),
           });
-          toast.success('Insumo atualizado com sucesso.');
+          toast.success('Ingrediente atualizado.');
         } else {
           await create.mutateAsync(toCreateInsumoBody(values));
-          toast.success('Insumo criado com sucesso.');
+          toast.success('Ingrediente cadastrado.');
         }
         onOpenChange(false);
       }}
