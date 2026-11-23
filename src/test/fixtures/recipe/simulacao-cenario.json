@@ -1,8 +1,21 @@
 {
-  "custoUnitario": 168.77,
-  "precoVenda": 0.5,
-  "volume": 100,
-  "lucroEstimado": -16827,
-  "margemProjetada": -336.54,
-  "breakEven": 33754
+  "custoUnitario": 0.3848,
+  "precoVenda": 0.46,
+  "volume": 28,
+  "lucroEstimado": 1.93,
+  "margemProjetada": 0.15,
+  "breakEven": 24,
+  "canalId": 143,
+  "canal": "Balcão",
+  "custoSemGastosMensais": 0.1957,
+  "percentuaisSemLucro": 0.0136,
+  "margemContribuicao": 0.2581,
+  "lucroPorUnidade": 0.069,
+  "lucroReal": 0.15,
+  "lucroMes": 1.93,
+  "gastosMensais": 2515,
+  "pontoEquilibrio": {
+    "unidades": 9745,
+    "motivo": null
+  }
 }

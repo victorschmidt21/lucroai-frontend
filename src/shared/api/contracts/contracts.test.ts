@@ -13,18 +13,33 @@ import {
   makeGastoIndireto,
   makeGastosDoSeed,
 } from '@/test/factories/gasto-indireto.factory';
-import { makeInsumo, makeInsumosDoSeed } from '@/test/factories/insumo.factory';
+import {
+  makeAlertas,
+  makeCompraInsumo,
+  makeInsumo,
+  makeInsumosDoSeed,
+} from '@/test/factories/insumo.factory';
 import { makeProducao } from '@/test/factories/producao.factory';
 import {
-  makePrecoVenda,
+  makeCanaisDoSeed,
+  makeConfiguracaoCustos,
+} from '@/test/factories/pricing.factory';
+import {
+  makePrecoCanal,
   makeReceita,
   makeReceitaCusto,
   makeReceitasDoSeed,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
-import { makeVenda } from '@/test/factories/venda.factory';
+import {
+  makeItemVenda,
+  makeResumoVendas,
+  makeVenda,
+} from '@/test/factories/venda.factory';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
+import alertas from '@/test/fixtures/catalog/alertas.json';
+import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
 import insumos from '@/test/fixtures/catalog/insumos.json';
@@ -34,30 +49,37 @@ import estoque from '@/test/fixtures/operations/estoque.json';
 import movimentacoes from '@/test/fixtures/operations/movimentacoes.json';
 import producao from '@/test/fixtures/operations/producao.json';
 import producoes from '@/test/fixtures/operations/producoes.json';
-import precoVenda from '@/test/fixtures/recipe/preco-venda.json';
+import canais from '@/test/fixtures/pricing/canais.json';
+import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
 import receitaCustoSimulada from '@/test/fixtures/recipe/receita-custo-simulada.json';
 import receitaCusto from '@/test/fixtures/recipe/receita-custo.json';
 import receita from '@/test/fixtures/recipe/receita.json';
 import receitas from '@/test/fixtures/recipe/receitas.json';
 import simulacaoCenario from '@/test/fixtures/recipe/simulacao-cenario.json';
+import resumoVendas from '@/test/fixtures/sales/resumo-vendas.json';
 import venda from '@/test/fixtures/sales/venda.json';
 import vendas from '@/test/fixtures/sales/vendas.json';
 import { unwrap } from '../request';
 import { jwtPayloadSchema, loginResponseSchema } from './auth';
-import { gastoIndiretoSchema, insumoSchema } from './catalog';
+import {
+  alertasSchema,
+  compraInsumoSchema,
+  gastoIndiretoSchema,
+  insumoSchema,
+} from './catalog';
 import {
   estoqueProdutoSchema,
   estoqueSchema,
   movimentacaoEstoqueSchema,
   producaoSchema,
 } from './operations';
+import { canalVendaSchema, configuracaoCustosSchema } from './pricing';
 import {
-  precoVendaSchema,
   receitaCustoSchema,
   receitaSchema,
   simulacaoCenarioSchema,
 } from './recipe';
-import { vendaSchema } from './sales';
+import { resumoVendasSchema, vendaSchema } from './sales';
 
 type Caso = {
   nome: string;
@@ -100,6 +122,30 @@ const CASOS: Caso[] = [
     invalida: { ...makeInsumo(), custoUnitario: '3' },
   },
   {
+    nome: 'compras de insumo',
+    schema: z.array(compraInsumoSchema),
+    fixture: comprasInsumo,
+    factory: [makeCompraInsumo(), makeCompraInsumo({ id: 2 })],
+    invalida: [{ ...makeCompraInsumo(), observacao: undefined }],
+  },
+  {
+    nome: 'alertas',
+    schema: alertasSchema,
+    fixture: alertas,
+    factory: makeAlertas(),
+    invalida: { ...makeAlertas(), precoDefasado: undefined },
+  },
+  {
+    nome: 'alertas sem itens',
+    schema: alertasSchema,
+    fixture: { estoqueNegativo: [], precoDefasado: [] },
+    factory: makeAlertas({ estoqueNegativo: [], precoDefasado: [] }),
+    invalida: {
+      estoqueNegativo: [{ id: 1, nome: 'Farinha', saldo: -1, unidade: 'kg' }],
+      precoDefasado: [],
+    },
+  },
+  {
     nome: 'lista de gastos indiretos',
     schema: z.array(gastoIndiretoSchema),
     fixture: gastosIndiretos,
@@ -107,8 +153,8 @@ const CASOS: Caso[] = [
     invalida: [
       {
         ...makeGastoIndireto(),
-        metodo_rateio: 'FIXO',
-        metodoRateio: undefined,
+        metodoRateio: 'FIXO',
+        tipo: undefined,
       },
     ],
   },
@@ -124,7 +170,14 @@ const CASOS: Caso[] = [
     schema: receitaSchema,
     fixture: receita,
     factory: makeReceita(),
-    invalida: { ...makeReceita(), margemLucro: null },
+    invalida: { ...makeReceita(), precoSugerido: null },
+  },
+  {
+    nome: 'receita sem o detalhamento do custo e os preços (BE-28)',
+    schema: receitaSchema,
+    fixture: receita,
+    factory: makeReceita(),
+    invalida: { ...makeReceita(), custo: undefined, precos: undefined },
   },
   {
     nome: 'custo da receita',
@@ -145,14 +198,21 @@ const CASOS: Caso[] = [
     schema: simulacaoCenarioSchema,
     fixture: simulacaoCenario,
     factory: makeSimulacaoCenario(),
-    invalida: { ...makeSimulacaoCenario(), breakEven: undefined },
+    invalida: { ...makeSimulacaoCenario(), pontoEquilibrio: undefined },
   },
   {
-    nome: 'preço de venda',
-    schema: precoVendaSchema,
-    fixture: precoVenda,
-    factory: makePrecoVenda(),
-    invalida: { precoSugerido: 0.11 },
+    nome: 'simulação sem ponto de equilíbrio (margem negativa)',
+    schema: simulacaoCenarioSchema,
+    fixture: simulacaoCenario,
+    factory: makeSimulacaoCenario({
+      lucroPorUnidade: -0.2,
+      lucroReal: -2,
+      pontoEquilibrio: { unidades: null, motivo: 'MARGEM_NEGATIVA' },
+    }),
+    invalida: {
+      ...makeSimulacaoCenario(),
+      pontoEquilibrio: { unidades: null, motivo: 'SEM_VENDAS' },
+    },
   },
   {
     nome: 'estoque',
@@ -160,6 +220,13 @@ const CASOS: Caso[] = [
     fixture: estoque,
     factory: makeEstoque({ id: 0, dataAlteracao: null }),
     invalida: { ...makeEstoque(), dataAlteracao: 'ontem' },
+  },
+  {
+    nome: 'estoque negativo',
+    schema: estoqueSchema,
+    fixture: { ...estoque, quantidadeDisponivel: -500, estoqueNegativo: true },
+    factory: makeEstoque({ quantidadeDisponivel: -0.5, estoqueNegativo: true }),
+    invalida: { ...makeEstoque(), estoqueNegativo: undefined },
   },
   {
     nome: 'lista de estoque dos insumos',
@@ -210,11 +277,41 @@ const CASOS: Caso[] = [
     invalida: [{ ...makeVenda(), status: 'concluida' }],
   },
   {
+    nome: 'resumo de vendas (ponto de equilíbrio da empresa)',
+    schema: resumoVendasSchema,
+    fixture: resumoVendas,
+    factory: makeResumoVendas({
+      vendas: 0,
+      receita: 0,
+      margemContribuicao: 0,
+      indiceMargemContribuicao: null,
+      pontoEquilibrio: { valor: null, motivo: 'SEM_VENDAS' },
+    }),
+    invalida: {
+      ...makeResumoVendas(),
+      pontoEquilibrio: { valor: null, motivo: 'SEM_GASTOS' },
+    },
+  },
+  {
     nome: 'venda',
     schema: vendaSchema,
     fixture: venda,
     factory: makeVenda(),
     invalida: { ...makeVenda(), itens: [{ receitaId: 1 }] },
+  },
+  {
+    nome: 'configuração de custos',
+    schema: configuracaoCustosSchema,
+    fixture: configuracaoCustos,
+    factory: makeConfiguracaoCustos(),
+    invalida: { ...makeConfiguracaoCustos(), baseRateio: 'HORAS' },
+  },
+  {
+    nome: 'lista de canais de venda',
+    schema: z.array(canalVendaSchema),
+    fixture: canais,
+    factory: makeCanaisDoSeed(),
+    invalida: [{ ...makeCanaisDoSeed()[0], ativo: 'sim' }],
   },
 ];
 
@@ -236,14 +333,66 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
-  it('receita sem margem omite margem e preço sugerido', () => {
-    const semMargem = unwrap(
-      { ...makeReceita(), margemLucro: undefined, precoSugerido: undefined },
+  it('receita sem preço possível omite o preço sugerido', () => {
+    const semPreco = unwrap(
+      { ...makeReceita(), precoSugerido: undefined },
       receitaSchema,
     );
 
-    expect(semMargem.margemLucro).toBeUndefined();
-    expect(semMargem.precoSugerido).toBeUndefined();
+    expect(semPreco.precoSugerido).toBeUndefined();
+  });
+
+  it('canal sem preço possível vem com preco, composicao e motivo', () => {
+    const lida = unwrap(
+      {
+        ...makeReceita(),
+        precoSugerido: undefined,
+        precos: [
+          makePrecoCanal({
+            percentuais: 1.05,
+            preco: null,
+            motivo: 'PERCENTUAIS_ACIMA_DE_100',
+            composicao: null,
+          }),
+        ],
+      },
+      receitaSchema,
+    );
+
+    expect(lida.precos[0]?.preco).toBeNull();
+    expect(lida.precos[0]?.motivo).toBe('PERCENTUAIS_ACIMA_DE_100');
+  });
+
+  it('a receita do seed traz um preço por canal ativo e o lucro configurado', () => {
+    const lida = unwrap(receita, receitaSchema);
+
+    expect(lida.precos.map((p) => p.canal)).toEqual(['Balcão', 'iFood']);
+    expect(lida.precos.every((p) => p.composicao?.lucro.fracao === 0.15)).toBe(
+      true,
+    );
+    expect(lida.lucroPercentual).toBeUndefined();
+  });
+
+  it('venda antiga vem sem canal e sem lucro real', () => {
+    const lida = unwrap(
+      {
+        ...makeVenda(),
+        canalId: null,
+        itens: [makeItemVenda({ lucroReal: null, custoUnitario: null })],
+      },
+      vendaSchema,
+    );
+
+    expect(lida.canalId).toBeNull();
+    expect(lida.itens[0]?.lucroReal).toBeNull();
+  });
+
+  it('a venda do seed no iFood traz o canal e o lucro real, sem a margem legada', () => {
+    const lida = unwrap(venda, vendaSchema);
+
+    expect(lida.canalId).toBe(144);
+    expect(lida.itens[0]?.lucroReal).toBe(0.2159);
+    expect(lida.itens[0]).not.toHaveProperty('margemRealizada');
   });
 
   it('movimentação de produção vem com observacao null', () => {

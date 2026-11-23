@@ -5,7 +5,7 @@ import { expectNoA11yViolations } from '@/test/a11y';
 import { Alert } from './alert';
 import {
   Badge,
-  MetodoRateioBadge,
+  TipoGastoBadge,
   StatusEstoqueBadge,
   StatusVendaBadge,
 } from './badge';
@@ -43,11 +43,11 @@ describe('Badge', () => {
   });
 
   it.each([
-    ['PROPORCIONAL', 'Proporcional à qtd. de lotes'],
-    ['POR_UNIDADE', 'Proporcional ao total de unidades'],
-    ['FIXO', 'Valor fixo por produção'],
-  ] as const)('método de rateio %s mostra o rótulo', (metodo, texto) => {
-    render(<MetodoRateioBadge metodo={metodo} />);
+    ['MENSAL', 'Conta do mês'],
+    ['POR_UNIDADE', 'Por unidade vendida'],
+    ['PERCENTUAL_VENDA', '% da venda'],
+  ] as const)('tipo de gasto %s mostra o rótulo', (tipo, texto) => {
+    render(<TipoGastoBadge tipo={tipo} />);
 
     expect(screen.getByText(texto)).toBeInTheDocument();
   });
@@ -260,8 +260,9 @@ describe('PageHeader e Logo', () => {
 describe('ícones', () => {
   const icones = Object.entries({ ...menu, ...acoes });
 
-  it('tem os oito ícones do menu do mobile', () => {
+  it('tem os oito ícones do menu do mobile e o das configurações', () => {
     expect(Object.keys(menu).toSorted()).toEqual([
+      'IconConfiguracoes',
       'IconCustos',
       'IconEstoque',
       'IconGastos',
@@ -290,7 +291,7 @@ it('os componentes de exibição não têm violações de acessibilidade', async
       <Logo />
       <StatusEstoqueBadge status="critico" />
       <StatusVendaBadge status="CANCELADA" />
-      <MetodoRateioBadge metodo="FIXO" />
+      <TipoGastoBadge tipo="MENSAL" />
       <Card title="Resumo">
         <StatCard title="Faturamento" value="R$ 10,00" detail="Período atual" />
       </Card>

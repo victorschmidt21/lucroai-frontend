@@ -11,6 +11,8 @@ export const estoqueSchema = z.object({
   /** Pode ficar negativo: a produção não confere o saldo (lacuna 10). */
   quantidadeDisponivel: z.number(),
   quantidadeMinima: z.number(),
+  /** `quantidadeDisponivel < 0` (BE-32): permitido, só para a indicação visual. */
+  estoqueNegativo: z.boolean(),
   dataAlteracao: z.iso.datetime().nullable(),
 });
 

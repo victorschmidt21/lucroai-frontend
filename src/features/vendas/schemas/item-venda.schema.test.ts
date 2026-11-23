@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  makeCanaisDoSeed,
+  makeCanalVenda,
+} from '@/test/factories/pricing.factory';
+import { makePrecoCanal } from '@/test/factories/receita.factory';
+import {
+  canaisParaVenda,
+  canalDaVendaSchema,
+  canalPadrao,
   itemVendaFormSchema,
   itemVendaFormVazio,
+  precoSugeridoNoCanal,
   toCreateVendaBody,
   type ItemVendaFormInput,
 } from './item-venda.schema';
@@ -69,5 +78,93 @@ describe('toCreateVendaBody', () => {
         { receita_id: 3, quantidade: 20, preco_unitario_real: 1 },
       ],
     });
+  });
+});
+
+describe('toCreateVendaBody com o canal (FE-46)', () => {
+  const itens = [{ receitaId: 1, quantidade: 2, precoUnitario: 3.69 }];
+
+  it('envia o canal_id do canal escolhido', () => {
+    expect(toCreateVendaBody(itens, 2)).toEqual({
+      canal_id: 2,
+      itens: [{ receita_id: 1, quantidade: 2, preco_unitario_real: 3.69 }],
+    });
+  });
+
+  it('sem canal, omite canal_id (o backend usa o Balcão)', () => {
+    expect(toCreateVendaBody(itens, null)).not.toHaveProperty('canal_id');
+  });
+});
+
+describe('canalDaVendaSchema ("Onde vendeu?")', () => {
+  it('lê o id do canal', () => {
+    expect(canalDaVendaSchema.parse('2')).toBe(2);
+  });
+
+  it('vazio ou inválido vira null', () => {
+    expect(canalDaVendaSchema.parse('')).toBeNull();
+    expect(canalDaVendaSchema.parse('  ')).toBeNull();
+    expect(canalDaVendaSchema.parse('abc')).toBeNull();
+    expect(canalDaVendaSchema.parse('-1')).toBeNull();
+  });
+});
+
+describe('canaisParaVenda e canalPadrao', () => {
+  it('mostra só os canais ativos, na ordem da API', () => {
+    expect(canaisParaVenda(makeCanaisDoSeed()).map((c) => c.nome)).toEqual([
+      'Balcão',
+      'iFood',
+    ]);
+  });
+
+  it('o padrão é o Balcão', () => {
+    const [balcao, ifood] = makeCanaisDoSeed();
+    expect(canalPadrao([ifood!, balcao!])).toBe(1);
+  });
+
+  it('com o Balcão inativo, o padrão é o primeiro ativo; sem ativos, null', () => {
+    const canais = makeCanaisDoSeed().map((c) =>
+      c.balcao ? { ...c, ativo: false } : c,
+    );
+    expect(canalPadrao(canais)).toBe(2);
+    expect(canalPadrao([makeCanalVenda({ ativo: false })])).toBeNull();
+    expect(canalPadrao([])).toBeNull();
+  });
+});
+
+describe('precoSugeridoNoCanal', () => {
+  const receita = {
+    precos: [
+      makePrecoCanal(),
+      makePrecoCanal({
+        canalId: 2,
+        canal: 'iFood',
+        balcao: false,
+        preco: 0.56,
+      }),
+    ],
+  };
+
+  it('usa o preço do canal escolhido', () => {
+    expect(precoSugeridoNoCanal(receita, 2)).toBe(0.56);
+    expect(precoSugeridoNoCanal(receita, 1)).toBe(0.46);
+  });
+
+  it('sem canal, usa o preço do Balcão', () => {
+    expect(precoSugeridoNoCanal(receita, null)).toBe(0.46);
+  });
+
+  it('canal sem preço possível ou fora da receita dá null', () => {
+    const semPreco = {
+      precos: [
+        makePrecoCanal({
+          preco: null,
+          motivo: 'PERCENTUAIS_ACIMA_DE_100',
+          composicao: null,
+        }),
+      ],
+    };
+    expect(precoSugeridoNoCanal(semPreco, 1)).toBeNull();
+    expect(precoSugeridoNoCanal(receita, 99)).toBeNull();
   });
 });

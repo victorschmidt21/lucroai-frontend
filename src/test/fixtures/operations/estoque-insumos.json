@@ -4,6 +4,7 @@
     "insumoId": 50,
     "quantidadeDisponivel": 6.5,
     "quantidadeMinima": 2,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.061Z"
   },
   {
@@ -11,6 +12,7 @@
     "insumoId": 51,
     "quantidadeDisponivel": 3.3,
     "quantidadeMinima": 1,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.064Z"
   },
   {
@@ -18,6 +20,7 @@
     "insumoId": 52,
     "quantidadeDisponivel": 760,
     "quantidadeMinima": 250,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.067Z"
   },
   {
@@ -25,6 +28,7 @@
     "insumoId": 53,
     "quantidadeDisponivel": 48,
     "quantidadeMinima": 12,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.070Z"
   },
   {
@@ -32,6 +36,7 @@
     "insumoId": 54,
     "quantidadeDisponivel": 0.4,
     "quantidadeMinima": 0.5,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.073Z"
   },
   {
@@ -39,6 +44,7 @@
     "insumoId": 55,
     "quantidadeDisponivel": 935,
     "quantidadeMinima": 100,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.075Z"
   },
   {
@@ -46,6 +52,7 @@
     "insumoId": 56,
     "quantidadeDisponivel": 400,
     "quantidadeMinima": 100,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.077Z"
   },
   {
@@ -53,6 +60,7 @@
     "insumoId": 57,
     "quantidadeDisponivel": 1.94,
     "quantidadeMinima": 0.25,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.080Z"
   },
   {
@@ -60,6 +68,7 @@
     "insumoId": 58,
     "quantidadeDisponivel": 500,
     "quantidadeMinima": 200,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.083Z"
   },
   {
@@ -67,6 +76,7 @@
     "insumoId": 59,
     "quantidadeDisponivel": 0.3,
     "quantidadeMinima": 0.5,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.084Z"
   },
   {
@@ -74,6 +84,7 @@
     "insumoId": 60,
     "quantidadeDisponivel": 20,
     "quantidadeMinima": 50,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.087Z"
   },
   {
@@ -81,6 +92,7 @@
     "insumoId": 61,
     "quantidadeDisponivel": 250,
     "quantidadeMinima": 50,
+    "estoqueNegativo": false,
     "dataAlteracao": "2026-11-20T16:42:11.088Z"
   }
 ]

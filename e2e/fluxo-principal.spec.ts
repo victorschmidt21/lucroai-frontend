@@ -34,15 +34,18 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
     page.getByRole('row', { name: new RegExp(insumo) }),
   ).toBeVisible();
 
-  // Receita: 2.000 g do insumo (R$ 10,00), rendimento 10, margem 50%.
+  // Receita: 2.000 g do insumo (R$ 10,00), rende 10, lucro de 20%: R$ 1,25
+  // no Balcão (custo ÷ (1 − lucro), na API falsa sem taxas).
   await page.goto('/receitas');
   await page.getByRole('link', { name: 'Nova receita' }).first().click();
   await expect(
     page.getByRole('heading', { name: 'Nova receita' }),
   ).toBeVisible();
   await page.getByRole('textbox', { name: 'Nome' }).fill(receita);
-  await page.getByRole('textbox', { name: 'Rendimento' }).fill('10');
-  await page.getByRole('textbox', { name: 'Margem de lucro (%)' }).fill('50');
+  await page
+    .getByRole('textbox', { name: 'Rende quantas unidades boas?' })
+    .fill('10');
+  await page.getByRole('textbox', { name: 'Lucro desta receita' }).fill('20');
   await page.getByRole('button', { name: 'Adicionar insumo' }).click();
   const dialogItem = page.getByRole('dialog', { name: 'Adicionar insumo' });
   await dialogItem.getByRole('combobox', { name: 'Insumo' }).click();
@@ -53,7 +56,8 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await expect(
     page.getByText('Receita criada com sucesso.', { exact: true }),
   ).toBeVisible();
-  await expect(page).toHaveURL(/\/receitas$/);
+  await expect(page).toHaveURL(/\/receitas\/\d+$/);
+  await expect(page.getByText('R$ 1,25')).toBeVisible();
 
   // Produção: 1 lote = 10 unidades.
   await page.goto('/producoes');
@@ -74,19 +78,19 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
     page.getByText('Produção registrada com sucesso.', { exact: true }),
   ).toBeVisible();
 
-  // Venda: 4 unidades pelo preço sugerido (R$ 1,50), concluída.
+  // Venda: 4 unidades pelo preço sugerido (R$ 1,25), concluída.
   await page.goto('/vendas');
   await page
     .getByRole('combobox', { name: 'Produto/Receita' })
     .selectOption({ label: receita });
   await expect(
     page.getByRole('textbox', { name: 'Preço unitário real' }),
-  ).toHaveValue('1,50');
+  ).toHaveValue('1,25');
   await page.getByRole('textbox', { name: 'Quantidade' }).fill('4');
   await page.getByRole('button', { name: 'Adicionar ao carrinho' }).click();
   await page.getByRole('button', { name: 'Registrar Venda' }).click();
   const confirmacao = page.getByRole('dialog', { name: 'Confirmar venda' });
-  await expect(confirmacao.getByText('R$ 6,00').first()).toBeVisible();
+  await expect(confirmacao.getByText('R$ 5,00').first()).toBeVisible();
   await confirmacao.getByRole('button', { name: 'Concluir venda' }).click();
   await expect(
     page.getByText('Venda concluída com sucesso.', { exact: true }),
@@ -94,10 +98,10 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await expect(confirmacao.getByText('Concluída')).toBeVisible();
 
   // Home: a receita vendida aparece entre os produtos mais rentáveis, com o
-  // lucro de 4 × (R$ 1,50 − R$ 1,00).
+  // lucro de 4 × (R$ 1,25 − R$ 1,00).
   await page.goto('/');
   await expect(page.getByText('Faturamento')).toBeVisible();
   const produto = page.getByRole('listitem').filter({ hasText: receita });
-  await expect(produto).toContainText('4 un - margem 33,3%');
-  await expect(produto).toContainText('R$ 2,00');
+  await expect(produto).toContainText('4 un - margem 20,0%');
+  await expect(produto).toContainText('R$ 1,00');
 });

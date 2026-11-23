@@ -4,6 +4,7 @@ import {
   contarEstoqueBaixo,
   evolucaoMensal,
   inicioDosSeisMeses,
+  pontoEquilibrioDoPainel,
   produtosMaisRentaveis,
   tendenciaMensal,
   vendasDoMes,
@@ -12,6 +13,11 @@ import {
 } from './painel.calculos';
 
 // TZ fixo em America/Sao_Paulo (vitest.config.ts).
+
+/** Preço do Balcão com o lucro por unidade e a fração do preço. */
+function balcao(valor: number, fracao: number) {
+  return [{ balcao: true, composicao: { lucro: { valor, fracao } } }];
+}
 const HOJE = new Date(2026, 10, 19, 15, 0); // 19/11/2026 15h
 
 const receitas: ReceitaParaPainel[] = [
@@ -20,16 +26,14 @@ const receitas: ReceitaParaPainel[] = [
     nome: 'Pão Francês',
     rendimento: 50,
     custoUnitario: 0.4,
-    precoSugerido: 1,
-    margemLucro: 1.5,
+    precos: balcao(0.15, 0.15),
   },
   {
     id: 2,
     nome: 'Bolo de Chocolate',
     rendimento: 1,
     custoUnitario: 20,
-    precoSugerido: 50,
-    margemLucro: 1.5,
+    precos: balcao(7.5, 0.15),
   },
 ];
 
@@ -206,17 +210,24 @@ describe('produtosMaisRentaveis', () => {
     ]);
   });
 
-  it('sem vendas, usa as receitas com lucro positivo', () => {
+  it('sem vendas, usa o lucro do preço do Balcão calculado pela API, só os positivos', () => {
     const cadastro: ReceitaParaPainel[] = [
       ...receitas,
+      { id: 3, nome: 'Lucro zero', rendimento: 1, precos: balcao(0, 0) },
       {
-        id: 3,
-        nome: 'Prejuízo',
+        id: 4,
+        nome: 'Sem preço possível',
         rendimento: 1,
-        custoUnitario: 5,
-        precoSugerido: 4,
+        precos: [{ balcao: true, composicao: null }],
       },
-      { id: 4, nome: 'Sem preço', rendimento: 1, margemLucro: 0.3 },
+      {
+        id: 5,
+        nome: 'Só no iFood',
+        rendimento: 1,
+        precos: [
+          { balcao: false, composicao: { lucro: { valor: 9, fracao: 0.2 } } },
+        ],
+      },
     ];
 
     expect(produtosMaisRentaveis([], cadastro)).toEqual([
@@ -224,28 +235,50 @@ describe('produtosMaisRentaveis', () => {
         receitaId: 2,
         nome: 'Bolo de Chocolate',
         quantidade: null,
-        lucro: 30,
-        margem: 60,
+        lucro: 7.5,
+        margem: 15,
       },
       {
         receitaId: 1,
         nome: 'Pão Francês',
         quantidade: null,
-        lucro: 0.6,
-        margem: 60,
+        lucro: 0.15,
+        margem: 15,
       },
     ]);
   });
 
-  it('sem preço, a margem vem de margemLucro × 100', () => {
-    const cadastro: ReceitaParaPainel[] = [
-      { id: 5, nome: 'X', rendimento: 1, custoUnitario: -1, margemLucro: 0.3 },
-    ];
-
-    expect(produtosMaisRentaveis([], cadastro)[0].margem).toBeCloseTo(30);
-  });
-
   it('fica vazio sem vendas nem receitas rentáveis', () => {
     expect(produtosMaisRentaveis([], [])).toEqual([]);
+  });
+});
+
+describe('pontoEquilibrioDoPainel', () => {
+  it('mostra o valor por mês da API', () => {
+    expect(pontoEquilibrioDoPainel({ valor: 4524.36, motivo: null })).toEqual({
+      valor: 'R$ 4.524,36',
+      detalhe: 'em vendas por mês',
+      tom: 'muted',
+    });
+  });
+
+  it('sem vendas, avisa os últimos 30 dias', () => {
+    expect(
+      pontoEquilibrioDoPainel({ valor: null, motivo: 'SEM_VENDAS' }),
+    ).toEqual({
+      valor: '—',
+      detalhe: 'sem vendas nos últimos 30 dias',
+      tom: 'muted',
+    });
+  });
+
+  it('com margem negativa, avisa em vermelho', () => {
+    expect(
+      pontoEquilibrioDoPainel({ valor: null, motivo: 'MARGEM_NEGATIVA' }),
+    ).toEqual({
+      valor: '—',
+      detalhe: 'as vendas não cobrem o custo',
+      tom: 'danger',
+    });
   });
 });

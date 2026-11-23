@@ -3,15 +3,16 @@
 import { useWatch } from 'react-hook-form';
 import type { GastoIndireto } from '@/shared/api/contracts/catalog';
 import {
-  METODO_RATEIO_DESCRICOES,
-  METODO_RATEIO_ROTULOS,
-  METODOS_RATEIO,
-  type MetodoRateio,
+  TIPO_GASTO_DESCRICOES,
+  TIPO_GASTO_ROTULOS,
+  TIPOS_GASTO,
+  type TipoGasto,
 } from '@/shared/api/contracts/enums';
 import {
   FormDialog,
   FormInput,
   FormMoneyInput,
+  FormPercentInput,
   FormSelect,
 } from '@/shared/ui/form';
 import { useToast } from '@/shared/ui/toast';
@@ -45,7 +46,7 @@ export function GastoIndiretoFormDialog({ open, onOpenChange, gasto }: Props) {
       open={open}
       onOpenChange={onOpenChange}
       title={gasto ? 'Editar gasto' : 'Novo gasto indireto'}
-      description="Este gasto será rateado em todas as receitas."
+      description="Este gasto entra no custo de todas as receitas."
       schema={gastoIndiretoFormSchema}
       defaultValues={
         gasto ? toGastoIndiretoFormInput(gasto) : gastoIndiretoFormVazio
@@ -72,30 +73,47 @@ export function GastoIndiretoFormDialog({ open, onOpenChange, gasto }: Props) {
         maxLength={DESCRICAO_MAX}
         required
       />
-      <FormMoneyInput name="valor" label="Valor (R$)" required />
-      <CampoMetodoRateio />
+      <CampoTipo />
+      <CampoValor />
     </FormDialog>
   );
 }
 
-/** Select nativo: a descrição do método escolhido aparece como texto de apoio. */
-function CampoMetodoRateio() {
-  const metodo = useWatch<GastoIndiretoFormInput, 'metodo_rateio'>({
-    name: 'metodo_rateio',
-  });
+/** Select nativo: a explicação do tipo escolhido aparece como texto de apoio. */
+function CampoTipo() {
+  const tipo = useWatch<GastoIndiretoFormInput, 'tipo'>({ name: 'tipo' });
 
   return (
     <FormSelect
-      name="metodo_rateio"
-      label="Método de rateio"
-      hint={METODO_RATEIO_DESCRICOES[metodo as MetodoRateio]}
+      name="tipo"
+      label="Tipo"
+      hint={TIPO_GASTO_DESCRICOES[tipo as TipoGasto]}
       required
     >
-      {METODOS_RATEIO.map((valor) => (
+      {TIPOS_GASTO.map((valor) => (
         <option key={valor} value={valor}>
-          {METODO_RATEIO_ROTULOS[valor]}
+          {TIPO_GASTO_ROTULOS[valor]}
         </option>
       ))}
     </FormSelect>
+  );
+}
+
+/** O rótulo e a máscara do valor seguem o tipo: R$ por mês, R$ por unidade ou %. */
+function CampoValor() {
+  const tipo = useWatch<GastoIndiretoFormInput, 'tipo'>({ name: 'tipo' });
+
+  if (tipo === 'PERCENTUAL_VENDA') {
+    return (
+      <FormPercentInput name="valor" label="Percentual da venda" required />
+    );
+  }
+
+  return (
+    <FormMoneyInput
+      name="valor"
+      label={tipo === 'POR_UNIDADE' ? 'Valor por unidade' : 'Valor por mês'}
+      required
+    />
   );
 }

@@ -1,8 +1,10 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { canaisOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import type { Venda } from '@/shared/api/contracts/sales';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { buttonClasses } from '@/shared/ui/button';
@@ -11,6 +13,7 @@ import { PageHeader } from '@/shared/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { useCreateVenda } from '../hooks/use-create-venda';
 import {
+  canalPadrao,
   toCreateVendaBody,
   type ItemCarrinho,
 } from '../schemas/item-venda.schema';
@@ -36,6 +39,13 @@ export function VendasTela({ busca }: Props) {
   // Nunca vai para o navegador: recarregar a página o descarta.
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const proximaChave = useRef(0);
+  // "Onde vendeu?" (FE-46): `undefined` segue o padrão (Balcão) até a escolha.
+  const canais = useQuery(canaisOptions());
+  const [canalEscolhido, setCanalEscolhido] = useState<number | null>();
+  const canalId =
+    canalEscolhido === undefined
+      ? canalPadrao(canais.data ?? [])
+      : canalEscolhido;
 
   function trocarAba(valor: string) {
     router.replace(
@@ -52,9 +62,11 @@ export function VendasTela({ busca }: Props) {
   function registrarVenda() {
     if (carrinho.length === 0) return;
 
-    registrar.mutate(toCreateVendaBody(carrinho), {
+    registrar.mutate(toCreateVendaBody(carrinho, canalId), {
       onSuccess: (venda) => {
         setCarrinho([]);
+        // A próxima venda volta ao Balcão, para não ir ao iFood sem querer.
+        setCanalEscolhido(undefined);
         setEmConfirmacao(venda);
       },
     });
@@ -85,6 +97,14 @@ export function VendasTela({ busca }: Props) {
         >
           <AdicionarProdutoCard
             bloqueado={registrar.isPending}
+            canal={{
+              id: canalId,
+              canais: canais.data ?? [],
+              carregando: canais.isPending,
+              erro: canais.isError,
+              travado: carrinho.length > 0 || registrar.isPending,
+              onChange: setCanalEscolhido,
+            }}
             onAdicionar={(item, receita) => {
               const chave = proximaChave.current;
               proximaChave.current += 1;

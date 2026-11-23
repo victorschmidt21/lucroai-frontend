@@ -3,11 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
+import { canaisOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import type { Venda } from '@/shared/api/contracts/sales';
 import { getErrorMessage, isEstoqueInsuficiente } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatMargem, formatQuantidade } from '@/shared/format/numero';
+import { formatQuantidade } from '@/shared/format/numero';
 import { Alert } from '@/shared/ui/alert';
 import { StatusVendaBadge } from '@/shared/ui/badge';
 import { Button, buttonClasses } from '@/shared/ui/button';
@@ -15,7 +16,11 @@ import { Dialog, ResponsiveDialog } from '@/shared/ui/dialog';
 import { useToast } from '@/shared/ui/toast';
 import { useAtualizarStatusVenda } from '../hooks/use-atualizar-status-venda';
 import { useVerificarEstoqueParaVenda } from '../hooks/use-verificar-estoque-para-venda';
-import { subtotalItem } from '../vendas.calculos';
+import {
+  descreverLucroReal,
+  nomeDoCanal,
+  subtotalItem,
+} from '../vendas.calculos';
 
 type Props = {
   /** Venda a confirmar; `null` fecha. Aberta ao registrar (FE-16) e pelo histórico (FE-18). */
@@ -63,6 +68,7 @@ function Conteudo({
 }) {
   const toast = useToast();
   const receitas = useQuery(receitasListOptions());
+  const canais = useQuery(canaisOptions());
   const atualizar = useAtualizarStatusVenda();
   const verificarEstoque = useVerificarEstoqueParaVenda();
   // Depois de concluir ou cancelar, mostra a venda devolvida pelo backend.
@@ -132,6 +138,12 @@ function Conteudo({
         <span>{`Venda #${venda.id}`}</span>
         <StatusVendaBadge status={venda.status} />
       </p>
+      <p className="flex items-center justify-between gap-3 text-body text-ink-muted">
+        <span>Onde vendeu</span>
+        <span className="font-semibold text-ink">
+          {nomeDoCanal(venda.canalId, canais.data ?? [])}
+        </span>
+      </p>
 
       <ul aria-label="Itens da venda" className="flex flex-col gap-3">
         {venda.itens.map((item) => (
@@ -144,10 +156,8 @@ function Conteudo({
                 <span className="text-ink-muted">
                   {`${formatQuantidade(item.quantidade)} × ${formatMoeda(item.precoUnitarioReal)}`}
                 </span>
-                {item.margemRealizada !== null ? (
-                  <span className="text-success">
-                    {`${formatMargem(item.margemRealizada)} margem`}
-                  </span>
+                {item.lucroReal !== null ? (
+                  <LucroRealDoItem lucroReal={item.lucroReal} />
                 ) : null}
               </span>
             </div>
@@ -218,5 +228,15 @@ function Conteudo({
         }
       />
     </>
+  );
+}
+
+/** "Lucro real X%" (FE-46); negativo em cor de alerta e com "(prejuízo)". */
+function LucroRealDoItem({ lucroReal }: { lucroReal: number }) {
+  const { texto, prejuizo } = descreverLucroReal(lucroReal);
+  return (
+    <span className={prejuizo ? 'font-semibold text-danger' : 'text-success'}>
+      {`Lucro real ${texto}`}
+    </span>
   );
 }

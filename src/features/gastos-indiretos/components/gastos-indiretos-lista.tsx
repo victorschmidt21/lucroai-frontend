@@ -7,7 +7,7 @@ import type { GastoIndireto } from '@/shared/api/contracts/catalog';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatNumero } from '@/shared/format/numero';
-import { MetodoRateioBadge } from '@/shared/ui/badge';
+import { TipoGastoBadge } from '@/shared/ui/badge';
 import { Button, IconButton } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
@@ -19,7 +19,10 @@ import {
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { gastosIndiretosListOptions } from '../api/gastos-indiretos.queries';
-import { calcularTotalGastos } from '../gastos-indiretos.calculos';
+import {
+  calcularTotalContasDoMes,
+  formatValorDoGasto,
+} from '../gastos-indiretos.calculos';
 import { useDeleteGastoIndireto } from '../hooks/use-delete-gasto-indireto';
 import { GastoIndiretoFormDialog } from './gasto-indireto-form-dialog';
 
@@ -65,7 +68,7 @@ export function GastosIndiretosLista({
     <>
       <ListPage
         title="Gastos Indiretos"
-        subtitle="Custos rateados automaticamente nas receitas"
+        subtitle="Contas e custos que entram no preço das receitas"
         actions={novoGasto}
         label="Gastos indiretos"
         query={query}
@@ -92,15 +95,15 @@ export function GastosIndiretosLista({
             cell: (gasto) => gasto.descricao,
           },
           {
-            id: 'metodoRateio',
-            header: 'Método de rateio',
-            cell: (gasto) => <MetodoRateioBadge metodo={gasto.metodoRateio} />,
+            id: 'tipo',
+            header: 'Tipo',
+            cell: (gasto) => <TipoGastoBadge tipo={gasto.tipo} />,
           },
           {
             id: 'valor',
             header: 'Valor',
             align: 'right',
-            cell: (gasto) => formatMoeda(gasto.valor),
+            cell: (gasto) => formatValorDoGasto(gasto),
           },
           {
             id: 'acoes',
@@ -154,23 +157,26 @@ export function GastosIndiretosLista({
   );
 }
 
-/** Cartão "Total de gastos" (`_buildTotalCard` do mobile). */
+/**
+ * Cartão "Contas do mês" (`_buildTotalCard` do mobile): soma só os gastos
+ * `MENSAL`, porque os outros tipos têm outra unidade (FE-42).
+ */
 function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
-  const quantidade = gastos.length;
+  const quantidade = gastos.filter((gasto) => gasto.tipo === 'MENSAL').length;
 
   return (
     <section
-      aria-label="Total de gastos"
+      aria-label="Contas do mês"
       className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3.5"
     >
       <div className="flex flex-col gap-0.5">
-        <p className="text-small text-ink-muted">Total de gastos</p>
+        <p className="text-small text-ink-muted">Contas do mês</p>
         <p className="text-small text-ink">
-          {`${formatNumero(quantidade)} ${quantidade === 1 ? 'item' : 'itens'}`}
+          {`${formatNumero(quantidade)} ${quantidade === 1 ? 'conta' : 'contas'}`}
         </p>
       </div>
       <p className="text-title text-accent tabular-nums">
-        {formatMoeda(calcularTotalGastos(gastos))}
+        {formatMoeda(calcularTotalContasDoMes(gastos))}
       </p>
     </section>
   );

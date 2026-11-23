@@ -1,9 +1,9 @@
 import type { ComponentProps } from 'react';
 import {
-  METODO_RATEIO_ROTULOS,
   STATUS_VENDA_ROTULOS,
-  type MetodoRateio,
+  TIPO_GASTO_ROTULOS,
   type StatusVenda,
+  type TipoGasto,
 } from '@/shared/api/contracts/enums';
 import { cn } from './cn';
 
@@ -72,6 +72,11 @@ export function StatusVendaBadge({ status }: { status: StatusVenda }) {
   );
 }
 
-export function MetodoRateioBadge({ metodo }: { metodo: MetodoRateio }) {
-  return <Badge>{METODO_RATEIO_ROTULOS[metodo]}</Badge>;
+export function TipoGastoBadge({ tipo }: { tipo: TipoGasto }) {
+  return <Badge>{TIPO_GASTO_ROTULOS[tipo]}</Badge>;
+}
+
+/** Saldo abaixo de zero (`estoqueNegativo`, FE-47): cor e texto, nunca só cor. */
+export function EstoqueNegativoBadge() {
+  return <Badge tone="critico">Estoque negativo</Badge>;
 }

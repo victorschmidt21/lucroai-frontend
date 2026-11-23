@@ -17,21 +17,32 @@ export const UNIDADE_MEDIDA_ROTULOS: Record<UnidadeMedida, string> = {
   UN: 'un',
 };
 
-/** `shared/src/domain/enums/metodo-rateio.enum.ts` */
-export const METODOS_RATEIO = ['PROPORCIONAL', 'POR_UNIDADE', 'FIXO'] as const;
-export const metodoRateioSchema = z.enum(METODOS_RATEIO);
-export type MetodoRateio = z.infer<typeof metodoRateioSchema>;
+/**
+ * `TipoGasto` do `schema.prisma` do monolito (BE-26), que substituiu o
+ * `MetodoRateio`. O `valor` muda de unidade conforme o tipo: reais por mês,
+ * reais por unidade vendida ou fração do preço de venda (0 a 1).
+ */
+export const TIPOS_GASTO = [
+  'MENSAL',
+  'POR_UNIDADE',
+  'PERCENTUAL_VENDA',
+] as const;
+export const tipoGastoSchema = z.enum(TIPOS_GASTO);
+export type TipoGasto = z.infer<typeof tipoGastoSchema>;
 
-export const METODO_RATEIO_ROTULOS: Record<MetodoRateio, string> = {
-  PROPORCIONAL: 'Proporcional à qtd. de lotes',
-  POR_UNIDADE: 'Proporcional ao total de unidades',
-  FIXO: 'Valor fixo por produção',
+/** Rótulos sem jargão (FE-42). */
+export const TIPO_GASTO_ROTULOS: Record<TipoGasto, string> = {
+  MENSAL: 'Conta do mês',
+  POR_UNIDADE: 'Por unidade vendida',
+  PERCENTUAL_VENDA: '% da venda',
 };
 
-export const METODO_RATEIO_DESCRICOES: Record<MetodoRateio, string> = {
-  PROPORCIONAL: 'Gastos que crescem com o volume, como energia e gás.',
-  POR_UNIDADE: 'Gastos por peça, como embalagem individual.',
-  FIXO: 'Valor integral, independente do volume, como aluguel e mensalidades.',
+/** Explicação do tipo, com exemplos (texto de apoio no formulário). */
+export const TIPO_GASTO_DESCRICOES: Record<TipoGasto, string> = {
+  MENSAL:
+    'Dividida pelas fornadas do mês. Ex.: aluguel, luz, gás, água, DAS do MEI.',
+  POR_UNIDADE: 'Valor de cada unidade. Ex.: saquinho, etiqueta.',
+  PERCENTUAL_VENDA: 'Percentual de cada venda. Ex.: comissão de revendedora.',
 };
 
 /** `shared/src/domain/enums/status-venda.enum.ts` */
@@ -61,4 +72,15 @@ export type OrigemMovimentacao = z.infer<typeof origemMovimentacaoSchema>;
 export const ORIGEM_MOVIMENTACAO_ROTULOS: Record<OrigemMovimentacao, string> = {
   COMPRA: 'Compra',
   PRODUCAO: 'Produção',
+};
+
+/** `BaseRateio` do `schema.prisma` do monolito (BE-24): o que a capacidade mensal conta. */
+export const BASES_RATEIO = ['FORNADAS', 'MINUTOS'] as const;
+export const baseRateioSchema = z.enum(BASES_RATEIO);
+export type BaseRateio = z.infer<typeof baseRateioSchema>;
+
+/** Rótulos sem jargão, da tela de configurações de custo (FE-41). */
+export const BASE_RATEIO_ROTULOS: Record<BaseRateio, string> = {
+  FORNADAS: 'Por fornadas',
+  MINUTOS: 'Por minutos de forno',
 };

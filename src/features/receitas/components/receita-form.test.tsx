@@ -1,11 +1,11 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { GastoIndireto } from '@/shared/api/contracts/catalog';
+import type { ConfiguracaoCustos } from '@/shared/api/contracts/pricing';
 import { ToastProvider } from '@/shared/ui/toast';
 import { mockApi, mockApiErro } from '@/test/api';
-import { makeGastoIndireto } from '@/test/factories/gasto-indireto.factory';
 import { makeInsumosDoSeed } from '@/test/factories/insumo.factory';
+import { makeConfiguracaoCustos } from '@/test/factories/pricing.factory';
 import { makeReceita } from '@/test/factories/receita.factory';
 import { setTestUrl } from '@/test/next-navigation';
 import { renderWithQuery } from '@/test/render';
@@ -22,11 +22,11 @@ const INSUMOS = makeInsumosDoSeed().slice(0, 3);
 
 function renderPagina({
   receitaId,
-  gastos = [],
-}: { receitaId?: number; gastos?: GastoIndireto[] } = {}) {
+  configuracao = makeConfiguracaoCustos(),
+}: { receitaId?: number; configuracao?: ConfiguracaoCustos } = {}) {
   server.use(
     mockApi('GET /insumos', INSUMOS),
-    mockApi('GET /gastos-indiretos', gastos),
+    mockApi('GET /configuracao-custos', configuracao),
   );
   return renderWithQuery(
     <ToastProvider>
@@ -55,29 +55,17 @@ async function adicionarInsumo(nome: string, quantidade: string) {
   await waitFor(() => expect(dialog).not.toBeInTheDocument());
 }
 
-function previa() {
-  return within(screen.getByRole('region', { name: 'Prévia dos custos' }));
-}
-
-function valorDa(regiao: ReturnType<typeof previa>, rotulo: string) {
-  return regiao.getByText(rotulo).nextElementSibling?.textContent;
-}
-
 beforeEach(() => {
   setTestUrl('/receitas/nova');
 });
 
 describe('nova receita', OPCOES, () => {
-  it('adiciona, edita e remove insumos, com a prévia na unidade do insumo', async () => {
+  it('adiciona, edita e remove insumos, com o custo na unidade do insumo', async () => {
     renderPagina();
 
     expect(
       await screen.findByText('Nenhum insumo adicionado.'),
     ).toBeInTheDocument();
-    await userEvent.type(
-      screen.getByRole('textbox', { name: 'Rendimento' }),
-      '10',
-    );
 
     await adicionarInsumo('Farinha de Trigo', '0,5');
     const quantidade = screen.getByRole('textbox', {
@@ -85,19 +73,15 @@ describe('nova receita', OPCOES, () => {
     });
     expect(quantidade).toHaveValue('0,5');
     expect(screen.getByText('Custo: R$ 1,50')).toBeInTheDocument();
-    expect(valorDa(previa(), 'Custo produção')).toBe('R$ 1,50');
-    expect(valorDa(previa(), 'Custo unitário')).toBe('R$ 0,15');
 
     await userEvent.clear(quantidade);
     await userEvent.type(quantidade, '2');
     expect(screen.getByText('Custo: R$ 6,00')).toBeInTheDocument();
-    expect(valorDa(previa(), 'Custo produção')).toBe('R$ 6,00');
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Remover Farinha de Trigo' }),
     );
     expect(screen.getByText('Nenhum insumo adicionado.')).toBeInTheDocument();
-    expect(valorDa(previa(), 'Custo produção')).toBe('R$ 0,00');
   });
 
   it('não oferece de novo um insumo já adicionado', async () => {
@@ -140,7 +124,7 @@ describe('nova receita', OPCOES, () => {
     expect(botao).toBeDisabled();
   });
 
-  it('salva com o corpo do contrato e volta para a lista', async () => {
+  it('salva a ficha técnica com o corpo do contrato e abre o detalhe', async () => {
     const corpos: unknown[] = [];
     server.use(
       mockApi('POST /receitas', async ({ request }) => {
@@ -148,28 +132,38 @@ describe('nova receita', OPCOES, () => {
         return makeReceita({ id: 9, nome: 'Bolo' });
       }),
     );
-    renderPagina({ gastos: [makeGastoIndireto({ valor: 10 })] });
+    renderPagina();
 
     await userEvent.type(
       await screen.findByRole('textbox', { name: 'Nome' }),
       'Bolo',
     );
     await userEvent.type(
-      screen.getByRole('textbox', { name: 'Rendimento' }),
+      screen.getByRole('textbox', { name: 'Rende quantas unidades boas?' }),
       '12',
     );
+    const fornadas = screen.getByRole('textbox', {
+      name: 'Quantas fornadas um lote ocupa?',
+    });
+    expect(fornadas).toHaveValue('1');
+    await userEvent.clear(fornadas);
+    await userEvent.type(fornadas, '0,5');
     await userEvent.type(
-      screen.getByRole('textbox', { name: 'Margem de lucro (%)' }),
-      '50',
+      screen.getByRole('textbox', { name: 'Embalagem por unidade' }),
+      '0,15',
     );
+    await userEvent.type(
+      screen.getByRole('textbox', {
+        name: 'Quanto costuma sobrar ou estragar?',
+      }),
+      '5',
+    );
+    // O lucro vazio usa o padrão da empresa, que aparece no texto de apoio.
+    expect(
+      screen.getByText('De cada R$ 1,00 vendido. Vazio usa o padrão (15,0%).'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Margem de lucro/)).not.toBeInTheDocument();
     await adicionarInsumo('Manteiga sem Sal', '100');
-
-    // 2,40 de manteiga + 10,00 de gasto proporcional (1 lote).
-    expect(valorDa(previa(), 'Gastos indiretos (1 lote)')).toBe('R$ 10,00');
-    expect(valorDa(previa(), 'Custo produção')).toBe('R$ 12,40');
-    expect(valorDa(previa(), 'Custo unitário')).toBe('R$ 1,03');
-    // 1,03 × 1,5 = 1,545, que o `toFixed(2)` do backend arredonda para 1,54.
-    expect(valorDa(previa(), 'Preço sugerido')).toBe('R$ 1,54');
 
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
@@ -181,11 +175,14 @@ describe('nova receita', OPCOES, () => {
         nome: 'Bolo',
         rendimento: 12,
         unidadeRendimento: 'UN',
-        margem_lucro: 0.5,
+        uso_por_lote: 0.5,
+        embalagem_por_unidade: 0.15,
+        perda_percentual: 0.05,
+        lucro_percentual: null,
         insumos: [{ insumo_id: 3, quantidade: 100 }],
       },
     ]);
-    expect(window.location.pathname).toBe('/receitas');
+    expect(window.location.pathname).toBe('/receitas/9');
   });
 
   it('mostra as mensagens de validação e o erro do backend', async () => {
@@ -200,7 +197,7 @@ describe('nova receita', OPCOES, () => {
 
     await userEvent.type(screen.getByRole('textbox', { name: 'Nome' }), 'Bolo');
     await userEvent.type(
-      screen.getByRole('textbox', { name: 'Rendimento' }),
+      screen.getByRole('textbox', { name: 'Rende quantas unidades boas?' }),
       '1',
     );
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
@@ -236,8 +233,10 @@ describe('editar receita', OPCOES, () => {
     setTestUrl('/receitas/1/editar');
   });
 
-  it('preenche o formulário, mostra os valores salvos e atualiza', async () => {
+  it('preenche o formulário e atualiza, com minutos de forno', async () => {
     const receita = makeReceita({
+      usoPorLote: 30,
+      lucroPercentual: 0.2,
       itens: [
         { insumoId: 1, quantidade: 1, custoCalculado: 3 },
         { insumoId: 99, quantidade: 2, custoCalculado: 1 },
@@ -251,23 +250,24 @@ describe('editar receita', OPCOES, () => {
         return receita;
       }),
     );
-    renderPagina({ receitaId: 1 });
+    renderPagina({
+      receitaId: 1,
+      configuracao: makeConfiguracaoCustos({ baseRateio: 'MINUTOS' }),
+    });
 
     expect(await screen.findByRole('textbox', { name: 'Nome' })).toHaveValue(
       'Pão Francês',
     );
     expect(
-      screen.getByRole('textbox', { name: 'Margem de lucro (%)' }),
-    ).toHaveValue('60');
+      screen.getByRole('textbox', {
+        name: 'Quantos minutos de forno um lote ocupa?',
+      }),
+    ).toHaveValue('30');
+    expect(
+      screen.getByRole('textbox', { name: 'Lucro desta receita' }),
+    ).toHaveValue('20');
     // Insumo que saiu do catálogo.
     expect(screen.getByText('Insumo #99')).toBeInTheDocument();
-
-    const salvos = within(
-      screen.getByRole('region', { name: 'Valores salvos' }),
-    );
-    expect(valorDa(salvos, 'Custo produção')).toBe('R$ 3,31');
-    expect(valorDa(salvos, 'Custo unitário')).toBe('R$ 0,07');
-    expect(valorDa(salvos, 'Preço sugerido')).toBe('R$ 0,11');
 
     await userEvent.click(
       screen.getByRole('button', { name: 'Remover Insumo #99' }),
@@ -282,10 +282,13 @@ describe('editar receita', OPCOES, () => {
         nome: 'Pão Francês',
         rendimento: 50,
         unidadeRendimento: 'UN',
-        margem_lucro: 0.6,
+        uso_por_lote: 30,
+        embalagem_por_unidade: 0,
+        perda_percentual: 0,
+        lucro_percentual: 0.2,
         insumos: [{ insumo_id: 1, quantidade: 1 }],
       },
     ]);
-    expect(window.location.pathname).toBe('/receitas');
+    expect(window.location.pathname).toBe('/receitas/1');
   });
 });

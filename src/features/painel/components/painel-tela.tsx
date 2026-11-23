@@ -29,12 +29,16 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { StatCard } from '@/shared/ui/stat-card';
 import { estoqueInsumosOptions } from '@/features/estoque/api/estoque.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
-import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
+import {
+  resumoVendasOptions,
+  vendasListOptions,
+} from '@/features/vendas/api/vendas.queries';
 import {
   calcularIndicadores,
   contarEstoqueBaixo,
   evolucaoMensal,
   inicioDosSeisMeses,
+  pontoEquilibrioDoPainel,
   produtosMaisRentaveis,
   tendenciaMensal,
   vendasDoMes,
@@ -140,6 +144,7 @@ export function PainelTela({ empresa }: { empresa: string }) {
   });
   const receitas = useQuery(receitasListOptions());
   const estoques = useQuery(estoqueInsumosOptions());
+  const resumo = useQuery(resumoVendasOptions());
 
   const dados =
     hoje && vendas.data && receitas.data
@@ -231,6 +236,35 @@ export function PainelTela({ empresa }: { empresa: string }) {
           },
         })}
       </section>
+
+      <Secao titulo="Contas do mês">
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          {bloco({
+            rotulo: 'Carregando o ponto de equilíbrio',
+            titulo:
+              'Não foi possível carregar quanto vender para pagar as contas.',
+            queries: [resumo],
+            pronto: Boolean(resumo.data),
+            classe: 'col-span-2',
+            conteudo: () => {
+              if (!resumo.data) return null;
+              const ponto = pontoEquilibrioDoPainel(
+                resumo.data.pontoEquilibrio,
+              );
+              return (
+                <StatCard
+                  className="col-span-2"
+                  title="Para pagar as contas"
+                  value={ponto.valor}
+                  detail={ponto.detalhe}
+                  detailTone={ponto.tom}
+                  icon={<IconGastos />}
+                />
+              );
+            },
+          })}
+        </div>
+      </Secao>
 
       <Secao titulo="Evolução mensal">
         {bloco({

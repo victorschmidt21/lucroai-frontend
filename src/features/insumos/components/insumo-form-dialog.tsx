@@ -70,7 +70,16 @@ export function InsumoFormDialog({ open, onOpenChange, insumo }: Props) {
         />
         <FormUnidadeSelect name="unidade" label="Unidade" />
       </div>
-      <FormMoneyInput name="valorPago" label="Valor pago" required />
+      <FormMoneyInput
+        name="valorPago"
+        label="Valor pago"
+        hint={
+          insumo
+            ? 'Mudar o valor ou a quantidade muda o preço de hoje, sem mexer no custo médio.'
+            : 'Conta como a primeira compra.'
+        }
+        required
+      />
       {insumo ? null : (
         <FormDecimalInput
           name="quantidadeDisponivelInicial"

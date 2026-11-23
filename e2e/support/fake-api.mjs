@@ -3,7 +3,7 @@
 //
 // Responde o que o /api/health sonda (`/health`), o login do seed (FE-07) e,
 // desde a FE-23, as rotas do spec de fumaça (`e2e/fluxo-principal.spec.ts`):
-// insumos, receitas, estoque, produções e vendas, com estado em memória que
+// insumos, receitas, estoque, produções, vendas e o canal Balcão (FE-46), com estado em memória que
 // começa vazio e dura enquanto o processo viver. Segue o contrato de
 // docs/api-integration.md e `src/shared/api/contracts/`: JSON puro, JWT de
 // teste e erros no formato da API (`{ statusCode, code, message, path,
@@ -103,11 +103,22 @@ const invalido = () => [
 // Estado em memória da empresa do seed. Cada coleção começa vazia; não há
 // gastos indiretos, então o custo invisível e os rateios são zero. `produtos`
 // é o saldo de produto acabado por receita (`GET /estoque/produtos`).
+/** Único canal da API falsa, o Balcão (o mesmo dos `precos` das receitas). */
+const CANAL_BALCAO = {
+  id: 1,
+  empresaId: EMPRESA_ID,
+  nome: 'Balcão',
+  comissaoPercentual: 0,
+  ativo: true,
+  balcao: true,
+};
+
 const db = { insumos: [], receitas: [], producoes: [], vendas: [] };
 const produtos = new Map();
 let ultimoId = 0;
 const novoId = () => ++ultimoId;
 const round2 = (valor) => Math.round(valor * 100) / 100;
+const round4 = (valor) => Math.round(valor * 10000) / 10000;
 const agora = () => new Date().toISOString();
 
 function buscar(colecao, id, code, mensagem) {
@@ -115,7 +126,10 @@ function buscar(colecao, id, code, mensagem) {
   return item ? [200, item] : naoEncontrado(code, mensagem);
 }
 
-/** `POST /insumos`: `custoUnitario = valorPago / quantidadeBaseCusto`. */
+/**
+ * `POST /insumos`: `custoUnitario = valorPago / quantidadeBaseCusto`, que é
+ * também o custo médio, o último custo e o preço de hoje (compra inicial, BE-29).
+ */
 function criarInsumo(body) {
   if (!body?.nome || !(body.quantidadeBaseCusto > 0) || !body.unidade) {
     return invalido();
@@ -128,17 +142,27 @@ function criarInsumo(body) {
     quantidadeBaseCusto: body.quantidadeBaseCusto,
     quantidadeDisponivel: body.quantidadeDisponivelInicial ?? 0,
     quantidadeMinima: 0,
+    estoqueNegativo: false,
     unidade: body.unidade,
     valorPago: body.valorPago,
     custoUnitario,
     precoUnitario: custoUnitario,
+    custoMedio: custoUnitario,
+    ultimoCusto: custoUnitario,
+    custoReposicao: custoUnitario,
+    precoMercado: null,
+    precoMercadoData: null,
     dataCriacao: agora(),
   };
   db.insumos.push(insumo);
   return [201, insumo];
 }
 
-/** `POST /receitas`: custos de docs/business-rules.md, sem custo invisível. */
+/**
+ * `POST /receitas`: custo só dos ingredientes (sem gastos, embalagem nem
+ * perda) e um preço só no Balcão, sem imposto nem maquininha:
+ * `custo ÷ (1 − lucro)`, com o lucro padrão de 15% quando vem `null`.
+ */
 function criarReceita(body) {
   if (!body?.nome || !(body.rendimento > 0) || !Array.isArray(body.insumos)) {
     return invalido();
@@ -153,27 +177,66 @@ function criarReceita(body) {
         : {}),
     };
   });
-  const custoProducao = round2(
-    itens.reduce((soma, item) => soma + (item.custoCalculado ?? 0), 0),
+  const custoLote = itens.reduce(
+    (soma, item) => soma + (item.custoCalculado ?? 0),
+    0,
   );
-  const custoUnitario = round2(custoProducao / body.rendimento);
+  const custoUnitario = round4(custoLote / body.rendimento);
+  const lucro = body.lucro_percentual ?? 0.15;
+  const preco = round4(custoUnitario / (1 - lucro));
+  const parte = (valor) => ({
+    valor: round4(valor),
+    fracao: round4(preco > 0 ? valor / preco : 0),
+  });
+  const zero = { valor: 0, fracao: 0 };
   const receita = {
     id: novoId(),
     empresaId: EMPRESA_ID,
     nome: body.nome,
     rendimento: body.rendimento,
     unidadeRendimento: body.unidadeRendimento,
-    custoProducao,
-    custoUnitario,
-    // Sem margem, o backend omite a margem e o preço sugerido.
-    ...(body.margem_lucro === undefined
+    usoPorLote: body.uso_por_lote ?? 1,
+    embalagemPorUnidade: body.embalagem_por_unidade ?? 0,
+    perdaPercentual: body.perda_percentual ?? 0,
+    ...(body.lucro_percentual == null
       ? {}
-      : {
-          margemLucro: body.margem_lucro,
-          precoSugerido: round2(custoUnitario * (1 + body.margem_lucro)),
-        }),
+      : { lucroPercentual: body.lucro_percentual }),
+    custoProducao: round2(custoLote),
+    custoUnitario,
+    precoSugerido: preco,
     dataCriacao: agora(),
     itens,
+    custo: {
+      ingredientesLote: round2(custoLote),
+      gastosMensaisLote: 0,
+      ingredientes: custoUnitario,
+      gastosMensais: 0,
+      gastosPorUnidade: 0,
+      embalagem: 0,
+      perdas: 0,
+      unitario: custoUnitario,
+    },
+    precos: [
+      {
+        canalId: 1,
+        canal: 'Balcão',
+        balcao: true,
+        percentuais: lucro,
+        preco,
+        motivo: null,
+        composicao: {
+          ingredientes: parte(custoUnitario),
+          gastosMensais: zero,
+          gastosPorUnidade: zero,
+          embalagem: zero,
+          perdas: zero,
+          imposto: zero,
+          taxaCanal: zero,
+          gastosPercentuais: zero,
+          lucro: { valor: round4(preco * lucro), fracao: lucro },
+        },
+      },
+    ],
   };
   db.receitas.push(receita);
   return [201, receita];
@@ -186,6 +249,7 @@ function estoqueDe(insumo) {
     insumoId: insumo.id,
     quantidadeDisponivel: insumo.quantidadeDisponivel,
     quantidadeMinima: insumo.quantidadeMinima,
+    estoqueNegativo: insumo.quantidadeDisponivel < 0,
     dataAlteracao: insumo.dataCriacao,
   };
 }
@@ -244,10 +308,11 @@ function criarVenda(body) {
       quantidade: item.quantidade,
       precoUnitarioReal: preco,
       custoUnitario: custo,
-      margemRealizada:
+      // Sem imposto nem taxas na API falsa: o lucro real é `1 − custo ÷ preço`.
+      lucroReal:
         custo === null || preco === 0
           ? null
-          : Math.round(((preco - custo) / preco) * 10_000) / 10_000,
+          : Math.round((1 - custo / preco) * 10_000) / 10_000,
     });
   }
   const venda = {
@@ -258,6 +323,7 @@ function criarVenda(body) {
     ),
     status: 'PENDENTE',
     dataVenda: agora(),
+    canalId: body.canal_id ?? CANAL_BALCAO.id,
     itens,
   };
   db.vendas.push(venda);
@@ -342,6 +408,24 @@ const routes = {
   ),
   'POST /insumos': autenticada((_req, _url, body) => criarInsumo(body)),
   'GET /gastos-indiretos': autenticada(() => [200, []]),
+  // Aviso ao entrar (FE-47): sem alertas, para nenhum e2e ver o aviso.
+  'GET /alertas': autenticada(() => [
+    200,
+    { estoqueNegativo: [], precoDefasado: [] },
+  ]),
+  // Configuração do seed (FE-44: o formulário de receita lê a base de rateio e o lucro padrão).
+  'GET /configuracao-custos': autenticada(() => [
+    200,
+    {
+      empresaId: EMPRESA_ID,
+      baseRateio: 'FORNADAS',
+      capacidadeMensal: 100,
+      lucroPadrao: 0.15,
+      impostoPercentual: 0,
+      taxaMaquininha: 0,
+    },
+  ]),
+  'GET /canais': autenticada(() => [200, [CANAL_BALCAO]]),
   // Receitas.
   'GET /receitas': autenticada(() => [200, db.receitas]),
   'GET /receitas/:id': autenticada((_req, _url, _body, id) =>
@@ -377,6 +461,21 @@ const routes = {
   'POST /producoes': autenticada((_req, _url, body) => criarProducao(body)),
   // Vendas.
   'GET /vendas': autenticada((_req, url) => listarVendas(url)),
+  // Ponto de equilíbrio da empresa (FE-45): sem gastos mensais nem mix
+  // calculado, a API falsa responde como se não houvesse vendas.
+  'GET /vendas/resumo': autenticada(() => [
+    200,
+    {
+      dias: 30,
+      dataInicio: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      vendas: 0,
+      receita: 0,
+      margemContribuicao: 0,
+      indiceMargemContribuicao: null,
+      gastosMensais: 0,
+      pontoEquilibrio: { valor: null, motivo: 'SEM_VENDAS' },
+    },
+  ]),
   'GET /vendas/:id': autenticada((_req, _url, _body, id) =>
     buscar('vendas', id, 'VENDA_NAO_ENCONTRADA', 'Venda não encontrada'),
   ),

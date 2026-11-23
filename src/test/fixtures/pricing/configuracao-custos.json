@@ -1,0 +1,8 @@
+{
+  "empresaId": 30,
+  "baseRateio": "FORNADAS",
+  "capacidadeMensal": 100,
+  "lucroPadrao": 0.15,
+  "impostoPercentual": 0,
+  "taxaMaquininha": 0.0136
+}

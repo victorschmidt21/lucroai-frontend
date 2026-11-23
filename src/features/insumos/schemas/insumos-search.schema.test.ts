@@ -8,6 +8,12 @@ it('lê a busca e o novo=1', () => {
   });
 });
 
+it('lê o insumo da compra (aviso de estoque negativo)', () => {
+  expect(insumosSearchSchema.parse({ compra: '12' }).compra).toBe(12);
+  expect(insumosSearchSchema.parse({ compra: '0' }).compra).toBeUndefined();
+  expect(insumosSearchSchema.parse({ compra: 'abc' }).compra).toBeUndefined();
+});
+
 it('aceita a URL sem parâmetros', () => {
   expect(insumosSearchSchema.parse({})).toEqual({});
 });

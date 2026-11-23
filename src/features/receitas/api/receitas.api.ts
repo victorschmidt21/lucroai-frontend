@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import { apiFetch } from '@/shared/api/client';
 import {
-  precoVendaSchema,
   receitaCustoSchema,
   receitaSchema,
   simulacaoCenarioSchema,
   type CreateReceitaBody,
-  type PrecoVendaBody,
   type SimularCenarioBody,
   type SimularReceitaCustoBody,
   type UpdateReceitaBody,
@@ -57,34 +55,22 @@ export async function deleteReceita(id: number) {
 
 // Simulação (FE-20): nenhuma destas rotas grava nada.
 
-/** Campo omitido usa o valor da receita (custo, preço sugerido e rendimento). */
+/** Campo omitido usa o valor da receita (custo, preço sugerido no canal, rendimento e Balcão). */
 export async function simularCenario({
   id,
   body,
+  signal,
 }: {
   id: number;
   body: SimularCenarioBody;
+  signal?: AbortSignal;
 }) {
   const corpo = await apiFetch(`/receitas/${id}/simular`, {
     method: 'POST',
     body,
+    signal,
   });
   return unwrap(corpo, simulacaoCenarioSchema);
-}
-
-/** Resposta sem arredondamento: formate com `formatMoeda`. */
-export async function calcularPrecoVenda({
-  id,
-  body,
-}: {
-  id: number;
-  body: PrecoVendaBody;
-}) {
-  const corpo = await apiFetch(`/receitas/${id}/preco-venda`, {
-    method: 'POST',
-    body,
-  });
-  return unwrap(corpo, precoVendaSchema);
 }
 
 /** Custo atual de 1 lote. */

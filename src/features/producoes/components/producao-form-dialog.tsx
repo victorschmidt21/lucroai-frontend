@@ -2,13 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useController, useWatch } from 'react-hook-form';
+import { configuracaoCustosOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import { gastosIndiretosListOptions } from '@/features/gastos-indiretos/api/gastos-indiretos.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import type { GastoIndireto } from '@/shared/api/contracts/catalog';
-import {
-  METODO_RATEIO_ROTULOS,
-  UNIDADE_MEDIDA_ROTULOS,
-} from '@/shared/api/contracts/enums';
+import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
@@ -45,6 +43,11 @@ export function ProducaoFormDialog({
   const registrar = useCreateProducao();
   const receitas = useQuery(receitasListOptions());
   const gastos = useQuery(gastosIndiretosListOptions());
+  const configuracao = useQuery(configuracaoCustosOptions());
+  // Só a conta do mês entra na produção (BE-30): os outros tipos ficam na receita e na venda.
+  const contasDoMes = (gastos.data ?? []).filter(
+    (gasto) => gasto.tipo === 'MENSAL',
+  );
 
   return (
     <FormDialog
@@ -85,11 +88,15 @@ export function ProducaoFormDialog({
         required
       />
       <CampoGastos
-        gastos={gastos.data ?? []}
+        gastos={contasDoMes}
         carregando={gastos.isPending}
         erro={gastos.isError ? getErrorMessage(gastos.error) : null}
       />
-      <Previa receitas={receitas.data ?? []} gastos={gastos.data ?? []} />
+      <Previa
+        receitas={receitas.data ?? []}
+        gastos={contasDoMes}
+        capacidadeMensal={configuracao.data?.capacidadeMensal}
+      />
     </FormDialog>
   );
 }
@@ -125,9 +132,7 @@ function CampoGastos({
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-small text-ink-muted">
-        Gastos indiretos
-      </legend>
+      <legend className="mb-2 text-small text-ink-muted">Contas do mês</legend>
       {carregando ? (
         <Skeleton aria-label="Carregando os gastos" className="h-8" />
       ) : (
@@ -162,9 +167,12 @@ function CampoGastos({
 function Previa({
   receitas,
   gastos,
+  capacidadeMensal,
 }: {
   receitas: readonly Receita[];
   gastos: readonly GastoIndireto[];
+  /** Sem a configuração de custos, a prévia não estima as contas do mês. */
+  capacidadeMensal: number | undefined;
 }) {
   const [receitaId, quantidade, todosGastos, ids] = useWatch<
     ProducaoFormInput,
@@ -179,7 +187,14 @@ function Previa({
   const rateados = todosGastos
     ? gastos
     : gastos.filter((gasto) => ids.includes(gasto.id));
-  const previa = calcularPreviaProducao(rateados, lotes, receita.rendimento);
+  const previa = calcularPreviaProducao(
+    rateados,
+    lotes,
+    receita.rendimento,
+    capacidadeMensal
+      ? { usoPorLote: receita.usoPorLote, capacidadeMensal }
+      : undefined,
+  );
 
   return (
     <section
@@ -201,12 +216,7 @@ function Previa({
           <ul className="flex flex-col gap-1">
             {previa.rateios.map(({ gasto, valorRateado }) => (
               <li key={gasto.id} className="flex justify-between gap-3">
-                <span className="min-w-0 wrap-anywhere">
-                  {gasto.descricao}
-                  <span className="block text-ink-muted">
-                    {METODO_RATEIO_ROTULOS[gasto.metodoRateio]}
-                  </span>
-                </span>
+                <span className="min-w-0 wrap-anywhere">{gasto.descricao}</span>
                 <span className="shrink-0 tabular-nums">
                   {formatMoeda(valorRateado)}
                 </span>

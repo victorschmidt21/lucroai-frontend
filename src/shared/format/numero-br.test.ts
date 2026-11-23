@@ -82,6 +82,13 @@ describe('formatNumeroEditavel', () => {
     expect(formatNumeroEditavel(5)).toBe('5');
   });
 
+  it('inteiro sai sem separador de milhar, e o campo lê o mesmo número', () => {
+    expect(formatNumeroEditavel(3000)).toBe('3000');
+    expect(formatNumeroEditavel(1234567)).toBe('1234567');
+    expect(parseNumeroBR(formatNumeroEditavel(3000))).toBe(3000);
+    expect(formatNumeroEditavel(1000, 2)).toBe('1.000,00');
+  });
+
   it('fixa as casas quando pedido (dinheiro)', () => {
     expect(formatNumeroEditavel(15, 2)).toBe('15,00');
     expect(formatNumeroEditavel(1234.567, 2)).toBe('1.234,57');

@@ -36,8 +36,14 @@ function montarInsumo(
     ...body,
     quantidadeDisponivel,
     quantidadeMinima: 0,
+    estoqueNegativo: quantidadeDisponivel < 0,
     custoUnitario,
     precoUnitario: custoUnitario,
+    custoMedio: custoUnitario,
+    ultimoCusto: custoUnitario,
+    custoReposicao: custoUnitario,
+    precoMercado: null,
+    precoMercadoData: null,
     dataCriacao: '2026-11-17T10:00:00.000Z',
   };
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   calcularBase,
-  calcularProjecao,
   cenariosDeVolume,
+  custoComVariacao,
   faixaPreco,
   faixaVolume,
   limitarNaFaixa,
@@ -13,7 +13,6 @@ const receita = {
   id: 1,
   rendimento: 10,
   custoUnitario: 2,
-  margemLucro: 0.5,
   precoSugerido: 3,
 };
 
@@ -29,11 +28,12 @@ describe('precoBaseDaReceita', () => {
     expect(precoBaseDaReceita(receita)).toBe(3);
   });
 
-  it('sem preço sugerido, usa custo × (1 + margem)', () => {
-    expect(precoBaseDaReceita({ ...receita, precoSugerido: 0 })).toBe(3);
+  it('sem preço sugerido, usa o custo; sem custo, 0', () => {
+    expect(precoBaseDaReceita({ ...receita, precoSugerido: 0 })).toBe(2);
     expect(precoBaseDaReceita({ id: 1, rendimento: 1, custoUnitario: 4 })).toBe(
       4,
     );
+    expect(precoBaseDaReceita({ id: 1, rendimento: 1 })).toBe(0);
   });
 });
 
@@ -56,35 +56,23 @@ describe('calcularBase', () => {
     ]);
 
     // receita = 4×5 + 6×4 = 44; quantidade = 10
-    expect(base).toEqual({
-      custo: 2,
-      precoAtual: 4.4,
-      receitaAtual: 44,
-      volumeAtual: 10,
-      lucroAtual: 24,
-      margemAtual: (24 / 44) * 100,
-    });
+    expect(base).toEqual({ custo: 2, precoAtual: 4.4, volumeAtual: 10 });
   });
 
-  it('sem vendas, usa o preço sugerido e o rendimento, sem dividir por zero', () => {
-    const base = calcularBase(receita, []);
-
-    expect(base).toEqual({
+  it('sem vendas, usa o preço sugerido e o rendimento', () => {
+    expect(calcularBase(receita, [])).toEqual({
       custo: 2,
       precoAtual: 3,
-      receitaAtual: 30,
       volumeAtual: 10,
-      lucroAtual: 10,
-      margemAtual: (10 / 30) * 100,
     });
   });
 
-  it('sem vendas e sem rendimento, o volume é 1; sem preço, a margem é 0', () => {
-    const base = calcularBase({ id: 1, rendimento: 0 }, []);
-
-    expect(base.volumeAtual).toBe(1);
-    expect(base.receitaAtual).toBe(0);
-    expect(base.margemAtual).toBe(0);
+  it('sem vendas e sem rendimento, o volume é 1; sem custo nem preço, 0', () => {
+    expect(calcularBase({ id: 1, rendimento: 0 }, [])).toEqual({
+      custo: 0,
+      precoAtual: 0,
+      volumeAtual: 1,
+    });
   });
 });
 
@@ -139,54 +127,17 @@ describe('limitarNaFaixa', () => {
   });
 });
 
-describe('calcularProjecao', () => {
-  it('calcula custo, lucro, receita, margem e diferença projetados', () => {
-    const projecao = calcularProjecao({
-      base: { custo: 2, lucroAtual: 10 },
-      preco: 5,
-      variacaoCusto: 50,
-      volume: 10,
-    });
-
-    expect(projecao).toEqual({
-      custoProjetado: 3,
-      lucroPorUnidade: 2,
-      lucroProjetado: 20,
-      receitaProjetada: 50,
-      margemProjetada: 40,
-      diferenca: 10,
-    });
-  });
-
-  it('com variação negativa, o custo cai; lucro negativo dá margem negativa', () => {
-    const projecao = calcularProjecao({
-      base: { custo: 4, lucroAtual: 0 },
-      preco: 1,
-      variacaoCusto: -50,
-      volume: 2,
-    });
-
-    expect(projecao.custoProjetado).toBe(2);
-    expect(projecao.lucroProjetado).toBe(-2);
-    expect(projecao.margemProjetada).toBe(-100);
-    expect(projecao.diferenca).toBe(-2);
-  });
-
-  it('com receita projetada zero, a margem é 0', () => {
-    expect(
-      calcularProjecao({
-        base: { custo: 0, lucroAtual: 0 },
-        preco: 0,
-        variacaoCusto: 0,
-        volume: 5,
-      }).margemProjetada,
-    ).toBe(0);
+describe('custoComVariacao', () => {
+  it('aplica a variação em pontos percentuais', () => {
+    expect(custoComVariacao(2, 50)).toBe(3);
+    expect(custoComVariacao(4, -50)).toBe(2);
+    expect(custoComVariacao(2, 0)).toBe(2);
   });
 });
 
 describe('cenariosDeVolume', () => {
-  it('Conservador (× 0,5), Base e Otimista (× 1,5), com receita e lucro', () => {
-    expect(cenariosDeVolume(5, 3, 10)).toEqual([
+  it('Conservador (× 0,5), Base e Otimista (× 1,5), com o lucro por unidade da API', () => {
+    expect(cenariosDeVolume(5, 2, 10)).toEqual([
       { nome: 'Conservador', volume: 5, receita: 25, lucro: 10 },
       { nome: 'Base', volume: 10, receita: 50, lucro: 20 },
       { nome: 'Otimista', volume: 15, receita: 75, lucro: 30 },

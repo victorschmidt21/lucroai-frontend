@@ -3,23 +3,34 @@
 import type { Venda } from '@/shared/api/contracts/sales';
 import { formatData } from '@/shared/format/data';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatMargem, formatQuantidade } from '@/shared/format/numero';
+import { formatQuantidade } from '@/shared/format/numero';
 import { StatusVendaBadge } from '@/shared/ui/badge';
 import { Drawer } from '@/shared/ui/drawer';
-import { subtotalItem, totalDaVenda } from '../vendas.calculos';
+import {
+  descreverLucroReal,
+  subtotalItem,
+  totalDaVenda,
+} from '../vendas.calculos';
 
 type Props = {
   venda: Venda;
   /** Nome da receita do item, ou "Produto #<id>". */
   nomeDoItem: (receitaId: number) => string;
+  /** Nome do canal da venda (FE-46). */
+  canal: string;
   onFechar: () => void;
 };
 
 /**
  * Detalhe da venda (FE-18, só na web): por item, preço real, custo unitário
- * (snapshot gravado na criação) e margem realizada, gravada pelo backend.
+ * (snapshot gravado na criação) e lucro real (FE-46), gravado pelo backend.
  */
-export function VendaDetalheDrawer({ venda, nomeDoItem, onFechar }: Props) {
+export function VendaDetalheDrawer({
+  venda,
+  nomeDoItem,
+  canal,
+  onFechar,
+}: Props) {
   return (
     <Drawer
       title={`Venda #${venda.id}`}
@@ -33,6 +44,10 @@ export function VendaDetalheDrawer({ venda, nomeDoItem, onFechar }: Props) {
         <p className="flex items-center justify-between gap-3 text-body text-ink-muted">
           <span>Status</span>
           <StatusVendaBadge status={venda.status} />
+        </p>
+        <p className="flex items-center justify-between gap-3 text-body text-ink-muted">
+          <span>Onde vendeu</span>
+          <span className="font-semibold text-ink">{canal}</span>
         </p>
 
         <ul aria-label="Itens da venda" className="flex flex-col gap-2">
@@ -63,10 +78,7 @@ export function VendaDetalheDrawer({ venda, nomeDoItem, onFechar }: Props) {
                   rotulo="Custo unitário"
                   valor={formatMoeda(item.custoUnitario)}
                 />
-                <Dado
-                  rotulo="Margem realizada"
-                  valor={formatMargem(item.margemRealizada)}
-                />
+                <LucroReal lucroReal={item.lucroReal} />
               </dl>
             </li>
           ))}
@@ -88,6 +100,25 @@ function Dado({ rotulo, valor }: { rotulo: string; valor: string }) {
     <div className="flex min-w-0 flex-col gap-0.5">
       <dt className="text-ink-muted">{rotulo}</dt>
       <dd className="tabular-nums">{valor}</dd>
+    </div>
+  );
+}
+
+/** Lucro real do item em % do preço; negativo em cor de alerta e com "(prejuízo)". */
+function LucroReal({ lucroReal }: { lucroReal: number | null }) {
+  const { texto, prejuizo } = descreverLucroReal(lucroReal);
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="text-ink-muted">Lucro real</dt>
+      <dd
+        className={
+          prejuizo
+            ? 'font-semibold text-danger tabular-nums'
+            : 'text-success tabular-nums'
+        }
+      >
+        {texto}
+      </dd>
     </div>
   );
 }

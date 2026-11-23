@@ -1,17 +1,70 @@
 {
-  "id": 25,
+  "id": 96,
   "empresaId": 30,
   "nome": "Pão Francês",
-  "rendimento": 50,
+  "rendimento": 28,
   "unidadeRendimento": "UN",
-  "custoProducao": 8438.31,
-  "custoUnitario": 168.77,
-  "margemLucro": 0.6,
-  "precoSugerido": 270.03,
-  "dataCriacao": "2026-05-25T16:42:10.418Z",
+  "custoProducao": 10.77,
+  "custoUnitario": 0.3848,
+  "margemLucro": 0.1765,
+  "precoSugerido": 0.46,
+  "usoPorLote": 0.2,
+  "embalagemPorUnidade": 0,
+  "perdaPercentual": 0.05,
+  "dataCriacao": "2026-05-27T18:00:40.839Z",
   "itens": [
-    { "insumoId": 50, "quantidade": 1, "custoCalculado": 3 },
-    { "insumoId": 57, "quantidade": 0.02, "custoCalculado": 0.05 },
-    { "insumoId": 55, "quantidade": 15, "custoCalculado": 0.26 }
+    { "insumoId": 256, "quantidade": 1, "custoCalculado": 3.5 },
+    { "insumoId": 263, "quantidade": 0.02, "custoCalculado": 0.05 },
+    { "insumoId": 261, "quantidade": 15, "custoCalculado": 0.26 }
+  ],
+  "custo": {
+    "ingredientesLote": 3.81,
+    "gastosMensaisLote": 5.03,
+    "ingredientes": 0.1359,
+    "gastosMensais": 0.1796,
+    "gastosPorUnidade": 0.05,
+    "embalagem": 0,
+    "perdas": 0.0192,
+    "unitario": 0.3848
+  },
+  "precos": [
+    {
+      "canalId": 143,
+      "canal": "Balcão",
+      "balcao": true,
+      "percentuais": 0.1636,
+      "preco": 0.46,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": { "valor": 0.1359, "fracao": 0.2954 },
+        "gastosMensais": { "valor": 0.1796, "fracao": 0.3905 },
+        "gastosPorUnidade": { "valor": 0.05, "fracao": 0.1087 },
+        "embalagem": { "valor": 0, "fracao": 0 },
+        "perdas": { "valor": 0.0192, "fracao": 0.0418 },
+        "imposto": { "valor": 0, "fracao": 0 },
+        "taxaCanal": { "valor": 0.0063, "fracao": 0.0136 },
+        "gastosPercentuais": { "valor": 0, "fracao": 0 },
+        "lucro": { "valor": 0.069, "fracao": 0.15 }
+      }
+    },
+    {
+      "canalId": 144,
+      "canal": "iFood",
+      "balcao": false,
+      "percentuais": 0.302,
+      "preco": 0.5513,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": { "valor": 0.1359, "fracao": 0.2465 },
+        "gastosMensais": { "valor": 0.1796, "fracao": 0.3259 },
+        "gastosPorUnidade": { "valor": 0.05, "fracao": 0.0907 },
+        "embalagem": { "valor": 0, "fracao": 0 },
+        "perdas": { "valor": 0.0192, "fracao": 0.0349 },
+        "imposto": { "valor": 0, "fracao": 0 },
+        "taxaCanal": { "valor": 0.0838, "fracao": 0.152 },
+        "gastosPercentuais": { "valor": 0, "fracao": 0 },
+        "lucro": { "valor": 0.0827, "fracao": 0.15 }
+      }
+    }
   ]
 }

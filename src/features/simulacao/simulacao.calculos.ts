@@ -4,14 +4,15 @@ import type { StatusVenda } from '@/shared/api/contracts/enums';
 /*
  * Simulação interativa (docs/business-rules.md#simulação-interativa). Origem:
  * simulacao_page.dart (`_ScenarioBase.fromReceita`, `_priceRangeFor`,
- * `_volumeRangeFor`, `_buildSimulationContent` e `_VolumePreviewCard`).
+ * `_volumeRangeFor` e `_VolumePreviewCard`). Desde a FE-45 o lucro vem de
+ * `POST /receitas/:id/simular`: aqui só ficam o preço e o volume de partida,
+ * as faixas dos controles e o custo que vai no corpo.
  */
 
 type ReceitaParaSimulacao = {
   id: number;
   rendimento: number;
   custoUnitario?: number;
-  margemLucro?: number;
   precoSugerido?: number;
 };
 
@@ -29,24 +30,22 @@ export type Faixa = { min: number; max: number; passo: number };
 export type BaseSimulacao = {
   custo: number;
   precoAtual: number;
-  receitaAtual: number;
   volumeAtual: number;
-  lucroAtual: number;
-  /** Pontos percentuais (`25` = 25%). */
-  margemAtual: number;
 };
 
-/** `precoSugerido > 0 ? precoSugerido : custo × (1 + margemLucro)`. */
+/**
+ * O preço sugerido no Balcão; sem ele (percentuais ≥ 100%), o custo. O mobile
+ * usava `custo × (1 + margemLucro)`, o markup que saiu na FE-45.
+ */
 export function precoBaseDaReceita(receita: ReceitaParaSimulacao) {
-  const custo = receita.custoUnitario ?? 0;
   const sugerido = receita.precoSugerido ?? 0;
 
-  return sugerido > 0 ? sugerido : custo * (1 + (receita.margemLucro ?? 0));
+  return sugerido > 0 ? sugerido : (receita.custoUnitario ?? 0);
 }
 
 /**
- * Base da receita a partir dos itens dela nas vendas `CONCLUIDA`. Sem vendas,
- * usa o preço sugerido e `max(1, rendimento)` como volume: não divide por zero.
+ * Preço médio e volume da receita nas vendas `CONCLUIDA`. Sem vendas, usa o
+ * preço sugerido e `max(1, rendimento)` como volume.
  */
 export function calcularBase(
   receita: ReceitaParaSimulacao,
@@ -63,22 +62,11 @@ export function calcularBase(
     }
   }
 
-  const custo = receita.custoUnitario ?? 0;
-  const precoAtual =
-    quantidade > 0 ? receitaVendas / quantidade : precoBaseDaReceita(receita);
-  const volumePadrao = Math.max(1, receita.rendimento);
-  const receitaAtual =
-    quantidade > 0 ? receitaVendas : precoAtual * volumePadrao;
-  const volumeAtual = quantidade > 0 ? quantidade : volumePadrao;
-  const lucroAtual = receitaAtual - custo * volumeAtual;
-
   return {
-    custo,
-    precoAtual,
-    receitaAtual,
-    volumeAtual,
-    lucroAtual,
-    margemAtual: receitaAtual === 0 ? 0 : (lucroAtual / receitaAtual) * 100,
+    custo: receita.custoUnitario ?? 0,
+    precoAtual:
+      quantidade > 0 ? receitaVendas / quantidade : precoBaseDaReceita(receita),
+    volumeAtual: quantidade > 0 ? quantidade : Math.max(1, receita.rendimento),
   };
 }
 
@@ -109,43 +97,12 @@ export function limitarNaFaixa(valor: number, { min, max }: Faixa) {
   return Math.min(max, Math.max(min, valor));
 }
 
-export type Projecao = {
-  custoProjetado: number;
-  lucroPorUnidade: number;
-  lucroProjetado: number;
-  receitaProjetada: number;
-  /** Pontos percentuais. */
-  margemProjetada: number;
-  /** `lucroProjetado − lucroAtual`. */
-  diferenca: number;
-};
-
-export function calcularProjecao({
-  base,
-  preco,
-  variacaoCusto,
-  volume,
-}: {
-  base: Pick<BaseSimulacao, 'custo' | 'lucroAtual'>;
-  preco: number;
-  /** Em pontos percentuais (`20` = +20%). */
-  variacaoCusto: number;
-  volume: number;
-}): Projecao {
-  const custoProjetado = base.custo * (1 + variacaoCusto / 100);
-  const lucroPorUnidade = preco - custoProjetado;
-  const lucroProjetado = lucroPorUnidade * volume;
-  const receitaProjetada = preco * volume;
-
-  return {
-    custoProjetado,
-    lucroPorUnidade,
-    lucroProjetado,
-    receitaProjetada,
-    margemProjetada:
-      receitaProjetada === 0 ? 0 : (lucroProjetado / receitaProjetada) * 100,
-    diferenca: lucroProjetado - base.lucroAtual,
-  };
+/**
+ * Custo com a variação em pontos percentuais (`20` = +20%), que vai como
+ * `novoCusto` na simulação.
+ */
+export function custoComVariacao(custo: number, variacaoCusto: number) {
+  return custo * (1 + variacaoCusto / 100);
 }
 
 export type CenarioVolume = {
@@ -155,10 +112,13 @@ export type CenarioVolume = {
   lucro: number;
 };
 
-/** `_VolumePreviewCard`: volume × 0,5, × 1 e × 1,5, arredondados e no mínimo 1. */
+/**
+ * `_VolumePreviewCard`: volume × 0,5, × 1 e × 1,5, arredondados e no mínimo 1.
+ * O lucro é o `lucroPorUnidade` da API × volume, como o `lucroMes` dela.
+ */
 export function cenariosDeVolume(
   preco: number,
-  custoProjetado: number,
+  lucroPorUnidade: number,
   volume: number,
 ): CenarioVolume[] {
   const cenarios = [
@@ -174,7 +134,7 @@ export function cenariosDeVolume(
       nome,
       volume: v,
       receita: preco * v,
-      lucro: (preco - custoProjetado) * v,
+      lucro: lucroPorUnidade * v,
     };
   });
 }

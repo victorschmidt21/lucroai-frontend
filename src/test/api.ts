@@ -1,6 +1,11 @@
 import { http, HttpResponse, type DefaultBodyType, type PathParams } from 'msw';
 import type { LoginResponse } from '@/shared/api/contracts/auth';
-import type { GastoIndireto, Insumo } from '@/shared/api/contracts/catalog';
+import type {
+  Alertas,
+  CompraInsumo,
+  GastoIndireto,
+  Insumo,
+} from '@/shared/api/contracts/catalog';
 import type {
   Estoque,
   EstoqueProduto,
@@ -8,12 +13,15 @@ import type {
   Producao,
 } from '@/shared/api/contracts/operations';
 import type {
-  PrecoVenda,
+  CanalVenda,
+  ConfiguracaoCustos,
+} from '@/shared/api/contracts/pricing';
+import type {
   Receita,
   ReceitaCusto,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
-import type { Venda } from '@/shared/api/contracts/sales';
+import type { ResumoVendas, Venda } from '@/shared/api/contracts/sales';
 
 /** URL do proxy BFF, sem depender da origem: `*\/api/backend/insumos`. */
 export function apiUrl(caminho: string) {
@@ -47,11 +55,16 @@ export type RotasDaApi = {
   'POST /insumos': Insumo;
   'PATCH /insumos/:id': Insumo;
   'DELETE /insumos/:id': undefined;
+  'GET /insumos/:id/compras': CompraInsumo[];
+  'GET /alertas': Alertas;
+  'POST /insumos/:id/compras': CompraInsumo;
   'GET /gastos-indiretos': GastoIndireto[];
   'GET /gastos-indiretos/:id': GastoIndireto;
   'POST /gastos-indiretos': GastoIndireto;
   'PUT /gastos-indiretos/:id': GastoIndireto;
   'DELETE /gastos-indiretos/:id': undefined;
+  'GET /configuracao-custos': ConfiguracaoCustos;
+  'GET /canais': CanalVenda[];
   'GET /receitas': Receita[];
   'GET /receitas/:id': Receita;
   'POST /receitas': Receita;
@@ -60,7 +73,6 @@ export type RotasDaApi = {
   'GET /receitas/:id/custo': ReceitaCusto;
   'POST /receitas/:id/custo/simular': ReceitaCusto;
   'POST /receitas/:id/simular': SimulacaoCenario;
-  'POST /receitas/:id/preco-venda': PrecoVenda;
   'GET /estoque/insumos': Estoque[];
   'POST /estoque/insumos/:id/entrada': Estoque;
   'PATCH /estoque/insumos/:id/minimo': Estoque;
@@ -70,6 +82,7 @@ export type RotasDaApi = {
   'GET /producoes/:id': Producao;
   'POST /producoes': Producao;
   'GET /vendas': Venda[];
+  'GET /vendas/resumo': ResumoVendas;
   'GET /vendas/:id': Venda;
   'POST /vendas': Venda;
   'PATCH /vendas/:id/status': Venda;

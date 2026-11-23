@@ -1,0 +1,26 @@
+[
+  {
+    "id": 143,
+    "empresaId": 30,
+    "nome": "Balcão",
+    "comissaoPercentual": 0,
+    "ativo": true,
+    "balcao": true
+  },
+  {
+    "id": 144,
+    "empresaId": 30,
+    "nome": "iFood",
+    "comissaoPercentual": 0.152,
+    "ativo": true,
+    "balcao": false
+  },
+  {
+    "id": 145,
+    "empresaId": 30,
+    "nome": "iFood com entrega",
+    "comissaoPercentual": 0.262,
+    "ativo": false,
+    "balcao": false
+  }
+]

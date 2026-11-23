@@ -1,199 +1,241 @@
 [
   {
-    "id": 28,
+    "id": 166,
     "empresaId": 30,
-    "total": 38603.8,
+    "total": 78.4,
     "status": "PENDENTE",
-    "dataVenda": "2026-11-20T15:42:10.418Z",
+    "dataVenda": "2026-11-22T17:00:40.839Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 48,
-        "vendaId": 28,
-        "receitaId": 25,
+        "id": 282,
+        "vendaId": 166,
+        "receitaId": 96,
         "quantidade": 100,
-        "precoUnitarioReal": 270.03,
-        "custoUnitario": 168.77,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.46,
+        "custoUnitario": 0.3799,
+        "margemRealizada": 0.1741,
+        "lucroReal": 0.1605
       },
       {
-        "id": 49,
-        "vendaId": 28,
-        "receitaId": 27,
+        "id": 283,
+        "vendaId": 166,
+        "receitaId": 98,
         "quantidade": 40,
-        "precoUnitarioReal": 290.02,
-        "custoUnitario": 181.26,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.81,
+        "custoUnitario": 0.5917,
+        "margemRealizada": 0.2695,
+        "lucroReal": 0.2559
       }
     ]
   },
   {
-    "id": 27,
+    "id": 164,
     "empresaId": 30,
-    "total": 7342.92,
+    "total": 15.28,
     "status": "CONCLUIDA",
-    "dataVenda": "2026-11-19T15:42:10.418Z",
+    "dataVenda": "2026-11-21T17:00:40.839Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 46,
-        "vendaId": 27,
-        "receitaId": 25,
+        "id": 279,
+        "vendaId": 164,
+        "receitaId": 96,
         "quantidade": 20,
-        "precoUnitarioReal": 270.03,
-        "custoUnitario": 168.77,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.46,
+        "custoUnitario": 0.3799,
+        "margemRealizada": 0.1741,
+        "lucroReal": 0.1605
       },
       {
-        "id": 47,
-        "vendaId": 27,
-        "receitaId": 26,
-        "quantidade": 4,
-        "precoUnitarioReal": 485.58,
-        "custoUnitario": 323.72,
-        "margemRealizada": 0.3333
+        "id": 280,
+        "vendaId": 164,
+        "receitaId": 97,
+        "quantidade": 2,
+        "precoUnitarioReal": 3.04,
+        "custoUnitario": 2.3326,
+        "margemRealizada": 0.2327,
+        "lucroReal": 0.2191
       }
     ]
   },
   {
-    "id": 26,
+    "id": 165,
     "empresaId": 30,
-    "total": 12251.3,
+    "total": 7.38,
+    "status": "CONCLUIDA",
+    "dataVenda": "2026-11-20T17:00:40.839Z",
+    "canalId": 144,
+    "itens": [
+      {
+        "id": 281,
+        "vendaId": 165,
+        "receitaId": 97,
+        "quantidade": 2,
+        "precoUnitarioReal": 3.69,
+        "custoUnitario": 2.3326,
+        "margemRealizada": 0.3679,
+        "lucroReal": 0.2159
+      }
+    ]
+  },
+  {
+    "id": 163,
+    "empresaId": 30,
+    "total": 22.45,
     "status": "CONCLUIDA",
     "dataVenda": "2026-10-14T13:00:00.000Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 44,
-        "vendaId": 26,
-        "receitaId": 25,
+        "id": 277,
+        "vendaId": 163,
+        "receitaId": 96,
         "quantidade": 40,
-        "precoUnitarioReal": 270.03,
-        "custoUnitario": 168.77,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.46,
+        "custoUnitario": 0.3799,
+        "margemRealizada": 0.1741,
+        "lucroReal": 0.1605
       },
       {
-        "id": 45,
-        "vendaId": 26,
-        "receitaId": 27,
+        "id": 278,
+        "vendaId": 163,
+        "receitaId": 98,
         "quantidade": 5,
-        "precoUnitarioReal": 290.02,
-        "custoUnitario": 181.26,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.81,
+        "custoUnitario": 0.5917,
+        "margemRealizada": 0.2695,
+        "lucroReal": 0.2559
       }
     ]
   },
   {
-    "id": 25,
+    "id": 162,
     "empresaId": 30,
-    "total": 11014.38,
+    "total": 32.04,
     "status": "CONCLUIDA",
     "dataVenda": "2026-09-20T13:00:00.000Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 42,
-        "vendaId": 25,
-        "receitaId": 25,
+        "id": 275,
+        "vendaId": 162,
+        "receitaId": 96,
         "quantidade": 30,
-        "precoUnitarioReal": 270.03,
-        "custoUnitario": 168.77,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.46,
+        "custoUnitario": 0.3799,
+        "margemRealizada": 0.1741,
+        "lucroReal": 0.1605
       },
       {
-        "id": 43,
-        "vendaId": 25,
-        "receitaId": 26,
+        "id": 276,
+        "vendaId": 162,
+        "receitaId": 97,
         "quantidade": 6,
-        "precoUnitarioReal": 485.58,
-        "custoUnitario": 323.72,
-        "margemRealizada": 0.3333
+        "precoUnitarioReal": 3.04,
+        "custoUnitario": 2.3326,
+        "margemRealizada": 0.2327,
+        "lucroReal": 0.2191
       }
     ]
   },
   {
-    "id": 24,
+    "id": 161,
     "empresaId": 30,
-    "total": 11653.92,
+    "total": 72.96,
     "status": "CANCELADA",
     "dataVenda": "2026-09-15T13:00:00.000Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 41,
-        "vendaId": 24,
-        "receitaId": 26,
+        "id": 274,
+        "vendaId": 161,
+        "receitaId": 97,
         "quantidade": 24,
-        "precoUnitarioReal": 485.58,
-        "custoUnitario": 323.72,
-        "margemRealizada": 0.3333
+        "precoUnitarioReal": 3.04,
+        "custoUnitario": 2.3326,
+        "margemRealizada": 0.2327,
+        "lucroReal": 0.2191
       }
     ]
   },
   {
-    "id": 23,
+    "id": 160,
     "empresaId": 30,
-    "total": 2900.2,
+    "total": 9.9,
     "status": "CONCLUIDA",
     "dataVenda": "2026-08-08T13:00:00.000Z",
+    "canalId": 144,
     "itens": [
       {
-        "id": 40,
-        "vendaId": 23,
-        "receitaId": 27,
+        "id": 273,
+        "vendaId": 160,
+        "receitaId": 98,
         "quantidade": 10,
-        "precoUnitarioReal": 290.02,
-        "custoUnitario": 181.26,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.99,
+        "custoUnitario": 0.5917,
+        "margemRealizada": 0.4023,
+        "lucroReal": 0.2503
       }
     ]
   },
   {
-    "id": 22,
+    "id": 159,
     "empresaId": 30,
-    "total": 11850,
+    "total": 71.28,
     "status": "CONCLUIDA",
     "dataVenda": "2026-07-12T13:00:00.000Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 38,
-        "vendaId": 22,
-        "receitaId": 26,
+        "id": 271,
+        "vendaId": 159,
+        "receitaId": 97,
         "quantidade": 12,
-        "precoUnitarioReal": 485.58,
-        "custoUnitario": 323.72,
-        "margemRealizada": 0.3333
+        "precoUnitarioReal": 3.04,
+        "custoUnitario": 2.3326,
+        "margemRealizada": 0.2327,
+        "lucroReal": 0.2191
       },
       {
-        "id": 39,
-        "vendaId": 22,
-        "receitaId": 28,
+        "id": 272,
+        "vendaId": 159,
+        "receitaId": 99,
         "quantidade": 12,
-        "precoUnitarioReal": 501.92,
-        "custoUnitario": 323.82,
-        "margemRealizada": 0.3548
+        "precoUnitarioReal": 2.9,
+        "custoUnitario": 2.2641,
+        "margemRealizada": 0.2193,
+        "lucroReal": 0.2057
       }
     ]
   },
   {
-    "id": 21,
+    "id": 158,
     "empresaId": 30,
-    "total": 19301.9,
+    "total": 39.2,
     "status": "CONCLUIDA",
     "dataVenda": "2026-06-10T13:00:00.000Z",
+    "canalId": 143,
     "itens": [
       {
-        "id": 36,
-        "vendaId": 21,
-        "receitaId": 25,
+        "id": 269,
+        "vendaId": 158,
+        "receitaId": 96,
         "quantidade": 50,
-        "precoUnitarioReal": 270.03,
-        "custoUnitario": 168.77,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.46,
+        "custoUnitario": 0.3799,
+        "margemRealizada": 0.1741,
+        "lucroReal": 0.1605
       },
       {
-        "id": 37,
-        "vendaId": 21,
-        "receitaId": 27,
+        "id": 270,
+        "vendaId": 158,
+        "receitaId": 98,
         "quantidade": 20,
-        "precoUnitarioReal": 290.02,
-        "custoUnitario": 181.26,
-        "margemRealizada": 0.375
+        "precoUnitarioReal": 0.81,
+        "custoUnitario": 0.5917,
+        "margemRealizada": 0.2695,
+        "lucroReal": 0.2559
       }
     ]
   }

@@ -7,10 +7,12 @@ import type { Insumo } from '@/shared/api/contracts/catalog';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { formatCustoUnitario, formatMoeda } from '@/shared/format/moeda';
 import { formatQuantidade } from '@/shared/format/numero';
+import { EstoqueNegativoBadge } from '@/shared/ui/badge';
 import { Button, IconButton } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
   IconAdicionar,
+  IconDinheiro,
   IconEditar,
   IconExcluir,
 } from '@/shared/ui/icons/acoes';
@@ -18,6 +20,7 @@ import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { insumosListOptions } from '../api/insumos.queries';
 import { useDeleteInsumo } from '../hooks/use-delete-insumo';
+import { InsumoDetalheDrawer } from './insumo-detalhe-drawer';
 import { InsumoFormDialog } from './insumo-form-dialog';
 
 type Formulario = { aberto: boolean; insumo?: Insumo };
@@ -26,7 +29,14 @@ type Formulario = { aberto: boolean; insumo?: Insumo };
  * Tela de insumos. Origem: insumos_page.dart, insumo_card.dart e
  * insumos_search_bar.dart.
  */
-export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
+export function InsumosLista({
+  abrirNovo = false,
+  abrirCompraDe,
+}: {
+  abrirNovo?: boolean;
+  /** Abre o detalhe do insumo com "Registrar compra" (`?compra=<id>`, FE-47). */
+  abrirCompraDe?: number;
+}) {
   const query = useQuery(insumosListOptions());
   const toast = useToast();
   const excluir = useDeleteInsumo();
@@ -34,9 +44,25 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
     aberto: abrirNovo,
   });
   const [paraExcluir, setParaExcluir] = useState<Insumo | null>(null);
+  // Guarda o id: o detalhe lê o insumo da lista, que volta atualizada depois
+  // de uma compra ou de um preço novo.
+  const [detalheId, setDetalheId] = useState<number | null>(
+    abrirCompraDe ?? null,
+  );
+  const detalhe = query.data?.find(({ id }) => id === detalheId);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  function fecharDetalhe() {
+    setDetalheId(null);
+    // `?compra=<id>` (aviso de estoque negativo) abre uma vez; ao fechar, sai da URL.
+    if (searchParams.has('compra')) {
+      router.replace(hrefComFiltros(pathname, searchParams, { compra: null }), {
+        scroll: false,
+      });
+    }
+  }
 
   function alternarFormulario(aberto: boolean) {
     setFormulario((atual) => ({ ...atual, aberto }));
@@ -71,7 +97,26 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
         errorTitle="Não foi possível carregar os insumos."
         getRowKey={(insumo) => insumo.id}
         columns={[
-          { id: 'nome', header: 'Nome', cell: (insumo) => insumo.nome },
+          {
+            id: 'nome',
+            header: 'Nome',
+            cell: (insumo) =>
+              insumo.estoqueNegativo ? (
+                <span className="flex flex-col items-start gap-1">
+                  <span>{insumo.nome}</span>
+                  <EstoqueNegativoBadge />
+                  <span className="text-small font-semibold text-danger tabular-nums">
+                    Saldo:{' '}
+                    {formatQuantidade(
+                      insumo.quantidadeDisponivel,
+                      insumo.unidade,
+                    )}
+                  </span>
+                </span>
+              ) : (
+                insumo.nome
+              ),
+          },
           {
             id: 'quantidade',
             header: 'Quantidade',
@@ -87,7 +132,8 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
           },
           {
             id: 'custoUnitario',
-            header: 'Custo unitário',
+            // `custoUnitario` é o preço de hoje (`custoReposicao`, BE-29).
+            header: 'Preço de hoje',
             align: 'right',
             // O valor gravado pelo backend, sem recalcular na tela.
             cell: (insumo) =>
@@ -99,6 +145,12 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
             acoes: true,
             cell: (insumo) => (
               <>
+                <IconButton
+                  aria-label={`Compras e preços de ${insumo.nome}`}
+                  onClick={() => setDetalheId(insumo.id)}
+                >
+                  <IconDinheiro />
+                </IconButton>
                 <IconButton
                   aria-label={`Editar ${insumo.nome}`}
                   onClick={() => setFormulario({ aberto: true, insumo })}
@@ -124,6 +176,17 @@ export function InsumosLista({ abrirNovo = false }: { abrirNovo?: boolean }) {
         onOpenChange={alternarFormulario}
         insumo={formulario.insumo}
       />
+
+      {detalhe ? (
+        <InsumoDetalheDrawer
+          open
+          onOpenChange={(aberto) => {
+            if (!aberto) fecharDetalhe();
+          }}
+          insumo={detalhe}
+          abrirCompra={abrirCompraDe === detalhe.id}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={paraExcluir !== null}

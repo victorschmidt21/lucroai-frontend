@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { makePrecoCanal } from '@/test/factories/receita.factory';
 import {
   custoLotesFormSchema,
-  precoMargemFormSchema,
+  precoDoCanalNoCampo,
   simulacaoCenarioFormSchema,
-  toPrecoMargemFormInput,
-  toPrecoVendaBody,
   toSimulacaoCenarioFormInput,
   toSimularCenarioBody,
   toSimularReceitaCustoBody,
@@ -12,7 +11,7 @@ import {
 
 function mensagens(entrada: Record<string, string>) {
   const result = simulacaoCenarioFormSchema.safeParse({
-    novoCusto: '',
+    canalId: '1',
     novoPreco: '',
     volume: '',
     ...entrada,
@@ -23,26 +22,39 @@ function mensagens(entrada: Record<string, string>) {
   ]);
 }
 
+const balcao = makePrecoCanal({ canalId: 1, canal: 'Balcão', balcao: true });
+const ifood = makePrecoCanal({
+  canalId: 2,
+  canal: 'iFood',
+  balcao: false,
+  preco: 0.5513,
+});
+
 describe('simulacaoCenarioFormSchema', () => {
-  it('converte os números brasileiros', () => {
+  it('converte o canal e os números brasileiros', () => {
     expect(
       simulacaoCenarioFormSchema.parse({
-        novoCusto: '1.234,56',
-        novoPreco: '5,00',
-        volume: '12',
+        canalId: '2',
+        novoPreco: '1.234,56',
+        volume: '3000',
       }),
-    ).toEqual({ novoCusto: 1234.56, novoPreco: 5, volume: 12 });
+    ).toEqual({ canalId: 2, novoPreco: 1234.56, volume: 3000 });
   });
 
-  it('aceita tudo vazio', () => {
+  it('aceita preço e volume vazios', () => {
     expect(mensagens({})).toEqual([]);
   });
 
-  it('recusa valores não positivos ou inválidos', () => {
-    expect(mensagens({ novoCusto: '0', novoPreco: 'abc' })).toEqual([
-      ['novoCusto', 'Informe um valor maior que zero'],
-      ['novoPreco', 'Informe um valor maior que zero'],
+  it('exige o canal', () => {
+    expect(mensagens({ canalId: '' })).toEqual([
+      ['canalId', 'Escolha onde vende'],
     ]);
+  });
+
+  it('recusa preço não positivo ou inválido', () => {
+    const erro = 'Informe um valor maior que zero';
+    expect(mensagens({ novoPreco: '0' })).toEqual([['novoPreco', erro]]);
+    expect(mensagens({ novoPreco: 'abc' })).toEqual([['novoPreco', erro]]);
   });
 
   it('exige volume inteiro maior que zero', () => {
@@ -53,79 +65,90 @@ describe('simulacaoCenarioFormSchema', () => {
 });
 
 describe('toSimularCenarioBody', () => {
-  it('envia só os campos preenchidos', () => {
+  const receita = { precos: [balcao, ifood] };
+
+  it('envia o canal e só os campos preenchidos', () => {
     expect(
       toSimularCenarioBody(
         simulacaoCenarioFormSchema.parse({
-          novoCusto: '',
-          novoPreco: '6,5',
+          canalId: '1',
+          novoPreco: '0,50',
           volume: '',
         }),
+        receita,
       ),
-    ).toEqual({ novoPreco: 6.5 });
+    ).toStrictEqual({ canalId: 1, novoPreco: 0.5 });
+  });
+
+  it('com preço e volume vazios, envia só o canal', () => {
+    expect(
+      toSimularCenarioBody(
+        { canalId: 2, novoPreco: undefined, volume: undefined },
+        receita,
+      ),
+    ).toStrictEqual({ canalId: 2 });
   });
 
   it('envia os três quando preenchidos', () => {
     expect(
-      toSimularCenarioBody({ novoCusto: 2.5, novoPreco: 5, volume: 10 }),
-    ).toEqual({ novoCusto: 2.5, novoPreco: 5, volume: 10 });
+      toSimularCenarioBody({ canalId: 1, novoPreco: 5, volume: 300 }, receita),
+    ).toEqual({ canalId: 1, novoPreco: 5, volume: 300 });
   });
 
-  it('com tudo vazio, envia um corpo vazio', () => {
+  it('omite o preço igual ao sugerido do canal arredondado, para a API usar o exato', () => {
+    // iFood: sugerido 0,5513, mostrado no campo como 0,55.
     expect(
-      toSimularCenarioBody({
-        novoCusto: undefined,
-        novoPreco: undefined,
-        volume: undefined,
-      }),
-    ).toStrictEqual({});
+      toSimularCenarioBody(
+        { canalId: 2, novoPreco: 0.55, volume: 28 },
+        receita,
+      ),
+    ).toStrictEqual({ canalId: 2, volume: 28 });
+    // O mesmo preço em outro canal é um preço informado.
+    expect(
+      toSimularCenarioBody(
+        { canalId: 1, novoPreco: 0.55, volume: 28 },
+        receita,
+      ),
+    ).toStrictEqual({ canalId: 1, novoPreco: 0.55, volume: 28 });
   });
 });
 
 describe('toSimulacaoCenarioFormInput', () => {
-  it('preenche com custo, preço sugerido e rendimento da receita', () => {
+  it('começa no Balcão, com o preço sugerido e o rendimento', () => {
     expect(
       toSimulacaoCenarioFormInput({
-        custoUnitario: 1.2,
-        precoSugerido: 2.16,
-        rendimento: 50,
+        rendimento: 28,
+        precos: [ifood, { ...balcao, preco: 0.46 }],
       }),
-    ).toEqual({ novoCusto: '1,20', novoPreco: '2,16', volume: '50' });
+    ).toEqual({ canalId: '1', novoPreco: '0,46', volume: '28' });
   });
 
-  it('deixa vazio o que não é positivo', () => {
+  it('sem Balcão, usa o primeiro canal; sem preço possível, deixa vazio', () => {
     expect(
       toSimulacaoCenarioFormInput({
-        custoUnitario: undefined,
-        precoSugerido: 0,
         rendimento: 0,
+        precos: [{ ...ifood, preco: null }],
       }),
-    ).toEqual({ novoCusto: '', novoPreco: '', volume: '' });
+    ).toEqual({ canalId: '2', novoPreco: '', volume: '' });
+  });
+
+  it('sem canais, deixa tudo vazio', () => {
+    expect(toSimulacaoCenarioFormInput({ rendimento: 12, precos: [] })).toEqual(
+      { canalId: '', novoPreco: '', volume: '12' },
+    );
   });
 });
 
-describe('preço para margem desejada', () => {
-  it('converte a margem em pontos para a fração do contrato', () => {
+describe('precoDoCanalNoCampo', () => {
+  it('usa o preço sugerido do canal escolhido', () => {
+    expect(precoDoCanalNoCampo({ precos: [balcao, ifood] }, 2)).toBe('0,55');
+  });
+
+  it('fica vazio com canal desconhecido ou sem preço', () => {
+    expect(precoDoCanalNoCampo({ precos: [balcao] }, 9)).toBe('');
     expect(
-      toPrecoVendaBody(precoMargemFormSchema.parse({ margem: '7' })),
-    ).toEqual({ margem_lucro: 0.07 });
-  });
-
-  it('aceita zero e recusa vazio ou negativo', () => {
-    expect(precoMargemFormSchema.safeParse({ margem: '0' }).success).toBe(true);
-    expect(precoMargemFormSchema.safeParse({ margem: '' }).success).toBe(false);
-    expect(precoMargemFormSchema.safeParse({ margem: '-1' }).success).toBe(
-      false,
-    );
-  });
-
-  it('começa com a margem salva da receita', () => {
-    expect(toPrecoMargemFormInput({ margemLucro: 0.6 })).toEqual({
-      margem: '60',
-    });
-    expect(toPrecoMargemFormInput({ margemLucro: undefined })).toEqual({
-      margem: '',
-    });
+      precoDoCanalNoCampo({ precos: [{ ...ifood, preco: null }] }, 2),
+    ).toBe('');
   });
 });
 
