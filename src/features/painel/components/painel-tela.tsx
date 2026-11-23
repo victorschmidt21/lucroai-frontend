@@ -11,8 +11,9 @@ import { buttonClasses } from '@/shared/ui/button';
 import { cn } from '@/shared/ui/cn';
 import { EmptyState } from '@/shared/ui/empty-state';
 import { ErrorState } from '@/shared/ui/error-state';
-import { IconSeta } from '@/shared/ui/icons/acoes';
+import { IconAdicionar, IconSeta } from '@/shared/ui/icons/acoes';
 import { IconEstoque, IconReceitas, IconVendas } from '@/shared/ui/icons/menu';
+import { IlustracaoSacola } from '@/shared/ui/ilustracoes';
 import { Logo } from '@/shared/ui/logo';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -470,7 +471,17 @@ function rotuloUnidades(quantidade: number | null) {
 function ProdutosRentaveis({ produtos }: { produtos: ProdutoRentavel[] }) {
   if (produtos.length === 0) {
     return (
-      <EmptyState title="Cadastre receitas e registre vendas para ver rentabilidade." />
+      <EmptyState
+        title="Crie uma receita e anote as vendas para ver o que mais deu lucro."
+        ilustracao={<IlustracaoSacola />}
+        action={
+          // Secundária: "Nova receita" das ações rápidas já é a primária da tela.
+          <Link href="/receitas/nova" className={buttonClasses('secundario')}>
+            <IconAdicionar className="size-5" />
+            Criar receita
+          </Link>
+        }
+      />
     );
   }
 

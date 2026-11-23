@@ -16,6 +16,7 @@ import {
   IconEditar,
   IconExcluir,
 } from '@/shared/ui/icons/acoes';
+import { IlustracaoDespensa } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { insumosListOptions } from '../api/insumos.queries';
@@ -94,7 +95,13 @@ export function InsumosLista({
         itemLabel={{ singular: 'ingrediente', plural: 'ingredientes' }}
         emptyTitle="Sua despensa está vazia"
         emptyDescription="Comece pelo ingrediente que você mais usa, como leite condensado."
-        emptyAction={novoInsumo}
+        emptyIlustracao={<IlustracaoDespensa />}
+        emptyAction={
+          <Button onClick={() => setFormulario({ aberto: true })}>
+            <IconAdicionar className="size-5" />
+            Adicionar ingrediente
+          </Button>
+        }
         errorTitle="Não consegui buscar seus ingredientes agora."
         getRowKey={(insumo) => insumo.id}
         columns={[

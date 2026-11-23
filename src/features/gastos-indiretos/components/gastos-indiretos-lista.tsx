@@ -16,6 +16,7 @@ import {
   IconExcluir,
   IconInfo,
 } from '@/shared/ui/icons/acoes';
+import { IlustracaoContas } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { gastosIndiretosListOptions } from '../api/gastos-indiretos.queries';
@@ -83,9 +84,15 @@ export function GastosIndiretosLista({
             {gastos.length > 0 ? <TotalGastos gastos={gastos} /> : null}
           </>
         }
-        emptyTitle="Nenhum gasto cadastrado"
-        emptyDescription="Adicione água, energia, gás, aluguel e outros custos para calcular o custo real das receitas."
-        emptyAction={novoGasto}
+        emptyTitle="Nenhuma conta do mês ainda"
+        emptyDescription="Adicione gás, luz, internet, aluguel e o que mais você paga, para o preço cobrir tudo."
+        emptyIlustracao={<IlustracaoContas />}
+        emptyAction={
+          <Button onClick={() => setFormulario({ aberto: true })}>
+            <IconAdicionar className="size-5" />
+            Adicionar conta
+          </Button>
+        }
         errorTitle="Não foi possível carregar os gastos."
         getRowKey={(gasto) => gasto.id}
         columns={[

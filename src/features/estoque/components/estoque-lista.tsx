@@ -14,6 +14,7 @@ import { isBaixoEstoque } from '@/shared/domain/estoque';
 import { Button, buttonClasses } from '@/shared/ui/button';
 import { Chip } from '@/shared/ui/chip';
 import { EmptyState } from '@/shared/ui/empty-state';
+import { IlustracaoDespensa } from '@/shared/ui/ilustracoes';
 import { ErrorState } from '@/shared/ui/error-state';
 import {
   IconAdicionar,
@@ -177,13 +178,13 @@ export function EstoqueLista() {
         />
       ) : itens.length === 0 ? (
         <EmptyState
-          icon={<IconEstoque />}
-          title="Nenhum estoque encontrado"
+          ilustracao={<IlustracaoDespensa />}
+          title="Sua despensa está vazia"
           description="Comece cadastrando os ingredientes que você compra."
           action={
             <Link href="/insumos?novo=1" className={buttonClasses()}>
               <IconAdicionar className="size-5" />
-              Novo ingrediente
+              Adicionar ingrediente
             </Link>
           }
         />

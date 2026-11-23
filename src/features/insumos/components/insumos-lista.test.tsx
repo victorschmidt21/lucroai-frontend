@@ -97,8 +97,11 @@ describe('estados', OPCOES, () => {
       await screen.findByText('Sua despensa está vazia'),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole('button', { name: 'Novo ingrediente' }),
-    ).toHaveLength(2);
+      screen.getByRole('button', { name: 'Novo ingrediente' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Adicionar ingrediente' }),
+    ).toBeInTheDocument();
   });
 
   it('mostra o erro e tenta de novo', async () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type {
@@ -18,12 +19,13 @@ import {
   formatQuantidade,
   fracaoParaPercentual,
 } from '@/shared/format/numero';
-import { Button } from '@/shared/ui/button';
+import { Button, buttonClasses } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { cn } from '@/shared/ui/cn';
 import { EmptyState } from '@/shared/ui/empty-state';
 import { ErrorState } from '@/shared/ui/error-state';
-import { IconAtualizar } from '@/shared/ui/icons/acoes';
+import { IconAdicionar, IconAtualizar } from '@/shared/ui/icons/acoes';
+import { IlustracaoCaderno } from '@/shared/ui/ilustracoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -103,7 +105,16 @@ export function SimulacaoTela({ receitaId }: { receitaId?: number }) {
     conteudo = <Skeleton aria-label="Carregando simulação" className="h-96" />;
   } else if (receitas.data.length === 0) {
     conteudo = (
-      <EmptyState title="Cadastre uma receita para simular cenários." />
+      <EmptyState
+        title="Cadastre uma receita para simular cenários."
+        ilustracao={<IlustracaoCaderno />}
+        action={
+          <Link href="/receitas/nova" className={buttonClasses('primario')}>
+            <IconAdicionar className="size-5" />
+            Criar receita
+          </Link>
+        }
+      />
     );
   } else {
     const receita =

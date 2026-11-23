@@ -18,6 +18,7 @@ import {
   IconExcluir,
   IconSimular,
 } from '@/shared/ui/icons/acoes';
+import { IlustracaoCaderno } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
 import { receitasListOptions } from '../api/receitas.queries';
@@ -54,8 +55,15 @@ export function ReceitasLista() {
         searchField="nome"
         searchPlaceholder="Buscar receita"
         itemLabel={{ singular: 'receita', plural: 'receitas' }}
-        emptyTitle="Nenhuma receita encontrada."
-        emptyAction={novaReceita}
+        emptyTitle="Seu caderno de receitas está vazio"
+        emptyDescription="Crie a primeira receita e descubra quanto custa e quanto cobrar."
+        emptyIlustracao={<IlustracaoCaderno />}
+        emptyAction={
+          <Link href="/receitas/nova" className={buttonClasses('primario')}>
+            <IconAdicionar className="size-5" />
+            Criar receita
+          </Link>
+        }
         errorTitle="Não foi possível carregar as receitas."
         getRowKey={(receita) => receita.id}
         // Os valores gravados pelo backend, sem recalcular; ausentes viram "—".

@@ -9,6 +9,7 @@ import { hrefComFiltros } from '@/shared/api/filtros';
 import { formatMoeda } from '@/shared/format/moeda';
 import { Button, IconButton } from '@/shared/ui/button';
 import { IconAdicionar, IconMostrar } from '@/shared/ui/icons/acoes';
+import { IlustracaoForno } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { Select } from '@/shared/ui/select';
 import { producoesListOptions } from '../api/producoes.queries';
@@ -86,7 +87,13 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
             : 'Nenhuma fornada anotada'
         }
         emptyDescription="Anote a primeira fornada para o estoque e o custo baterem."
-        emptyAction={novaProducao}
+        emptyIlustracao={<IlustracaoForno />}
+        emptyAction={
+          <Button onClick={() => setFormularioAberto(true)}>
+            <IconAdicionar className="size-5" />
+            Registrar fornada
+          </Button>
+        }
         errorTitle="Não consegui buscar suas fornadas agora."
         getRowKey={(producao) => producao.id}
         columns={[
