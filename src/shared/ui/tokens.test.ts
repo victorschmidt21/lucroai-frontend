@@ -15,14 +15,17 @@ function lerTokens(seletor: RegExp) {
   );
 }
 
-const claro = lerTokens(/:root \{([\s\S]*?)\n\}/);
+const tokensClaro = lerTokens(/:root \{([\s\S]*?)\n\}/);
 // O modo noite (FE-52) só troca valores; os tokens de status vêm do claro e
 // apontam para os semânticos do noite.
 const noite = lerTokens(/:root\[data-tema='noite'\] \{([\s\S]*?)\n\}/);
 const automatico = lerTokens(
   /:root\[data-tema='automatico'\] \{([\s\S]*?)\n {2}\}/,
 );
-const TEMAS = { claro, noite: new Map([...claro, ...noite]) };
+const TEMAS = {
+  claro: tokensClaro,
+  noite: new Map([...tokensClaro, ...noite]),
+};
 
 function resolveNo(tema: keyof typeof TEMAS, name: string): string {
   const value = TEMAS[tema].get(name);

@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/shared/api/errors';
 import { Card } from '@/shared/ui/card';
 import { ErrorState } from '@/shared/ui/error-state';
 import { PageHeader } from '@/shared/ui/page-header';
+import { SeletorAparencia } from '@/shared/ui/seletor-aparencia';
 import { Skeleton } from '@/shared/ui/skeleton';
 import {
   canaisOptions,
@@ -14,7 +15,10 @@ import {
 import { CanaisCard } from './canais-card';
 import { ConfiguracaoCustosForm } from './configuracao-custos-form';
 
-/** Tela "Configurações de custo" (FE-41): como o negócio funciona e onde vende. */
+/**
+ * Tela "Configurações de custo" (FE-41): como o negócio funciona, onde vende e,
+ * desde a FE-52, a aparência do app.
+ */
 export function ConfiguracoesTela() {
   const configuracao = useQuery(configuracaoCustosOptions());
   const canais = useQuery(canaisOptions());
@@ -72,6 +76,13 @@ export function ConfiguracoesTela() {
       <div className="grid items-start gap-6 lg:grid-cols-2">
         {blocoConfiguracao}
         {blocoCanais}
+        <Card title="Aparência">
+          <p className="text-body text-ink-muted">
+            O claro é o mais fácil de ler na cozinha. O modo noite ajuda a
+            anotar pedidos à noite.
+          </p>
+          <SeletorAparencia />
+        </Card>
       </div>
     </>
   );

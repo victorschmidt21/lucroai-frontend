@@ -7,6 +7,7 @@ import { toUsuarioAtual } from '@/shared/auth/usuario-atual';
 import { expectNoA11yViolations } from '@/test/a11y';
 import { makeJwtPayload } from '@/test/factories/auth.factory';
 import { renderWithQuery } from '@/test/render';
+import { ToastProvider } from '@/shared/ui/toast';
 import { server } from '@/test/server';
 import { UserMenu } from './user-menu';
 
@@ -30,7 +31,11 @@ function mockSessao(nome: string | null = 'João da Silva') {
 describe('UserMenu', () => {
   it('mostra nome, e-mail e empresa da sessão', async () => {
     mockSessao();
-    const { container } = renderWithQuery(<UserMenu />);
+    const { container } = renderWithQuery(
+      <ToastProvider>
+        <UserMenu />
+      </ToastProvider>,
+    );
 
     expect(screen.getByLabelText('Carregando usuário')).toBeInTheDocument();
     expect(await screen.findByText('João da Silva')).toBeInTheDocument();
@@ -41,7 +46,11 @@ describe('UserMenu', () => {
 
   it('usa o e-mail quando o token não traz o nome', async () => {
     mockSessao(null);
-    renderWithQuery(<UserMenu />);
+    renderWithQuery(
+      <ToastProvider>
+        <UserMenu />
+      </ToastProvider>,
+    );
 
     expect(
       await screen.findAllByText('joao@padariapaofeliz.com.br'),
@@ -58,7 +67,11 @@ describe('UserMenu', () => {
       }),
     );
     const user = userEvent.setup();
-    const { queryClient } = renderWithQuery(<UserMenu />);
+    const { queryClient } = renderWithQuery(
+      <ToastProvider>
+        <UserMenu />
+      </ToastProvider>,
+    );
     const limpar = vi.spyOn(queryClient, 'clear');
     await screen.findByText('João da Silva');
 
@@ -75,7 +88,11 @@ describe('UserMenu', () => {
     mockSessao();
     server.use(http.post('*/api/auth/logout', () => HttpResponse.error()));
     const user = userEvent.setup();
-    renderWithQuery(<UserMenu />);
+    renderWithQuery(
+      <ToastProvider>
+        <UserMenu />
+      </ToastProvider>,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Sair' }));
 

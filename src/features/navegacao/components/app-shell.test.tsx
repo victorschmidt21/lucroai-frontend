@@ -7,6 +7,7 @@ import { toUsuarioAtual } from '@/shared/auth/usuario-atual';
 import { makeJwtPayload } from '@/test/factories/auth.factory';
 import { setTestUrl } from '@/test/next-navigation';
 import { renderWithQuery } from '@/test/render';
+import { ToastProvider } from '@/shared/ui/toast';
 import { server } from '@/test/server';
 import { AppShell } from './app-shell';
 
@@ -23,9 +24,11 @@ beforeEach(() => {
 
 function renderShell() {
   return renderWithQuery(
-    <AppShell userMenu={<UserMenu />}>
-      <h1>Estoque</h1>
-    </AppShell>,
+    <ToastProvider>
+      <AppShell userMenu={<UserMenu />}>
+        <h1>Estoque</h1>
+      </AppShell>
+    </ToastProvider>,
   );
 }
 
