@@ -18,7 +18,7 @@ type ErrorStateProps = {
   className?: string;
 };
 
-/** Falha ao carregar dados, no mesmo bloco do `EmptyState`, sempre com "Tentar novamente". */
+/** Falha ao carregar dados, no mesmo bloco do `EmptyState`, sempre com "Tentar de novo". */
 export function ErrorState({
   title,
   message,
@@ -37,7 +37,7 @@ export function ErrorState({
       </div>
       <Button variant="secundario" loading={retrying} onClick={onRetry}>
         {retrying ? null : <IconAtualizar className="size-4" />}
-        Tentar novamente
+        Tentar de novo
       </Button>
     </div>
   );

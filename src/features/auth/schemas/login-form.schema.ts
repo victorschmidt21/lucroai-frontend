@@ -5,7 +5,7 @@ import { ApiError } from '@/shared/api/errors';
 // Origem: lib/features/auth/presentation/pages/login_page.dart.
 export const MENSAGEM_CREDENCIAIS_INVALIDAS = 'E-mail ou senha inválidos';
 export const MENSAGEM_ERRO_LOGIN =
-  'Não foi possível entrar. Verifique o servidor e tente novamente.';
+  'Não foi possível entrar. Confira a internet e tente de novo.';
 
 /**
  * O mobile só confere se há `@`; aqui o formato vem do `z.email()`, o mesmo

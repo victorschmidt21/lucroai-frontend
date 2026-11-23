@@ -267,7 +267,7 @@ FE-11. Origem: `lib/features/receitas/presentation/pages/receitas_page.dart`, `l
 | Confirmação        | "Excluir receita" / `Deseja excluir "<nome>"?`                         | igual                                                                  |
 | Toast              | —                                                                      | "Receita excluída com sucesso."                                        |
 | Vazio              | "Nenhuma receita encontrada."                                          | igual                                                                  |
-| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar novamente"       |
+| Erro               | "Nao foi possivel carregar as receitas."                               | "Não foi possível carregar as receitas.", com "Tentar de novo"         |
 
 ## Receitas: formulário e custo
 
@@ -370,7 +370,7 @@ barra          = clamp(percentual / 100, 0, 1)
 | Ação do cartão     | "Registrar entrada"                                          | igual                                                                                                                            |
 | Filtro             | "Status": "Todos" / "Baixo"; chip "Baixo Estoque" e "Limpar" | igual; `baixo=1` na URL                                                                                                          |
 | Vazio              | "Nenhum estoque encontrado" / "Comece adicionando insumos"   | igual, com link para `/insumos`                                                                                                  |
-| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar novamente"                                                                                 |
+| Erro               | "Erro ao carregar estoques" / "Tentar Novamente"             | "Erro ao carregar estoques" / "Tentar de novo"                                                                                   |
 | Erro em um insumo  | —                                                            | "Não foi possível carregar o estoque deste insumo." no próprio cartão (falha de uma das duas consultas vira o erro da tela)      |
 
 O filtro "Baixo" mostra os itens com `isBaixoEstoque`. Na web, um item sem saldo continua visível com o filtro ativo, porque sem o saldo não dá para saber se ele está abaixo do mínimo.
@@ -391,19 +391,19 @@ FE-14. Origem: `lib/features/estoques/presentation/widgets/registrar_entrada_mod
 - **Definir mínimo** (FE-39, só na web; lacuna 14, resolvida): botão "Definir mínimo" no cartão (com o saldo carregado), que abre "Definir Estoque Mínimo" com o nome do insumo, o disponível, o campo "Estoque mínimo" (começa com o mínimo atual, aceita 0; dica "Abaixo deste valor, o insumo aparece como Crítico."; erro "Digite uma quantidade válida") e "Salvar". Envia `PATCH /estoque/insumos/:id/minimo` com `{ quantidadeMinima }` (`estoque-minimo.schema.ts`), mostra "Estoque mínimo atualizado com sucesso." e invalida `estoque` e `insumos`.
 - Não existe endpoint para corrigir o saldo (`atualizarEstoque` lança `UnsupportedError` no mobile). Não crie essa ação.
 
-| Onde            | Mobile                                                         | Web                                                    |
-| --------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| Título          | "Registrar Entrada"                                            | igual                                                  |
-| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | igual                                                  |
-| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"             |
-| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                               |
-| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>"         |
-| Botão           | "Confirmar Entrada"                                            | igual                                                  |
-| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."           |
-| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo                    |
-| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."                     |
-| Histórico       | —                                                              | título "Histórico", com o nome do insumo               |
-| Histórico, erro | —                                                              | "Erro ao carregar o histórico", com "Tentar novamente" |
+| Onde            | Mobile                                                         | Web                                                  |
+| --------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| Título          | "Registrar Entrada"                                            | igual                                                |
+| Informações     | "Insumo", "Quantidade Atual", "Mínimo"                         | igual                                                |
+| Campo           | "Quantidade a Adicionar", dica "Ex: 10.5"                      | "Quantidade a Adicionar", dica "Ex.: 10,5"           |
+| Validação       | "Digite uma quantidade válida" (o mobile não aceitava vírgula) | igual, aceitando vírgula                             |
+| Prévia          | —                                                              | "Saldo após a entrada: <quantidade> <unidade>"       |
+| Botão           | "Confirmar Entrada"                                            | igual                                                |
+| Sucesso         | "Entrada de estoque registrada com sucesso"                    | "Entrada de estoque registrada com sucesso."         |
+| Erro            | "Erro ao registrar entrada: <erro>"                            | `getErrorMessage(error)` no diálogo                  |
+| Histórico vazio | —                                                              | "Nenhuma movimentação registrada."                   |
+| Histórico       | —                                                              | título "Histórico", com o nome do insumo             |
+| Histórico, erro | —                                                              | "Erro ao carregar o histórico", com "Tentar de novo" |
 
 ## Produções e rateio
 
@@ -443,7 +443,7 @@ Origem: `_submeter` em `producoes_page.dart` (`_selecionarTodosGastos ? null : _
 | Botão              | "Registrar Produção"                                                                     | igual                                                                         |
 | Sucesso            | "Produção registrada com sucesso"                                                        | "Produção registrada com sucesso."                                            |
 | Vazio              | "Nenhuma produção registrada" / "Registre sua primeira produção tocando no botão abaixo" | "Nenhuma produção registrada" / "Registre sua primeira produção", com o botão |
-| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Erro ao carregar produções", com "Tentar novamente"                          |
+| Erro               | "Erro ao carregar produções" e a mensagem                                                | "Erro ao carregar produções", com "Tentar de novo"                            |
 | Filtro             | —                                                                                        | Select "Receita", com "Todas as receitas" (`receitaId` na URL)                |
 | Vazio no filtro    | —                                                                                        | "Nenhuma produção registrada para esta receita"                               |
 | Prévia             | —                                                                                        | "Total de unidades", "Rateio estimado" por gasto e "Total do rateio"          |
@@ -606,7 +606,7 @@ lucroReal = 1 − percentuais do canal sem o lucro − custoUnitario / precoUnit
 | Filtro | "Data inicial", "Data final"              | igual; status opcional ("Todos", "Pendente", "Concluída", "Cancelada") |
 | Resumo | "Total vendido", "Vendas", "Ticket medio" | "Total vendido", "Vendas", "Ticket médio"                              |
 | Vazio  | "Nenhuma venda encontrada no período."    | igual                                                                  |
-| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar novamente"                                          |
+| Erro   | "Não foi possível carregar as vendas."    | igual, com "Tentar de novo"                                            |
 
 Na web (FE-18):
 
@@ -765,7 +765,7 @@ margemProjetada = resposta.lucroReal × 100
 diferenca       = lucroProjetado − lucroAtual
 ```
 
-Enquanto a primeira resposta não chega, o bloco do preço mostra um Skeleton; nos ajustes seguintes fica o resultado anterior até chegar o novo. Erro: "Não foi possível simular." com "Tentar novamente".
+Enquanto a primeira resposta não chega, o bloco do preço mostra um Skeleton; nos ajustes seguintes fica o resultado anterior até chegar o novo. Erro: "Não foi possível simular." com "Tentar de novo".
 
 Cenários de volume, com o preço e o lucro por unidade da API:
 
@@ -948,20 +948,20 @@ FE-05 e FE-07. Origem: `lib/features/auth/presentation/pages/login_page.dart`, `
 | E-mail vazio / inválido | "Informe seu e-mail" / "Informe um e-mail válido"                  |
 | Senha vazia             | "Informe sua senha"                                                |
 | Login 401               | "E-mail ou senha inválidos"                                        |
-| Login, outros erros     | "Não foi possível entrar. Verifique o servidor e tente novamente." |
+| Login, outros erros     | "Não foi possível entrar. Confira a internet e tente de novo."     |
 | Login, botão do olho    | "Mostrar senha" / "Ocultar senha" (nome acessível do botão)        |
 | Login, cabeçalho        | logo Doce Fatia e "Seu doce, seu preço justo." (FE-54)             |
 | 401 em qualquer serviço | "Sessão expirada. Faça login novamente." (leva ao login)           |
-| 404                     | "Registro não encontrado."                                         |
+| 404                     | "Não encontrei esse item. Ele pode ter sido excluído."             |
 | 409                     | mensagem do backend ("CNPJ já cadastrado", "E-mail já cadastrado") |
 | 400                     | mensagens de validação do backend, juntas                          |
-| Rede ou timeout (10 s)  | "Sem conexão com o servidor."                                      |
-| 5xx                     | "Erro no servidor. Tente novamente."                               |
+| Rede ou timeout (10 s)  | "Sem conexão. Confira a internet e tente de novo."                 |
+| 5xx                     | "O sistema falhou agora. Tente de novo em instantes."              |
 
 Como a web aplica (FE-07, `features/auth/`):
 
 - `loginFormSchema` (`schemas/login-form.schema.ts`): o e-mail é aparado e conferido com `z.email()`, o mesmo critério do `@IsEmail()` do backend (o mobile só confere o `@`); a senha não é aparada. Com erro, o foco vai para o primeiro campo inválido.
-- `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Verifique o servidor e tente novamente.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
+- `getLoginErrorMessage(error)`: `ApiError` 401 vira "E-mail ou senha inválidos"; qualquer outro erro (400, 5xx, rede), "Não foi possível entrar. Confira a internet e tente de novo.". O texto aparece num `Alert` acima do botão, e não num SnackBar.
 - `?expirada=1` mostra "Sessão expirada. Faça login novamente." num aviso (`role="status"`) acima dos campos, que some quando há erro de login.
 - Depois de entrar, a web vai para o `redirect` (só caminho interno) ou para `/`.
 - Abaixo do botão "Entrar": "Ainda não tem conta? **Criar conta**", com link para `/cadastro` (FE-48).
@@ -984,7 +984,7 @@ FE-48. Não existe no mobile. Backend: `POST /auth/empresa` (BE-06, BE-36), `cre
 | 409 `EMAIL_JA_CADASTRADO` / `CNPJ_JA_CADASTRADO` | "E-mail já cadastrado" no e-mail / "CNPJ já cadastrado" no CNPJ                                                                               |
 | 429                                              | "Muitas tentativas. Aguarde um minuto e tente de novo."                                                                                       |
 | 400 `DADOS_INVALIDOS`                            | um texto em português em cada campo do `details` (o do class-validator vem em inglês)                                                         |
-| Outros erros (5xx, rede)                         | "Não foi possível criar a conta. Tente novamente."                                                                                            |
+| Outros erros (5xx, rede)                         | "Não foi possível criar a conta. Tente de novo."                                                                                              |
 | Botões e links                                   | "Criar conta"; "Já tem conta? **Entrar**", para o login; "Mostrar token" / "Ocultar token"                                                    |
 
 Como a web aplica (`features/auth/`):

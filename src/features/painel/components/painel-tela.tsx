@@ -83,7 +83,7 @@ type QueryDoBloco = {
   refetch: () => unknown;
 };
 
-/** Estado de um bloco: erro (com "Tentar novamente"), Skeleton ou o conteúdo. */
+/** Estado de um bloco: erro (com "Tentar de novo"), Skeleton ou o conteúdo. */
 function bloco({
   rotulo,
   titulo,

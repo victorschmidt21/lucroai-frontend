@@ -97,7 +97,7 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Sair' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Sem conexão com o servidor.',
+      'Sem conexão. Confira a internet e tente de novo.',
     );
     expect(navigateTo).not.toHaveBeenCalled();
   });

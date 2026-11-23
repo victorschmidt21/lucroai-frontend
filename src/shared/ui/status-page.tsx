@@ -10,7 +10,7 @@ type StatusPageProps = {
   description: string;
   /** Anuncia a descrição ao leitor de tela, para os erros que chegam sem navegação. */
   alert?: boolean;
-  /** "Voltar ao início", "Tentar novamente". */
+  /** "Voltar ao início", "Tentar de novo". */
   action: ReactNode;
   /** Fora do layout de `(app)`, a própria página traz o `main` e a logo. */
   standalone?: boolean;

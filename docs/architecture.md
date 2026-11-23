@@ -180,7 +180,7 @@ Páginas de status (FE-08, com a `StatusPage` de `shared/ui/`):
 | Arquivo                                            | Quando                                                                                                                                                            |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `(app)/[...rota]/page.tsx` + `(app)/not-found.tsx` | rota inexistente com sessão, ou `notFound()` numa tela: 404 **dentro do layout**, com o menu. O catch-all define o título ("Página não encontrada \| Doce Fatia") |
-| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar novamente" (`retry`)                                                                                     |
+| `(app)/error.tsx`                                  | erro inesperado numa tela, dentro do layout, com "Tentar de novo" (`retry`)                                                                                       |
 | `not-found.tsx` e `error.tsx` na raiz de `app/`    | fora do layout: `/design-system` no build, falha no próprio layout de `(app)` ou no login                                                                         |
 
 Sem sessão, rota inexistente também leva ao login (o `src/proxy.ts` age antes). Erros de dados da API não chegam a essas páginas: ficam no `ErrorState` de cada bloco.
@@ -538,7 +538,7 @@ Client Component que compõe `ListPage`, `InsumoFormDialog` e `ConfirmDialog`:
 - `abrirNovo` (de `?novo=1`) abre a criação ao carregar; ao fechar, o parâmetro sai da URL com `router.replace(hrefComFiltros(pathname, searchParams, { novo: null }), { scroll: false })`, mantendo a busca.
 - A exclusão usa `ConfirmDialog` com "Excluir insumo", `Deseja excluir "<nome>"?` e "Excluir"; o `onConfirm` chama `mutateAsync`, mostra "Insumo excluído com sucesso." e fecha. Se o backend recusar, o diálogo continua aberto com a mensagem dele.
 
-`ListPage` cuida de: `PageHeader`, busca com debounce gravando `q` na URL, filtro sem acentos pelo `searchField`, contagem de resultados, cartões no celular e tabela no desktop, e os estados de carregamento, vazio, vazio por busca e erro com "Tentar novamente".
+`ListPage` cuida de: `PageHeader`, busca com debounce gravando `q` na URL, filtro sem acentos pelo `searchField`, contagem de resultados, cartões no celular e tabela no desktop, e os estados de carregamento, vazio, vazio por busca e erro com "Tentar de novo".
 
 ### `src/app/(app)/insumos/page.tsx`
 

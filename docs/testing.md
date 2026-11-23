@@ -65,7 +65,7 @@ Renderiza com Testing Library e interage como o usuário: busque por papel e nom
 
 Para cada componente com dados, cubra o que se aplicar:
 
-1. Carregando, vazio, erro (com "Tentar novamente") e sucesso.
+1. Carregando, vazio, erro (com "Tentar de novo") e sucesso.
 2. Busca e filtros na URL, sem diferenciar acentos ("acucar" encontra "Açúcar").
 3. Validação do formulário, com a mensagem no campo certo.
 4. Envio: o corpo que chegou à API (nomes do contrato) e o Toast de sucesso.
@@ -391,7 +391,7 @@ it('busca sem diferenciar acentos', async () => {
   expect(screen.queryByText('Sal')).not.toBeInTheDocument();
 });
 
-it('mostra o erro com "Tentar novamente"', async () => {
+it('mostra o erro com "Tentar de novo"', async () => {
   server.use(
     http.get(apiUrl('/insumos'), () =>
       HttpResponse.json(
@@ -409,7 +409,7 @@ it('mostra o erro com "Tentar novamente"', async () => {
     await screen.findByText('Não foi possível carregar os insumos.'),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole('button', { name: 'Tentar novamente' }),
+    screen.getByRole('button', { name: 'Tentar de novo' }),
   ).toBeInTheDocument();
 });
 ```

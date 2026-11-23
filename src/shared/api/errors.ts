@@ -7,12 +7,15 @@ export const STATUS_ERRO_DE_REDE = 0;
 // Textos de docs/business-rules.md#login-e-mensagens-de-erro-gerais.
 export const MENSAGEM_SESSAO_EXPIRADA =
   'Sessão expirada. Faça login novamente.';
-export const MENSAGEM_NAO_ENCONTRADO = 'Registro não encontrado.';
-export const MENSAGEM_SEM_CONEXAO = 'Sem conexão com o servidor.';
-export const MENSAGEM_ERRO_SERVIDOR = 'Erro no servidor. Tente novamente.';
-export const MENSAGEM_CONTRATO_INVALIDO = 'Resposta inesperada do servidor.';
-export const MENSAGEM_GENERICA =
-  'Não foi possível concluir a ação. Tente novamente.';
+export const MENSAGEM_NAO_ENCONTRADO =
+  'Não encontrei esse item. Ele pode ter sido excluído.';
+export const MENSAGEM_SEM_CONEXAO =
+  'Sem conexão. Confira a internet e tente de novo.';
+export const MENSAGEM_ERRO_SERVIDOR =
+  'O sistema falhou agora. Tente de novo em instantes.';
+export const MENSAGEM_CONTRATO_INVALIDO =
+  'O sistema respondeu algo inesperado. Tente de novo em instantes.';
+export const MENSAGEM_GENERICA = 'Não deu para concluir agora. Tente de novo.';
 
 /** Erro de um campo no 400 `DADOS_INVALIDOS` (mensagens do class-validator, em inglês). */
 export type DetalheDeErro = { field: string; messages: string[] };

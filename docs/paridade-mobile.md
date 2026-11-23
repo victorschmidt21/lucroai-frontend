@@ -4,7 +4,7 @@ Matriz da FE-23: cada tela e ação do app Flutter ([`lucroai_mobile`](https://g
 
 **Resultado: nenhuma funcionalidade do mobile ficou sem equivalente na web.**
 
-Valem para todas as telas: textos com acentuação correta, busca que ignora acentos, campos numéricos no formato brasileiro (`1.234,56`), erro da API num `Alert` dentro do formulário (e não num SnackBar), e carregamento, vazio e erro com "Tentar novamente".
+Valem para todas as telas: textos com acentuação correta, busca que ignora acentos, campos numéricos no formato brasileiro (`1.234,56`), erro da API num `Alert` dentro do formulário (e não num SnackBar), e carregamento, vazio e erro com "Tentar de novo".
 
 ## Telas do menu
 

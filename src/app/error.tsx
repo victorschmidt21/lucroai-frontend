@@ -10,8 +10,8 @@ export default function RootError({ retry }: { retry: () => void }) {
       standalone
       alert
       title="Não foi possível carregar esta página"
-      description="Tente novamente em instantes."
-      action={<Button onClick={() => retry()}>Tentar novamente</Button>}
+      description="Tente de novo em instantes."
+      action={<Button onClick={() => retry()}>Tentar de novo</Button>}
     />
   );
 }

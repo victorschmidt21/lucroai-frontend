@@ -131,7 +131,7 @@ describe('apiFetch (navegador)', () => {
     expect(erro).toMatchObject({
       statusCode: 0,
       isTimeout: false,
-      message: 'Sem conexão com o servidor.',
+      message: 'Sem conexão. Confira a internet e tente de novo.',
     });
   });
 

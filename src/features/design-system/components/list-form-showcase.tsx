@@ -367,7 +367,7 @@ const OPCOES_DE_CENARIO: [keyof CenarioExemplo, string, string][] = [
   [
     'falharAoCarregar',
     'Falhar ao carregar',
-    'Mostra o erro com "Tentar novamente".',
+    'Mostra o erro com "Tentar de novo".',
   ],
   ['listaVazia', 'Lista vazia', 'Mostra o estado de nenhum cadastro.'],
   [

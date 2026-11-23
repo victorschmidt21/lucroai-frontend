@@ -250,7 +250,7 @@ describe('estados', () => {
     );
 
     await userEvent.click(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     );
 
     expect(onRetry).toHaveBeenCalledOnce();
@@ -266,7 +266,7 @@ describe('estados', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Tentar novamente' }),
+      screen.getByRole('button', { name: 'Tentar de novo' }),
     ).toBeDisabled();
   });
 
@@ -352,7 +352,7 @@ describe('PageHeader e Logo', () => {
 describe('ícones', () => {
   const icones = Object.entries({ ...menu, ...acoes });
 
-  it('tem os oito ícones do menu do mobile e o das configurações', () => {
+  it('tem os oito ícones do menu do mobile, o das configurações e o "Mais"', () => {
     expect(Object.keys(menu).toSorted()).toEqual([
       'IconConfiguracoes',
       'IconCustos',
@@ -360,6 +360,7 @@ describe('ícones', () => {
       'IconGastos',
       'IconHome',
       'IconInsumos',
+      'IconMais',
       'IconProducao',
       'IconReceitas',
       'IconVendas',

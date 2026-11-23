@@ -29,8 +29,8 @@ describe('StatusPage', () => {
         standalone
         alert
         title="Não foi possível carregar esta página"
-        description="Tente novamente em instantes."
-        action={<button type="button">Tentar novamente</button>}
+        description="Tente de novo em instantes."
+        action={<button type="button">Tentar de novo</button>}
       />,
     );
 
@@ -38,7 +38,7 @@ describe('StatusPage', () => {
       screen.getByRole('img', { name: 'Doce Fatia' }),
     );
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Tente novamente em instantes.',
+      'Tente de novo em instantes.',
     );
   });
 });

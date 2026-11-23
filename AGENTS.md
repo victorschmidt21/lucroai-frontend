@@ -79,7 +79,7 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 6. **Nenhum `fetch` direto em componente.** Chame a API pelas funções de `features/<modulo>/api/`, que usam `apiFetch` e `unwrap`, com TanStack Query no cliente. Query keys ficam em `<modulo>.queries.ts`.
 7. **Toda mutação invalida as queries afetadas, inclusive as de outras funcionalidades**, conforme a [matriz de invalidação](docs/api-integration.md#invalidação-após-mutações).
 8. **Erros chegam à tela como `ApiError`**, com mensagem em português (`getErrorMessage`). Decida pelo `code` estável da API (`temCodigo`, `isEstoqueInsuficiente`) e, sem ele, pelo `statusCode`; nunca pelo texto, fora do fallback documentado de `isEstoqueInsuficiente`.
-9. **Toda tela com dados trata carregamento, vazio e erro** (com "Tentar novamente"), com os componentes e padrões de [docs/ui.md](docs/ui.md).
+9. **Toda tela com dados trata carregamento, vazio e erro** (com "Tentar de novo"), com os componentes e padrões de [docs/ui.md](docs/ui.md).
 10. **Regra de negócio calculada no cliente vem de [docs/business-rules.md](docs/business-rules.md)**, fica em função pura (`<modulo>.calculos.ts` ou `shared/domain/`) e tem teste de cada ramo. Valor gravado pelo backend não é recalculado na tela.
 11. **Dinheiro é `number`**: formate com `src/shared/format/` (nunca `toFixed` para exibir), arredonde a centavos só na exibição e repita o arredondamento do backend nas prévias ([docs/conventions.md](docs/conventions.md#dinheiro-e-quantidades)).
 12. **Use os nomes do contrato** (`margem_lucro`, `custoUnitario`) sem converter; o formulário monta o corpo numa função `to...Body`.
