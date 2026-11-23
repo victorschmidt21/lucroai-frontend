@@ -2,6 +2,7 @@ import Archive from 'lucide-react/icons/archive';
 import BookOpen from 'lucide-react/icons/book-open';
 import ChartPie from 'lucide-react/icons/chart-pie';
 import CookingPot from 'lucide-react/icons/cooking-pot';
+import Ellipsis from 'lucide-react/icons/ellipsis';
 import House from 'lucide-react/icons/house';
 import Receipt from 'lucide-react/icons/receipt';
 import ShoppingBag from 'lucide-react/icons/shopping-bag';
@@ -14,7 +15,7 @@ import { criarIcone } from './icone';
 /** Início */
 export const IconHome = criarIcone('Home', House);
 
-/** Insumos: os ingredientes */
+/** Ingredientes (insumos) */
 export const IconInsumos = criarIcone('Insumos', Wheat);
 
 /** Receitas: o caderno de receitas */
@@ -29,11 +30,14 @@ export const IconVendas = criarIcone('Vendas', ShoppingBag);
 /** Estoque: a despensa */
 export const IconEstoque = criarIcone('Estoque', Archive);
 
-/** Produção: a fornada */
+/** Fornadas (produção) */
 export const IconProducao = criarIcone('Producao', CookingPot);
 
-/** Gastos indiretos: as contas da casa */
+/** Contas do mês (gastos indiretos) */
 export const IconGastos = criarIcone('Gastos', Receipt);
 
-/** Configurações de custo: os ajustes */
+/** Ajustes de preço (configurações de custo) */
 export const IconConfiguracoes = criarIcone('Configuracoes', SlidersHorizontal);
+
+/** "Mais": a gaveta com o resto do menu na barra inferior (FE-57) */
+export const IconMais = criarIcone('Mais', Ellipsis);

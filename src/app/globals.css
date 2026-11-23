@@ -185,12 +185,11 @@
   --text-caption--line-height: 1.125rem;
   --text-caption--font-weight: 700;
   /*
-   * Rótulo da barra inferior do celular, com oito itens. A marca pede 12px, mas
-   * "Produção" (53px a 12px) não cabe na coluna de 45px em 360px: fica em 10px
-   * até a FE-57 agrupar o menu.
+   * Rótulo da barra inferior do celular: cinco itens (Início, Receitas, Vendas,
+   * Estoque e "Mais") desde a FE-57, com os 12px da marca.
    */
-  --text-nav: 0.625rem;
-  --text-nav--line-height: 0.75rem;
+  --text-nav: 0.75rem;
+  --text-nav--line-height: 1rem;
   --text-nav--font-weight: 700;
 
   /* Só `transform` nos painéis: mudar a opacidade afetaria o contraste na entrada. */
