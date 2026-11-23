@@ -1,5 +1,6 @@
 import 'server-only';
 import { NextResponse, type NextRequest } from 'next/server';
+import type { DetalheDeErro } from '@/shared/api/errors';
 import { parseEnv, publicEnvSchema } from '@/shared/config/env.schema';
 
 const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -8,9 +9,19 @@ const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
  * Erro no formato da API (`{ statusCode, code, message }`), para o navegador
  * tratar a resposta do BFF como as do backend (`ApiError`).
  */
-export function erroBff(statusCode: number, message: string, code?: string) {
+export function erroBff(
+  statusCode: number,
+  message: string,
+  code?: string,
+  details: readonly DetalheDeErro[] = [],
+) {
   return NextResponse.json(
-    { statusCode, ...(code ? { code } : {}), message },
+    {
+      statusCode,
+      ...(code ? { code } : {}),
+      message,
+      ...(details.length > 0 ? { details } : {}),
+    },
     { status: statusCode, headers: { 'Cache-Control': 'no-store' } },
   );
 }

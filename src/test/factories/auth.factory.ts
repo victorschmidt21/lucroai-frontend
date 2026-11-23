@@ -1,4 +1,8 @@
-import type { JwtPayload, LoginResponse } from '@/shared/api/contracts/auth';
+import type {
+  EmpresaCriada,
+  JwtPayload,
+  LoginResponse,
+} from '@/shared/api/contracts/auth';
 
 /** Payload do JWT do usuário do seed (João da Silva, Padaria Pão Feliz). */
 export function makeJwtPayload(
@@ -47,4 +51,13 @@ export function makeJwt(
     base64Url(payload),
     'assinatura-de-teste',
   ].join('.');
+}
+
+/** Resposta de `POST /auth/empresa` com o token de `makeJwt`. */
+export function makeEmpresaCriada(
+  overrides: Partial<EmpresaCriada> = {},
+): EmpresaCriada {
+  const { sub, email, nome, empresa } = makeJwtPayload();
+
+  return { sub, email, nome, empresa, access_token: makeJwt(), ...overrides };
 }

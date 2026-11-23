@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
+  makeEmpresaCriada,
   makeJwtPayload,
   makeLoginResponse,
 } from '@/test/factories/auth.factory';
@@ -36,6 +37,7 @@ import {
   makeResumoVendas,
   makeVenda,
 } from '@/test/factories/venda.factory';
+import empresaCriada from '@/test/fixtures/auth/empresa-criada.json';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
 import alertas from '@/test/fixtures/catalog/alertas.json';
@@ -60,7 +62,11 @@ import resumoVendas from '@/test/fixtures/sales/resumo-vendas.json';
 import venda from '@/test/fixtures/sales/venda.json';
 import vendas from '@/test/fixtures/sales/vendas.json';
 import { unwrap } from '../request';
-import { jwtPayloadSchema, loginResponseSchema } from './auth';
+import {
+  empresaCriadaSchema,
+  jwtPayloadSchema,
+  loginResponseSchema,
+} from './auth';
 import {
   alertasSchema,
   compraInsumoSchema,
@@ -99,6 +105,15 @@ const CASOS: Caso[] = [
     fixture: login,
     factory: makeLoginResponse(),
     invalida: { token: 'abc' },
+  },
+  {
+    // Montada a partir do `EmpresaCriadaDto`: o monolito local não tem o
+    // `CADASTRO_EMPRESA_TOKEN`, então não deu para capturar (FE-48).
+    nome: 'empresa criada',
+    schema: empresaCriadaSchema,
+    fixture: empresaCriada,
+    factory: makeEmpresaCriada(),
+    invalida: { ...makeEmpresaCriada(), access_token: '' },
   },
   {
     nome: 'payload do JWT',
