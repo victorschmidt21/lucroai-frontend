@@ -8,7 +8,7 @@ test('abre a página inicial com sessão e recebe 200', async ({ page }) => {
 
   expect(response?.status()).toBe(200);
   await expect(page).toHaveTitle('Doce Fatia');
-  await expect(page.getByRole('heading', { name: 'Doce Fatia' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Oi, João!' })).toBeVisible();
 });
 
 test('alcança a API em /api/health', async ({ request }) => {

@@ -4,26 +4,14 @@ import type { PontoMensal } from '../painel.calculos';
 
 const LARGURA = 300;
 const ALTURA = 120;
-const MARGEM = 8;
+const ESPACO = 12;
+/** Altura mínima da barra, para o mês sem vendas não sumir. */
+const MINIMO = 2;
 
 /**
- * Pontos da linha: como o `_MonthlyEvolutionPainter`, normaliza entre o menor e
- * o maior valor (intervalo mínimo de 1).
- */
-function pontosDaLinha(valores: readonly number[]) {
-  const minimo = Math.min(...valores);
-  const intervalo = Math.max(Math.max(...valores) - minimo, 1);
-  const passo = (LARGURA - MARGEM * 2) / (valores.length - 1);
-  const alturaUtil = ALTURA - MARGEM * 2;
-  return valores.map((valor, indice) => ({
-    x: MARGEM + passo * indice,
-    y: MARGEM + alturaUtil - ((valor - minimo) / intervalo) * alturaUtil,
-  }));
-}
-
-/**
- * `_ChartCard`: receita dos últimos 6 meses em SVG próprio, com a tendência do
- * último mês. O SVG é decorativo; a tabela `sr-only` diz os valores.
+ * Receita dos últimos 6 meses em barras (FE-58): `accent-soft`, com o mês atual
+ * (o último) em `accent`, a partir do zero. O valor de cada mês fica no tooltip
+ * (`<title>`) e na tabela `sr-only`; o SVG é decorativo para o leitor de tela.
  */
 export function GraficoEvolucao({
   pontos,
@@ -32,11 +20,12 @@ export function GraficoEvolucao({
   pontos: readonly PontoMensal[];
   tendencia: string;
 }) {
-  const coordenadas = pontosDaLinha(pontos.map((p) => p.valor));
+  const maximo = Math.max(...pontos.map((p) => p.valor), 1);
+  const largura = (LARGURA - ESPACO * (pontos.length - 1)) / pontos.length;
   const negativa = tendencia.startsWith('-');
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3.5">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-body font-bold text-ink">
           Receita dos últimos 6 meses
@@ -57,34 +46,27 @@ export function GraficoEvolucao({
         className="h-32 w-full"
         preserveAspectRatio="none"
       >
-        {[0, 1, 2, 3].map((linha) => {
-          const y = MARGEM + ((ALTURA - MARGEM * 2) * linha) / 3;
+        {pontos.map((p, indice) => {
+          const altura = Math.max((p.valor / maximo) * ALTURA, MINIMO);
+          const atual = indice === pontos.length - 1;
           return (
-            <line
-              key={linha}
-              x1={0}
-              x2={LARGURA}
-              y1={y}
-              y2={y}
-              className="stroke-border"
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-            />
+            <rect
+              key={`${p.ano}-${p.rotulo}`}
+              x={indice * (largura + ESPACO)}
+              y={ALTURA - altura}
+              width={largura}
+              height={altura}
+              rx={6}
+              className={atual ? 'fill-accent' : 'fill-accent-soft'}
+            >
+              <title>{`${p.rotulo}/${p.ano}: ${formatMoeda(p.valor)}`}</title>
+            </rect>
           );
         })}
-        <polyline
-          points={coordenadas.map(({ x, y }) => `${x},${y}`).join(' ')}
-          fill="none"
-          className="stroke-accent"
-          strokeWidth={3}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
       </svg>
       <div
         aria-hidden="true"
-        className="flex justify-between text-caption text-ink-muted"
+        className="grid grid-cols-6 text-center text-caption text-ink-muted"
       >
         {pontos.map((p) => (
           <span key={`${p.ano}-${p.rotulo}`}>{p.rotulo}</span>

@@ -8,7 +8,7 @@ const DESTINOS = [
   {
     rotulo: 'Início',
     rota: '/',
-    titulo: 'Doce Fatia',
+    titulo: 'Oi, João!',
     aba: 'Doce Fatia',
     barra: true,
   },

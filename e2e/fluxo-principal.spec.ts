@@ -101,7 +101,7 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   // Home: a receita vendida aparece entre os produtos mais rentáveis, com o
   // lucro de 4 × (R$ 1,25 − R$ 1,00).
   await page.goto('/');
-  await expect(page.getByText('Faturamento')).toBeVisible();
+  await expect(page.getByText('Você vendeu')).toBeVisible();
   const produto = page.getByRole('listitem').filter({ hasText: receita });
   await expect(produto).toContainText('4 un - R$ 20 de cada R$ 100');
   await expect(produto).toContainText('R$ 1,00');
