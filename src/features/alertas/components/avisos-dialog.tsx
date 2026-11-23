@@ -139,7 +139,7 @@ function ItemPrecoDefasado({
                 <span className="wrap-anywhere">{receita.nome}</span>
                 <span className="text-small text-ink-muted tabular-nums">
                   {receita.precoSugerido === null
-                    ? 'Sem preço sugerido: os percentuais passam de 100%.'
+                    ? 'Sem preço que pague tudo: as taxas e o lucro passam de 100%.'
                     : `Preço novo sugerido: ${formatMoeda(receita.precoSugerido)} (antes ${formatMoeda(receita.precoComCustoMedio)})`}
                 </span>
               </div>
