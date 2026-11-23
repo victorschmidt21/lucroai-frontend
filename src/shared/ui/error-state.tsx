@@ -1,11 +1,8 @@
 import { Button } from './button';
 import { cn } from './cn';
-import {
-  BLOCO_ESTADO_CLASSES,
-  ICONE_ESTADO_CLASSES,
-  TITULO_ESTADO_CLASSES,
-} from './empty-state';
-import { IconAtualizar, IconErro } from './icons/acoes';
+import { BLOCO_ESTADO_CLASSES, TITULO_ESTADO_CLASSES } from './empty-state';
+import { IconAtualizar } from './icons/acoes';
+import { IlustracaoSemConexao } from './ilustracoes';
 
 type ErrorStateProps = {
   /** O que falhou, com o texto da tela: "Não foi possível carregar os insumos." */
@@ -15,12 +12,15 @@ type ErrorStateProps = {
   onRetry: () => void;
   /** Durante a nova tentativa, o botão fica ocupado. */
   retrying?: boolean;
-  /** Versão menor, sem ícone, para erro de um bloco dentro da tela (painel, FE-58). */
+  /** Versão menor, sem ilustração, para erro de um bloco dentro da tela (painel, FE-58). */
   compacto?: boolean;
   className?: string;
 };
 
-/** Falha ao carregar dados, no mesmo bloco do `EmptyState`, sempre com "Tentar de novo". */
+/**
+ * Falha ao carregar dados, no mesmo bloco do `EmptyState`, sempre com "Tentar de novo".
+ * Mostra a nuvem sem conexão (FE-59): o texto sempre manda conferir a internet.
+ */
 export function ErrorState({
   title,
   message,
@@ -39,11 +39,7 @@ export function ErrorState({
         className,
       )}
     >
-      {compacto ? null : (
-        <span className={cn(ICONE_ESTADO_CLASSES, 'text-danger')}>
-          <IconErro />
-        </span>
-      )}
+      {compacto ? null : <IlustracaoSemConexao />}
       <div className="flex max-w-prose flex-col gap-1">
         <p
           className={

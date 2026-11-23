@@ -12,6 +12,8 @@ type StatusPageProps = {
   alert?: boolean;
   /** "Voltar ao início", "Tentar de novo". */
   action: ReactNode;
+  /** Ilustração "spot" decorativa acima do código, como a nuvem sem conexão nos erros (FE-59). */
+  ilustracao?: ReactNode;
   /** Fora do layout de `(app)`, a própria página traz o `main` e a logo. */
   standalone?: boolean;
 };
@@ -27,6 +29,7 @@ export function StatusPage({
   alert = false,
   action,
   standalone = false,
+  ilustracao,
 }: StatusPageProps) {
   const Container = standalone ? 'main' : 'div';
 
@@ -39,6 +42,7 @@ export function StatusPage({
     >
       {standalone ? <Logo /> : null}
       <div className={cn(BLOCO_ESTADO_CLASSES, 'w-full max-w-lg gap-4')}>
+        {ilustracao}
         {code ? <p className="text-display-lg text-accent">{code}</p> : null}
         <h1 className="text-heading text-ink">{title}</h1>
         <p
