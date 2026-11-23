@@ -50,19 +50,19 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
   const novaProducao = (
     <Button onClick={() => setFormularioAberto(true)}>
       <IconAdicionar className="size-5" />
-      Nova Produção
+      Nova fornada
     </Button>
   );
 
   return (
     <>
       <ListPage
-        title="Produções"
-        subtitle="Registre e acompanhe suas produções"
+        title="Fornadas"
+        subtitle="O que você produziu"
         actions={novaProducao}
-        label="Produções"
+        label="Fornadas"
         query={query}
-        itemLabel={{ singular: 'produção', plural: 'produções' }}
+        itemLabel={{ singular: 'fornada', plural: 'fornadas' }}
         summary={
           <Select
             label="Receita"
@@ -82,12 +82,12 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
         }
         emptyTitle={
           receitaId
-            ? 'Nenhuma produção registrada para esta receita'
-            : 'Nenhuma produção registrada'
+            ? 'Nenhuma fornada desta receita'
+            : 'Nenhuma fornada anotada'
         }
-        emptyDescription="Registre sua primeira produção"
+        emptyDescription="Anote a primeira fornada para o estoque e o custo baterem."
         emptyAction={novaProducao}
-        errorTitle="Erro ao carregar produções"
+        errorTitle="Não consegui buscar suas fornadas agora."
         getRowKey={(producao) => producao.id}
         columns={[
           {
@@ -97,7 +97,7 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
           },
           {
             id: 'lotes',
-            header: 'Produção',
+            header: 'Fornada',
             cell: descricaoDosLotes,
           },
           {
@@ -122,7 +122,7 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
             acoes: true,
             cell: (producao) => (
               <IconButton
-                aria-label={`Ver detalhes da produção de ${nomeDaReceita(producao.receitaId)}, ${descricaoDosLotes(producao)}`}
+                aria-label={`Ver detalhes da fornada de ${nomeDaReceita(producao.receitaId)}, ${descricaoDosLotes(producao)}`}
                 onClick={() => setDetalhe(producao)}
               >
                 <IconMostrar />

@@ -70,7 +70,7 @@ export function ConfiguracoesTela() {
   return (
     <>
       <PageHeader
-        title="Configurações de custo"
+        title="Ajustes de preço"
         subtitle="Conte como o seu negócio funciona: o preço sugerido das receitas usa estas respostas."
       />
       <div className="grid items-start gap-6 lg:grid-cols-2">

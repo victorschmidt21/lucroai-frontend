@@ -125,7 +125,7 @@ describe('receitaFormSchema', () => {
           { insumo_id: 1, quantidade: '2' },
         ],
       }),
-    ).toEqual([['insumos.1.insumo_id', 'Insumo repetido']]);
+    ).toEqual([['insumos.1.insumo_id', 'Ingrediente repetido']]);
   });
 
   it('aceita receita sem insumos', () => {

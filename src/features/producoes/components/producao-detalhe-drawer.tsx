@@ -51,7 +51,7 @@ function Detalhe({
   if (detalhe.isError) {
     return (
       <ErrorState
-        title="Erro ao carregar a produção"
+        title="Não consegui buscar a fornada agora."
         message={getErrorMessage(detalhe.error)}
         onRetry={() => void detalhe.refetch()}
         retrying={detalhe.isFetching}
@@ -77,10 +77,12 @@ function Detalhe({
       </dl>
       <section aria-labelledby="rateios-titulo" className="flex flex-col gap-2">
         <h3 id="rateios-titulo" className="text-small text-ink-muted">
-          Rateio dos gastos indiretos
+          Parte das contas do mês
         </h3>
         {producao.rateios.length === 0 ? (
-          <p className="text-small text-ink-muted">Nenhum gasto rateado.</p>
+          <p className="text-small text-ink-muted">
+            Nenhuma conta do mês nesta fornada.
+          </p>
         ) : (
           <ul className="flex flex-col gap-2">
             {producao.rateios.map((rateio) => (

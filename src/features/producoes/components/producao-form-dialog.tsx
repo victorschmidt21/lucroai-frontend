@@ -53,15 +53,15 @@ export function ProducaoFormDialog({
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Registrar Produção"
+      title="Anotar fornada"
       description="Informe quantos lotes foram produzidos"
       schema={producaoFormSchema}
       defaultValues={producaoFormVazio(receitaIdInicial)}
-      submitLabel="Registrar Produção"
+      submitLabel="Anotar fornada"
       // Rejeitar com o ApiError mantém o diálogo aberto e mostra o erro nele.
       onSubmit={async (values) => {
         await registrar.mutateAsync(toCreateProducaoBody(values));
-        toast.success('Produção registrada com sucesso.');
+        toast.success('Fornada anotada.');
         onOpenChange(false);
       }}
     >
@@ -198,7 +198,7 @@ function Previa({
 
   return (
     <section
-      aria-label="Prévia da produção"
+      aria-label="Prévia da fornada"
       aria-live="polite"
       className="flex flex-col gap-2 rounded-md border border-border bg-surface-alt p-3.5 text-small"
     >
@@ -209,10 +209,14 @@ function Previa({
         </span>
       </p>
       {previa.rateios.length === 0 ? (
-        <p className="text-ink-muted">Nenhum gasto será rateado.</p>
+        <p className="text-ink-muted">
+          Nenhuma conta do mês entra nesta fornada.
+        </p>
       ) : (
         <>
-          <p className="text-ink-muted">Rateio estimado</p>
+          <p className="text-ink-muted">
+            Parte das contas do mês nesta fornada
+          </p>
           <ul className="flex flex-col gap-1">
             {previa.rateios.map(({ gasto, valorRateado }) => (
               <li key={gasto.id} className="flex justify-between gap-3">
@@ -224,7 +228,7 @@ function Previa({
             ))}
           </ul>
           <p className="flex justify-between gap-3 border-t border-border pt-2 font-semibold">
-            <span>Total do rateio</span>
+            <span>Total das contas</span>
             <span className="tabular-nums">
               {formatMoeda(previa.totalRateio)}
             </span>

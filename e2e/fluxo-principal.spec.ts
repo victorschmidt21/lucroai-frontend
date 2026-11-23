@@ -16,8 +16,8 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
 
   // Insumo: 1.000 g por R$ 5,00, com 5.000 g em estoque.
   await page.goto('/insumos');
-  await page.getByRole('button', { name: 'Novo insumo' }).first().click();
-  const dialogInsumo = page.getByRole('dialog', { name: 'Novo insumo' });
+  await page.getByRole('button', { name: 'Novo ingrediente' }).first().click();
+  const dialogInsumo = page.getByRole('dialog', { name: 'Novo ingrediente' });
   await dialogInsumo.getByRole('textbox', { name: 'Nome' }).fill(insumo);
   await dialogInsumo
     .getByRole('textbox', { name: 'Quantidade', exact: true })
@@ -28,7 +28,7 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
     .fill('5000');
   await dialogInsumo.getByRole('button', { name: 'Salvar' }).click();
   await expect(
-    page.getByText('Insumo criado com sucesso.', { exact: true }),
+    page.getByText('Ingrediente cadastrado.', { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('row', { name: new RegExp(insumo) }),
@@ -46,9 +46,11 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
     .getByRole('textbox', { name: 'Rende quantas unidades boas?' })
     .fill('10');
   await page.getByRole('textbox', { name: 'Lucro desta receita' }).fill('20');
-  await page.getByRole('button', { name: 'Adicionar insumo' }).click();
-  const dialogItem = page.getByRole('dialog', { name: 'Adicionar insumo' });
-  await dialogItem.getByRole('combobox', { name: 'Insumo' }).click();
+  await page.getByRole('button', { name: 'Adicionar ingrediente' }).click();
+  const dialogItem = page.getByRole('dialog', {
+    name: 'Adicionar ingrediente',
+  });
+  await dialogItem.getByRole('combobox', { name: 'Ingrediente' }).click();
   await page.getByRole('option', { name: insumo }).click();
   await dialogItem.getByRole('textbox', { name: 'Quantidade' }).fill('2000');
   await dialogItem.getByRole('button', { name: 'Adicionar' }).click();
@@ -59,11 +61,11 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await expect(page).toHaveURL(/\/receitas\/\d+$/);
   await expect(page.getByText('R$ 1,25')).toBeVisible();
 
-  // Produção: 1 lote = 10 unidades.
+  // Fornada: 1 lote = 10 unidades.
   await page.goto('/producoes');
-  await page.getByRole('button', { name: 'Nova Produção' }).first().click();
+  await page.getByRole('button', { name: 'Nova fornada' }).first().click();
   const dialogProducao = page.getByRole('dialog', {
-    name: 'Registrar Produção',
+    name: 'Anotar fornada',
   });
   await dialogProducao
     .getByRole('combobox', { name: 'Receita' })
@@ -71,11 +73,9 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await dialogProducao
     .getByRole('textbox', { name: 'Quantidade de lotes' })
     .fill('1');
-  await dialogProducao
-    .getByRole('button', { name: 'Registrar Produção' })
-    .click();
+  await dialogProducao.getByRole('button', { name: 'Anotar fornada' }).click();
   await expect(
-    page.getByText('Produção registrada com sucesso.', { exact: true }),
+    page.getByText('Fornada anotada.', { exact: true }),
   ).toBeVisible();
 
   // Venda: 4 unidades pelo preço sugerido (R$ 1,25), concluída.
@@ -93,7 +93,8 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await expect(confirmacao.getByText('R$ 5,00').first()).toBeVisible();
   await confirmacao.getByRole('button', { name: 'Concluir venda' }).click();
   await expect(
-    page.getByText('Venda concluída com sucesso.', { exact: true }),
+    // O total do mês depende das vendas que a API falsa já guardou.
+    page.getByText(/^Venda anotada! O mês já soma R\$ [\d.,]+\.$/),
   ).toBeVisible();
   await expect(confirmacao.getByText('Concluída')).toBeVisible();
 
@@ -102,6 +103,6 @@ test('cadastra, produz, vende e vê o resultado no painel', async ({ page }) => 
   await page.goto('/');
   await expect(page.getByText('Faturamento')).toBeVisible();
   const produto = page.getByRole('listitem').filter({ hasText: receita });
-  await expect(produto).toContainText('4 un - margem 20,0%');
+  await expect(produto).toContainText('4 un - R$ 20 de cada R$ 100');
   await expect(produto).toContainText('R$ 1,00');
 });

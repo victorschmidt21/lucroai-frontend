@@ -35,7 +35,7 @@ export function ConfiguracaoCustosForm({
       defaultValues={toConfiguracaoCustosFormInput(configuracao)}
       onSubmit={async (values) => {
         await salvar.mutateAsync(toUpdateConfiguracaoCustosBody(values));
-        toast.success('Configurações salvas.');
+        toast.success('Ajustes salvos.');
       }}
     >
       <CampoBaseRateio />

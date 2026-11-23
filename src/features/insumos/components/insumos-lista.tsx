@@ -77,24 +77,25 @@ export function InsumosLista({
   const novoInsumo = (
     <Button onClick={() => setFormulario({ aberto: true })}>
       <IconAdicionar className="size-5" />
-      Novo insumo
+      Novo ingrediente
     </Button>
   );
 
   return (
     <>
       <ListPage
-        title="Insumos"
-        subtitle="Gerencie quantidade, valor pago e custo unitário"
+        title="Ingredientes e embalagens"
+        subtitle="O que você compra para produzir"
         actions={novoInsumo}
-        label="Insumos"
+        label="Ingredientes e embalagens"
         query={query}
         searchField="nome"
-        searchPlaceholder="Buscar insumo"
-        itemLabel={{ singular: 'insumo', plural: 'insumos' }}
-        emptyTitle="Nenhum insumo encontrado."
+        searchPlaceholder="Buscar ingrediente"
+        itemLabel={{ singular: 'ingrediente', plural: 'ingredientes' }}
+        emptyTitle="Sua despensa está vazia"
+        emptyDescription="Comece pelo ingrediente que você mais usa, como leite condensado."
         emptyAction={novoInsumo}
-        errorTitle="Não foi possível carregar os insumos."
+        errorTitle="Não consegui buscar seus ingredientes agora."
         getRowKey={(insumo) => insumo.id}
         columns={[
           {
@@ -193,14 +194,14 @@ export function InsumosLista({
         onOpenChange={(aberto) => {
           if (!aberto) setParaExcluir(null);
         }}
-        title="Excluir insumo"
+        title="Excluir ingrediente"
         description={`Deseja excluir "${paraExcluir?.nome ?? ''}"?`}
         confirmLabel="Excluir"
         // Rejeitar mantém o diálogo aberto, com a mensagem do backend.
         onConfirm={async () => {
           if (!paraExcluir) return;
           await excluir.mutateAsync(paraExcluir.id);
-          toast.success('Insumo excluído com sucesso.');
+          toast.success('Ingrediente excluído.');
           setParaExcluir(null);
         }}
       />

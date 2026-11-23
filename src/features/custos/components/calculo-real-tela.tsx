@@ -49,8 +49,8 @@ export function CalculoRealTela() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Cálculo Real"
-        subtitle="Custo verdadeiro incluindo custos invisíveis"
+        title="Quanto custa de verdade"
+        subtitle="O custo de cada unidade, com o que não aparece na receita"
       />
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">

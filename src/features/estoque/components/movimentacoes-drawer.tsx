@@ -92,7 +92,7 @@ function ItemMovimentacao({
   const sinal = entrada ? '+' : '−';
   const referencia =
     movimentacao.origem === 'PRODUCAO' && movimentacao.referenciaId !== null
-      ? `Produção #${movimentacao.referenciaId}`
+      ? `Fornada #${movimentacao.referenciaId}`
       : null;
 
   return (

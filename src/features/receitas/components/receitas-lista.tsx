@@ -47,7 +47,7 @@ export function ReceitasLista() {
     <>
       <ListPage
         title="Receitas"
-        subtitle="Gerencie insumos, rendimento, custo e preço automáticos"
+        subtitle="Quanto custa e quanto cobrar por cada uma"
         actions={novaReceita}
         label="Receitas"
         query={query}

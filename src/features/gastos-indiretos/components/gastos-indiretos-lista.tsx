@@ -67,10 +67,10 @@ export function GastosIndiretosLista({
   return (
     <>
       <ListPage
-        title="Gastos Indiretos"
-        subtitle="Contas e custos que entram no preço das receitas"
+        title="Contas do mês"
+        subtitle="Gás, luz, internet, aluguel e outros custos que entram no preço"
         actions={novoGasto}
-        label="Gastos indiretos"
+        label="Contas do mês"
         query={query}
         itemLabel={{ singular: 'gasto', plural: 'gastos' }}
         summary={
@@ -158,7 +158,7 @@ export function GastosIndiretosLista({
 }
 
 /**
- * Cartão "Contas do mês" (`_buildTotalCard` do mobile): soma só os gastos
+ * Cartão "Total por mês" (`_buildTotalCard` do mobile): soma só os gastos
  * `MENSAL`, porque os outros tipos têm outra unidade (FE-42).
  */
 function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
@@ -166,11 +166,11 @@ function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
 
   return (
     <section
-      aria-label="Contas do mês"
+      aria-label="Total por mês"
       className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3.5"
     >
       <div className="flex flex-col gap-0.5">
-        <p className="text-small text-ink-muted">Contas do mês</p>
+        <p className="text-small text-ink-muted">Total por mês</p>
         <p className="text-small text-ink">
           {`${formatNumero(quantidade)} ${quantidade === 1 ? 'conta' : 'contas'}`}
         </p>

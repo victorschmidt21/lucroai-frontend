@@ -93,7 +93,7 @@ export function GraficoLucro({
           <tr>
             <th scope="col">Cenário</th>
             <th scope="col">Lucro</th>
-            <th scope="col">Margem</th>
+            <th scope="col">Lucro real (do preço)</th>
           </tr>
         </thead>
         <tbody>
@@ -113,13 +113,13 @@ export function GraficoLucro({
         <Legenda
           rotulo="Atual"
           valor={formatMoeda(lucroAtual)}
-          detalhe={`${formatPercentual(margemAtual)} margem`}
+          detalhe={`${formatPercentual(margemAtual)} do preço`}
           className="text-ink"
         />
         <Legenda
           rotulo="Projetado"
           valor={formatMoeda(lucroProjetado)}
-          detalhe={`${formatPercentual(margemProjetada)} margem`}
+          detalhe={`${formatPercentual(margemProjetada)} do preço`}
           className="text-success"
         />
       </div>

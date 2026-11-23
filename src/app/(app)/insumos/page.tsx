@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { InsumosLista } from '@/features/insumos/components/insumos-lista';
 import { insumosSearchSchema } from '@/features/insumos/schemas/insumos-search.schema';
 
-export const metadata: Metadata = { title: 'Insumos' };
+export const metadata: Metadata = { title: 'Ingredientes e embalagens' };
 
 /**
  * A busca (`q`) é lida pela `ListPage`; aqui, o `novo=1` das ações rápidas e o

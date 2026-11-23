@@ -46,6 +46,6 @@ describe('enums do contrato', () => {
 
   it('movimentações têm rótulos de tipo e origem', () => {
     expect(TIPO_MOVIMENTACAO_ROTULOS.SAIDA).toBe('Saída');
-    expect(ORIGEM_MOVIMENTACAO_ROTULOS.PRODUCAO).toBe('Produção');
+    expect(ORIGEM_MOVIMENTACAO_ROTULOS.PRODUCAO).toBe('Fornada');
   });
 });

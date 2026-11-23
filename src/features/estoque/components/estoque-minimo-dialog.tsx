@@ -60,7 +60,7 @@ export function EstoqueMinimoDialog({
         label="Estoque mínimo"
         placeholder="Ex.: 2,5"
         unidade={UNIDADE_MEDIDA_ROTULOS[insumo.unidade]}
-        hint="Abaixo deste valor, o insumo aparece como Crítico."
+        hint="Abaixo deste valor, o ingrediente aparece como Acabando."
         required
       />
     </FormDialog>

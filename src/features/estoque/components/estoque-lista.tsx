@@ -36,7 +36,7 @@ type FiltroStatus = 'todos' | 'baixo';
 
 const OPCOES_STATUS = [
   { value: 'todos', label: 'Todos' },
-  { value: 'baixo', label: 'Baixo' },
+  { value: 'baixo', label: 'Acabando' },
 ] satisfies { value: FiltroStatus; label: string }[];
 
 /** Com o filtro "Baixo", um item sem saldo continua visível: não dá para saber. */
@@ -94,7 +94,7 @@ export function EstoqueLista() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Estoque"
-        subtitle="Acompanhe disponibilidade e alertas"
+        subtitle="O que tem na sua despensa"
         actions={
           <Button
             variant="secundario"
@@ -117,9 +117,9 @@ export function EstoqueLista() {
           <Input
             ref={campoDeBusca}
             type="search"
-            label="Buscar insumos"
+            label="Buscar ingredientes"
             hideLabel
-            placeholder="Buscar insumos"
+            placeholder="Buscar ingredientes"
             icon={<IconBusca className="size-5" />}
             value={busca.texto}
             onChange={(event) => busca.alterar(event.target.value)}
@@ -144,7 +144,7 @@ export function EstoqueLista() {
       {apenasBaixo ? (
         <div className="flex flex-wrap items-center gap-2">
           <IconFiltro className="size-4 text-accent" />
-          <Chip>Baixo Estoque</Chip>
+          <Chip>Acabando</Chip>
           <Button
             variant="fantasma"
             size="compacto"
@@ -170,7 +170,7 @@ export function EstoqueLista() {
         </output>
       ) : falha ? (
         <ErrorState
-          title="Erro ao carregar estoques"
+          title="Não consegui buscar o estoque agora."
           message={getErrorMessage(falha)}
           onRetry={() => void atualizar()}
           retrying={atualizando}
@@ -179,11 +179,11 @@ export function EstoqueLista() {
         <EmptyState
           icon={<IconEstoque />}
           title="Nenhum estoque encontrado"
-          description="Comece adicionando insumos"
+          description="Comece cadastrando os ingredientes que você compra."
           action={
             <Link href="/insumos?novo=1" className={buttonClasses()}>
               <IconAdicionar className="size-5" />
-              Novo insumo
+              Novo ingrediente
             </Link>
           }
         />
@@ -201,7 +201,7 @@ export function EstoqueLista() {
         <EmptyState
           icon={<IconEstoque />}
           title="Nenhum estoque encontrado"
-          description="Nenhum insumo está abaixo do estoque mínimo."
+          description="Nenhum ingrediente acabando."
           action={
             <Button variant="secundario" onClick={() => alterarFiltro(false)}>
               Limpar filtro

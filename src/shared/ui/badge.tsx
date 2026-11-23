@@ -68,7 +68,7 @@ export function Badge({
 export type StatusEstoque = 'critico' | 'baixo' | 'adequado';
 
 const STATUS_ESTOQUE = {
-  critico: { label: 'Crítico', tone: 'critico' },
+  critico: { label: 'Acabando', tone: 'critico' },
   baixo: { label: 'Baixo', tone: 'baixo' },
   adequado: { label: 'Adequado', tone: 'adequado' },
 } as const satisfies Record<StatusEstoque, { label: string; tone: BadgeTone }>;

@@ -21,7 +21,7 @@ function renderForm(insumo?: Insumo) {
     </ToastProvider>,
   );
   const dialog = screen.getByRole('dialog', {
-    name: insumo ? 'Editar insumo' : 'Novo insumo',
+    name: insumo ? 'Editar ingrediente' : 'Novo ingrediente',
   });
 
   return { dialog, onOpenChange };
@@ -105,7 +105,7 @@ describe('criação', OPCOES, () => {
       },
     ]);
     expect(
-      await screen.findByText('Insumo criado com sucesso.'),
+      await screen.findByText('Ingrediente cadastrado.'),
     ).toBeInTheDocument();
   });
 
@@ -195,7 +195,7 @@ describe('edição', OPCOES, () => {
       ],
     ]);
     expect(
-      await screen.findByText('Insumo atualizado com sucesso.'),
+      await screen.findByText('Ingrediente atualizado.'),
     ).toBeInTheDocument();
   });
 });

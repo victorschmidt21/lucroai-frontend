@@ -23,7 +23,7 @@ import { StatCard } from './stat-card';
 
 describe('Badge', () => {
   it.each([
-    ['critico', 'Crítico', 'text-status-critico'],
+    ['critico', 'Acabando', 'text-status-critico'],
     ['baixo', 'Baixo', 'text-status-baixo'],
     ['adequado', 'Adequado', 'text-status-adequado'],
   ] as const)('estoque %s tem cor e texto', (status, texto, classe) => {
