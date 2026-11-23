@@ -22,7 +22,7 @@ type ProgressBarProps = {
   className?: string;
 };
 
-/** `LinearProgressIndicator` do cartão de estoque: 8px e cantos arredondados. */
+/** `LinearProgressIndicator` do cartão de estoque: 8px, trilho `border-strong` e pontas arredondadas. */
 export function ProgressBar({
   value,
   tone = 'accent',
@@ -36,8 +36,8 @@ export function ProgressBar({
       value={Math.min(Math.max(value, 0), 1)}
       aria-valuetext={valueText}
       className={cn(
-        'block h-2 w-full appearance-none overflow-hidden rounded-sm bg-border-strong',
-        '[&::-webkit-progress-bar]:bg-border-strong [&::-webkit-progress-value]:rounded-sm [&::-moz-progress-bar]:rounded-sm',
+        'block h-2 w-full appearance-none overflow-hidden rounded-full bg-border-strong',
+        '[&::-webkit-progress-bar]:bg-border-strong [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:rounded-full',
         TONE_CLASSES[tone],
         className,
       )}

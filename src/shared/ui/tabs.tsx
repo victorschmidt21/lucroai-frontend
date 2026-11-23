@@ -19,7 +19,7 @@ export function TabsList({
   );
 }
 
-/** Aba do `TabBar` do mobile: rótulo e indicador em Amora na ativa. */
+/** Aba do `TabBar` do mobile: na ativa, texto Amora e sublinhado arredondado de 3px (FE-55). */
 export function TabsTrigger({
   className,
   ...props
@@ -27,9 +27,10 @@ export function TabsTrigger({
   return (
     <RadixTabs.Trigger
       className={cn(
-        '-mb-px min-h-12 flex-1 cursor-pointer border-b-2 border-transparent px-4 py-2 text-body font-medium whitespace-nowrap text-ink-muted transition-colors duration-150',
-        'hover:text-ink data-[state=active]:border-accent data-[state=active]:text-accent',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'relative min-h-12 flex-1 cursor-pointer px-4 py-2 text-body font-bold whitespace-nowrap text-ink-muted transition-colors duration-150',
+        'after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-full after:bg-transparent',
+        'hover:text-ink data-[state=active]:text-accent data-[state=active]:after:bg-accent',
+        'disabled:cursor-default disabled:opacity-50',
         'focus-visible:-outline-offset-2',
         className,
       )}

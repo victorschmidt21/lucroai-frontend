@@ -5,8 +5,9 @@ import type { ComponentProps } from 'react';
 import { cn } from './cn';
 import { IconCheck } from './icons/acoes';
 
+// Pílula com borda `border` (FE-55); selecionada, `accent-soft` com borda `accent`.
 const CHIP_CLASSES =
-  'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-small font-semibold whitespace-nowrap';
+  'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-small font-bold whitespace-nowrap';
 
 /** Rótulo estático, sem ação (ex.: categoria do insumo). */
 export function Chip({ className, ...props }: ComponentProps<'span'>) {
@@ -14,7 +15,7 @@ export function Chip({ className, ...props }: ComponentProps<'span'>) {
     <span
       className={cn(
         CHIP_CLASSES,
-        'border-border bg-surface-alt text-ink-muted',
+        'border-border bg-surface text-ink-muted',
         className,
       )}
       {...props}
@@ -53,9 +54,9 @@ export function ToggleChip({
         CHIP_CLASSES,
         // 48px de alvo de toque sem aumentar o chip (32px + 8px em cima e embaixo).
         'group relative cursor-pointer transition-colors duration-150 before:absolute before:-inset-y-2 before:inset-x-0',
-        'border-border-field bg-surface text-ink-muted not-disabled:hover:text-ink',
+        'border-border bg-surface text-ink-muted not-disabled:hover:border-accent not-disabled:hover:text-ink',
         'data-[state=on]:border-accent data-[state=on]:bg-accent-soft data-[state=on]:text-ink',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'disabled:cursor-default disabled:opacity-50',
         className,
       )}
       {...props}

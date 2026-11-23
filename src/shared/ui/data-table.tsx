@@ -51,7 +51,10 @@ export function DataTable<Row>({
         aria-label={label}
         className="block w-full border-collapse md:table"
       >
-        <thead role="rowgroup" className="hidden md:table-header-group">
+        <thead
+          role="rowgroup"
+          className="hidden bg-surface-alt md:table-header-group"
+        >
           <tr role="row" className="border-b border-border">
             {columns.map(({ id, header, align, acoes }) => (
               <th
@@ -59,7 +62,7 @@ export function DataTable<Row>({
                 role="columnheader"
                 scope="col"
                 className={cn(
-                  'px-4 py-3 text-left text-small font-semibold whitespace-nowrap text-ink-muted',
+                  'text-section-label px-4 py-3 text-left whitespace-nowrap text-ink-muted',
                   (align === 'right' || acoes) && 'text-right',
                   acoes && 'w-px',
                 )}
