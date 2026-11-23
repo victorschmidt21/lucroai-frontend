@@ -350,7 +350,7 @@ export function DesignSystemShowcase() {
             <p className="text-section-label text-ink-muted">
               Custos invisíveis (section-label)
             </p>
-            <p className="text-body">body: Roboto Regular para textos.</p>
+            <p className="text-body">body: Nunito Regular para textos.</p>
             <p className="text-small text-ink-muted">small: texto de apoio.</p>
             <p className="text-caption text-ink-muted">
               caption: legendas e metadados.
@@ -359,7 +359,8 @@ export function DesignSystemShowcase() {
               Pesos: <span className="font-normal">400</span>{' '}
               <span className="font-medium">500</span>{' '}
               <span className="font-semibold">600</span>{' '}
-              <span className="font-bold">700</span>
+              <span className="font-bold">700</span>{' '}
+              <span className="font-extrabold">800</span>
             </p>
           </div>
         </Secao>
@@ -475,7 +476,7 @@ export function DesignSystemShowcase() {
                 Cartão com rótulo de seção, como no cálculo real.
               </p>
             </Card>
-            <Card variant="resumo">
+            <Card>
               <p className="text-small text-ink-muted">Total vendido</p>
               <p className="text-title text-accent">R$ 3.480,00</p>
             </Card>

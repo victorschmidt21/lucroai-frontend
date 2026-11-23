@@ -9,7 +9,7 @@ type PageHeaderProps = {
   actions?: ReactNode;
 };
 
-/** Cabeçalho das telas internas do mobile: título de 27px e subtítulo cinza. */
+/** Cabeçalho das telas internas: título em Fredoka de 24px e subtítulo cinza. */
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { publicEnv } from '@/shared/config/env.public';
 import { COOKIE_TEMA, lerTema } from '@/shared/ui/tema';
 import { TemaProvider } from '@/shared/ui/tema-provider';
-import { roboto } from './fonts';
+import { fredoka, nunito } from './fonts';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -30,7 +30,11 @@ export default async function RootLayout({
   const tema = lerTema((await cookies()).get(COOKIE_TEMA)?.value);
 
   return (
-    <html lang="pt-BR" className={roboto.variable} data-tema={tema}>
+    <html
+      lang="pt-BR"
+      className={`${fredoka.variable} ${nunito.variable}`}
+      data-tema={tema}
+    >
       <body className="bg-bg font-sans text-body text-ink antialiased">
         <TemaProvider temaInicial={tema}>{children}</TemaProvider>
       </body>

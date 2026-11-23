@@ -8,13 +8,13 @@ type LogoProps = {
 
 /**
  * Wordmark "LucroAI" do cabeçalho do painel (dashboard_page.dart, `_buildHeader`):
- * texto branco de 27px, em negrito. O mobile não tem logo em imagem.
+ * em Fredoka (FE-53). O mobile não tem logo em imagem; o nome e a logo mudam na FE-54.
  */
 export function Logo({ size = 'padrao', className }: LogoProps) {
   return (
     <span
       className={cn(
-        'inline-block font-bold text-ink',
+        'inline-block font-display font-semibold text-ink',
         size === 'padrao' ? 'text-heading' : 'text-title',
         className,
       )}

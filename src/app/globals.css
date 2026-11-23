@@ -146,39 +146,52 @@
   --text-shadow-*: initial;
   --radius-*: initial;
 
-  /* Raios do mobile: `BorderRadius.circular(8, 12, 14, 18)` */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* Raios da marca (FE-53, docs/marca.md#forma). Botões, chips e badges usam `rounded-full`. */
+  --radius-sm: 10px; /* itens pequenos */
+  --radius-md: 14px; /* campos e áreas dentro de cartões */
+  --radius-lg: 20px; /* cartões e `StatCard` */
+  --radius-xl: 24px; /* Dialog e Drawer */
 
-  /* Escala tipográfica, em px do mobile convertidos para rem. */
+  /*
+   * Escala tipográfica da marca (FE-53, docs/ui.md#tipografia). Os três tokens de
+   * título também trocam a fonte para Fredoka (regra em `@layer utilities`, abaixo):
+   * o Tailwind não aceita `--text-*--font-family`. Nada abaixo de 12px.
+   */
   --text-*: initial;
   --text-display-lg: 2.25rem;
   --text-display-lg--line-height: 2.5rem;
-  --text-display-lg--font-weight: 700;
+  --text-display-lg--font-weight: 600;
+  --text-heading: 1.5rem;
+  --text-heading--line-height: 1.875rem;
+  --text-heading--font-weight: 600;
   --text-display: 1.375rem;
   --text-display--line-height: 1.75rem;
-  --text-display--font-weight: 700;
-  --text-heading: 1.6875rem;
-  --text-heading--line-height: 2rem;
-  --text-heading--font-weight: 700;
+  --text-display--font-weight: 600;
   --text-title: 1.125rem;
   --text-title--line-height: 1.5rem;
-  --text-title--font-weight: 700;
-  --text-subtitle: 0.78125rem;
-  --text-subtitle--line-height: 1.125rem;
+  --text-title--font-weight: 800;
+  /* 16px nos campos: com menos, o iPhone amplia a tela ao focar. */
   --text-field: 1rem;
   --text-field--line-height: 1.5rem;
-  --text-body: 0.875rem;
-  --text-body--line-height: 1.25rem;
-  --text-small: 0.75rem;
-  --text-small--line-height: 1rem;
-  --text-caption: 0.6875rem;
-  --text-caption--line-height: 1rem;
-  /* Rótulo da barra inferior com oito itens: o mobile usa 9px (main_screen.dart). */
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.25rem;
+  --text-small--font-weight: 600;
+  --text-subtitle: 0.875rem;
+  --text-subtitle--line-height: 1.25rem;
+  --text-subtitle--font-weight: 600;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.125rem;
+  --text-caption--font-weight: 700;
+  /*
+   * Rótulo da barra inferior do celular, com oito itens. A marca pede 12px, mas
+   * "Produção" (53px a 12px) não cabe na coluna de 45px em 360px: fica em 10px
+   * até a FE-57 agrupar o menu.
+   */
   --text-nav: 0.625rem;
   --text-nav--line-height: 0.75rem;
+  --text-nav--font-weight: 700;
 
   /* Só `transform` nos painéis: mudar a opacidade afetaria o contraste na entrada. */
   --animate-surgir: surgir 150ms ease-out;
@@ -212,7 +225,11 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-roboto), system-ui, -apple-system, sans-serif;
+  /* `--font-fredoka` e `--font-nunito` vêm do `next/font`, no <html> (src/app/fonts.ts). */
+  --font-sans:
+    var(--font-nunito), ui-rounded, system-ui, -apple-system, sans-serif;
+  --font-display:
+    var(--font-fredoka), var(--font-nunito), ui-rounded, sans-serif;
 
   --color-bg: var(--bg);
   --color-bg-alt: var(--bg-alt);
@@ -253,11 +270,20 @@
 
 /* Rótulos de seção em caixa alta, como "CUSTOS INVISÍVEIS" no cálculo real. */
 @utility text-section-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   line-height: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* Os tokens de título usam Fredoka; o resto do texto fica em Nunito (`font-sans`). */
+@layer utilities {
+  .text-display-lg,
+  .text-heading,
+  .text-display {
+    font-family: --theme(--font-display);
+  }
 }
 
 @layer base {
