@@ -2,7 +2,7 @@
 
 > **Marca:** o visual e os textos seguem a marca **Doce Fatia**, descrita em [marca.md](marca.md). Leia-o antes de mexer em interface ou texto.
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite opcional **existe** desde a FE-52 ([Aparência](#aparência)); a tipografia Fredoka e Nunito, os raios da marca e as áreas de toque de 48px **existem** desde a FE-53.
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; desde a FE-51, os tokens usam a paleta clara **Confeitaria** (as tabelas abaixo); o modo noite opcional **existe** desde a FE-52 ([Aparência](#aparência)); a tipografia Fredoka e Nunito, os raios da marca e as áreas de toque de 48px **existem** desde a FE-53; os ícones de traço arredondado (`lucide-react`) **existem** desde a FE-56 ([Ícones](#ícones)).
 
 ## Princípios
 
@@ -177,7 +177,7 @@ Componentes base da FE-04. Radix UI onde há foco e teclado (Dialog, Drawer, Tab
 | `status-page.tsx`                    | `StatusPage`                                                                | páginas 404 e de erro (FE-08), na caixa tracejada do `EmptyState` (FE-55): `code`, `title` (o `h1`), `description`, `alert` (anuncia a descrição) e `action`; `standalone` traz o `<main>` e a logo, para as páginas fora do layout de `(app)`                                                                                                                                                                                                                                                                                                                                                                     |
 | `date-picker.tsx`                    | `DateRangePicker`, `isPeriodoValido`                                        | período do histórico de vendas: `legend`, `value` e `onChange` com `{ inicio, fim }` em `YYYY-MM-DD`; dois `<input type="date">` ("Data inicial", "Data final") e o erro de data inicial depois da final                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `logo.tsx`                           | `Logo`                                                                      | logo Doce Fatia (FE-54): símbolo e logotipo, `variante`, `size` e `tom`; ver [Logo](#logo)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…                   | SVGs locais equivalentes aos Material Icons do mobile; decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone`. Do login (FE-07): `IconEmail`, `IconCadeado`, `IconMostrar`, `IconOcultar` e `IconSair`; do layout (FE-08): `IconConta` e `IconConstrucao`                                                                                                                                                                                                                                                                                                                                               |
+| `icons/menu.tsx`, `icons/acoes.tsx`  | `IconHome`, `IconInsumos`… e `IconEditar`, `IconExcluir`…                   | contorno do `lucide-react` com traço de 2px (FE-56, [Ícones](#ícones)); decorativos (`aria-hidden`); `icons/icone.tsx` tem o `criarIcone(nome, IconeDoLucide)`. Do login (FE-07): `IconEmail`, `IconCadeado`, `IconMostrar`, `IconOcultar` e `IconSair`; do layout (FE-08): `IconConta` e `IconConstrucao`; dos avisos (FE-56): `IconAvisos`                                                                                                                                                                                                                                                                       |
 | `cn.ts`                              | `cn`                                                                        | junta classes condicionais                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ### Logo
@@ -191,6 +191,58 @@ O desenho, as versões e as proibições estão em [marca.md](marca.md#logo). No
 Os ícones do app são arquivos de imagem, por isso têm as cores escritas neles: `src/app/icon.svg` (favicon, só o símbolo), `src/app/apple-icon.png` (180px) e `public/icon-192.png` e `icon-512.png` (do `src/app/manifest.ts`), com o símbolo sobre Chantilly e 15% de margem. O manifesto também tem as cores fixas (`theme_color` Amora, `background_color` Chantilly) e é a única exceção do `sem-cores-fixas.test.ts` além do `globals.css`. Se a arte final do símbolo mudar, troque os caminhos no `logo.tsx` e no `icon.svg` e gere os PNGs de novo a partir do `icon.svg` (com o `sharp`, que já vem com o Next).
 
 A página `/design-system` (`src/app/design-system/page.tsx`, com o catálogo em `src/features/design-system/`) mostra todos os tokens e componentes, com o seletor de aparência no topo (claro e noite) e a seção "Estados dos componentes" (padrão, hover, foco, erro ou carregando e desabilitado lado a lado; hover e foco simulados com classes `!`, FE-55). `/design-system/listagem` (FE-06) é o exemplo funcionando da listagem de insumos com busca, cadastro, edição e exclusão, do `Form` em página e dos estados, sobre uma API em memória (`src/features/design-system/exemplo-api.ts`) com os cenários "Falhar ao carregar", "Lista vazia" e "Falhar ao salvar e excluir". As duas devolvem 404 no build de produção.
+
+### Ícones
+
+Desde a FE-56, os ícones são do [`lucide-react`](https://lucide.dev) (licença ISC, versão exata no `package.json`), importados um a um (`lucide-react/icons/<nome>`) para não pesar o bundle. As telas não importam o `lucide-react`: usam os `Icon…` de `src/shared/ui/icons/`, que passam pelo `criarIcone`. A regra ([marca.md](marca.md#ícones)):
+
+- contorno, traço de 2px (`strokeWidth={2}`) com pontas arredondadas, cor `currentColor` (a cor vem do texto, por classe de token);
+- 20px (`size-5`, o padrão) em botões, campos e textos; 24px (`size-6`) no menu lateral e na barra inferior;
+- sempre decorativos (`aria-hidden`): o nome vem do texto ao lado ou do `aria-label` do botão; na navegação, ícone sempre com rótulo;
+- nada de ícone preenchido nem desenhado à mão; um ícone novo entra em `menu.tsx` ou `acoes.tsx` com `criarIcone`, preferindo metáforas de cozinha.
+
+| Export              | Lucide              | Por quê                              |
+| ------------------- | ------------------- | ------------------------------------ |
+| `IconHome`          | `House`             | início                               |
+| `IconInsumos`       | `Wheat`             | ingredientes                         |
+| `IconReceitas`      | `BookOpen`          | caderno de receitas                  |
+| `IconCustos`        | `ChartPie`          | a fatia: quanto custa cada parte     |
+| `IconVendas`        | `ShoppingBag`       | sacola de entrega                    |
+| `IconEstoque`       | `Archive`           | despensa                             |
+| `IconProducao`      | `CookingPot`        | fornada                              |
+| `IconGastos`        | `Receipt`           | contas da casa                       |
+| `IconConfiguracoes` | `SlidersHorizontal` | ajustes                              |
+| `IconAdicionar`     | `Plus`              | criar                                |
+| `IconEditar`        | `Pencil`            | editar                               |
+| `IconExcluir`       | `Trash2`            | excluir                              |
+| `IconBusca`         | `Search`            | busca                                |
+| `IconFechar`        | `X`                 | fechar diálogo, gaveta e chip        |
+| `IconCheck`         | `Check`             | confirmado, opção marcada            |
+| `IconChevronBaixo`  | `ChevronDown`       | abrir lista                          |
+| `IconSeta`          | `ChevronRight`      | links "Ver tudo"                     |
+| `IconMaisOpcoes`    | `EllipsisVertical`  | mais opções                          |
+| `IconAvisos`        | `Bell`              | avisos ao entrar (`IndicadorAvisos`) |
+| `IconAlerta`        | `TriangleAlert`     | atenção                              |
+| `IconInfo`          | `Info`              | informação                           |
+| `IconErro`          | `CircleAlert`       | erro                                 |
+| `IconSucesso`       | `CircleCheck`       | sucesso                              |
+| `IconSimular`       | `FlaskConical`      | simular cenário                      |
+| `IconAtualizar`     | `RefreshCw`         | atualizar                            |
+| `IconFiltro`        | `ListFilter`        | filtro                               |
+| `IconCalendario`    | `Calendar`          | datas                                |
+| `IconVazio`         | `Inbox`             | estados vazios                       |
+| `IconDinheiro`      | `Banknote`          | faturamento                          |
+| `IconTendencia`     | `TrendingUp`        | lucro                                |
+| `IconEmail`         | `Mail`              | e-mail                               |
+| `IconCadeado`       | `Lock`              | senha                                |
+| `IconMostrar`       | `Eye`               | mostrar senha                        |
+| `IconOcultar`       | `EyeOff`            | ocultar senha                        |
+| `IconSair`          | `LogOut`            | sair                                 |
+| `IconConta`         | `User`              | conta                                |
+| `IconConstrucao`    | `Construction`      | tela provisória                      |
+| `IconEntrada`       | `ArrowDown`         | entrada de estoque                   |
+| `IconSaida`         | `ArrowUp`           | saída de estoque                     |
+| `IconHistorico`     | `History`           | histórico                            |
 
 ### Ações
 
@@ -304,12 +356,12 @@ Toda tela interna começa com `PageHeader` (ou `ListPage`, que o inclui): títul
 
 Oito destinos fixos, na ordem do mobile (`main_screen.dart`), em `features/navegacao/menu.ts` (existe desde a FE-08): Home (`/`), Insumos, Receitas, Custos, Vendas, Estoque, Produção (`/producoes`) e Gastos (`/gastos-indiretos`). `getItemAtivo(pathname)` marca também as subtelas (`/receitas/nova` marca Receitas); telas fora do menu, como `/simulacao`, não marcam nenhum.
 
-| Onde                     | Como                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Celular (< 768px)        | barra inferior fixa (`MenuNavegacao variante="inferior"`), fundo `bg` com borda superior `surface-alt` (`app_bottom_nav.dart`), oito colunas iguais com ícone de 22px e rótulo `text-nav` (10px) sem quebrar, 64px de altura e `env(safe-area-inset-bottom)`. Com 12px (FE-53), "Insumos", "Receitas" e "Produção" (47 a 53px) não cabem na coluna de 45px em 360px; o rótulo fica em 10px até a FE-57 agrupar o menu |
-| Celular, cabeçalho       | logo (leva à Home) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                                                                                                                                                                         |
-| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens e o `UserMenu` no rodapé                                                                                                                                                                                                                                                                                                         |
-| Os dois                  | item ativo em `ink` com o ícone `accent` e `aria-current="page"` (no lateral, sobre a pílula `accent-soft`, em 800; na barra inferior, a pílula fica atrás do ícone; FE-55); lateral e barra em `surface` com borda `border`; inativos em `ink-muted`; links reais (`<a>`), sem pré-carregamento; atalho "Pular para o conteúdo" antes do menu                                                                        |
+| Onde                     | Como                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Celular (< 768px)        | barra inferior fixa (`MenuNavegacao variante="inferior"`), fundo `bg` com borda superior `surface-alt` (`app_bottom_nav.dart`), oito colunas iguais com ícone de 24px (FE-56) e rótulo `text-nav` (10px) sem quebrar, 64px de altura e `env(safe-area-inset-bottom)`. Com 12px (FE-53), "Insumos", "Receitas" e "Produção" (47 a 53px) não cabem na coluna de 45px em 360px; o rótulo fica em 10px até a FE-57 agrupar o menu |
+| Celular, cabeçalho       | logo (leva à Home) e o botão "Conta", que abre o `UserMenu` numa gaveta (`MenuContaCelular`): a barra não tem espaço para ele                                                                                                                                                                                                                                                                                                 |
+| Desktop (a partir de md) | menu lateral de 240px (`MenuNavegacao variante="lateral"`) com a logo, os oito itens e o `UserMenu` no rodapé                                                                                                                                                                                                                                                                                                                 |
+| Os dois                  | item ativo em `ink` com o ícone `accent` e `aria-current="page"` (no lateral, sobre a pílula `accent-soft`, em 800; na barra inferior, a pílula fica atrás do ícone; FE-55); lateral e barra em `surface` com borda `border`; inativos em `ink-muted`; links reais (`<a>`), sem pré-carregamento; atalho "Pular para o conteúdo" antes do menu                                                                                |
 
 O `next dev` mostra o indicador dele em cima, à esquerda (`devIndicators` no `next.config.ts`): na posição padrão, ele cobria o item Home da barra.
 
