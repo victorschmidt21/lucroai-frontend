@@ -34,7 +34,9 @@ describe('StatusPage', () => {
       />,
     );
 
-    expect(screen.getByRole('main')).toHaveTextContent('LucroAI');
+    expect(screen.getByRole('main')).toContainElement(
+      screen.getByRole('img', { name: 'Doce Fatia' }),
+    );
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Tente novamente em instantes.',
     );

@@ -250,10 +250,43 @@ describe('PageHeader e Logo', () => {
   it.each([
     ['padrao', 'text-heading'],
     ['compacto', 'text-title'],
-  ] as const)('Logo %s escreve LucroAI', (size, classe) => {
+  ] as const)('Logo %s é uma imagem chamada Doce Fatia', (size, classe) => {
     render(<Logo size={size} />);
 
-    expect(screen.getByText('LucroAI')).toHaveClass(classe);
+    const logo = screen.getByRole('img', { name: 'Doce Fatia' });
+    expect(logo).toHaveClass(classe);
+    expect(logo.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('Logo completo traz o logotipo; só o símbolo, não', () => {
+    const { rerender } = render(<Logo />);
+
+    expect(screen.getByRole('img', { name: 'Doce Fatia' })).toHaveTextContent(
+      'Doce Fatia',
+    );
+    expect(screen.getByText('Doce')).toHaveClass('text-accent', 'font-medium');
+    expect(screen.getByText('Fatia')).toHaveClass('text-ink', 'font-semibold');
+
+    rerender(<Logo variante="simbolo" />);
+
+    expect(screen.getByRole('img', { name: 'Doce Fatia' })).toHaveTextContent(
+      '',
+    );
+    expect(screen.queryByText('Doce')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['normal', 'fill-accent', 'fill-bg', 'text-accent'],
+    ['sobre-cor', 'fill-on-accent', 'fill-accent', 'text-on-accent'],
+  ] as const)('Logo no tom %s', (tom, bolo, confeitos, doce) => {
+    const { container } = render(<Logo tom={tom} />);
+    const parte = (nome: string) =>
+      container.querySelector(`[data-parte="${nome}"]`);
+
+    expect(parte('bolo')).toHaveClass(bolo);
+    expect(parte('fatia')).toHaveClass('fill-highlight');
+    expect(parte('confeitos')).toHaveClass(confeitos);
+    expect(screen.getByText('Doce')).toHaveClass(doce);
   });
 });
 
