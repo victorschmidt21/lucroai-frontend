@@ -12,19 +12,19 @@ const VARIANTES = {
     item: 'flex min-h-12 items-center gap-3 rounded-full px-4 py-2 text-body',
     ativo: 'bg-accent-soft font-extrabold',
     inativo: 'hover:bg-surface-alt',
-    icone: 'size-5',
+    icone: 'size-6',
     fundoDoIcone: '',
     fundoDoIconeAtivo: '',
     itens: ITENS_MENU_LATERAL,
   },
-  // Barra inferior do celular (main_screen.dart): ícone de 22px sobre o rótulo, oito
+  // Barra inferior do celular (main_screen.dart): ícone de 24px sobre o rótulo, oito
   // colunas iguais. O contorno do foco fica para dentro, para não ser cortado.
   inferior: {
     lista: 'grid grid-cols-8',
     item: 'flex min-h-16 flex-col items-center justify-center gap-0.5 rounded-md px-0.5 text-nav whitespace-nowrap -outline-offset-2',
     ativo: '',
     inativo: '',
-    icone: 'size-5.5',
+    icone: 'size-6',
     // Pílula atrás do ícone, que marca o item ativo (FE-55).
     fundoDoIcone:
       'flex h-7 w-11 max-w-full items-center justify-center rounded-full',
