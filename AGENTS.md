@@ -4,7 +4,9 @@ Guia para agentes de IA (Claude Code, Codex, Cursor, Copilot etc.) e para os int
 
 ## Visão geral
 
-Frontend web do **LucroAI**: sistema de custos e lucro para pequenos produtores de alimentos, como padarias e confeitarias. Cadastro de insumos com custo unitário automático, receitas (ficha técnica) com custo de produção e preço sugerido, gastos indiretos rateados nas produções, estoque de insumos, produções, vendas com confirmação, cálculo do custo real, simulações de preço, custo e volume, e um painel financeiro.
+Frontend web do **Doce Fatia** (antes chamado LucroAI): sistema de custos e lucro para pequenos produtores de alimentos, como padarias e confeitarias. Cadastro de insumos com custo unitário automático, receitas (ficha técnica) com custo de produção e preço sugerido, gastos indiretos rateados nas produções, estoque de insumos, produções, vendas com confirmação, cálculo do custo real, simulações de preço, custo e volume, e um painel financeiro.
+
+A marca, a voz e o visual estão em [docs/marca.md](docs/marca.md) (épico E9, FE-50 a FE-60). O repositório, o pacote npm, as variáveis de ambiente, o cookie e as rotas continuam com `lucroai`.
 
 A web **substitui o app Flutter** [`lucroai_mobile`](https://github.com/GrupoDoisENG/lucroai_mobile), com as mesmas telas, regras e textos (corrigindo a acentuação). A migração inteira é feita por agentes de IA, issue por issue (FE-01 a FE-24).
 
@@ -56,6 +58,7 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 | [docs/business-rules.md](docs/business-rules.md)                                           | implementar qualquer tela: fórmulas, validações, mensagens e textos de cada tela, com o arquivo de origem no mobile e no backend                                                        |
 | [docs/conventions.md](docs/conventions.md)                                                 | nomear arquivos, componentes, hooks e rotas; lidar com dinheiro em `number`; escrever commits, branches e PRs                                                                           |
 | [docs/api-integration.md](docs/api-integration.md)                                         | chamar a API: rotas, contratos Zod, cliente, proxy, erros com `code`, query keys, invalidação e **lacunas do backend**                                                                  |
+| [docs/marca.md](docs/marca.md)                                                             | mexer em qualquer interface ou texto: nome, logo, cores, tipografia, forma, ícones, voz e tom, glossário e checklist de revisão de tela (Doce Fatia)                                    |
 | [docs/ui.md](docs/ui.md)                                                                   | montar telas: tokens, componentes, `ListPage`, `FormDialog`, campos numéricos, confirmação, estados, formatação e acessibilidade                                                        |
 | [docs/testing.md](docs/testing.md)                                                         | escrever testes unitários, de componente e e2e; dados do seed; cobertura; CI                                                                                                            |
 | [docs/security.md](docs/security.md)                                                       | sessão, cookie, proxy, proteção de rotas, multiempresa e o que nunca guardar no navegador                                                                                               |
@@ -79,7 +82,7 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 10. **Regra de negócio calculada no cliente vem de [docs/business-rules.md](docs/business-rules.md)**, fica em função pura (`<modulo>.calculos.ts` ou `shared/domain/`) e tem teste de cada ramo. Valor gravado pelo backend não é recalculado na tela.
 11. **Dinheiro é `number`**: formate com `src/shared/format/` (nunca `toFixed` para exibir), arredonde a centavos só na exibição e repita o arredondamento do backend nas prévias ([docs/conventions.md](docs/conventions.md#dinheiro-e-quantidades)).
 12. **Use os nomes do contrato** (`margem_lucro`, `custoUnitario`) sem converter; o formulário monta o corpo numa função `to...Body`.
-13. **Use o design system e os tokens.** Só tema escuro, sem cores fixas fora de `globals.css`, sem gradientes. Status usa cor **e** texto.
+13. **Use o design system e os tokens.** Sem cores fixas fora de `globals.css`, sem gradientes. Status usa cor **e** texto.
 14. **Acessibilidade não é opcional**: teclado, foco visível, rótulos, contraste de 4,5:1, e nenhuma rolagem horizontal em 360px.
 15. **Textos de tela em português com acentuação correta**, copiados de [docs/business-rules.md](docs/business-rules.md), mesmo quando o mobile escreve sem acento.
 16. **Nunca guarde o token nem dados de negócio no navegador** (`localStorage`, `sessionStorage`, cookie legível) e nunca envie `empresaId`: ele vem do token ([docs/security.md](docs/security.md)).
@@ -90,6 +93,7 @@ Depois de `npm install <pacote>` ou `npm uninstall <pacote>`, confira se o `pack
 21. **Não use o que ainda não existe.** Itens marcados como "previsto (FE-NN)" dependem da issue citada. Ao entregar um deles, atualize a documentação no mesmo PR.
 22. **Se a issue e o backend divergirem, vale o backend.** Registre a divergência em [docs/api-integration.md](docs/api-integration.md#divergências-entre-as-issues-e-o-backend) e no PR.
 23. Não adicione dependências novas sem necessidade clara; se adicionar, justifique no PR.
+24. **Antes de mexer em interface ou texto, leia [docs/marca.md](docs/marca.md).** A marca Doce Fatia prevalece sobre o visual do mobile.
 
 ## Como criar uma tela nova (checklist)
 

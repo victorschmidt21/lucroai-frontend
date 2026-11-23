@@ -1,6 +1,8 @@
-# LucroAI Frontend
+# Doce Fatia Frontend
 
-Interface web do LucroAI, que substitui o app Flutter [`lucroai_mobile`](https://github.com/GrupoDoisENG/lucroai_mobile). Construída com [Next.js](https://nextjs.org/docs) (App Router, TypeScript `strict`, ESM) e [Tailwind CSS](https://tailwindcss.com/docs) v4, rodando em containers Docker.
+Interface web do **Doce Fatia** (antes chamado LucroAI), que substitui o app Flutter [`lucroai_mobile`](https://github.com/GrupoDoisENG/lucroai_mobile). Construída com [Next.js](https://nextjs.org/docs) (App Router, TypeScript `strict`, ESM) e [Tailwind CSS](https://tailwindcss.com/docs) v4, rodando em containers Docker.
+
+A marca (nome, logo, cores, tipografia e voz) está em [docs/marca.md](docs/marca.md). O repositório, o pacote npm, as variáveis de ambiente e as rotas continuam com `lucroai`.
 
 ## Pré-requisitos
 

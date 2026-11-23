@@ -1,11 +1,13 @@
 # Interface
 
-> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. A referência visual é o app Flutter (`lib/main.dart` e as telas de `lib/features/*/presentation/`).
+> **Marca:** o visual e os textos seguem a marca **Doce Fatia**, descrita em [marca.md](marca.md). Leia-o antes de mexer em interface ou texto.
+
+> **Status:** os tokens, a tipografia, os ícones e os componentes base **existem** (FE-04), em `src/app/globals.css` e `src/shared/ui/`. Os blocos de listagem e formulário (`ListPage`, `DataTable`, `Form`, `FormDialog`, os campos numéricos e o `UnidadeSelect`) **existem** desde a FE-06, com o exemplo funcionando em [`/design-system/listagem`](http://localhost:3000/design-system/listagem). O layout das telas internas, com o menu, a `StatusPage` e o token `text-nav` **existem** desde a FE-08. Desde a FE-50, a referência visual é a marca Doce Fatia ([marca.md](marca.md)), não mais o app Flutter; os valores das tabelas de tokens e de contraste abaixo ainda são os do tema escuro e mudam nas FE-51 e FE-52.
 
 ## Princípios
 
-1. **Paridade visual com o mobile.** Tema escuro com destaque laranja, cartões de cantos arredondados, cabeçalho com título e subtítulo cinza. Ao lado do app Flutter (`flutter run -d chrome`), a web deve parecer o mesmo produto.
-2. **Só tema escuro**, como o mobile. Não há tema claro nem alternância.
+1. **A marca Doce Fatia guia o visual** ([marca.md](marca.md)).
+2. **Tema claro é o padrão**; o modo noite é opcional (FE-52).
 3. **Use o design system e os tokens.** Não recrie botão, campo ou diálogo dentro de uma funcionalidade; se faltar uma variação, adicione-a em `src/shared/ui/`. Nenhuma cor fixa fora de `src/app/globals.css`.
 4. **Acessibilidade não é opcional**: teclado, foco visível, rótulos, contraste de 4,5:1 e status com cor **e** texto.
 5. **Celular primeiro.** O público usa o celular na produção; toda tela funciona em 360px sem rolagem horizontal.
@@ -96,7 +98,7 @@ Roboto (a fonte padrão do Material no Flutter), via `next/font/google` em `src/
 | `text-caption`       | 11px                  | legendas, metadados e badges                                       |
 | `text-nav`           | 10px (mobile: 9px)    | rótulo da barra inferior do celular, com oito itens (FE-08)        |
 
-`text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva **LucroAI**.
+`text-section-label` já aplica a caixa alta: escreva o texto normal ("Custos invisíveis"), com acento. Em texto corrido, escreva o nome do produto como manda a [marca](marca.md#nome): **Doce Fatia** (as telas ainda dizem "LucroAI" até a FE-54).
 
 ## Componentes (`src/shared/ui/`)
 
