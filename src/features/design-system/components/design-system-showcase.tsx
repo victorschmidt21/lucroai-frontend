@@ -72,6 +72,12 @@ import { Input } from '@/shared/ui/input';
 import { Logo } from '@/shared/ui/logo';
 import { NumberInput } from '@/shared/ui/number-input';
 import { PageHeader } from '@/shared/ui/page-header';
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/popover';
 import { ProgressBar } from '@/shared/ui/progress-bar';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { Select } from '@/shared/ui/select';
@@ -83,6 +89,7 @@ import { StatCard } from '@/shared/ui/stat-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Textarea } from '@/shared/ui/textarea';
 import { ToastProvider, useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
 
 const ILUSTRACOES: [string, ComponentType<IlustracaoProps>][] = [
   ['Despensa', IlustracaoDespensa],
@@ -740,6 +747,42 @@ export function DesignSystemShowcase() {
             />
           </div>
           <ExemploDeToast />
+        </Secao>
+
+        <Secao titulo="Pitada no termo">
+          <p className="text-body text-ink-muted">
+            Toque no termo: gaveta de baixo com alça no celular e balão no
+            computador (FE-64). Troque a aparência no topo para ver no tema
+            noite.
+          </p>
+          <p className="text-body">
+            Sua <Termo id="margem">margem</Termo> nesta receita é de 29%, e o{' '}
+            <Termo id="preco-sugerido">preço sugerido</Termo> já cobre a taxa do
+            canal.
+          </p>
+          <div className="rounded-lg bg-accent p-4 text-on-accent">
+            <Termo id="sobrou-pra-voce" tom="sobre-cor">
+              Sobrou pra você
+            </Termo>{' '}
+            este mês
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="secundario" className="self-start">
+                Abrir Popover
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent aria-label="Exemplo de Popover">
+              <p className="text-body">
+                Balão ancorado: fecha com Esc ou clique fora.
+              </p>
+              <PopoverClose asChild>
+                <Button variant="fantasma" className="self-end">
+                  Entendi
+                </Button>
+              </PopoverClose>
+            </PopoverContent>
+          </Popover>
         </Secao>
 
         <Secao titulo="Abas">

@@ -4,7 +4,7 @@ type PageHeaderProps = {
   /** O `h1` da tela, como "Insumos". */
   title: string;
   /** Texto cinza sob o título, como "Gerencie quantidade, valor pago e custo unitário". */
-  subtitle?: string;
+  subtitle?: ReactNode;
   /** Ação primária da tela e atalhos do cabeçalho. */
   actions?: ReactNode;
 };

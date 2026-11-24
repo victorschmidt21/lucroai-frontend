@@ -22,7 +22,7 @@ export type ListPageQuery<Row> = Pick<
 
 type ListPageProps<Row> = {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   /** Ação primária ("Novo insumo"), com a variante `primario`. */
   actions?: ReactNode;
   /** Nome acessível da lista ("Insumos"). */
