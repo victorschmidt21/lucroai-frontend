@@ -3,7 +3,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
 import type {
   Receita,
   SimularCenarioBody,
@@ -33,6 +38,7 @@ import {
   receitasListOptions,
   simulacaoReceitaOptions,
 } from '@/features/receitas/api/receitas.queries';
+import { Termo } from '@/features/aprender/components/termo';
 import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
 import {
   FAIXA_VARIACAO_CUSTO,
@@ -263,7 +269,9 @@ function Simulacao({
                 </dd>
               </div>
               <div className="flex flex-col-reverse gap-0.5 px-2">
-                <dt className="text-caption text-ink-muted">Lucro real</dt>
+                <dt className="text-caption text-ink-muted">
+                  <Termo id="margem">Lucro real</Termo>
+                </dt>
                 <dd className="text-body font-extrabold text-warning tabular-nums">
                   {formatMargem(resultado.lucroReal)}
                 </dd>
@@ -295,8 +303,14 @@ function Simulacao({
           ))}
         </Select>
         <dl className="grid gap-2.5 sm:grid-cols-3">
-          <Info rotulo="Custo unitário" valor={formatMoeda(base.custo)} />
-          <Info rotulo="Preço atual" valor={formatMoeda(base.precoAtual)} />
+          <Info
+            rotulo={<Termo id="custo-por-unidade">Custo unitário</Termo>}
+            valor={formatMoeda(base.custo)}
+          />
+          <Info
+            rotulo={<Termo id="preco-sugerido">Preço atual</Termo>}
+            valor={formatMoeda(base.precoAtual)}
+          />
           <Info
             rotulo="Volume atual no período"
             valor={`${formatQuantidade(base.volumeAtual)} unidades`}
@@ -364,7 +378,7 @@ function Simulacao({
   );
 }
 
-function Info({ rotulo, valor }: { rotulo: string; valor: string }) {
+function Info({ rotulo, valor }: { rotulo: ReactNode; valor: string }) {
   return (
     <div className="flex min-w-0 flex-col-reverse gap-1 rounded-md border border-border bg-surface-alt px-3 py-2.5">
       <dt className="text-caption text-ink-muted">{rotulo}</dt>

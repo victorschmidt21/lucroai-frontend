@@ -23,13 +23,21 @@ import {
   IconHistorico,
 } from '@/shared/ui/icons/acoes';
 import { ProgressBar } from '@/shared/ui/progress-bar';
+import { Termo } from '@/features/aprender/components/termo';
 import type { ItemEstoque } from '../hooks/use-estoques';
 import { EntradaEstoqueDialog } from './entrada-estoque-dialog';
 import { EstoqueMinimoDialog } from './estoque-minimo-dialog';
 import { MovimentacoesDrawer } from './movimentacoes-drawer';
 
 /** Cartão de um insumo. Origem: estoque_card.dart. */
-export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
+export function EstoqueCard({
+  insumo,
+  estoque,
+  explicarNegativo = false,
+}: ItemEstoque & {
+  /** Põe a Pitada no selo "Estoque negativo" (só no primeiro cartão, FE-64). */
+  explicarNegativo?: boolean;
+}) {
   const tituloId = useId();
   const unidade = UNIDADE_MEDIDA_ROTULOS[insumo.unidade];
   const [entradaAberta, setEntradaAberta] = useState(false);
@@ -49,7 +57,12 @@ export function EstoqueCard({ insumo, estoque }: ItemEstoque) {
       </div>
 
       {estoque ? (
-        <Saldo estoque={estoque} nome={insumo.nome} unidade={insumo.unidade} />
+        <Saldo
+          estoque={estoque}
+          nome={insumo.nome}
+          unidade={insumo.unidade}
+          explicarNegativo={explicarNegativo}
+        />
       ) : (
         <p role="alert" className="text-small text-ink-muted">
           Não foi possível carregar o estoque deste insumo.
@@ -121,10 +134,12 @@ function Saldo({
   estoque,
   nome,
   unidade,
+  explicarNegativo,
 }: {
   estoque: Estoque;
   nome: string;
   unidade: UnidadeMedida;
+  explicarNegativo: boolean;
 }) {
   const status = statusEstoque(estoque);
   const percentual = `${formatNumero(percentualEstoque(estoque), 0)}%`;
@@ -134,7 +149,15 @@ function Saldo({
       <div className="flex items-center justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2">
           <StatusEstoqueBadge status={status} />
-          {estoque.estoqueNegativo ? <EstoqueNegativoBadge /> : null}
+          {estoque.estoqueNegativo ? (
+            explicarNegativo ? (
+              <Termo id="estoque-negativo">
+                <EstoqueNegativoBadge />
+              </Termo>
+            ) : (
+              <EstoqueNegativoBadge />
+            )
+          ) : null}
         </span>
         <span className="text-small text-ink-muted tabular-nums">
           {percentual}

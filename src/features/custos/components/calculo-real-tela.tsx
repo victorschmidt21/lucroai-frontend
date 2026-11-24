@@ -14,6 +14,7 @@ import { IconAdicionar } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { useToast } from '@/shared/ui/toast';
 import { calcularCustoReal, lerCamposCustoReal } from '../custos.calculos';
+import { Termo } from '@/features/aprender/components/termo';
 import { useSimulacoesSalvas } from '../hooks/use-simulacoes-salvas';
 import {
   custoRealFormSchema,
@@ -77,7 +78,7 @@ export function CalculoRealTela() {
                 />
               </Card>
 
-              <Card title="Custos invisíveis">
+              <Card title={<Termo id="contas-do-mes">Custos invisíveis</Termo>}>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <FormMoneyInput name="energia" label="Energia" />
                   <FormMoneyInput name="agua" label="Água" />

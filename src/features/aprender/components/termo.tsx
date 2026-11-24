@@ -11,6 +11,8 @@ type TermoProps = {
   children: ReactNode;
   /** Bloco "No seu caso" com os números da conta (FE-65). */
   exemplo?: ReactNode;
+  /** `sobre-cor`: sobre fundo `accent` (herói do painel), com sublinhado e "?" em `on-accent`. */
+  tom?: 'padrao' | 'sobre-cor';
   className?: string;
 };
 
@@ -21,7 +23,14 @@ type TermoProps = {
  *
  *   <Termo id="margem">margem 29%</Termo>
  */
-export function Termo({ id, children, exemplo, className }: TermoProps) {
+export function Termo({
+  id,
+  children,
+  exemplo,
+  tom = 'padrao',
+  className,
+}: TermoProps) {
+  const sobreCor = tom === 'sobre-cor';
   const termo = buscarTermo(id);
   const [aberta, setAberta] = useState(false);
   const [idAtual, setIdAtual] = useState<string>(id);
@@ -46,7 +55,10 @@ export function Termo({ id, children, exemplo, className }: TermoProps) {
           aria-label={`O que é ${termo.titulo}?`}
           className={cn(
             // 48px de área de toque mesmo com texto pequeno, pelo `::before`.
-            'relative inline cursor-pointer text-left underline decoration-accent decoration-dotted decoration-2 underline-offset-4',
+            'relative inline cursor-pointer text-left underline decoration-dotted decoration-2 underline-offset-4',
+            sobreCor
+              ? 'decoration-on-accent focus-visible:outline-on-accent'
+              : 'decoration-accent',
             'before:absolute before:top-1/2 before:left-1/2 before:size-full before:min-h-12 before:min-w-12 before:-translate-1/2',
             className,
           )}
@@ -54,7 +66,10 @@ export function Termo({ id, children, exemplo, className }: TermoProps) {
           {children}
           <span
             aria-hidden="true"
-            className="ml-1 inline-flex size-[18px] items-center justify-center rounded-full bg-accent-soft align-middle text-caption leading-none font-extrabold text-ink no-underline"
+            className={cn(
+              'ml-1 inline-flex size-[18px] items-center justify-center rounded-full align-middle text-caption leading-none font-extrabold no-underline',
+              sobreCor ? 'bg-on-accent text-accent' : 'bg-accent-soft text-ink',
+            )}
           >
             ?
           </span>

@@ -33,6 +33,7 @@ import { useToast } from '@/shared/ui/toast';
 import { receitaDetailOptions } from '../api/receitas.queries';
 import { useCreateReceita } from '../hooks/use-create-receita';
 import { useUpdateReceita } from '../hooks/use-update-receita';
+import { Termo } from '@/features/aprender/components/termo';
 import { calcularCustoItem } from '../receitas.calculos';
 import {
   NOME_MAX,
@@ -151,7 +152,11 @@ function ReceitaForm({
       <div className="grid grid-cols-2 gap-3">
         <FormIntegerInput
           name="rendimento"
-          label="Rende quantas unidades boas?"
+          label={
+            <>
+              Rende quantas <Termo id="rendimento">unidades boas</Termo>?
+            </>
+          }
           hint="Por lote, sem contar as que sobram ou estragam."
           required
         />
@@ -163,26 +168,32 @@ function ReceitaForm({
           <FormDecimalInput
             name="uso_por_lote"
             label={
-              configuracao.baseRateio === 'MINUTOS'
-                ? 'Quantos minutos de forno um lote ocupa?'
-                : 'Quantas fornadas um lote ocupa?'
+              <Termo id="divisao-das-contas">
+                {configuracao.baseRateio === 'MINUTOS'
+                  ? 'Quantos minutos de forno um lote ocupa?'
+                  : 'Quantas fornadas um lote ocupa?'}
+              </Termo>
             }
             hint="Divide as contas do mês entre as receitas. Padrão: 1."
             required
           />
           <FormMoneyInput
             name="embalagem_por_unidade"
-            label="Embalagem por unidade"
+            label={
+              <>
+                <Termo id="embalagem">Embalagem</Termo> por unidade
+              </>
+            }
             hint="Caixa, pote ou saquinho de cada unidade."
           />
           <FormPercentInput
             name="perda_percentual"
-            label="Quanto costuma sobrar ou estragar?"
+            label={<Termo id="perda">Quanto costuma sobrar ou estragar?</Termo>}
             hint="Das unidades de cada lote. Vazio é 0%."
           />
           <FormPercentInput
             name="lucro_percentual"
-            label="Lucro desta receita"
+            label={<Termo id="lucro-desejado">Lucro desta receita</Termo>}
             hint={`De cada R$ 1,00 vendido. Vazio usa o padrão (${formatMargem(configuracao.lucroPadrao)}).`}
           />
         </div>
@@ -210,7 +221,7 @@ function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
   const todosAdicionados = disponiveis.length === 0 && insumos.length > 0;
 
   return (
-    <Card title="Ingredientes e embalagens">
+    <Card title={<Termo id="ficha-tecnica">Ingredientes e embalagens</Termo>}>
       {fields.length === 0 ? (
         <p className="text-body text-ink-muted">
           Nenhum ingrediente adicionado.

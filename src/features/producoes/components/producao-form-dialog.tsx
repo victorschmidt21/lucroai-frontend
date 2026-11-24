@@ -17,6 +17,7 @@ import { ToggleChip } from '@/shared/ui/chip';
 import { FormDialog, FormIntegerInput, FormSelect } from '@/shared/ui/form';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
 import { useCreateProducao } from '../hooks/use-create-producao';
 import { calcularPreviaProducao } from '../producoes.calculos';
 import {
@@ -132,7 +133,9 @@ function CampoGastos({
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-small text-ink-muted">Contas do mês</legend>
+      <legend className="mb-2 text-small text-ink-muted">
+        <Termo id="divisao-das-contas">Contas do mês</Termo>
+      </legend>
       {carregando ? (
         <Skeleton aria-label="Carregando os gastos" className="h-8" />
       ) : (

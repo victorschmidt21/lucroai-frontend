@@ -42,6 +42,7 @@ import {
   vendasDoMes,
   type ProdutoRentavel,
 } from '../painel.calculos';
+import { Termo } from '@/features/aprender/components/termo';
 import { GraficoEvolucao } from './grafico-evolucao';
 
 function nada() {
@@ -196,7 +197,7 @@ export function PainelTela({ nome }: { nome: string | null }) {
                 indicadores ? (
                   <>
                     <StatCard
-                      title="Você vendeu"
+                      title={<Termo id="faturamento">Você vendeu</Termo>}
                       value={formatMoeda(indicadores.faturamento)}
                       detail="Este mês"
                     />
@@ -327,7 +328,18 @@ function Heroi({
     <StatCard
       variant="heroi"
       heroiTone={negativo ? 'danger' : 'accent'}
-      title={heroi.titulo}
+      title={
+        heroi.estado === 'positivo' ? (
+          <>
+            <Termo id="sobrou-pra-voce" tom="sobre-cor">
+              Sobrou pra você
+            </Termo>{' '}
+            este mês
+          </>
+        ) : (
+          heroi.titulo
+        )
+      }
       value={formatMoeda(indicadores.lucro)}
       detail={heroi.detalhe ?? undefined}
       decoration={
@@ -407,6 +419,8 @@ function CardEstoque({ nomes }: { nomes: string[] }) {
   );
 }
 
+const PARA_PAGAR_AS_CONTAS = 'Para pagar as contas do mês';
+
 /** "Para pagar as contas do mês, venda R$ X" com o quanto já foi vendido (FE-45, FE-58). */
 function ContasDoMes({
   ponto,
@@ -418,7 +432,10 @@ function ContasDoMes({
       aria-label="Contas do mês"
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
     >
-      <h2 className="text-body font-bold text-ink">{ponto.titulo}</h2>
+      <h2 className="text-body font-bold text-ink">
+        <Termo id="para-pagar-as-contas">{PARA_PAGAR_AS_CONTAS}</Termo>
+        {ponto.titulo.slice(PARA_PAGAR_AS_CONTAS.length)}
+      </h2>
       {ponto.progresso !== null ? (
         <ProgressBar
           aria-label="Quanto já vendeu para pagar as contas do mês"

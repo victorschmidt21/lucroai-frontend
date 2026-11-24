@@ -10,6 +10,7 @@ import type { ConfiguracaoCustos } from '@/shared/api/contracts/pricing';
 import { Form, FormDecimalInput, FormPercentInput } from '@/shared/ui/form';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
 import { useUpdateConfiguracaoCustos } from '../hooks/use-update-configuracao-custos';
 import {
   configuracaoCustosFormSchema,
@@ -42,19 +43,23 @@ export function ConfiguracaoCustosForm({
       <CampoCapacidade />
       <FormPercentInput
         name="lucroPadrao"
-        label="Quanto você quer de lucro em cada venda?"
+        label={
+          <Termo id="lucro-desejado">
+            Quanto você quer de lucro em cada venda?
+          </Termo>
+        }
         hint="De cada R$ 1,00 vendido, quanto fica para você. Ex.: 15% são R$ 0,15."
         required
       />
       <FormPercentInput
         name="impostoPercentual"
-        label="Você paga imposto sobre as vendas?"
+        label={<Termo id="imposto">Você paga imposto sobre as vendas?</Termo>}
         hint="Se é informal ou MEI, deixe 0."
         required
       />
       <FormPercentInput
         name="taxaMaquininha"
-        label="Taxa da maquininha"
+        label={<Termo id="taxa-do-canal">Taxa da maquininha</Termo>}
         hint="Quanto a maquininha de cartão cobra nas vendas do balcão."
         required
       />
@@ -69,7 +74,9 @@ function CampoBaseRateio() {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-body font-medium text-ink-muted">{PERGUNTA_BASE}</p>
+      <p className="text-body font-medium text-ink-muted">
+        <Termo id="divisao-das-contas">{PERGUNTA_BASE}</Termo>
+      </p>
       <SegmentedControl<BaseRateio>
         aria-label={PERGUNTA_BASE}
         options={BASES_RATEIO.map((valor) => ({
@@ -99,9 +106,11 @@ function CampoCapacidade() {
     <FormDecimalInput
       name="capacidadeMensal"
       label={
-        minutos
-          ? 'Quantos minutos de forno você usa por mês?'
-          : 'Quantas fornadas você faz por mês?'
+        <Termo id="fornadas-por-mes">
+          {minutos
+            ? 'Quantos minutos de forno você usa por mês?'
+            : 'Quantas fornadas você faz por mês?'}
+        </Termo>
       }
       unidade={minutos ? 'min' : 'fornadas'}
       hint="Uma estimativa já serve; dá para ajustar depois."

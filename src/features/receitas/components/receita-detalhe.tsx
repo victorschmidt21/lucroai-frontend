@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import type { PrecoCanal, Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
@@ -13,6 +14,7 @@ import { ErrorState } from '@/shared/ui/error-state';
 import { IconAlerta, IconEditar, IconSimular } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { Termo } from '@/features/aprender/components/termo';
 import { receitaDetailOptions } from '../api/receitas.queries';
 import {
   avisoSemPrecoPossivel,
@@ -98,7 +100,7 @@ function Linha({
   valor,
   destaque = false,
 }: {
-  rotulo: string;
+  rotulo: ReactNode;
   valor: string;
   destaque?: boolean;
 }) {
@@ -126,17 +128,17 @@ function Detalhe({ receita }: { receita: Receita }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card title="Custo de 1 unidade">
+      <Card title={<Termo id="custo-por-unidade">Custo de 1 unidade</Termo>}>
         <p className="text-display text-accent tabular-nums">
           {formatMoeda(custo.unitario)}
         </p>
         <dl className="flex flex-col gap-2">
           <Linha
-            rotulo="Ingredientes"
+            rotulo={<Termo id="ficha-tecnica">Ingredientes</Termo>}
             valor={formatMoeda(custo.ingredientes)}
           />
           <Linha
-            rotulo="Contas do mês"
+            rotulo={<Termo id="divisao-das-contas">Contas do mês</Termo>}
             valor={formatMoeda(custo.gastosMensais)}
           />
           {custo.gastosPorUnidade > 0 ? (
@@ -145,16 +147,34 @@ function Detalhe({ receita }: { receita: Receita }) {
               valor={formatMoeda(custo.gastosPorUnidade)}
             />
           ) : null}
-          <Linha rotulo="Embalagem" valor={formatMoeda(custo.embalagem)} />
-          <Linha rotulo="Perdas" valor={formatMoeda(custo.perdas)} />
           <Linha
-            rotulo={`Custo do lote (${formatQuantidade(receita.rendimento, receita.unidadeRendimento)})`}
+            rotulo={<Termo id="embalagem">Embalagem</Termo>}
+            valor={formatMoeda(custo.embalagem)}
+          />
+          <Linha
+            rotulo={<Termo id="perda">Perdas</Termo>}
+            valor={formatMoeda(custo.perdas)}
+          />
+          <Linha
+            rotulo={
+              <>
+                Custo do lote (
+                <Termo id="rendimento">
+                  {formatQuantidade(
+                    receita.rendimento,
+                    receita.unidadeRendimento,
+                  )}
+                </Termo>
+                )
+              </>
+            }
             valor={formatMoeda(receita.custoProducao)}
             destaque
           />
         </dl>
         <p className="text-small text-ink-muted">
-          {`Lucro desta receita: ${formatMargem(lucro)} de cada R$ 1,00 vendido${
+          <Termo id="lucro-desejado">Lucro desta receita</Termo>
+          {`: ${formatMargem(lucro)} de cada R$ 1,00 vendido${
             receita.lucroPercentual === undefined ? ' (padrão da empresa)' : ''
           }.`}
         </p>
@@ -165,7 +185,8 @@ function Detalhe({ receita }: { receita: Receita }) {
         className="flex flex-col gap-3"
       >
         <h2 id="precos-por-canal" className="text-title text-ink">
-          Preço sugerido por canal
+          <Termo id="preco-sugerido">Preço sugerido</Termo> por{' '}
+          <Termo id="canal-de-venda">canal</Termo>
         </h2>
         {receita.precos.length === 0 ? (
           <Card>

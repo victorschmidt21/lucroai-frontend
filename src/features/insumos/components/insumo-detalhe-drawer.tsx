@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { CompraInsumo, Insumo } from '@/shared/api/contracts/catalog';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatData } from '@/shared/format/data';
@@ -16,6 +16,7 @@ import { ErrorState } from '@/shared/ui/error-state';
 import { IconAdicionar, IconHistorico } from '@/shared/ui/icons/acoes';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
 import { comprasInsumoOptions } from '../api/insumos.queries';
 import { useUpdateInsumo } from '../hooks/use-update-insumo';
 import { VOLTAR_AO_ULTIMO_CUSTO } from '../schemas/preco-mercado.schema';
@@ -62,14 +63,17 @@ export function InsumoDetalheDrawer({
           rotulo="Em estoque"
           valor={formatQuantidade(insumo.quantidadeDisponivel, insumo.unidade)}
           explicacao={
-            insumo.estoqueNegativo
-              ? 'Estoque negativo: registre a compra para acertar o saldo e o custo.'
-              : undefined
+            insumo.estoqueNegativo ? (
+              <>
+                <Termo id="estoque-negativo">Estoque negativo</Termo>: registre
+                a compra para acertar o saldo e o custo.
+              </>
+            ) : undefined
           }
           negativo={insumo.estoqueNegativo}
         />
         <Numero
-          rotulo="Custo médio"
+          rotulo={<Termo id="custo-medio">Custo médio</Termo>}
           valor={formatCustoUnitario(insumo.custoMedio, insumo.unidade)}
           explicacao="Quanto você pagou, em média, pelo que tem guardado."
         />
@@ -150,9 +154,9 @@ function Numero({
   destaque = false,
   negativo = false,
 }: {
-  rotulo: string;
+  rotulo: ReactNode;
   valor: string;
-  explicacao?: string;
+  explicacao?: ReactNode;
   destaque?: boolean;
   /** Saldo abaixo de zero: vermelho, com a explicação em texto (FE-47). */
   negativo?: boolean;

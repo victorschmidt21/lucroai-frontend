@@ -90,6 +90,10 @@ export function EstoqueLista() {
     (item) => item.insumo.nome,
     busca.termo,
   ).filter((item) => passaNoFiltro(item, apenasBaixo));
+  // A Pitada vai só no primeiro selo "Estoque negativo" da tela (FE-64).
+  const primeiroNegativo = visiveis.find(
+    (item) => item.estoque?.estoqueNegativo,
+  )?.insumo.id;
 
   return (
     <div className="flex flex-col gap-5">
@@ -216,7 +220,10 @@ export function EstoqueLista() {
         >
           {visiveis.map((item) => (
             <li key={item.insumo.id}>
-              <EstoqueCard {...item} />
+              <EstoqueCard
+                {...item}
+                explicarNegativo={item.insumo.id === primeiroNegativo}
+              />
             </li>
           ))}
         </ul>

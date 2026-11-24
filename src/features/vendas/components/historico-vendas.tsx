@@ -36,6 +36,7 @@ import { IconAdicionar, IconMostrar } from '@/shared/ui/icons/acoes';
 import { IlustracaoSacola } from '@/shared/ui/ilustracoes';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { Termo } from '@/features/aprender/components/termo';
 import { vendasListOptions } from '../api/vendas.queries';
 import type { VendasSearch } from '../schemas/vendas-search.schema';
 import {
@@ -261,7 +262,7 @@ function ListaDeVendas({
             },
             {
               id: 'lucroReal',
-              header: 'Lucro real',
+              header: <Termo id="lucro-real">Lucro real</Termo>,
               align: 'right',
               cell: (venda) => (
                 <LucroRealDosItens
