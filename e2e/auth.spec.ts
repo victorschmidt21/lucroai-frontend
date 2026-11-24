@@ -26,13 +26,23 @@ test('leva ao login sem sessão e, ao entrar, volta à página de destino', asyn
     page.getByRole('complementary').getByText('Padaria Pão Feliz Ltda'),
   ).toBeVisible();
 
-  // Nenhum token fica ao alcance do JavaScript da página.
+  // Nenhum token fica ao alcance do JavaScript da página. O navegador só
+  // guarda preferências de interface do Aprender (docs/aprender.md), sem token.
   const visivel = await page.evaluate(() => ({
     cookie: document.cookie,
-    local: localStorage.length,
-    sessao: sessionStorage.length,
+    itens: [localStorage, sessionStorage].flatMap((armazenamento) =>
+      Object.keys(armazenamento).map((chave) => ({
+        chave,
+        valor: armazenamento.getItem(chave) ?? '',
+      })),
+    ),
   }));
-  expect(visivel).toEqual({ cookie: '', local: 0, sessao: 0 });
+  expect(visivel.cookie).toBe('');
+  for (const { chave, valor } of visivel.itens) {
+    expect(chave).toMatch(/^(aprender|lucroai):/);
+    // Um JWT tem três partes em base64url separadas por ponto.
+    expect(valor).not.toMatch(/[\w-]+\.[\w-]+\.[\w-]+/);
+  }
   const cookie = (await context.cookies()).find(
     (item) => item.name === SESSION_COOKIE,
   );

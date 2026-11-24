@@ -42,6 +42,9 @@ import {
   vendasDoMes,
   type ProdutoRentavel,
 } from '../painel.calculos';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
+import { Termo } from '@/features/aprender/components/termo';
+import type { DadosDoExemplo } from '@/features/aprender/termos';
 import { GraficoEvolucao } from './grafico-evolucao';
 
 function nada() {
@@ -138,7 +141,14 @@ const LINK_CLASSES =
  * carregamento e erro. No celular, uma coluna na ordem do código; a partir de
  * `lg`, herói e cards à esquerda e as listas à direita.
  */
-export function PainelTela({ nome }: { nome: string | null }) {
+export function PainelTela({
+  nome,
+  primeirosPassos,
+}: {
+  nome: string | null;
+  /** Cartões "Seus primeiros passos" (FE-66) e do Aprender (FE-67), compostos pela página, entre o herói e os cards. */
+  primeirosPassos?: ReactNode;
+}) {
   const agora = useAgora();
   // Só no navegador; o início dos seis meses só muda na virada do mês.
   const hoje = agora ? paraData(agora) : null;
@@ -169,6 +179,7 @@ export function PainelTela({ nome }: { nome: string | null }) {
           {hoje ? textoFechamentoDoMes(hoje) : null}
         </p>
       </header>
+      <DicaNaHora tela="inicio" vendas={vendas.data ?? null} />
 
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <div className="flex min-w-0 flex-col gap-5">
@@ -181,6 +192,8 @@ export function PainelTela({ nome }: { nome: string | null }) {
             conteudo: () =>
               indicadores ? <Heroi indicadores={indicadores} /> : null,
           })}
+
+          {primeirosPassos}
 
           <section
             aria-label="Indicadores"
@@ -196,7 +209,11 @@ export function PainelTela({ nome }: { nome: string | null }) {
                 indicadores ? (
                   <>
                     <StatCard
-                      title="Você vendeu"
+                      title={
+                        <Termo id="faturamento" dados={indicadores}>
+                          Você vendeu
+                        </Termo>
+                      }
                       value={formatMoeda(indicadores.faturamento)}
                       detail="Este mês"
                     />
@@ -240,6 +257,10 @@ export function PainelTela({ nome }: { nome: string | null }) {
                     resumo.data.pontoEquilibrio,
                     indicadores.faturamento,
                   )}
+                  dados={{
+                    valor: resumo.data.pontoEquilibrio.valor,
+                    faturamento: indicadores.faturamento,
+                  }}
                 />
               ) : null,
           })}
@@ -327,7 +348,18 @@ function Heroi({
     <StatCard
       variant="heroi"
       heroiTone={negativo ? 'danger' : 'accent'}
-      title={heroi.titulo}
+      title={
+        heroi.estado === 'positivo' ? (
+          <>
+            <Termo id="sobrou-pra-voce" tom="sobre-cor" dados={indicadores}>
+              Sobrou pra você
+            </Termo>{' '}
+            este mês
+          </>
+        ) : (
+          heroi.titulo
+        )
+      }
       value={formatMoeda(indicadores.lucro)}
       detail={heroi.detalhe ?? undefined}
       decoration={
@@ -407,18 +439,28 @@ function CardEstoque({ nomes }: { nomes: string[] }) {
   );
 }
 
+const PARA_PAGAR_AS_CONTAS = 'Para pagar as contas do mês';
+
 /** "Para pagar as contas do mês, venda R$ X" com o quanto já foi vendido (FE-45, FE-58). */
 function ContasDoMes({
   ponto,
+  dados,
 }: {
   ponto: ReturnType<typeof pontoEquilibrioDoPainel>;
+  /** Para o exemplo "No seu caso" da Pitada (FE-65). */
+  dados: DadosDoExemplo<'para-pagar-as-contas'>;
 }) {
   return (
     <section
       aria-label="Contas do mês"
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
     >
-      <h2 className="text-body font-bold text-ink">{ponto.titulo}</h2>
+      <h2 className="text-body font-bold text-ink">
+        <Termo id="para-pagar-as-contas" dados={dados}>
+          {PARA_PAGAR_AS_CONTAS}
+        </Termo>
+        {ponto.titulo.slice(PARA_PAGAR_AS_CONTAS.length)}
+      </h2>
       {ponto.progresso !== null ? (
         <ProgressBar
           aria-label="Quanto já vendeu para pagar as contas do mês"

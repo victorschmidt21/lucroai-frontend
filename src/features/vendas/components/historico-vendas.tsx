@@ -36,6 +36,7 @@ import { IconAdicionar, IconMostrar } from '@/shared/ui/icons/acoes';
 import { IlustracaoSacola } from '@/shared/ui/ilustracoes';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { Termo } from '@/features/aprender/components/termo';
 import { vendasListOptions } from '../api/vendas.queries';
 import type { VendasSearch } from '../schemas/vendas-search.schema';
 import {
@@ -209,6 +210,18 @@ function ListaDeVendas({
 
   const vendas = query.data;
   const resumo = resumirVendas(vendas);
+  // Exemplo da Pitada de "Lucro real" (FE-65): o primeiro item com lucro real da lista.
+  const itemComLucro = vendas
+    .flatMap((venda) => venda.itens)
+    .find((item) => item.lucroReal !== null);
+  const exemploLucro = itemComLucro
+    ? {
+        nome:
+          nomes.get(itemComLucro.receitaId) ??
+          `Produto #${itemComLucro.receitaId}`,
+        lucroReal: itemComLucro.lucroReal,
+      }
+    : null;
 
   return (
     <>
@@ -261,7 +274,11 @@ function ListaDeVendas({
             },
             {
               id: 'lucroReal',
-              header: 'Lucro real',
+              header: (
+                <Termo id="lucro-real" dados={exemploLucro}>
+                  Lucro real
+                </Termo>
+              ),
               align: 'right',
               cell: (venda) => (
                 <LucroRealDosItens

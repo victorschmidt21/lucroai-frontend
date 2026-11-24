@@ -12,6 +12,7 @@ import { IconAdicionar, IconMostrar } from '@/shared/ui/icons/acoes';
 import { IlustracaoForno } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { Select } from '@/shared/ui/select';
+import { Termo } from '@/features/aprender/components/termo';
 import { producoesListOptions } from '../api/producoes.queries';
 import { ProducaoDetalheDrawer } from './producao-detalhe-drawer';
 import { ProducaoFormDialog } from './producao-form-dialog';
@@ -59,7 +60,7 @@ export function ProducoesLista({ receitaId, abrirNovo = false }: Props) {
     <>
       <ListPage
         title="Fornadas"
-        subtitle="O que você produziu"
+        subtitle={<Termo id="fornada">O que você produziu</Termo>}
         actions={novaProducao}
         label="Fornadas"
         query={query}

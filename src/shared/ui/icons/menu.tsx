@@ -1,5 +1,6 @@
 import Archive from 'lucide-react/icons/archive';
 import BookOpen from 'lucide-react/icons/book-open';
+import BookOpenText from 'lucide-react/icons/book-open-text';
 import ChartPie from 'lucide-react/icons/chart-pie';
 import CookingPot from 'lucide-react/icons/cooking-pot';
 import Ellipsis from 'lucide-react/icons/ellipsis';
@@ -35,6 +36,9 @@ export const IconProducao = criarIcone('Producao', CookingPot);
 
 /** Contas do mês (gastos indiretos) */
 export const IconGastos = criarIcone('Gastos', Receipt);
+
+/** Aprender: o livro com as explicações (FE-67) */
+export const IconAprender = criarIcone('Aprender', BookOpenText);
 
 /** Ajustes de preço (configurações de custo) */
 export const IconConfiguracoes = criarIcone('Configuracoes', SlidersHorizontal);

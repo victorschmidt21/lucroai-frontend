@@ -12,6 +12,11 @@ const SIDE_CLASSES = {
 
 type DrawerProps = ModalProps & {
   side?: keyof typeof SIDE_CLASSES;
+  /**
+   * Alça no topo da gaveta de baixo (FE-64): arrastar para baixo fecha, chamando
+   * `onOpenChange(false)`; use com `open` controlado. Some a partir de `lg`.
+   */
+  alca?: boolean;
 };
 
 export function Drawer({ side = 'bottom', ...props }: DrawerProps) {

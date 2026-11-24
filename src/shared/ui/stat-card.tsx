@@ -13,7 +13,7 @@ const DETAIL_CLASSES = {
 export type StatCardDetailTone = keyof typeof DETAIL_CLASSES;
 
 type StatCardProps = {
-  title: string;
+  title: ReactNode;
   value: string;
   detail?: string;
   /** Cor do chip do detalhe, como `detailColor` do `_KpiCard` do painel. */

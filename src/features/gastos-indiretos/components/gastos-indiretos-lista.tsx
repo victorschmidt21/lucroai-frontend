@@ -19,6 +19,7 @@ import {
 import { IlustracaoContas } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
 import { gastosIndiretosListOptions } from '../api/gastos-indiretos.queries';
 import {
   calcularTotalContasDoMes,
@@ -69,7 +70,13 @@ export function GastosIndiretosLista({
     <>
       <ListPage
         title="Contas do mês"
-        subtitle="Gás, luz, internet, aluguel e outros custos que entram no preço"
+        subtitle={
+          <>
+            Gás, luz, internet, aluguel,{' '}
+            <Termo id="das-do-mei">DAS do MEI</Termo> e outros custos que entram
+            no preço
+          </>
+        }
         actions={novoGasto}
         label="Contas do mês"
         query={query}
@@ -170,6 +177,7 @@ export function GastosIndiretosLista({
  */
 function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
   const quantidade = gastos.filter((gasto) => gasto.tipo === 'MENSAL').length;
+  const total = calcularTotalContasDoMes(gastos);
 
   return (
     <section
@@ -177,13 +185,17 @@ function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
       className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface px-4 py-3.5"
     >
       <div className="flex flex-col gap-0.5">
-        <p className="text-small text-ink-muted">Total por mês</p>
+        <p className="text-small text-ink-muted">
+          <Termo id="contas-do-mes" dados={{ totalContas: total }}>
+            Total por mês
+          </Termo>
+        </p>
         <p className="text-small text-ink">
           {`${formatNumero(quantidade)} ${quantidade === 1 ? 'conta' : 'contas'}`}
         </p>
       </div>
       <p className="text-title text-accent tabular-nums">
-        {formatMoeda(calcularTotalContasDoMes(gastos))}
+        {formatMoeda(total)}
       </p>
     </section>
   );

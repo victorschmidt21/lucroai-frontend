@@ -1,5 +1,6 @@
 import type { IconComponent } from '@/shared/ui/icons/icone';
 import {
+  IconAprender,
   IconConfiguracoes,
   IconCustos,
   IconEstoque,
@@ -41,9 +42,20 @@ export const ITEM_CONFIGURACOES: ItemMenu = {
   icone: IconConfiguracoes,
 };
 
-/** Itens do menu lateral: os oito destinos e os ajustes de preço. */
+/**
+ * Página Aprender (FE-67): no menu lateral e, no celular, na gaveta "Conta"
+ * (`MenuContaCelular`), e não na "Mais".
+ */
+export const ITEM_APRENDER: ItemMenu = {
+  label: 'Aprender',
+  href: '/aprender',
+  icone: IconAprender,
+};
+
+/** Itens do menu lateral: os oito destinos, o Aprender e os ajustes de preço. */
 export const ITENS_MENU_LATERAL: readonly ItemMenu[] = [
   ...ITENS_MENU,
+  ITEM_APRENDER,
   ITEM_CONFIGURACOES,
 ];
 
@@ -58,9 +70,12 @@ export const ITENS_BARRA_INFERIOR: readonly ItemMenu[] = ITENS_MENU.filter(
   (item) => ROTAS_DA_BARRA.has(item.href),
 );
 
-/** O resto do menu lateral, na gaveta "Mais" da barra inferior. */
+/**
+ * O resto do menu lateral, na gaveta "Mais" da barra inferior. O Aprender fica
+ * na gaveta "Conta" (FE-67).
+ */
 export const ITENS_MAIS: readonly ItemMenu[] = ITENS_MENU_LATERAL.filter(
-  (item) => !ROTAS_DA_BARRA.has(item.href),
+  (item) => !ROTAS_DA_BARRA.has(item.href) && item !== ITEM_APRENDER,
 );
 
 function contemRota(href: string, pathname: string) {

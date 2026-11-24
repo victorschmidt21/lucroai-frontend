@@ -1,6 +1,7 @@
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatPercentual } from '@/shared/format/numero';
 import { Card } from '@/shared/ui/card';
+import { Termo } from '@/features/aprender/components/termo';
 import type { ResultadoCustoReal } from '../custos.calculos';
 
 /** Destaque do resultado. Origem: `_buildResultadoCard` de calculo_real_screen.dart. */
@@ -17,7 +18,9 @@ export function ResultadoCustoRealCard({
       </p>
       <dl className="mt-3 grid w-full grid-cols-2 divide-x divide-border-strong">
         <div className="flex flex-col-reverse items-center gap-0.5 px-2">
-          <dt className="text-caption text-ink-muted">Custo Total</dt>
+          <dt className="text-caption text-ink-muted">
+            <Termo id="custo-da-receita">Custo Total</Termo>
+          </dt>
           <dd className="text-body font-bold wrap-anywhere tabular-nums">
             {formatMoeda(resultado.custoTotal)}
           </dd>

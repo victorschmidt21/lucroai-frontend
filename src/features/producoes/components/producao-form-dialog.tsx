@@ -17,6 +17,9 @@ import { ToggleChip } from '@/shared/ui/chip';
 import { FormDialog, FormIntegerInput, FormSelect } from '@/shared/ui/form';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useToast } from '@/shared/ui/toast';
+import { Termo } from '@/features/aprender/components/termo';
+import type { DadosDoExemplo } from '@/features/aprender/termos';
+import { calcularTotalContasDoMes } from '@/shared/domain/contas-do-mes';
 import { useCreateProducao } from '../hooks/use-create-producao';
 import { calcularPreviaProducao } from '../producoes.calculos';
 import {
@@ -48,6 +51,18 @@ export function ProducaoFormDialog({
   const contasDoMes = (gastos.data ?? []).filter(
     (gasto) => gasto.tipo === 'MENSAL',
   );
+  // Exemplo da Pitada de "Contas do mês" (FE-65): o rateio de 1 fornada, como a prévia.
+  const divisao = configuracao.data
+    ? {
+        totalContas: calcularTotalContasDoMes(contasDoMes),
+        capacidadeMensal: configuracao.data.capacidadeMensal,
+        baseRateio: configuracao.data.baseRateio,
+        porFornada: calcularPreviaProducao(contasDoMes, 1, 1, {
+          usoPorLote: 1,
+          capacidadeMensal: configuracao.data.capacidadeMensal,
+        }).totalRateio,
+      }
+    : null;
 
   return (
     <FormDialog
@@ -91,6 +106,7 @@ export function ProducaoFormDialog({
         gastos={contasDoMes}
         carregando={gastos.isPending}
         erro={gastos.isError ? getErrorMessage(gastos.error) : null}
+        divisao={divisao}
       />
       <Previa
         receitas={receitas.data ?? []}
@@ -109,10 +125,12 @@ function CampoGastos({
   gastos,
   carregando,
   erro,
+  divisao,
 }: {
   gastos: readonly GastoIndireto[];
   carregando: boolean;
   erro: string | null;
+  divisao: DadosDoExemplo<'divisao-das-contas'> | null;
 }) {
   const todos = useController<ProducaoFormInput, 'todosGastos'>({
     name: 'todosGastos',
@@ -132,7 +150,11 @@ function CampoGastos({
 
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 text-small text-ink-muted">Contas do mês</legend>
+      <legend className="mb-2 text-small text-ink-muted">
+        <Termo id="divisao-das-contas" dados={divisao}>
+          Contas do mês
+        </Termo>
+      </legend>
       {carregando ? (
         <Skeleton aria-label="Carregando os gastos" className="h-8" />
       ) : (

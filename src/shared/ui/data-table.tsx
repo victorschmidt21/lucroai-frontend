@@ -4,10 +4,15 @@
 
 import type { Key, ReactNode } from 'react';
 import { cn } from './cn';
+import { textoDoNo } from './label';
 
 export type DataTableColumn<Row> = {
   id: string;
-  header: string;
+  /**
+   * Rótulo da coluna. Pode ter um `<Termo>` (FE-64): ele aparece só no cabeçalho da
+   * tabela; nos cartões do celular, o rótulo repetido em cada linha vai como texto.
+   */
+  header: ReactNode;
   cell: (row: Row) => ReactNode;
   /** Números e valores à direita, para compará-los na vertical. */
   align?: 'right';
@@ -99,7 +104,7 @@ export function DataTable<Row>({
                   >
                     {isTitulo || acoes ? null : (
                       <span className="text-caption text-ink-muted md:hidden">
-                        {header}
+                        {textoDoNo(header)}
                       </span>
                     )}
                     {acoes ? (

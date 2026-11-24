@@ -6,11 +6,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { canaisOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import type { Venda } from '@/shared/api/contracts/sales';
+import { totalDaVenda } from '@/shared/domain/vendas';
 import { hrefComFiltros } from '@/shared/api/filtros';
 import { buttonClasses } from '@/shared/ui/button';
 import { IconProducao } from '@/shared/ui/icons/menu';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { useCreateVenda } from '../hooks/use-create-venda';
 import {
   canalPadrao,
@@ -58,6 +60,11 @@ export function VendasTela({ busca }: Props) {
 
   // A venda nasce `PENDENTE` e abre a confirmação (`_showConfirmacaoSheet`).
   const [emConfirmacao, setEmConfirmacao] = useState<Venda | null>(null);
+  // A última venda concluída aqui, para a dica da taxa do canal (FE-68).
+  const [anotada, setAnotada] = useState<Venda | null>(null);
+  const canalDaAnotada = anotada
+    ? canais.data?.find((canal) => canal.id === anotada.canalId)
+    : undefined;
 
   function registrarVenda() {
     if (carrinho.length === 0) return;
@@ -82,6 +89,18 @@ export function VendasTela({ busca }: Props) {
             <IconProducao className="size-5" />
             Fornadas
           </Link>
+        }
+      />
+      <DicaNaHora
+        tela="vendas"
+        vendaAnotada={
+          anotada && canalDaAnotada
+            ? {
+                canal: canalDaAnotada.nome,
+                comissao: canalDaAnotada.comissaoPercentual,
+                total: totalDaVenda(anotada),
+              }
+            : null
         }
       />
 
@@ -135,6 +154,7 @@ export function VendasTela({ busca }: Props) {
       <ConfirmacaoVenda
         venda={emConfirmacao}
         onFechar={() => setEmConfirmacao(null)}
+        onConcluida={setAnotada}
       />
     </div>
   );

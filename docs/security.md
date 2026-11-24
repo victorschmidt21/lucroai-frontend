@@ -94,6 +94,8 @@ O backend é multiempresa: cada módulo filtra pelo `empresa.id` do token, e rec
 
 **Exceção documentada:** as simulações salvas do cálculo real (FE-19) podem ir para `localStorage`, dentro de `try/catch`. São valores digitados à mão para uma conta local, sem dado pessoal e sem relação com o banco. A escolha deve ser registrada no PR da FE-19.
 
+**Preferências de interface (E10):** o Aprender guarda no navegador só o que a pessoa já viu ou escondeu, com prefixo `aprender:` (dicas vistas, Primeiros passos escondidos ou concluídos, primeiro acesso) e `lucroai:` (sessão em que o aviso ao entrar abriu). São ids e datas, sem dado de negócio nem token ([docs/aprender.md](aprender.md)). O e2e de login (`e2e/auth.spec.ts`) confere que toda chave tem um desses prefixos e que nenhum valor parece um JWT.
+
 ## Dados pessoais
 
 O LucroAI trata poucos dados pessoais: nome e e-mail do usuário, e nome, CNPJ e segmento da empresa (no JWT). Mesmo assim:

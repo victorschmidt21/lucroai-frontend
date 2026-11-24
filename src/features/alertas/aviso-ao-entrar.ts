@@ -57,3 +57,28 @@ export function marcarSessaoVerificada(sessao: string) {
     // Fica só em memória.
   }
 }
+
+/**
+ * Guarda a sessão em que o aviso abriu sozinho (FE-68): nessa sessão, as dicas
+ * de estoque negativo e de preço que precisa subir não aparecem, nem depois de
+ * recarregar a página.
+ */
+const CHAVE_ABRIU = 'lucroai:aviso-ao-entrar-abriu';
+let abriuEmMemoria: string | null = null;
+
+export function lerSessaoEmQueAbriu(): string | null {
+  try {
+    return window.sessionStorage.getItem(CHAVE_ABRIU) ?? abriuEmMemoria;
+  } catch {
+    return abriuEmMemoria;
+  }
+}
+
+export function marcarSessaoEmQueAbriu(sessao: string) {
+  abriuEmMemoria = sessao;
+  try {
+    window.sessionStorage.setItem(CHAVE_ABRIU, sessao);
+  } catch {
+    // Fica só em memória.
+  }
+}

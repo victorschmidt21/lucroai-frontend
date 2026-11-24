@@ -1,8 +1,11 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
-import { isFaturavel, totalDaVenda } from '@/shared/domain/vendas';
+import {
+  descreverLucroReal,
+  isFaturavel,
+  totalDaVenda,
+} from '@/shared/domain/vendas';
 import { toDataSemHora } from '@/shared/format/data';
 import { arredondarCentavos, formatMoeda } from '@/shared/format/moeda';
-import { formatMargem } from '@/shared/format/numero';
 
 /*
  * Carrinho de venda (docs/business-rules.md#vendas-carrinho). Origem:
@@ -68,8 +71,9 @@ type VendaParaHistorico = {
   itens: readonly ItemParaHistorico[];
 };
 
-// `totalDaVenda` fica em `shared/domain/vendas.ts`, porque o painel também usa.
-export { totalDaVenda };
+// `totalDaVenda` fica em `shared/domain/vendas.ts`, porque o painel também usa;
+// `descreverLucroReal`, porque a Pitada (FE-65) também usa.
+export { descreverLucroReal, totalDaVenda };
 
 /** Soma das quantidades dos itens (a coluna "un" do `venda_card.dart`). */
 export function quantidadeDaVenda({ itens }: VendaParaHistorico) {
@@ -124,21 +128,6 @@ export function nomeDoCanal(
   return (
     canais.find((canal) => canal.id === canalId)?.nome ?? `Canal #${canalId}`
   );
-}
-
-/**
- * Lucro real do item em % do preço, com o aviso quando é negativo (a venda não
- * pagou o custo e as taxas): a cor nunca vem sozinha.
- */
-export function descreverLucroReal(lucroReal: number | null) {
-  if (lucroReal === null) return { texto: formatMargem(null), prejuizo: false };
-  const prejuizo = lucroReal < 0;
-  return {
-    texto: prejuizo
-      ? `${formatMargem(lucroReal)} (prejuízo)`
-      : formatMargem(lucroReal),
-    prejuizo,
-  };
 }
 
 /**

@@ -28,6 +28,7 @@ import { Input } from '@/shared/ui/input';
 import { PageHeader } from '@/shared/ui/page-header';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { useBuscaNaUrl } from '@/shared/ui/use-busca-na-url';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { estoqueKeys } from '../api/estoque.queries';
 import { useEstoques, type ItemEstoque } from '../hooks/use-estoques';
 import { estoqueSearchSchema } from '../schemas/estoque-search.schema';
@@ -90,6 +91,10 @@ export function EstoqueLista() {
     (item) => item.insumo.nome,
     busca.termo,
   ).filter((item) => passaNoFiltro(item, apenasBaixo));
+  // A Pitada vai só no primeiro selo "Estoque negativo" da tela (FE-64).
+  const primeiroNegativo = visiveis.find(
+    (item) => item.estoque?.estoqueNegativo,
+  )?.insumo.id;
 
   return (
     <div className="flex flex-col gap-5">
@@ -107,6 +112,7 @@ export function EstoqueLista() {
           </Button>
         }
       />
+      <DicaNaHora tela="estoque" />
 
       <search>
         <form
@@ -216,7 +222,10 @@ export function EstoqueLista() {
         >
           {visiveis.map((item) => (
             <li key={item.insumo.id}>
-              <EstoqueCard {...item} />
+              <EstoqueCard
+                {...item}
+                explicarNegativo={item.insumo.id === primeiroNegativo}
+              />
             </li>
           ))}
         </ul>

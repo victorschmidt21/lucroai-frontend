@@ -19,6 +19,7 @@ import { Card } from '@/shared/ui/card';
 import { FormIntegerInput, FormMoneyInput } from '@/shared/ui/form';
 import { IconAdicionar } from '@/shared/ui/icons/acoes';
 import { Select } from '@/shared/ui/select';
+import { Termo } from '@/features/aprender/components/termo';
 import {
   canaisParaVenda,
   canalDaVendaSchema,
@@ -130,7 +131,7 @@ function CampoCanal({
 
   return (
     <Select
-      label="Onde vendeu?"
+      label={<Termo id="canal-de-venda">Onde vendeu?</Termo>}
       value={id === null ? '' : String(id)}
       onChange={(event) =>
         onChange(canalDaVendaSchema.parse(event.target.value))

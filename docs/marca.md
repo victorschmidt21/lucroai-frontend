@@ -105,6 +105,8 @@ Na navegação, ícone sempre com rótulo.
 3. **Comemora junto.** Lucro bom merece festa discreta; prejuízo merece um caminho, não um alarme.
 4. **Respeita a profissional.** "Você", sem diminutivos, sem "amiga", sem excesso de exclamação ou emoji.
 
+As explicações dos termos de custo, preço e venda (Pitadas e página Aprender) seguem as regras de escrita de [aprender.md](aprender.md#regras-de-escrita) e ficam na base de termos, escritas uma vez só.
+
 Glossário (interface → termo técnico, que fica no código e na API):
 
 | Interface                                    | Código/API              |

@@ -19,6 +19,8 @@ import {
 import { IlustracaoDespensa } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
+import { Termo } from '@/features/aprender/components/termo';
 import { insumosListOptions } from '../api/insumos.queries';
 import { useDeleteInsumo } from '../hooks/use-delete-insumo';
 import { InsumoDetalheDrawer } from './insumo-detalhe-drawer';
@@ -51,6 +53,10 @@ export function InsumosLista({
     abrirCompraDe ?? null,
   );
   const detalhe = query.data?.find(({ id }) => id === detalheId);
+  // A Pitada vai só no primeiro selo "Estoque negativo" da tela (FE-64).
+  const primeiroNegativo = query.data?.find(
+    (insumo) => insumo.estoqueNegativo,
+  )?.id;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -88,6 +94,7 @@ export function InsumosLista({
         title="Ingredientes e embalagens"
         subtitle="O que você compra para produzir"
         actions={novoInsumo}
+        topo={<DicaNaHora tela="insumos" />}
         label="Ingredientes e embalagens"
         query={query}
         searchField="nome"
@@ -112,7 +119,13 @@ export function InsumosLista({
               insumo.estoqueNegativo ? (
                 <span className="flex flex-col items-start gap-1">
                   <span>{insumo.nome}</span>
-                  <EstoqueNegativoBadge />
+                  {insumo.id === primeiroNegativo ? (
+                    <Termo id="estoque-negativo">
+                      <EstoqueNegativoBadge />
+                    </Termo>
+                  ) : (
+                    <EstoqueNegativoBadge />
+                  )}
                   <span className="text-small font-semibold text-danger tabular-nums">
                     Saldo:{' '}
                     {formatQuantidade(

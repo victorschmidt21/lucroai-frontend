@@ -238,7 +238,7 @@ O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `perc
 
 | Onde                 | Mobile                                                                                                                      | Web                                                                                                                                                                                      |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Contas do mês" / "Gás, luz, internet, aluguel e outros custos que entram no preço" (FE-57)                                                                                              |
+| Título e subtítulo   | "Gastos Indiretos" / "Custos rateados automaticamente nas receitas"                                                         | "Contas do mês" / "Gás, luz, internet, aluguel, DAS do MEI e outros custos que entram no preço" (FE-57; "DAS do MEI" desde a FE-64)                                                      |
 | Ação primária        | "Novo gasto"                                                                                                                | igual                                                                                                                                                                                    |
 | Resumo               | "Total de gastos", "N item(s)"                                                                                              | "Total por mês", "1 conta" / "N contas" (FE-42; "Total por mês" desde a FE-57)                                                                                                           |
 | Aviso                | "Alteracoes afetam o custo unitario de todas as receitas automaticamente."                                                  | "Alterações afetam o custo unitário de todas as receitas automaticamente."                                                                                                               |
@@ -880,6 +880,24 @@ A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e
 
 Desde a FE-58, o cabeçalho é a saudação, e as ações rápidas são só "Nova receita" (primária) e "Anotar venda" (secundária); ver [Layout](#layout-fe-58). Saíram o título "Doce Fatia", "Seu painel financeiro", o nome da empresa (que continua no menu da conta), o atalho "Simulação" (o herói no vermelho leva a `/simulacao`) e as ações "Novo ingrediente", "Nova fornada" e "Novo gasto", para a tela ter uma ação primária só ([marca.md](marca.md#checklist-de-revisão-de-tela)).
 
+### Primeiros passos
+
+FE-66. Cartão "Seus primeiros passos" entre o herói e os cards, com os 5 passos de `passosIniciais` (`features/aprender/primeiros-passos.ts`); a tabela, os textos e o `localStorage` estão em [aprender.md](aprender.md#primeiros-passos). Cada passo é feito pelos dados, nunca à mão:
+
+```text
+passo1 = insumos.length ≥ 3
+passo2 = algum gasto com tipo == MENSAL
+passo3 = configuracao.capacidadeMensal ≠ 40   (CONFIGURACAO_CUSTOS_PADRAO do monolito)
+passo4 = receitas.length ≥ 1
+passo5 = alguma venda com status == CONCLUIDA (de qualquer data)
+```
+
+O passo 3 deveria ser "configuração salva pela pessoa", mas a API não diz isso: `GET /configuracao-custos` devolve só os valores, e a empresa nova nasce com os padrões (BE-24). Vale a regra alternativa da issue: a capacidade diferente do padrão. Quem salvar 40 fornadas continua com o passo aberto.
+
+### Cartão do Aprender
+
+FE-67. Logo abaixo dos Primeiros passos (ou no lugar deles, quando não aparecem), um cartão discreto que leva a `/aprender`: "Dúvida em alguma palavra? Veja o Aprender". Aparece sempre; não tem estado nem requisição. Textos da página Aprender e dos guias em [aprender.md](aprender.md#página-aprender).
+
 ## Configurações de custo e formas de venda
 
 FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, "Ajustes de preço" desde a FE-57, no menu lateral e na gaveta "Mais" da barra inferior do celular.
@@ -951,6 +969,7 @@ Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver ite
 - Seguir um link ou "Fechar" fecha o aviso.
 - **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
 - **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
+- **Dica na hora certa** (FE-68, [aprender.md](aprender.md#dica-na-hora-certa)): as dicas "Faltou anotar uma compra?" (Ingredientes e Estoque) e "Um ingrediente ficou mais caro" (Receitas) complementam o aviso. Só aparecem com o aviso resolvido e se ele não abriu sozinho na sessão (a sessão em que abriu fica em `lucroai:aviso-ao-entrar-abriu`, no `sessionStorage`); nunca junto com ele. As outras dicas (margem negativa, taxa do canal e primeiro mês) e as regras de uma por sessão e uma vez só estão na mesma seção.
 
 ## Login e mensagens de erro gerais
 

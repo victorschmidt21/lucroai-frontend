@@ -32,6 +32,7 @@ it('tem um só h1 e uma seção para cada grupo', () => {
     'Rendimento',
     'Status',
     'Sobreposições',
+    'Pitada no termo',
     'Abas',
     'Estados',
     'Listagem e formulário',

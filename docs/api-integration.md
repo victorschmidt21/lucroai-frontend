@@ -422,6 +422,7 @@ Encontradas na análise dos microsserviços. Cada uma diz o que a web faz. Desde
 25. **Resolvida.** ~~`POST /vendas` aceita a lista de itens vazia~~: `@ArrayNotEmpty()`. O botão continua desabilitado com o carrinho vazio.
 26. **Resolvida.** ~~`POST /vendas` não confere a empresa da receita~~: receita de outra empresa → `404`.
 27. **Resolvida.** ~~Simulação divide por preço 0~~: `400` `PRECO_INVALIDO`, cuja mensagem a tela da FE-20 mostra.
+28. **`GET /configuracao-custos` não diz se a configuração foi salva pela pessoa** (sem data de atualização nem indicador; a empresa nasce com os valores padrão, BE-24). → O passo 3 dos Primeiros passos (FE-66) conta como feito quando `capacidadeMensal` é diferente de 40, o padrão do backend ([business-rules.md](business-rules.md#primeiros-passos)).
 
 ## Divergências entre as issues e o backend
 

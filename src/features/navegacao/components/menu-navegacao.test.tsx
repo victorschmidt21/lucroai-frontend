@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 
 describe('MenuNavegacao lateral', () => {
-  it('mostra os oito destinos e os ajustes de preço, na ordem do mobile', async () => {
+  it('mostra os oito destinos, o Aprender e os ajustes de preço, na ordem do mobile', async () => {
     const { container } = render(<MenuNavegacao variante="lateral" />);
 
     expect(linksDoMenu()).toEqual([
@@ -37,6 +37,7 @@ describe('MenuNavegacao lateral', () => {
       ['Estoque', '/estoque'],
       ['Fornadas', '/producoes'],
       ['Contas do mês', '/gastos-indiretos'],
+      ['Aprender', '/aprender'],
       ['Ajustes de preço', '/configuracoes'],
     ]);
     await expectNoA11yViolations(container);

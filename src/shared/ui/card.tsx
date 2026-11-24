@@ -1,10 +1,11 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useId } from 'react';
 import { cn } from './cn';
+import { textoDoNo } from './label';
 
-type CardProps = ComponentProps<'div'> & {
+type CardProps = Omit<ComponentProps<'div'>, 'title'> & {
   /** Rótulo da seção em caixa alta, como os cartões do cálculo real ("RENDIMENTO"). */
-  title?: string;
+  title?: ReactNode;
   /** `destaque` ganha a sombra quente, para o cartão que importa mais na tela. */
   variant?: 'padrao' | 'destaque';
 };
@@ -36,7 +37,14 @@ export function Card({
   }
 
   return (
-    <section aria-labelledby={titleId} className={classes} {...props}>
+    <section
+      // Título com `<Termo>` (FE-64): o nome da seção é o texto, sem o "O que é...?".
+      {...(typeof title === 'string'
+        ? { 'aria-labelledby': titleId }
+        : { 'aria-label': textoDoNo(title) })}
+      className={classes}
+      {...props}
+    >
       <h2 id={titleId} className="text-section-label text-ink-muted">
         {title}
       </h2>
