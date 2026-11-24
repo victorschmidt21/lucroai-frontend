@@ -2,7 +2,7 @@
 
 Como o Doce Fatia ensina os termos de custo, preço e venda dentro do próprio app. Fonte: proposta "Pitadas: aprender no Doce Fatia" de 2026-11-23. Implementação: épico **E10 Aprender no app** (FE-63 a FE-68).
 
-> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65, e os **Primeiros passos** no Início desde a FE-66. As outras duas camadas são previstas nas FE-67 e FE-68.
+> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65, os **Primeiros passos** no Início desde a FE-66 e a **página Aprender**, com a busca e os guias, desde a FE-67. A dica na hora certa é prevista na FE-68.
 
 Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md](marca.md#público)). Cada explicação é escrita **uma vez só**, na base de termos, e todas as camadas leem dela.
 
@@ -13,7 +13,7 @@ Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md
 | **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | existe (FE-64)   |
 | **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | existe (FE-66)   |
 | **Dica na hora certa** | uma dica curta quando a situação aparece (estoque negativo, preço que precisa subir etc.).       | previsto (FE-68) |
-| **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | previsto (FE-67) |
+| **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | existe (FE-67)   |
 
 Decisões do épico: **Pitada** é a ajuda no termo e **Aprender** é a página; sem tour nem carrossel de boas-vindas; conteúdo como código, sem CMS e sem endpoint novo; estado derivado dos dados ou guardado no `localStorage`/`sessionStorage`; voz e nomes de [marca.md](marca.md#voz-e-tom). Fora do escopo: assistente com IA, vídeos, gamificação, ferramentas pagas de onboarding, backend e o app Flutter.
 
@@ -30,7 +30,7 @@ Desde a FE-64. Arquivos em `src/features/aprender/components/`: `termo.tsx` (`<T
 - **Abre só com toque, clique, Enter ou Espaço. Nunca por hover nem por foco**: no celular não existe hover, e abrir no foco atrapalha quem navega por teclado.
 - **Uma vez por tela**: só a primeira ocorrência de cada termo ganha o `<Termo>`, para não poluir. Em listas, vai só no primeiro item (o primeiro selo "Estoque negativo"); em colunas da `DataTable`, só no cabeçalho da tabela (no celular, o rótulo repetido em cada cartão fica em texto).
 - Em campo de formulário, o `<Termo>` fica no `label` (que aceita nó desde a FE-64), sem mudar o `htmlFor`. O campo ganha um texto escondido ligado por `aria-labelledby`, para ser anunciado pelo rótulo, e não pelo "O que é...?". O `Card` com título em nó faz o mesmo com `aria-label`.
-- A folha (`Pitada`): até `md`, `Drawer` de baixo com alça; a partir de `md`, `Popover` ancorado no termo, com até 360px (`useMediaQuery(MEDIA_COMPUTADOR)`). Conteúdo, nesta ordem: título (Fredoka 600), `explicacao`, "No seu caso" (só quando o termo tem `exemplo` e a tela passa `dados`; ver [No seu caso](#no-seu-caso)), `porQueImporta` em `ink-muted`, a `acao` (escondida quando a tela atual já é o `href`), os relacionados como chips ("Veja também") e "Entendi". "Ver no Aprender" entra na FE-67.
+- A folha (`Pitada`): até `md`, `Drawer` de baixo com alça; a partir de `md`, `Popover` ancorado no termo, com até 360px (`useMediaQuery(MEDIA_COMPUTADOR)`). Conteúdo, nesta ordem: título (Fredoka 600), `explicacao`, "No seu caso" (só quando o termo tem `exemplo` e a tela passa `dados`; ver [No seu caso](#no-seu-caso)), `porQueImporta` em `ink-muted`, a `acao` (escondida quando a tela atual já é o `href`), o link "Ver no Aprender" (→ `/aprender/{id}`, desde a FE-67; escondido na própria página do termo), os relacionados como chips ("Veja também") e "Entendi".
 - Tocar num chip troca o conteúdo sem fechar a folha, e o foco vai para o conteúdo novo; reabrir volta ao termo da tela.
 - Fecha com "Entendi", Esc, toque fora ou arrastando a alça para baixo; o foco volta para o termo (o Radix devolve ao gatilho).
 - Outras funcionalidades importam `@/features/aprender/components/termo`: é a exceção às [regras de dependência](architecture.md#regras-de-dependência), como os `*.queries.ts`.
@@ -142,6 +142,65 @@ O cartão:
 - **Pitada só no passo destacado**, que é o único com o apoio; "fornadas" está no título do passo 3, e não no apoio como a issue sugeria.
 - **Conta vazia** coberta pelo unitário de `passosIniciais`: o cadastro de empresa exige o token de cadastro (BE-36), então o teste manual foi com o seed, forçando o passo 3 aberto (capacidade 40 pela API, depois restaurada para 100).
 
+## Página Aprender
+
+Desde a FE-67. Um lugar para consultar com calma, dentro do grupo `(app)` (com sessão). Tudo vem da base de termos e de `guias.ts`: **nenhuma requisição**.
+
+| Rota                     | Arquivo da página                          | Componente     | `metadata.title`  |
+| ------------------------ | ------------------------------------------ | -------------- | ----------------- |
+| `/aprender`              | `app/(app)/aprender/page.tsx`              | `AprenderTela` | "Aprender"        |
+| `/aprender/[termo]`      | `app/(app)/aprender/[termo]/page.tsx`      | `TermoPagina`  | o título do termo |
+| `/aprender/guias/[guia]` | `app/(app)/aprender/guias/[guia]/page.tsx` | `GuiaPagina`   | o título do guia  |
+
+Id de termo ou de guia inexistente chama `notFound()`: o 404 dentro do layout (`/aprender/nao-existe`).
+
+`/aprender` (`components/aprender-tela.tsx`):
+
+- Título "Aprender" e subtítulo "O que cada palavra do app quer dizer".
+- Busca "Busque uma palavra, como “lucro”", com o texto em `?q=` pelo `useBuscaNaUrl` das listas (300 ms de espera; recarregar e voltar mantêm o texto).
+- `buscarTermos(q)` (`busca.ts`, função pura com `busca.test.ts`): ignora acento e caixa (`normalizarTexto`) e procura no `titulo`, nos `sinonimos` e no `curto`. Ordem: título que começa com o texto, depois sinônimo igual ao texto, depois o resto; dentro de cada grupo, a ordem da base. "sobra" acha `margem`, "rateio" acha `divisao-das-contas` e "ifood" acha `canal-de-venda` e `taxa-do-canal`.
+- Assuntos em chips (`ToggleChip` num `fieldset` com a legenda "Assunto"): Todos, Custos, Preço, Vendas e Estoque, com o assunto em `?assunto=` (`aprenderSearchSchema`; "Todos" tira o parâmetro). Chips, e não `SegmentedControl`: as cinco opções não cabem numa linha em 360px, e os chips quebram a linha.
+- Cartões com o título e o `curto`, levando a `/aprender/{id}`. Sem resultado: `EmptyState` com a ilustração do caderno (FE-59), "Ainda não temos essa palavra. Tente outra, como “custo” ou “preço”." e "Limpar busca".
+- Seção "Guias", sempre visível no fim, com os três guias e o número de passos.
+
+`/aprender/[termo]` (`components/termo-pagina.tsx`, Server Component): "Voltar ao Aprender", o título com o `curto` como subtítulo, um cartão com a `explicacao`, o `porQueImporta` e o botão da `acao`, "Onde aparece no app" (as telas da [tabela da Pitada](#pitada-no-termo), com link, de `onde-aparece.ts`; some quando o termo não aparece em tela nenhuma) e "Veja também" (os relacionados, como links para as páginas deles).
+
+**Sem "No seu caso" na página do termo.** Os dados de cada exemplo vêm de telas diferentes (uma receita, a simulação, a fornada sendo anotada), e a página não tem uma receita ou uma venda escolhida; buscar seria requisição nova só para a página. A Pitada já mostra o exemplo nas telas que têm os dados.
+
+Acesso:
+
+- Menu lateral: "Aprender" (`ITEM_APRENDER`, ícone `book-open-text`), logo acima de "Ajustes de preço". No celular, no topo da gaveta "Conta" (`MenuContaCelular`), e não na "Mais".
+- Pitada: "Ver no Aprender" → `/aprender/{id}`.
+- Início: cartão discreto "Dúvida em alguma palavra? Veja o Aprender" (`components/cartao-aprender.tsx`), logo abaixo dos Primeiros passos (a página passa os dois na prop `primeirosPassos` do `PainelTela`); quando os passos não aparecem, fica no lugar deles.
+
+Ao pôr um `<Termo>` numa tela nova, acrescente a tela em `onde-aparece.ts` e na tabela da Pitada.
+
+## Guias
+
+Desde a FE-67. Passo a passo curto que leva à tela certa. Ficam em `src/features/aprender/guias.ts` (`GUIAS`, `guiaSchema`, `buscarGuia`) e abrem em `/aprender/guias/[id]` (`components/guia-pagina.tsx`): cada passo numerado, com o botão da tela e, quando houver, o link "Saiba mais: {termo}" para a página do termo.
+
+| id                      | Título                                           | Passos (tela)                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preco-do-bolo`         | Como chegar no preço do seu bolo                 | ingredientes e embalagem (`/insumos`) → contas do mês (`/gastos-indiretos`) → fornadas (`/configuracoes`) → receita (`/receitas/nova`) → preço sugerido (`/receitas`) |
+| `registrar-fornada`     | Como registrar uma fornada                       | abrir Fornadas (`/producoes`) → receita e lotes (`/producoes?novo=1`) → conferir a prévia (`/producoes?novo=1`) → salvar e ver o Estoque (`/estoque`)                 |
+| `ingrediente-mais-caro` | O que fazer quando um ingrediente fica mais caro | anotar a compra (`/insumos`) → o aviso de preço que precisa subir (`/`) → abrir a receita (`/receitas`) → ajustar ou simular (`/simulacao`)                           |
+
+Como escrever um guia:
+
+1. Acrescente um objeto em `GUIAS`, com `id` em kebab-case que não vá mudar (vai na URL) e o título como pergunta ou tarefa ("Como...", "O que fazer quando...").
+2. De 3 a 5 passos (o schema aceita de 1 a 5; o teste de conteúdo pede pelo menos 3). Cada passo tem `texto` (uma ação, até 160 caracteres, começando pelo verbo), `link` (`rotulo` com o nome da tela como no menu, "Ver Ingredientes", e `href` de uma rota de `src/app/(app)`, com query se ajudar, como `?novo=1`) e `termo` opcional (id da base).
+3. Siga as [regras de escrita](#regras-de-escrita): fala de cozinha, "você", sem exclamação e sem as palavras proibidas.
+4. Rode `npx vitest run src/features/aprender`: `guias.test.ts` confere o schema, os ids, o tamanho, as rotas, os termos e as regras de escrita.
+
+### Decisões da FE-67
+
+- **Aprender fora da gaveta "Mais"**: a issue pede o item no menu lateral e na gaveta "Conta" do celular; para não repetir o link em duas gavetas, a "Mais" continua com os mesmos cinco itens.
+- **Sem "No seu caso" na página do termo** (ver acima): a Pitada já mostra o exemplo nas telas.
+- **Chips no lugar do `SegmentedControl`** nos assuntos, para caber em 360px.
+- **Passo "conferir o que sai do estoque"** do guia da fornada: o formulário mostra a prévia (unidades e contas do mês), e não a lista do que sai do estoque. O passo virou "Confira na prévia...", e o seguinte leva ao Estoque para ver o que baixou.
+- **Passo "ver o aviso de preço que precisa subir"** leva ao Início: o aviso abre ao entrar no app e fica no sino do topo, em qualquer tela.
+- **Guias sempre visíveis** no fim de `/aprender`, mesmo com busca: são poucos, e a busca é só de termos.
+
 ## Regras de escrita
 
 - **Linguagem simples** (Lei 15.263/2025): frases curtas, ordem direta, uma ideia por frase.
@@ -160,6 +219,7 @@ Limites (conferidos pelo schema): `curto` com 1 frase e até 140 caracteres; `ex
 | `termos/custos.ts`, `preco.ts`, `vendas.ts`, `estoque.ts` | os termos de cada assunto                                                                                                   |
 | `termos/index.ts`                                         | `TERMOS` (lista), o tipo `TermoId` (união dos ids), `buscarTermo(id)` e `isTermoId(id)`                                     |
 | `aprender.conteudo.test.ts`                               | ids únicos, limites, `relacionados` válidos, `acao.href` com rota em `src/app/(app)` e palavras proibidas só em `sinonimos` |
+| `busca.ts`, `guias.ts`, `onde-aparece.ts`                 | `buscarTermos` (FE-67), os guias e as telas de cada termo, usados pela [página Aprender](#página-aprender)                  |
 
 Formato do termo:
 

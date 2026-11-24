@@ -894,6 +894,10 @@ passo5 = alguma venda com status == CONCLUIDA (de qualquer data)
 
 O passo 3 deveria ser "configuração salva pela pessoa", mas a API não diz isso: `GET /configuracao-custos` devolve só os valores, e a empresa nova nasce com os padrões (BE-24). Vale a regra alternativa da issue: a capacidade diferente do padrão. Quem salvar 40 fornadas continua com o passo aberto.
 
+### Cartão do Aprender
+
+FE-67. Logo abaixo dos Primeiros passos (ou no lugar deles, quando não aparecem), um cartão discreto que leva a `/aprender`: "Dúvida em alguma palavra? Veja o Aprender". Aparece sempre; não tem estado nem requisição. Textos da página Aprender e dos guias em [aprender.md](aprender.md#página-aprender).
+
 ## Configurações de custo e formas de venda
 
 FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, "Ajustes de preço" desde a FE-57, no menu lateral e na gaveta "Mais" da barra inferior do celular.
