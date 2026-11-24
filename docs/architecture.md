@@ -64,6 +64,8 @@ docs/                             # esta documentação
 
 Segunda exceção (FE-64): qualquer funcionalidade importa `features/aprender/components/termo.tsx`, o `<Termo>` da [Pitada](aprender.md#pitada-no-termo), que só depende da base de termos e de `shared/`.
 
+Terceira exceção (FE-68): qualquer funcionalidade importa `features/aprender/components/dica-na-hora.tsx`, a [dica na hora certa](aprender.md#dica-na-hora-certa), que depende só de `features/aprender` e de `shared/` (o estado do aviso ao entrar vem do `AvisosContext` de `shared/avisos/`).
+
 A exceção do `api/<outro>.queries.ts` existe porque o LucroAI calcula muita coisa no cliente: o painel lê as queries de vendas, receitas e estoque, e uma produção precisa invalidar o estoque. Um `*.queries.ts` exporta só chaves e `queryOptions`, e importa só o próprio `*.api.ts` e `shared/`, então não cria ciclos.
 
 Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, hook), há três caminhos, nesta ordem de preferência:
@@ -74,20 +76,21 @@ Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, 
 
 ## O que fica em `src/shared/`
 
-| Caminho                | O que é                                                                                                                                                             | Situação                                                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                            | existe                                                    |
-| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                    | existe                                                    |
-| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                         | existe                                                    |
-| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por grupo de recursos, e os enums com rótulos                                                                             | existe (FE-05)                                            |
-| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`          | existe (FE-05)                                            |
-| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                | existe (FE-05)                                            |
-| `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts` | existe (FE-06)                                            |
-| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                            | `estoque.ts` existe (FE-13); `vendas.ts` previsto (FE-18) |
-| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                       | existe (FE-04)                                            |
-| `ui/`                  | `StatusPage` (páginas 404 e de erro)                                                                                                                                | existe (FE-08)                                            |
-| `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`              | existe (FE-06)                                            |
-| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                     | existe (FE-07)                                            |
+| Caminho                | O que é                                                                                                                                                                      | Situação                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `config/env.schema.ts` | schemas Zod das variáveis e `parseEnv()`                                                                                                                                     | existe                                                    |
+| `config/env.server.ts` | `getServerEnv()`, só no servidor                                                                                                                                             | existe                                                    |
+| `config/env.public.ts` | `publicEnv`, disponível também no navegador                                                                                                                                  | existe                                                    |
+| `api/contracts/`       | schemas Zod de resposta e tipos de corpo, por grupo de recursos, e os enums com rótulos                                                                                      | existe (FE-05)                                            |
+| `api/`                 | `apiFetch` (`client.ts`, `client.server.ts`), `unwrap()`, `ApiError`, `getErrorMessage()`, `isEstoqueInsuficiente()`, `filtrarPorTexto()`, `QueryProvider`                   | existe (FE-05)                                            |
+| `format/`              | `formatMoeda`, `formatCustoUnitario`, `formatPercentual`, `formatQuantidade`, `formatData`, `parseDataSemHora`, `arredondarCentavos`                                         | existe (FE-05)                                            |
+| `format/`              | `numero-br.ts`: `parseNumeroBR`, `parseInteiroBR`, `formatNumeroEditavel`, `numeroBR()`, `numeroBROpcional()`, `inteiroBR()`; `percentualParaFracao` em `numero.ts`          | existe (FE-06)                                            |
+| `domain/`              | regras usadas por mais de uma funcionalidade: `estoque.ts` (`isBaixoEstoque`, `statusEstoque`), `vendas.ts` (`isFaturavel`, `totalItem`)                                     | `estoque.ts` existe (FE-13); `vendas.ts` previsto (FE-18) |
+| `ui/`                  | componentes base, ícones, `Logo`, `PageHeader`, `StatCard`, `Toast`, `ConfirmDialog`, estados                                                                                | existe (FE-04)                                            |
+| `ui/`                  | `StatusPage` (páginas 404 e de erro)                                                                                                                                         | existe (FE-08)                                            |
+| `ui/`                  | `ListPage`, `DataTable`, `useBuscaNaUrl`, `FormDialog`, `Form` e campos, `MoneyInput`, `DecimalInput`, `IntegerInput`, `PercentInput`, `UnidadeSelect`                       | existe (FE-06)                                            |
+| `avisos/`              | `AvisosContext` e `useAvisos` (FE-68): o estado do aviso ao entrar, dado pelo `AvisosProvider` de `features/alertas` e lido pelo indicador do topo e pela dica na hora certa | existe (FE-68)                                            |
+| `auth/`                | cookie de sessão, `getUsuarioAtual()`, `useUsuarioAtual()`, decodificação do JWT, proxy BFF (`backend-proxy.server.ts`), `handleSessaoExpirada`                              | existe (FE-07)                                            |
 
 Não use o que ainda não existe: implemente a issue correspondente ou combine a mudança de escopo.
 

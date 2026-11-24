@@ -969,6 +969,7 @@ Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver ite
 - Seguir um link ou "Fechar" fecha o aviso.
 - **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
 - **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
+- **Dica na hora certa** (FE-68, [aprender.md](aprender.md#dica-na-hora-certa)): as dicas "Faltou anotar uma compra?" (Ingredientes e Estoque) e "Um ingrediente ficou mais caro" (Receitas) complementam o aviso. Só aparecem com o aviso resolvido e se ele não abriu sozinho na sessão (a sessão em que abriu fica em `lucroai:aviso-ao-entrar-abriu`, no `sessionStorage`); nunca junto com ele. As outras dicas (margem negativa, taxa do canal e primeiro mês) e as regras de uma por sessão e uma vez só estão na mesma seção.
 
 ## Login e mensagens de erro gerais
 

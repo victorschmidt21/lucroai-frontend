@@ -2,18 +2,18 @@
 
 Como o Doce Fatia ensina os termos de custo, preço e venda dentro do próprio app. Fonte: proposta "Pitadas: aprender no Doce Fatia" de 2026-11-23. Implementação: épico **E10 Aprender no app** (FE-63 a FE-68).
 
-> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65, os **Primeiros passos** no Início desde a FE-66 e a **página Aprender**, com a busca e os guias, desde a FE-67. A dica na hora certa é prevista na FE-68.
+> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65, os **Primeiros passos** no Início desde a FE-66 e a **página Aprender**, com a busca e os guias, desde a FE-67, e a **dica na hora certa** desde a FE-68.
 
 Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md](marca.md#público)). Cada explicação é escrita **uma vez só**, na base de termos, e todas as camadas leem dela.
 
 ## As quatro camadas
 
-| Camada                 | O que é                                                                                          | Situação         |
-| ---------------------- | ------------------------------------------------------------------------------------------------ | ---------------- |
-| **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | existe (FE-64)   |
-| **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | existe (FE-66)   |
-| **Dica na hora certa** | uma dica curta quando a situação aparece (estoque negativo, preço que precisa subir etc.).       | previsto (FE-68) |
-| **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | existe (FE-67)   |
+| Camada                 | O que é                                                                                          | Situação       |
+| ---------------------- | ------------------------------------------------------------------------------------------------ | -------------- |
+| **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | existe (FE-64) |
+| **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | existe (FE-66) |
+| **Dica na hora certa** | uma dica curta quando a situação aparece (estoque negativo, preço que precisa subir etc.).       | existe (FE-68) |
+| **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | existe (FE-67) |
 
 Decisões do épico: **Pitada** é a ajuda no termo e **Aprender** é a página; sem tour nem carrossel de boas-vindas; conteúdo como código, sem CMS e sem endpoint novo; estado derivado dos dados ou guardado no `localStorage`/`sessionStorage`; voz e nomes de [marca.md](marca.md#voz-e-tom). Fora do escopo: assistente com IA, vídeos, gamificação, ferramentas pagas de onboarding, backend e o app Flutter.
 
@@ -200,6 +200,50 @@ Como escrever um guia:
 - **Passo "conferir o que sai do estoque"** do guia da fornada: o formulário mostra a prévia (unidades e contas do mês), e não a lista do que sai do estoque. O passo virou "Confira na prévia...", e o seguinte leva ao Estoque para ver o que baixou.
 - **Passo "ver o aviso de preço que precisa subir"** leva ao Início: o aviso abre ao entrar no app e fica no sino do topo, em qualquer tela.
 - **Guias sempre visíveis** no fim de `/aprender`, mesmo com busca: são poucos, e a busca é só de termos.
+
+## Dica na hora certa
+
+Desde a FE-68. A única ajuda **proativa** do épico: uma dica curta, rara e que se pode dispensar para sempre, quando algo pede atenção. Arquivos em `src/features/aprender/`: `dicas.ts` (`dicaDaVez(contexto, vistas)`, função pura), `dicas.test.ts`, `dicas-armazenamento.ts` (o que fica no navegador) e `components/dica-na-hora.tsx` (`DicaNaHora`).
+
+**Dica nova só entra com gatilho, texto e ação definidos nesta tabela.**
+
+| id                        | Quando aparece                                                                                          | Onde (`tela`)                                                                  | Título                                      | Texto                                                                                                                            | Ação                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `margem-negativa`         | lucro por unidade < 0 (a condição do `avisoDePrejuizo`)                                                 | detalhe da receita (`receita`); Simulação e Simulação de cenário (`simulacao`) | "Esse preço está pagando para vender"       | "A receita {receita} custa R$ X para fazer e está a R$ Y. Cada unidade vendida tira R$ Z do seu bolso."                          | "Ajustar o preço" → `/receitas/{id}/editar` (detalhe) ou `/receitas/{id}` (simulações) |
+| `estoque-negativo`        | primeiro item de `estoqueNegativo` em `GET /alertas`, com o aviso ao entrar liberado                    | Ingredientes (`insumos`) e Estoque (`estoque`)                                 | "Faltou anotar uma compra?"                 | "O ingrediente {ingrediente} está com estoque abaixo de zero. Anote a compra para o custo ficar certo."                          | "Anotar compra" → `/insumos?compra={id}`                                               |
+| `preco-que-precisa-subir` | primeira receita do primeiro item de `precoDefasado` que tem receita, com o aviso ao entrar liberado    | Receitas (`receitas`)                                                          | "Um ingrediente ficou mais caro"            | "O preço de {receita} deixa menos lucro do que antes. Veja o preço novo sugerido."                                               | "Ver a receita" → `/receitas/{id}`                                                     |
+| `taxa-do-canal`           | venda concluída nesta tela num canal com `comissaoPercentual` > 0                                       | Vendas (`vendas`), depois de concluir a venda                                  | "No canal {canal}, uma parte fica com eles" | "Dessa venda, R$ X foram de taxa. O preço sugerido do canal {canal} já conta com isso." (X = total da venda × comissão do canal) | "Ver preços por canal" → `/receitas`                                                   |
+| `primeiro-mes`            | o mês atual é o seguinte ao da venda `CONCLUIDA` mais antiga entre as que o Início carrega (seis meses) | Início (`inicio`)                                                              | "Seu primeiro mês fechou"                   | "Veja quanto sobrou pra você e quanto precisa vender para pagar as contas do mês."                                               | "Entender o Início" → `/aprender/sobrou-pra-voce`                                      |
+
+Termos com `<Termo>` no texto: "custa R$ X para fazer" (`custo-por-unidade`), "estoque abaixo de zero" (`estoque-negativo`), "preço novo sugerido" (`preco-que-precisa-subir`), "taxa" (`taxa-do-canal`), "preço sugerido" (`preco-sugerido`), "sobrou pra você" (`sobrou-pra-voce`) e "para pagar as contas do mês" (`para-pagar-as-contas`).
+
+Regras (`dicaDaVez`, nesta ordem):
+
+1. **Carência**: nada aparece nos primeiros 30 segundos da primeira sessão (`aprender:primeiro-acesso` no `localStorage`, gravado na primeira tela com `DicaNaHora`). Passada a carência, a faixa confere de novo sozinha.
+2. **Uma vez**: tocar na ação ou em "Não mostrar de novo" grava o id em `aprender:dicas-vistas` (`localStorage`), e a dica não volta, em nenhuma tela.
+3. **Uma por sessão**: a primeira dica que aparece fica em `aprender:dica-da-sessao` (`sessionStorage`); nenhuma outra aparece nessa sessão. A mesma continua aparecendo até ser dispensada.
+4. **Complementa o aviso ao entrar (FE-47)**: as dicas de estoque negativo e de preço que precisa subir só aparecem com o aviso **resolvido** (fechado, ou sem precisar abrir) e se ele **não abriu sozinho nesta sessão** (`dicasDeAlertaLiberadas`). O `AvisosProvider` guarda a sessão em que o aviso abriu em `lucroai:aviso-ao-entrar-abriu` (`sessionStorage`, só o id da sessão), para recarregar a página não liberar a dica.
+
+Todo acesso ao `localStorage` e ao `sessionStorage` tem `try/catch`; sem eles, o estado fica em memória até recarregar. Só ids de dica, um horário e o id da sessão: nenhum dado de negócio.
+
+A faixa (`DicaNaHora`):
+
+- Logo abaixo do `PageHeader` (no Início, abaixo da saudação; em `/simulacao`, no topo do conteúdo, que tem a receita escolhida). O `ListPage` ganhou a prop `topo` para isso.
+- Fundo `warning-soft`, título Fredoka 600 (`font-display text-title font-semibold`), texto em `ink`, a ação em link `accent` (negrito, sublinhado) e "Não mostrar de novo" em `ink-muted`, os dois com 48px de altura.
+- Fica num `<output>` (`role="status"`) que existe antes da dica, `sr-only` enquanto vazio: o leitor de tela anuncia a dica quando ela chega, sem mover o foco.
+- Os dados vêm do que a tela já carregou e do `GET /alertas` que o `AvisosProvider` já leu (pelo `AvisosContext`). **Nenhuma requisição nova.**
+- Qualquer funcionalidade importa `@/features/aprender/components/dica-na-hora`: é a terceira exceção às [regras de dependência](architecture.md#regras-de-dependência), como o `<Termo>`.
+
+### Decisões da FE-68
+
+- **Estado do aviso em `shared/avisos/avisos-context.ts`**: o `AvisosContext` e o `useAvisos` saíram de `features/alertas` para `shared/`, com dois campos novos (`alertas` e `dicasDeAlertaLiberadas`). Assim a dica lê o estado e os alertas já em cache sem importar outra funcionalidade e sem montar outro observador da query.
+- **"Na mesma sessão" é a sessão do aviso** (`<id do usuário>:<fim do token>`, no `sessionStorage`): como o aviso abre em toda sessão que começa com alerta, na prática as dicas de alerta aparecem para alertas que surgem durante o uso (uma fornada que deixa o saldo negativo). Abrir o aviso pelo indicador do topo não conta como "abriu sozinho".
+- **"Entendi" ficou de fora**: a faixa tem só a ação e "Não mostrar de novo" (o componente da issue), e os dois registram a dica como vista.
+- **Margem negativa**: `dicas.ts` não importa `receitas.calculos.ts`; a tela passa o lucro por unidade que já mostra, e a dica usa a mesma condição do `avisoDePrejuizo` (lucro < 0) e o mesmo valor da perda (`-lucroPorUnidade`). No detalhe da receita, o lucro vem da `composicao` dos preços sugeridos, que hoje nunca é negativa; na prática, a dica aparece nas simulações. Em `/simulacao`, vale o **preço que você pratica** (a consulta "atual", com o preço médio das vendas), e não o do controle, para a dica não aparecer ao arrastar o preço. Na Simulação de cenário (`/receitas/{id}/simular`), vale o resultado simulado, e o `useSimularCenario` subiu para a página.
+- **"A receita X", "O ingrediente X" e "No canal X"** no lugar de "O {receita}", "O {ingrediente}" e "No {canal}", pelo mesmo motivo da FE-65: a frase não sabe o gênero do nome.
+- **Taxa da venda** = total da venda × `comissaoPercentual` do canal, arredondado a centavos; a dica aparece ao concluir a venda (quando o toast diz que ela foi anotada).
+- **Primeiro mês**: só no mês **seguinte** ao da primeira venda (não dois meses depois), com as vendas dos seis meses que o Início já carrega.
+- **Carência por navegador**: o `primeiro-acesso` fica no `localStorage`, sem id da conta, como as outras chaves `aprender:*`.
 
 ## Regras de escrita
 
