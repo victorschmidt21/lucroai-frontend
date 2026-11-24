@@ -1,31 +1,20 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useUsuarioAtual } from '@/shared/auth/use-usuario-atual';
+import { AvisosContext } from '@/shared/avisos/avisos-context';
 import { alertasOptions } from '../api/alertas.queries';
 import {
   deveAbrirAviso,
   idDaSessao,
+  lerSessaoEmQueAbriu,
   lerSessaoVerificada,
+  marcarSessaoEmQueAbriu,
   marcarSessaoVerificada,
   totalDeAlertas,
 } from '../aviso-ao-entrar';
 import { AvisosDialog } from './avisos-dialog';
-
-type Avisos = { total: number; abrir: () => void };
-
-const AvisosContext = createContext<Avisos>({ total: 0, abrir: () => {} });
-
-export function useAvisos() {
-  return useContext(AvisosContext);
-}
 
 /**
  * Aviso ao entrar (FE-47): na primeira leitura de `GET /alertas` da sessão,
@@ -33,6 +22,10 @@ export function useAvisos() {
  * (`IndicadorAvisos`) o reabre. Composto pelo layout de `(app)`, por fora do
  * `AppShell`, para o diálogo existir uma vez só (o indicador aparece no menu
  * lateral e no cabeçalho do celular).
+ *
+ * O estado vai pelo `AvisosContext` de `shared/avisos/` (FE-68): a dica na hora
+ * certa só mostra as dicas de alerta com o aviso resolvido e se ele não abriu
+ * sozinho nesta sessão.
  */
 export function AvisosProvider({ children }: { children: ReactNode }) {
   const { data: usuario } = useUsuarioAtual();
@@ -41,16 +34,20 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<'pendente' | 'aberto' | 'fechado'>(
     'pendente',
   );
+  // O aviso abriu sozinho nesta sessão (agora ou antes de recarregar a página).
+  const [abriuNaSessao, setAbriuNaSessao] = useState(false);
 
   // Ajuste durante a renderização (sem efeito): os alertas só são lidos no
   // navegador, então o `sessionStorage` existe aqui.
   if (estado === 'pendente' && usuario && alertas) {
+    const sessaoAtual = idDaSessao(usuario);
     const abrir = deveAbrirAviso({
-      sessaoAtual: idDaSessao(usuario),
+      sessaoAtual,
       sessaoJaVerificada: lerSessaoVerificada(),
       totalAlertas: totalDeAlertas(alertas),
     });
     setEstado(abrir ? 'aberto' : 'fechado');
+    setAbriuNaSessao(abrir || lerSessaoEmQueAbriu() === sessaoAtual);
   }
 
   // Aberto ou não, a sessão já foi verificada: o aviso não volta sozinho.
@@ -58,11 +55,21 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (estado !== 'pendente' && sessao) marcarSessaoVerificada(sessao);
   }, [estado, sessao]);
+  useEffect(() => {
+    if (abriuNaSessao && sessao) marcarSessaoEmQueAbriu(sessao);
+  }, [abriuNaSessao, sessao]);
 
   const total = alertas ? totalDeAlertas(alertas) : 0;
 
   return (
-    <AvisosContext value={{ total, abrir: () => setEstado('aberto') }}>
+    <AvisosContext
+      value={{
+        total,
+        abrir: () => setEstado('aberto'),
+        alertas: alertas ?? null,
+        dicasDeAlertaLiberadas: estado === 'fechado' && !abriuNaSessao,
+      }}
+    >
       {children}
       {alertas ? (
         <AvisosDialog

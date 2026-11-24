@@ -1,8 +1,8 @@
 'use client';
 
+import { useAvisos } from '@/shared/avisos/avisos-context';
 import { IconButton } from '@/shared/ui/button';
 import { IconAvisos } from '@/shared/ui/icons/acoes';
-import { useAvisos } from './avisos-provider';
 
 /**
  * Ícone com contador no topo (FE-47): reabre a lista de avisos depois de
