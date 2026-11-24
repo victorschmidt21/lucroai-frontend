@@ -62,6 +62,8 @@ docs/                             # esta documentação
 | `src/features/<modulo>/` | a própria funcionalidade, `shared/` e **só** `api/<outro>.queries.ts` de outra funcionalidade | qualquer outro arquivo de outra funcionalidade |
 | `src/shared/`            | `shared/`                                                                                     | `features/`, `app/`                            |
 
+Segunda exceção (FE-64): qualquer funcionalidade importa `features/aprender/components/termo.tsx`, o `<Termo>` da [Pitada](aprender.md#pitada-no-termo), que só depende da base de termos e de `shared/`.
+
 A exceção do `api/<outro>.queries.ts` existe porque o LucroAI calcula muita coisa no cliente: o painel lê as queries de vendas, receitas e estoque, e uma produção precisa invalidar o estoque. Um `*.queries.ts` exporta só chaves e `queryOptions`, e importa só o próprio `*.api.ts` e `shared/`, então não cria ciclos.
 
 Quando uma funcionalidade precisar de outra coisa de outra (componente, schema, hook), há três caminhos, nesta ordem de preferência:

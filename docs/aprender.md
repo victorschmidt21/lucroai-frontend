@@ -2,7 +2,7 @@
 
 Como o Doce Fatia ensina os termos de custo, preço e venda dentro do próprio app. Fonte: proposta "Pitadas: aprender no Doce Fatia" de 2026-11-23. Implementação: épico **E10 Aprender no app** (FE-63 a FE-68).
 
-> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`). As quatro camadas abaixo são previstas nas FE-64 a FE-68 e ainda não existem na tela.
+> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`) e a **Pitada no termo** desde a FE-64. As outras três camadas são previstas nas FE-66 a FE-68.
 
 Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md](marca.md#público)). Cada explicação é escrita **uma vez só**, na base de termos, e todas as camadas leem dela.
 
@@ -10,12 +10,51 @@ Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md
 
 | Camada                 | O que é                                                                                          | Situação         |
 | ---------------------- | ------------------------------------------------------------------------------------------------ | ---------------- |
-| **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | previsto (FE-64) |
+| **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | existe (FE-64)   |
 | **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | previsto (FE-66) |
 | **Dica na hora certa** | uma dica curta quando a situação aparece (estoque negativo, preço que precisa subir etc.).       | previsto (FE-68) |
 | **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | previsto (FE-67) |
 
 Decisões do épico: **Pitada** é a ajuda no termo e **Aprender** é a página; sem tour nem carrossel de boas-vindas; conteúdo como código, sem CMS e sem endpoint novo; estado derivado dos dados ou guardado no `localStorage`/`sessionStorage`; voz e nomes de [marca.md](marca.md#voz-e-tom). Fora do escopo: assistente com IA, vídeos, gamificação, ferramentas pagas de onboarding, backend e o app Flutter.
+
+## Pitada no termo
+
+Desde a FE-64. Arquivos em `src/features/aprender/components/`: `termo.tsx` (`<Termo>`), `pitada.tsx` (a folha) e `termo.test.tsx`.
+
+```tsx
+<Termo id="margem">margem 29%</Termo>
+```
+
+- O texto do filho continua sendo o texto da tela. O `<Termo>` é um `<button type="button">` com sublinhado pontilhado `accent` (2px, `underline-offset-4`) e um "?" num círculo `accent-soft` de 18px; `aria-haspopup="dialog"`, `aria-expanded` e `aria-label` "O que é {título}?". Área de toque de 48px pelo `::before`, mesmo com texto pequeno.
+- `tom="sobre-cor"`: sobre fundo `accent` (herói do painel), com sublinhado, "?" e foco em `on-accent`.
+- **Abre só com toque, clique, Enter ou Espaço. Nunca por hover nem por foco**: no celular não existe hover, e abrir no foco atrapalha quem navega por teclado.
+- **Uma vez por tela**: só a primeira ocorrência de cada termo ganha o `<Termo>`, para não poluir. Em listas, vai só no primeiro item (o primeiro selo "Estoque negativo"); em colunas da `DataTable`, só no cabeçalho da tabela (no celular, o rótulo repetido em cada cartão fica em texto).
+- Em campo de formulário, o `<Termo>` fica no `label` (que aceita nó desde a FE-64), sem mudar o `htmlFor`. O campo ganha um texto escondido ligado por `aria-labelledby`, para ser anunciado pelo rótulo, e não pelo "O que é...?". O `Card` com título em nó faz o mesmo com `aria-label`.
+- A folha (`Pitada`): até `md`, `Drawer` de baixo com alça; a partir de `md`, `Popover` ancorado no termo, com até 360px (`useMediaQuery(MEDIA_COMPUTADOR)`). Conteúdo, nesta ordem: título (Fredoka 600), `explicacao`, "No seu caso" (só com a prop `exemplo`, que a FE-65 vai preencher), `porQueImporta` em `ink-muted`, a `acao` (escondida quando a tela atual já é o `href`), os relacionados como chips ("Veja também") e "Entendi". "Ver no Aprender" entra na FE-67.
+- Tocar num chip troca o conteúdo sem fechar a folha, e o foco vai para o conteúdo novo; reabrir volta ao termo da tela.
+- Fecha com "Entendi", Esc, toque fora ou arrastando a alça para baixo; o foco volta para o termo (o Radix devolve ao gatilho).
+- Outras funcionalidades importam `@/features/aprender/components/termo`: é a exceção às [regras de dependência](architecture.md#regras-de-dependência), como os `*.queries.ts`.
+
+| Tela                     | Termos                                                                                                                                                                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Início (painel)          | `sobrou-pra-voce` (herói, só com lucro), `faturamento` ("Você vendeu"), `para-pagar-as-contas`                                                                                                                                                                                |
+| Receita, detalhe         | `custo-por-unidade` (cartão), `ficha-tecnica` ("Ingredientes"), `divisao-das-contas` ("Contas do mês"), `embalagem`, `perda` ("Perdas"), `rendimento` (no "Custo do lote"), `lucro-desejado` ("Lucro desta receita"), `preco-sugerido` e `canal-de-venda` (título dos preços) |
+| Receita, formulário      | `rendimento` ("unidades boas"), `ficha-tecnica` ("Ingredientes e embalagens"), `divisao-das-contas` (fornadas do lote), `embalagem`, `perda`, `lucro-desejado`                                                                                                                |
+| Simulação (`/simulacao`) | `margem` ("Lucro real", em %), `custo-por-unidade` ("Custo unitário"), `preco-sugerido` ("Preço atual")                                                                                                                                                                       |
+| Custos (cálculo real)    | `contas-do-mes` ("Custos invisíveis"), `custo-da-receita` ("Custo Total")                                                                                                                                                                                                     |
+| Vendas                   | `canal-de-venda` ("Onde vendeu?"), `lucro-real` (coluna do histórico, no computador)                                                                                                                                                                                          |
+| Contas do mês            | `das-do-mei` (subtítulo), `contas-do-mes` ("Total por mês")                                                                                                                                                                                                                   |
+| Ajustes de preço         | `divisao-das-contas`, `fornadas-por-mes`, `lucro-desejado`, `imposto`, `taxa-do-canal` ("Taxa da maquininha")                                                                                                                                                                 |
+| Ingredientes             | `estoque-negativo` (primeiro selo e detalhe), `custo-medio` (detalhe do ingrediente)                                                                                                                                                                                          |
+| Estoque                  | `estoque-negativo` (primeiro selo)                                                                                                                                                                                                                                            |
+| Fornadas                 | `fornada` (subtítulo), `divisao-das-contas` ("Contas do mês" ao anotar a fornada)                                                                                                                                                                                             |
+
+### Decisões da FE-64
+
+- **Só onde a palavra aparece.** `margem` no cálculo real, `taxa-do-canal` em Vendas e `custo-medio` no Estoque ficaram de fora: essas telas não mostram margem, taxa nem custo médio, e o `<Termo>` não inventa texto. Nos outros casos, o termo foi no rótulo que mostra o mesmo valor com outro nome ("Lucro real" em % é a margem; "Preço atual" parte do preço sugerido).
+- **"DAS do MEI" entrou no subtítulo de Contas do mês** ("Gás, luz, internet, aluguel, DAS do MEI e outros custos..."), para o termo ter onde aparecer e lembrar de cadastrar o DAS.
+- **`sobrou-pra-voce` só no herói com lucro**: nos estados "sem vendas" e "no vermelho" o título não tem a expressão.
+- **`lucro-real` só no computador**: no celular, o histórico vira cartões, e o rótulo "Lucro real" se repete em cada um; ali ele fica em texto.
 
 ## Regras de escrita
 
