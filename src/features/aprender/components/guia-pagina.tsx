@@ -53,7 +53,7 @@ export function GuiaPagina({ guia }: { guia: Guia }) {
                       href={`/aprender/${termo.id}`}
                       className="inline-flex min-h-12 items-center text-small font-bold text-accent underline underline-offset-4"
                     >
-                      O que é {termo.titulo}?
+                      Saiba mais: {termo.titulo}
                     </Link>
                   ) : null}
                 </div>

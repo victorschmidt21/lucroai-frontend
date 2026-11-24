@@ -45,7 +45,7 @@ const TELAS: readonly TelaComTermos[] = [
     ],
   },
   {
-    nome: 'Simular outro preço',
+    nome: 'Simulação de preço',
     href: '/simulacao',
     termos: ['margem', 'custo-por-unidade', 'preco-sugerido'],
   },
