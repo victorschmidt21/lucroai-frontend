@@ -4,6 +4,7 @@ import {
   ITENS_BARRA_INFERIOR,
   ITENS_MAIS,
   ITENS_MENU,
+  ITENS_MENU_LATERAL,
 } from './menu';
 
 describe('ITENS_MENU', () => {
@@ -21,8 +22,19 @@ describe('ITENS_MENU', () => {
   });
 });
 
+describe('ITENS_MENU_LATERAL', () => {
+  it('tem os oito destinos, o Aprender e os ajustes de preço', () => {
+    expect(ITENS_MENU_LATERAL.map(({ label }) => label).slice(-3)).toEqual([
+      'Contas do mês',
+      'Aprender',
+      'Ajustes de preço',
+    ]);
+    expect(ITENS_MENU_LATERAL).toHaveLength(10);
+  });
+});
+
 describe('barra inferior', () => {
-  it('mostra Início, Receitas, Vendas e Estoque, e o resto vai para "Mais"', () => {
+  it('mostra Início, Receitas, Vendas e Estoque, e o resto (fora o Aprender) vai para "Mais"', () => {
     expect(ITENS_BARRA_INFERIOR.map(({ label }) => label)).toEqual([
       'Início',
       'Receitas',
@@ -51,6 +63,9 @@ describe('getItemAtivo', () => {
     ['/producoes', 'Fornadas'],
     ['/gastos-indiretos', 'Contas do mês'],
     ['/configuracoes', 'Ajustes de preço'],
+    ['/aprender', 'Aprender'],
+    ['/aprender/margem', 'Aprender'],
+    ['/aprender/guias/registrar-fornada', 'Aprender'],
   ])('em %s, é %s', (pathname, label) => {
     expect(getItemAtivo(pathname)?.label).toBe(label);
   });
