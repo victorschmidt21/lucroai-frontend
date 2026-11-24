@@ -140,7 +140,14 @@ const LINK_CLASSES =
  * carregamento e erro. No celular, uma coluna na ordem do código; a partir de
  * `lg`, herói e cards à esquerda e as listas à direita.
  */
-export function PainelTela({ nome }: { nome: string | null }) {
+export function PainelTela({
+  nome,
+  primeirosPassos,
+}: {
+  nome: string | null;
+  /** Cartão "Seus primeiros passos" (FE-66), composto pela página, entre o herói e os cards. */
+  primeirosPassos?: ReactNode;
+}) {
   const agora = useAgora();
   // Só no navegador; o início dos seis meses só muda na virada do mês.
   const hoje = agora ? paraData(agora) : null;
@@ -183,6 +190,8 @@ export function PainelTela({ nome }: { nome: string | null }) {
             conteudo: () =>
               indicadores ? <Heroi indicadores={indicadores} /> : null,
           })}
+
+          {primeirosPassos}
 
           <section
             aria-label="Indicadores"
