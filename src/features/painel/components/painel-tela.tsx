@@ -145,7 +145,7 @@ export function PainelTela({
   primeirosPassos,
 }: {
   nome: string | null;
-  /** Cartão "Seus primeiros passos" (FE-66), composto pela página, entre o herói e os cards. */
+  /** Cartões "Seus primeiros passos" (FE-66) e do Aprender (FE-67), compostos pela página, entre o herói e os cards. */
   primeirosPassos?: ReactNode;
 }) {
   const agora = useAgora();

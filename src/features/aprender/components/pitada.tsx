@@ -140,6 +140,15 @@ function PitadaConteudo({
           {termo.acao.rotulo}
         </Link>
       ) : null}
+      {/* A explicação inteira, com os guias e as telas onde o termo aparece (FE-67). */}
+      {pathname !== `/aprender/${termo.id}` ? (
+        <Link
+          href={`/aprender/${termo.id}`}
+          className="inline-flex min-h-12 items-center self-start font-bold text-ink-muted underline underline-offset-4 hover:text-ink"
+        >
+          Ver no Aprender
+        </Link>
+      ) : null}
       {relacionados.length > 0 ? (
         <div className="flex flex-col gap-2">
           <h3 className="text-section-label text-ink-muted">Veja também</h3>
