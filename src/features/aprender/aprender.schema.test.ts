@@ -81,6 +81,6 @@ describe('definirTermo', () => {
   });
 
   it('rejeita o termo inválido nos testes', () => {
-    expect(() => definirTermo({ ...valido, curto: '' })).toThrow();
+    expect(() => definirTermo({ ...valido, curto: '' })).toThrow(/curto/);
   });
 });

@@ -36,9 +36,10 @@ function existeRota(href: string) {
 describe('base de termos', () => {
   it('tem os 24 termos e todos passam no schema', () => {
     expect(TERMOS).toHaveLength(24);
-    for (const termo of TERMOS) {
-      expect(termoSchema.safeParse(termo).success, termo.id).toBe(true);
-    }
+    const invalidos = TERMOS.filter(
+      (termo) => !termoSchema.safeParse(termo).success,
+    ).map((termo) => termo.id);
+    expect(invalidos).toEqual([]);
   });
 
   it('não repete id', () => {
@@ -47,42 +48,43 @@ describe('base de termos', () => {
   });
 
   it('relaciona só ids existentes e nunca o próprio termo', () => {
-    for (const termo of TERMOS) {
-      for (const relacionado of termo.relacionados) {
-        expect(isTermoId(relacionado), `${termo.id} → ${relacionado}`).toBe(
-          true,
-        );
-        expect(relacionado, termo.id).not.toBe(termo.id);
-      }
-    }
+    const errados = TERMOS.flatMap((termo) =>
+      termo.relacionados
+        .filter((id) => !isTermoId(id) || id === termo.id)
+        .map((id) => `${termo.id} → ${id}`),
+    );
+    expect(errados).toEqual([]);
   });
 
   it('leva a ação para uma rota que existe em src/app/(app)', () => {
-    for (const termo of TERMOS) {
-      if (termo.acao) {
-        expect(existeRota(termo.acao.href), termo.acao.href).toBe(true);
-      }
-    }
+    const semRota = TERMOS.flatMap((termo) =>
+      termo.acao && !existeRota(termo.acao.href) ? [termo.acao.href] : [],
+    );
+    expect(TERMOS.filter((termo) => termo.acao)).not.toHaveLength(0);
+    expect(semRota).toEqual([]);
   });
 
   it('usa as palavras proibidas só nos sinônimos', () => {
-    for (const termo of TERMOS) {
-      for (const texto of textosPrincipais(termo)) {
-        for (const palavra of PALAVRAS_PROIBIDAS) {
-          expect(normalizar(texto), `${termo.id}: ${palavra}`).not.toContain(
-            palavra,
-          );
-        }
-      }
-    }
+    const usos = TERMOS.flatMap((termo) =>
+      textosPrincipais(termo).flatMap((texto) =>
+        PALAVRAS_PROIBIDAS.filter((palavra) =>
+          normalizar(texto).includes(palavra),
+        ).map((palavra) => `${termo.id}: ${palavra}`),
+      ),
+    );
+    expect(usos).toEqual([]);
+  });
+
+  it('acha as palavras proibidas mesmo com acento e maiúscula', () => {
+    expect(normalizar('Cadastre o Insumo')).toContain('insumo');
+    expect(normalizar('GASTOS INDIRETOS')).toContain('gastos indiretos');
   });
 
   it('não usa exclamação nos textos', () => {
-    for (const termo of TERMOS) {
-      for (const texto of textosPrincipais(termo)) {
-        expect(texto, termo.id).not.toContain('!');
-      }
-    }
+    const comExclamacao = TERMOS.filter((termo) =>
+      textosPrincipais(termo).some((texto) => texto.includes('!')),
+    ).map((termo) => termo.id);
+    expect(comExclamacao).toEqual([]);
   });
 });
 
