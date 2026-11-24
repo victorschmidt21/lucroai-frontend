@@ -2,7 +2,7 @@
 
 Como o Doce Fatia ensina os termos de custo, preço e venda dentro do próprio app. Fonte: proposta "Pitadas: aprender no Doce Fatia" de 2026-11-23. Implementação: épico **E10 Aprender no app** (FE-63 a FE-68).
 
-> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65. As outras três camadas são previstas nas FE-66 a FE-68.
+> **Status:** a base de termos **existe** desde a FE-63 (`src/features/aprender/`), a **Pitada no termo** desde a FE-64 e o bloco **"No seu caso"**, com os números da pessoa, desde a FE-65, e os **Primeiros passos** no Início desde a FE-66. As outras duas camadas são previstas nas FE-67 e FE-68.
 
 Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md](marca.md#público)). Cada explicação é escrita **uma vez só**, na base de termos, e todas as camadas leem dela.
 
@@ -11,7 +11,7 @@ Público: a Mah, que vende de casa e não conhece termos de finanças ([marca.md
 | Camada                 | O que é                                                                                          | Situação         |
 | ---------------------- | ------------------------------------------------------------------------------------------------ | ---------------- |
 | **Pitada no termo**    | `<Termo id>` em volta do termo na tela; ao tocar, mostra o `curto`, o `porQueImporta` e um link. | existe (FE-64)   |
-| **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | previsto (FE-66) |
+| **Primeiros passos**   | lista do que falta para o primeiro preço certo, com o estado derivado dos dados da conta.        | existe (FE-66)   |
 | **Dica na hora certa** | uma dica curta quando a situação aparece (estoque negativo, preço que precisa subir etc.).       | previsto (FE-68) |
 | **Página Aprender**    | `/aprender` com a busca e os termos por assunto, e `/aprender/[id]` com a explicação inteira.    | previsto (FE-67) |
 
@@ -102,6 +102,45 @@ Os outros 12 termos não têm exemplo. Onde um termo com exemplo aparece numa te
 - **`faturamento` no vermelho**: "..., mas ficou R$ X no vermelho.", em vez de "sobraram -R$ X".
 - **`margem` negativa** usa o `lucroPorUnidade` da simulação ("cada venda tira R$ 0,20 do seu bolso").
 - **Moeda sempre com 2 casas** (`formatMoeda`), como manda a formatação; a issue escrevia "R$ 240" e "R$ 830".
+
+## Primeiros passos
+
+Desde a FE-66. Um cartão no Início leva a conta nova até o **primeiro preço justo** fazendo, e não lendo; não há tour nem carrossel de boas-vindas. Arquivos em `src/features/aprender/`: `primeiros-passos.ts` (`passosIniciais`, função pura), `primeiros-passos.test.ts` e `components/primeiros-passos.tsx` (`PrimeirosPassos`).
+
+**Regra: o estado é derivado dos dados.** `passosIniciais(dados)` devolve os 5 passos com `feito` calculado a partir do que a conta tem; nada é marcado à mão.
+
+| #   | Passo (título)                      | Apoio                                                 | Feito quando                                           | Botão                                   |
+| --- | ----------------------------------- | ----------------------------------------------------- | ------------------------------------------------------ | --------------------------------------- |
+| 1   | Cadastrar 3 ingredientes            | "Comece pelos que você mais usa."                     | ≥ 3 insumos                                            | "Adicionar ingrediente" → `/insumos`    |
+| 2   | Anotar as contas do mês             | "Gás, luz, internet, DAS: o que você paga todo mês."  | ≥ 1 gasto do tipo `MENSAL`                             | "Adicionar conta" → `/gastos-indiretos` |
+| 3   | Dizer quantas fornadas cabem no mês | "Assim dividimos as contas do mês entre os produtos." | `capacidadeMensal` diferente do padrão do backend (40) | "Responder" → `/configuracoes`          |
+| 4   | Criar a primeira receita            | "Você vai ver quanto custa e quanto cobrar."          | ≥ 1 receita                                            | "Criar receita" → `/receitas/nova`      |
+| 5   | Anotar a primeira venda             | "Para ver quanto sobrou pra você."                    | ≥ 1 venda `CONCLUIDA`                                  | "Anotar venda" → `/vendas`              |
+
+O cartão:
+
+- Fica entre o herói e os cartões do painel. A página (`app/(app)/page.tsx`) passa `<PrimeirosPassos />` ao `PainelTela` pela prop `primeirosPassos`, para o painel não importar outra funcionalidade.
+- Título "Seus primeiros passos", `ProgressBar` e "N de 5 feitos". Passos feitos com ✓ em `success` e o título riscado em `ink-muted`; o primeiro não feito com borda `accent`, apoio e o botão (secundário: a primária da tela continua sendo "Nova receita"); os demais só com o título. A Pitada vai só no passo destacado: "fornadas" (título do passo 3) → `fornadas-por-mes` e "quanto cobrar" (apoio do passo 4) → `preco-sugerido`.
+- Botão discreto "Esconder": grava `aprender:passos-escondidos` = `1` no `localStorage` e o cartão não volta.
+- **Comemoração**: com os 5 feitos, "Seu primeiro preço justo está pronto!", com o símbolo da marca e "Ver minhas receitas" → `/receitas`. Some na próxima visita ao Início.
+- Dados: `insumosListOptions`, `gastosIndiretosListOptions`, `configuracaoCustosOptions`, `receitasListOptions` (as mesmas chaves do painel e das telas, com cache) e `vendasListOptions({ status: 'CONCLUIDA' })`. Sem endpoint novo. Escondido ou depois da comemoração, as queries ficam desligadas.
+- Enquanto carrega ou com erro, o cartão não aparece (sem `Skeleton` nem `ErrorState`): ele é um extra, e os blocos do painel já mostram o erro.
+
+`aprender:passos-concluidos` no `localStorage` (lido uma vez ao abrir o Início, sempre com `try/catch`):
+
+| Valor | Quando é gravado                     | Efeito na próxima visita                         |
+| ----- | ------------------------------------ | ------------------------------------------------ |
+| —     | nunca apareceu                       | com os 5 feitos, o cartão **não aparece** (seed) |
+| `nao` | o cartão apareceu com passo faltando | com os 5 feitos, mostra a comemoração            |
+| `sim` | a comemoração apareceu               | o cartão não aparece mais                        |
+
+### Decisões da FE-66
+
+- **Passo 3 pela capacidade**: a API não diz se a configuração foi salva pela pessoa (`GET /configuracao-custos` devolve só os valores, e a empresa nova já nasce com os padrões), então vale a regra alternativa da issue: feito quando `capacidadeMensal` ≠ 40 (`CONFIGURACAO_CUSTOS_PADRAO` do monolito). Quem salvar 40 de propósito continua com o passo aberto. Ver [business-rules.md](business-rules.md#primeiros-passos).
+- **Conta com tudo feito na primeira visita não vê o cartão nem a comemoração** (o seed "Padaria Pão Feliz", e quem já usava o app antes da FE-66): a comemoração só aparece para quem viu o cartão com passo faltando (`aprender:passos-concluidos` = `nao`).
+- **Vendas concluídas de qualquer data** (`GET /vendas?status=CONCLUIDA`), e não as dos últimos 6 meses do painel: uma venda antiga também conta.
+- **Pitada só no passo destacado**, que é o único com o apoio; "fornadas" está no título do passo 3, e não no apoio como a issue sugeria.
+- **Conta vazia** coberta pelo unitário de `passosIniciais`: o cadastro de empresa exige o token de cadastro (BE-36), então o teste manual foi com o seed, forçando o passo 3 aberto (capacidade 40 pela API, depois restaurada para 100).
 
 ## Regras de escrita
 

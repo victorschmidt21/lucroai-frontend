@@ -880,6 +880,20 @@ A query usa `staleTime: 0`: o resumo depende de vendas, gastos, configuração e
 
 Desde a FE-58, o cabeçalho é a saudação, e as ações rápidas são só "Nova receita" (primária) e "Anotar venda" (secundária); ver [Layout](#layout-fe-58). Saíram o título "Doce Fatia", "Seu painel financeiro", o nome da empresa (que continua no menu da conta), o atalho "Simulação" (o herói no vermelho leva a `/simulacao`) e as ações "Novo ingrediente", "Nova fornada" e "Novo gasto", para a tela ter uma ação primária só ([marca.md](marca.md#checklist-de-revisão-de-tela)).
 
+### Primeiros passos
+
+FE-66. Cartão "Seus primeiros passos" entre o herói e os cards, com os 5 passos de `passosIniciais` (`features/aprender/primeiros-passos.ts`); a tabela, os textos e o `localStorage` estão em [aprender.md](aprender.md#primeiros-passos). Cada passo é feito pelos dados, nunca à mão:
+
+```text
+passo1 = insumos.length ≥ 3
+passo2 = algum gasto com tipo == MENSAL
+passo3 = configuracao.capacidadeMensal ≠ 40   (CONFIGURACAO_CUSTOS_PADRAO do monolito)
+passo4 = receitas.length ≥ 1
+passo5 = alguma venda com status == CONCLUIDA (de qualquer data)
+```
+
+O passo 3 deveria ser "configuração salva pela pessoa", mas a API não diz isso: `GET /configuracao-custos` devolve só os valores, e a empresa nova nasce com os padrões (BE-24). Vale a regra alternativa da issue: a capacidade diferente do padrão. Quem salvar 40 fornadas continua com o passo aberto.
+
 ## Configurações de custo e formas de venda
 
 FE-41 (épico E8, sem equivalente no mobile). Backend: `src/modules/configuracao-custos/` (BE-24) e `src/modules/canais/` (BE-25) do monolito; regras em `docs/business-rules.md` de lá ("Configuração de custos" e "Canais de venda"). Rota `/configuracoes`, "Ajustes de preço" desde a FE-57, no menu lateral e na gaveta "Mais" da barra inferior do celular.
