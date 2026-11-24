@@ -46,15 +46,29 @@ export const termoSchema = z.object({
   relacionados: z.array(z.string().regex(ID_KEBAB)),
 });
 
-export type Termo = z.infer<typeof termoSchema>;
+/**
+ * Exemplo com os números da pessoa (FE-65): função pura que recebe o que a tela
+ * já carregou e devolve a frase do bloco "No seu caso", ou `null` quando faltam
+ * dados (aí o bloco não aparece).
+ */
+export type Exemplo<Dados> = (dados: Dados) => string | null;
 
 /**
- * Declara um termo, mantendo o `id` literal (para o tipo `TermoId`).
- * Valida com o schema em desenvolvimento e nos testes; no build de produção só devolve o termo.
+ * O termo da base. O `exemplo` fica fora do `termoSchema` (é uma função, e o
+ * schema confere só o texto); o tipo dos dados de cada termo vem do `exemplo`.
  */
-export function definirTermo<const Id extends string>(
-  termo: Termo & { id: Id },
-): Termo & { id: Id } {
+export type Termo = z.infer<typeof termoSchema> & {
+  exemplo?: Exemplo<never>;
+};
+
+/**
+ * Declara um termo, mantendo o `id` literal (para o tipo `TermoId`) e o tipo dos
+ * dados do `exemplo` (para o `<Termo dados>`). Valida o texto com o schema em
+ * desenvolvimento e nos testes; no build de produção só devolve o termo.
+ */
+export function definirTermo<const Id extends string, Dados = never>(
+  termo: z.infer<typeof termoSchema> & { id: Id; exemplo?: Exemplo<Dados> },
+): z.infer<typeof termoSchema> & { id: Id; exemplo?: Exemplo<Dados> } {
   if (process.env.NODE_ENV !== 'production') {
     termoSchema.parse(termo);
   }

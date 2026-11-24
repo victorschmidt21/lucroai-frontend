@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { flushSync } from 'react-dom';
-import { useId, useRef, type ReactElement, type ReactNode } from 'react';
+import { useId, useRef, type ReactElement } from 'react';
 import { Button } from '@/shared/ui/button';
 import { DialogClose } from '@/shared/ui/dialog';
 import { Drawer } from '@/shared/ui/drawer';
@@ -25,8 +25,8 @@ type PitadaProps = {
   onTrocarTermo: (id: string) => void;
   /** O botão do termo; o Radix liga `aria-expanded` e devolve o foco a ele. */
   gatilho: ReactElement;
-  /** Bloco "No seu caso" (FE-65); sem ele, o bloco não aparece. */
-  exemplo?: ReactNode;
+  /** Frase do bloco "No seu caso" (FE-65); sem ela, o bloco não aparece. */
+  exemplo?: string | null;
 };
 
 /**
@@ -97,7 +97,7 @@ function PitadaConteudo({
   onTrocarTermo,
 }: {
   termo: Termo;
-  exemplo?: ReactNode;
+  exemplo?: string | null;
   onTrocarTermo: (id: string) => void;
 }) {
   const pathname = usePathname();
@@ -123,10 +123,12 @@ function PitadaConteudo({
       {exemplo ? (
         <section
           aria-label="No seu caso"
-          className="rounded-md bg-surface-alt px-4 py-3"
+          className="rounded-md bg-success-soft px-4 py-3 text-ink"
         >
-          <h3 className="text-section-label text-ink-muted">No seu caso</h3>
-          <div className="mt-1">{exemplo}</div>
+          <h3 className="text-section-label">No seu caso</h3>
+          <p className="mt-1">
+            <ComValoresEmDestaque texto={exemplo} />
+          </p>
         </section>
       ) : null}
       <p className="text-ink-muted">{termo.porQueImporta}</p>
@@ -157,5 +159,22 @@ function PitadaConteudo({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** Valores em reais, percentuais e frações ("1/12"). */
+const VALOR = /(-?R\$ \d[\d.]*(?:,\d+)?|\d[\d.]*(?:,\d+)?%|\d+\/\d[\d.]*)/;
+
+/** A frase do exemplo com os valores em `success` e `tabular-nums`. */
+function ComValoresEmDestaque({ texto }: { texto: string }) {
+  return texto.split(VALOR).map((parte, indice) =>
+    // Com o grupo de captura, os valores ficam nos índices ímpares.
+    indice % 2 === 1 ? (
+      <span key={indice} className="font-bold text-success tabular-nums">
+        {parte}
+      </span>
+    ) : (
+      parte
+    ),
   );
 }

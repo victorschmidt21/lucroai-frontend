@@ -1,8 +1,15 @@
 import { definirTermo } from '../aprender.schema';
+import {
+  exemploFaturamento,
+  exemploLucroReal,
+  exemploParaPagarAsContas,
+  exemploSobrouPraVoce,
+} from '../exemplos';
 
 export const TERMOS_VENDAS = [
   definirTermo({
     id: 'faturamento',
+    exemplo: exemploFaturamento,
     titulo: 'Faturamento',
     assunto: 'vendas',
     sinonimos: ['vendi', 'quanto vendeu', 'quanto entrou', 'vendas do mês'],
@@ -16,6 +23,7 @@ export const TERMOS_VENDAS = [
   }),
   definirTermo({
     id: 'lucro-real',
+    exemplo: exemploLucroReal,
     titulo: 'Lucro real da venda',
     assunto: 'vendas',
     sinonimos: ['lucro da venda', 'quanto sobrou na venda'],
@@ -30,6 +38,7 @@ export const TERMOS_VENDAS = [
   }),
   definirTermo({
     id: 'sobrou-pra-voce',
+    exemplo: exemploSobrouPraVoce,
     titulo: 'Sobrou pra você',
     assunto: 'vendas',
     sinonimos: ['lucro', 'lucro do mês', 'lucro líquido'],
@@ -43,6 +52,7 @@ export const TERMOS_VENDAS = [
   }),
   definirTermo({
     id: 'para-pagar-as-contas',
+    exemplo: exemploParaPagarAsContas,
     titulo: 'Para pagar as contas do mês',
     assunto: 'vendas',
     sinonimos: ['ponto de equilíbrio', 'meta do mês', 'quanto preciso vender'],

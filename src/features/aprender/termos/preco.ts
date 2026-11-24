@@ -1,8 +1,14 @@
 import { definirTermo } from '../aprender.schema';
+import {
+  exemploMargem,
+  exemploPrecoSugerido,
+  exemploTaxaDoCanal,
+} from '../exemplos';
 
 export const TERMOS_PRECO = [
   definirTermo({
     id: 'preco-sugerido',
+    exemplo: exemploPrecoSugerido,
     titulo: 'Preço sugerido',
     assunto: 'preco',
     sinonimos: ['preço ideal', 'quanto cobrar', 'preço certo'],
@@ -34,6 +40,7 @@ export const TERMOS_PRECO = [
   }),
   definirTermo({
     id: 'margem',
+    exemplo: exemploMargem,
     titulo: 'Margem',
     assunto: 'preco',
     sinonimos: ['lucro em porcentagem', 'sobra', 'quanto fica'],
@@ -61,6 +68,7 @@ export const TERMOS_PRECO = [
   }),
   definirTermo({
     id: 'taxa-do-canal',
+    exemplo: exemploTaxaDoCanal,
     titulo: 'Taxa do canal',
     assunto: 'preco',
     sinonimos: ['comissão', 'taxa do iFood', 'taxa da maquininha'],

@@ -2,18 +2,19 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setTestUrl } from '@/test/next-navigation';
+import type { DadosDoExemplo } from '../termos';
 import { Termo } from './termo';
 
 vi.mock('next/navigation', () => import('@/test/next-navigation'));
 
 const OPCOES = { timeout: 20_000 };
 
-function renderTermo(exemplo?: string) {
+function renderTermo(dados?: DadosDoExemplo<'margem'>) {
   setTestUrl('/receitas');
   render(
     <p>
       Sua{' '}
-      <Termo id="margem" exemplo={exemplo}>
+      <Termo id="margem" dados={dados}>
         margem 29%
       </Termo>{' '}
       está boa.
@@ -129,7 +130,7 @@ describe('Termo', OPCOES, () => {
     expect(screen.getByRole('dialog', { name: 'Margem' })).toBeVisible();
   });
 
-  it('esconde "No seu caso" sem exemplo', async () => {
+  it('esconde "No seu caso" sem dados', async () => {
     const user = userEvent.setup();
     const termo = renderTermo();
 
@@ -137,13 +138,19 @@ describe('Termo', OPCOES, () => {
     expect(screen.queryByText('No seu caso')).not.toBeInTheDocument();
   });
 
-  it('mostra "No seu caso" quando há exemplo', async () => {
+  it('mostra "No seu caso" com os dados da tela', async () => {
     const user = userEvent.setup();
-    const termo = renderTermo('De cada R$ 100, R$ 29 ficam com você.');
+    const termo = renderTermo({
+      nome: 'Bolo de pote',
+      lucroReal: 0.29,
+      lucroPorUnidade: 2.1,
+    });
 
     await user.click(termo);
     const bloco = screen.getByRole('region', { name: 'No seu caso' });
-    expect(bloco).toHaveTextContent('De cada R$ 100, R$ 29 ficam com você.');
+    expect(bloco).toHaveTextContent(
+      'Na receita Bolo de pote, ficam com você R$ 29 de cada R$ 100 vendidos.',
+    );
   });
 
   it('esconde a ação quando a tela já é a do link', async () => {

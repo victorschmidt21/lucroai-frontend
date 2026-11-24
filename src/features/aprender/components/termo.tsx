@@ -2,15 +2,19 @@
 
 import { useState, type ReactNode } from 'react';
 import { cn } from '@/shared/ui/cn';
-import { buscarTermo, type TermoId } from '../termos';
+import { buscarTermo, type DadosDoExemplo, type TermoId } from '../termos';
 import { Pitada } from './pitada';
 
-type TermoProps = {
-  id: TermoId;
+type TermoProps<Id extends TermoId> = {
+  id: Id;
   /** O texto da tela, que continua aparecendo como está. */
   children: ReactNode;
-  /** Bloco "No seu caso" com os números da conta (FE-65). */
-  exemplo?: ReactNode;
+  /**
+   * O que a tela já carregou, para o bloco "No seu caso" (FE-65): o tipo vem do
+   * `exemplo` do termo. Sem dados (ou com o exemplo devolvendo `null`), o bloco
+   * não aparece. Nunca faz requisição.
+   */
+  dados?: DadosDoExemplo<Id> | null;
   /** `sobre-cor`: sobre fundo `accent` (herói do painel), com sublinhado e "?" em `on-accent`. */
   tom?: 'padrao' | 'sobre-cor';
   className?: string;
@@ -21,15 +25,15 @@ type TermoProps = {
  * pontilhado e um "?"; tocar (clique, Enter ou Espaço) abre a explicação. Nunca
  * abre por hover nem por foco. Use só na primeira vez que o termo aparece na tela.
  *
- *   <Termo id="margem">margem 29%</Termo>
+ *   <Termo id="margem" dados={{ nome, lucroReal, lucroPorUnidade }}>margem 29%</Termo>
  */
-export function Termo({
+export function Termo<Id extends TermoId>({
   id,
   children,
-  exemplo,
+  dados,
   tom = 'padrao',
   className,
-}: TermoProps) {
+}: TermoProps<Id>) {
   const sobreCor = tom === 'sobre-cor';
   const termo = buscarTermo(id);
   const [aberta, setAberta] = useState(false);
@@ -48,7 +52,12 @@ export function Termo({
       aberta={aberta}
       onAbertaChange={mudarAberta}
       onTrocarTermo={setIdAtual}
-      exemplo={atual.id === id ? exemplo : undefined}
+      // O exemplo é só do termo da tela: os dados são dele, não dos relacionados.
+      exemplo={
+        aberta && atual.id === id && dados != null
+          ? (termo.exemplo?.(dados as never) ?? null)
+          : null
+      }
       gatilho={
         <button
           type="button"

@@ -1,4 +1,11 @@
 import { definirTermo } from '../aprender.schema';
+import {
+  exemploContasDoMes,
+  exemploCustoPorUnidade,
+  exemploDivisaoDasContas,
+  exemploFornadasPorMes,
+  exemploRendimento,
+} from '../exemplos';
 
 export const TERMOS_CUSTOS = [
   definirTermo({
@@ -21,6 +28,7 @@ export const TERMOS_CUSTOS = [
   }),
   definirTermo({
     id: 'rendimento',
+    exemplo: exemploRendimento,
     titulo: 'Rendimento',
     assunto: 'custos',
     sinonimos: ['rende', 'quantas unidades', 'porções'],
@@ -34,6 +42,7 @@ export const TERMOS_CUSTOS = [
   }),
   definirTermo({
     id: 'custo-por-unidade',
+    exemplo: exemploCustoPorUnidade,
     titulo: 'Custo de 1 unidade',
     assunto: 'custos',
     sinonimos: ['custo unitário', 'quanto custa cada'],
@@ -86,6 +95,7 @@ export const TERMOS_CUSTOS = [
   }),
   definirTermo({
     id: 'contas-do-mes',
+    exemplo: exemploContasDoMes,
     titulo: 'Contas do mês',
     assunto: 'custos',
     sinonimos: [
@@ -108,6 +118,7 @@ export const TERMOS_CUSTOS = [
   }),
   definirTermo({
     id: 'divisao-das-contas',
+    exemplo: exemploDivisaoDasContas,
     titulo: 'Divisão das contas do mês',
     assunto: 'custos',
     sinonimos: ['rateio', 'rateado', 'dividir as contas'],
@@ -121,6 +132,7 @@ export const TERMOS_CUSTOS = [
   }),
   definirTermo({
     id: 'fornadas-por-mes',
+    exemplo: exemploFornadasPorMes,
     titulo: 'Fornadas por mês',
     assunto: 'custos',
     sinonimos: ['capacidade', 'capacidade mensal', 'minutos de forno'],

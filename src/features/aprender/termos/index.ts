@@ -1,4 +1,4 @@
-import type { Termo } from '../aprender.schema';
+import type { Exemplo, Termo } from '../aprender.schema';
 import { TERMOS_CUSTOS } from './custos';
 import { TERMOS_ESTOQUE } from './estoque';
 import { TERMOS_PRECO } from './preco';
@@ -14,6 +14,17 @@ export const TERMOS = [
 
 /** União dos ids dos termos: um id inexistente dá erro de tipo. */
 export type TermoId = (typeof TERMOS)[number]['id'];
+
+/**
+ * O que a tela passa no `<Termo dados>` para o exemplo "No seu caso" do termo
+ * (FE-65); `never` nos termos sem exemplo.
+ */
+export type DadosDoExemplo<Id extends TermoId> =
+  Extract<(typeof TERMOS)[number], { id: Id }> extends {
+    exemplo?: Exemplo<infer Dados>;
+  }
+    ? Dados
+    : never;
 
 const TERMOS_POR_ID = new Map<string, Termo>(
   TERMOS.map((termo) => [termo.id, termo]),
