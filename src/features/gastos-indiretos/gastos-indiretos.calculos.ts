@@ -1,19 +1,13 @@
 import type { GastoIndireto } from '@/shared/api/contracts/catalog';
+import { calcularTotalContasDoMes } from '@/shared/domain/contas-do-mes';
 import { formatMoeda } from '@/shared/format/moeda';
 import { fracaoParaPercentual, formatQuantidade } from '@/shared/format/numero';
 
 type GastoParaTotal = Pick<GastoIndireto, 'valor' | 'tipo'>;
 
-/**
- * Total das contas do mês: soma só os gastos `MENSAL`, sem arredondamento
- * (docs/business-rules.md#total). Os outros tipos têm outra unidade (reais por
- * unidade, percentual da venda) e não entram na soma (FE-42).
- */
-export function calcularTotalContasDoMes(gastos: readonly GastoParaTotal[]) {
-  return gastos
-    .filter((gasto) => gasto.tipo === 'MENSAL')
-    .reduce((total, gasto) => total + gasto.valor, 0);
-}
+// `calcularTotalContasDoMes` fica em `shared/domain/contas-do-mes.ts`, porque
+// a fornada e a Pitada (FE-65) também usam.
+export { calcularTotalContasDoMes };
 
 /**
  * Valor com a unidade do tipo: `R$ 1.800,00 por mês`, `R$ 0,05 por unidade`

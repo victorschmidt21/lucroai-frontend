@@ -1,5 +1,6 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
 import { arredondarCentavos } from '@/shared/format/moeda';
+import { formatMargem } from '@/shared/format/numero';
 
 /**
  * Só vendas `CONCLUIDA` entram no faturamento: `PENDENTE` ainda não é receita e
@@ -27,4 +28,19 @@ export function totalDaVenda({
       itens.reduce((soma, i) => soma + i.quantidade * i.precoUnitarioReal, 0),
     )
   );
+}
+
+/**
+ * Lucro real do item em % do preço, com o aviso quando é negativo (a venda não
+ * pagou o custo e as taxas): a cor nunca vem sozinha.
+ */
+export function descreverLucroReal(lucroReal: number | null) {
+  if (lucroReal === null) return { texto: formatMargem(null), prejuizo: false };
+  const prejuizo = lucroReal < 0;
+  return {
+    texto: prejuizo
+      ? `${formatMargem(lucroReal)} (prejuízo)`
+      : formatMargem(lucroReal),
+    prejuizo,
+  };
 }
