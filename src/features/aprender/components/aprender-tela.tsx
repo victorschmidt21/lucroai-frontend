@@ -86,11 +86,9 @@ export function AprenderTela() {
         </form>
       </search>
 
-      <div
-        role="group"
-        aria-label="Assunto"
-        className="flex flex-wrap items-center gap-x-2 gap-y-3"
-      >
+      {/* `min-w-0`: o `fieldset` não encolhe sozinho, e os chips precisam quebrar a linha em 360px. */}
+      <fieldset className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-3">
+        <legend className="sr-only">Assunto</legend>
         {OPCOES_ASSUNTO.map((opcao) => (
           <ToggleChip
             key={opcao.label}
@@ -101,7 +99,7 @@ export function AprenderTela() {
             {opcao.label}
           </ToggleChip>
         ))}
-      </div>
+      </fieldset>
 
       {termos.length === 0 ? (
         <EmptyState

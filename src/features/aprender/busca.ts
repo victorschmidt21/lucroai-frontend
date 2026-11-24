@@ -21,9 +21,9 @@ export function buscarTermos(
     return prioridade === null ? [] : [{ termo, prioridade }];
   });
 
-  // `sort` é estável: a ordem da base vale dentro de cada grupo.
+  // `toSorted` é estável: a ordem da base vale dentro de cada grupo.
   return comPrioridade
-    .sort((a, b) => a.prioridade - b.prioridade)
+    .toSorted((a, b) => a.prioridade - b.prioridade)
     .map(({ termo }) => termo);
 }
 

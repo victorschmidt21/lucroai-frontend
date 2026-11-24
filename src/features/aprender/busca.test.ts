@@ -8,7 +8,11 @@ function ids(termos: Termo[]) {
   return termos.map((termo) => termo.id);
 }
 
-function termo(id: string, titulo: string, sinonimos: string[] = []): Termo {
+function criarTermo(
+  id: string,
+  titulo: string,
+  sinonimos: string[] = [],
+): Termo {
   return {
     id,
     titulo,
@@ -38,16 +42,16 @@ describe('buscarTermos', () => {
 
   it('procura também no texto curto', () => {
     expect(ids(buscarTermos('maquininha'))).toContain('taxa-do-canal');
-    const soNoCurto = termo('a', 'Alfa');
+    const soNoCurto = criarTermo('a', 'Alfa');
     expect(buscarTermos('texto curto de alfa', [soNoCurto])).toEqual([
       soNoCurto,
     ]);
   });
 
   it('ordena: título que começa com o texto, sinônimo igual, depois o resto', () => {
-    const resto = termo('resto', 'Outro', ['bolo de pote']);
-    const sinonimo = termo('sinonimo', 'Fatia', ['bolo']);
-    const titulo = termo('titulo', 'Bolo de rolo');
+    const resto = criarTermo('resto', 'Outro', ['bolo de pote']);
+    const sinonimo = criarTermo('sinonimo', 'Fatia', ['bolo']);
+    const titulo = criarTermo('titulo', 'Bolo de rolo');
     expect(ids(buscarTermos('bolo', [resto, sinonimo, titulo]))).toEqual([
       'titulo',
       'sinonimo',

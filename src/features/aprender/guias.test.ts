@@ -60,7 +60,10 @@ describe('guias', () => {
       }).success,
     ).toBe(false);
     expect(
-      guiaSchema.safeParse({ ...guia, passos: Array(6).fill(passo) }).success,
+      guiaSchema.safeParse({
+        ...guia,
+        passos: Array.from({ length: 6 }, () => passo),
+      }).success,
     ).toBe(false);
     expect(
       guiaSchema.safeParse({
