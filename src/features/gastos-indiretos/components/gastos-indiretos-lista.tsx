@@ -177,6 +177,7 @@ export function GastosIndiretosLista({
  */
 function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
   const quantidade = gastos.filter((gasto) => gasto.tipo === 'MENSAL').length;
+  const total = calcularTotalContasDoMes(gastos);
 
   return (
     <section
@@ -185,14 +186,16 @@ function TotalGastos({ gastos }: { gastos: readonly GastoIndireto[] }) {
     >
       <div className="flex flex-col gap-0.5">
         <p className="text-small text-ink-muted">
-          <Termo id="contas-do-mes">Total por mês</Termo>
+          <Termo id="contas-do-mes" dados={{ totalContas: total }}>
+            Total por mês
+          </Termo>
         </p>
         <p className="text-small text-ink">
           {`${formatNumero(quantidade)} ${quantidade === 1 ? 'conta' : 'contas'}`}
         </p>
       </div>
       <p className="text-title text-accent tabular-nums">
-        {formatMoeda(calcularTotalContasDoMes(gastos))}
+        {formatMoeda(total)}
       </p>
     </section>
   );

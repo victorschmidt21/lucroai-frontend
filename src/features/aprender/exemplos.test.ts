@@ -54,23 +54,21 @@ function preco(canal: string, valor: number | null, lucro = 0.3): PrecoCanal {
 }
 
 describe('exemplos da Pitada (FE-65)', () => {
-  it('cada termo principal tem o exemplo ligado na base', () => {
-    for (const id of [
-      'custo-por-unidade',
-      'rendimento',
-      'divisao-das-contas',
-      'fornadas-por-mes',
-      'contas-do-mes',
-      'preco-sugerido',
-      'margem',
-      'taxa-do-canal',
-      'lucro-real',
-      'faturamento',
-      'sobrou-pra-voce',
-      'para-pagar-as-contas',
-    ]) {
-      expect(buscarTermo(id)?.exemplo, id).toBeTypeOf('function');
-    }
+  it.each([
+    'custo-por-unidade',
+    'rendimento',
+    'divisao-das-contas',
+    'fornadas-por-mes',
+    'contas-do-mes',
+    'preco-sugerido',
+    'margem',
+    'taxa-do-canal',
+    'lucro-real',
+    'faturamento',
+    'sobrou-pra-voce',
+    'para-pagar-as-contas',
+  ])('%s tem o exemplo ligado na base', (id) => {
+    expect(buscarTermo(id)?.exemplo).toBeTypeOf('function');
   });
 
   describe('custo-por-unidade', () => {

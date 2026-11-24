@@ -128,7 +128,13 @@ function Detalhe({ receita }: { receita: Receita }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card title={<Termo id="custo-por-unidade">Custo de 1 unidade</Termo>}>
+      <Card
+        title={
+          <Termo id="custo-por-unidade" dados={receita}>
+            Custo de 1 unidade
+          </Termo>
+        }
+      >
         <p className="text-display text-accent tabular-nums">
           {formatMoeda(custo.unitario)}
         </p>
@@ -159,7 +165,7 @@ function Detalhe({ receita }: { receita: Receita }) {
             rotulo={
               <>
                 Custo do lote (
-                <Termo id="rendimento">
+                <Termo id="rendimento" dados={receita}>
                   {formatQuantidade(
                     receita.rendimento,
                     receita.unidadeRendimento,
@@ -185,8 +191,10 @@ function Detalhe({ receita }: { receita: Receita }) {
         className="flex flex-col gap-3"
       >
         <h2 id="precos-por-canal" className="text-title text-ink">
-          <Termo id="preco-sugerido">Preço sugerido</Termo> por{' '}
-          <Termo id="canal-de-venda">canal</Termo>
+          <Termo id="preco-sugerido" dados={receita}>
+            Preço sugerido
+          </Termo>{' '}
+          por <Termo id="canal-de-venda">canal</Termo>
         </h2>
         {receita.precos.length === 0 ? (
           <Card>

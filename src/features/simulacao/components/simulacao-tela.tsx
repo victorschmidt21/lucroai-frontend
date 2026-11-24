@@ -270,7 +270,16 @@ function Simulacao({
               </div>
               <div className="flex flex-col-reverse gap-0.5 px-2">
                 <dt className="text-caption text-ink-muted">
-                  <Termo id="margem">Lucro real</Termo>
+                  <Termo
+                    id="margem"
+                    dados={{
+                      nome: receita.nome,
+                      lucroReal: resultado.lucroReal,
+                      lucroPorUnidade: resultado.lucroPorUnidade,
+                    }}
+                  >
+                    Lucro real
+                  </Termo>
                 </dt>
                 <dd className="text-body font-extrabold text-warning tabular-nums">
                   {formatMargem(resultado.lucroReal)}
@@ -304,11 +313,19 @@ function Simulacao({
         </Select>
         <dl className="grid gap-2.5 sm:grid-cols-3">
           <Info
-            rotulo={<Termo id="custo-por-unidade">Custo unitário</Termo>}
+            rotulo={
+              <Termo id="custo-por-unidade" dados={receita}>
+                Custo unitário
+              </Termo>
+            }
             valor={formatMoeda(base.custo)}
           />
           <Info
-            rotulo={<Termo id="preco-sugerido">Preço atual</Termo>}
+            rotulo={
+              <Termo id="preco-sugerido" dados={receita}>
+                Preço atual
+              </Termo>
+            }
             valor={formatMoeda(base.precoAtual)}
           />
           <Info

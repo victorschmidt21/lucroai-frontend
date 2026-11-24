@@ -40,7 +40,7 @@ export function ConfiguracaoCustosForm({
       }}
     >
       <CampoBaseRateio />
-      <CampoCapacidade />
+      <CampoCapacidade configuracao={configuracao} />
       <FormPercentInput
         name="lucroPadrao"
         label={
@@ -59,7 +59,17 @@ export function ConfiguracaoCustosForm({
       />
       <FormPercentInput
         name="taxaMaquininha"
-        label={<Termo id="taxa-do-canal">Taxa da maquininha</Termo>}
+        label={
+          <Termo
+            id="taxa-do-canal"
+            dados={{
+              canal: 'A maquininha',
+              taxa: configuracao.taxaMaquininha,
+            }}
+          >
+            Taxa da maquininha
+          </Termo>
+        }
         hint="Quanto a maquininha de cartão cobra nas vendas do balcão."
         required
       />
@@ -96,7 +106,12 @@ function CampoBaseRateio() {
   );
 }
 
-function CampoCapacidade() {
+/** O exemplo da Pitada usa o valor salvo, não o que está sendo digitado. */
+function CampoCapacidade({
+  configuracao,
+}: {
+  configuracao: ConfiguracaoCustos;
+}) {
   const base = useWatch<ConfiguracaoCustosFormInput, 'baseRateio'>({
     name: 'baseRateio',
   });
@@ -106,7 +121,7 @@ function CampoCapacidade() {
     <FormDecimalInput
       name="capacidadeMensal"
       label={
-        <Termo id="fornadas-por-mes">
+        <Termo id="fornadas-por-mes" dados={configuracao}>
           {minutos
             ? 'Quantos minutos de forno você usa por mês?'
             : 'Quantas fornadas você faz por mês?'}

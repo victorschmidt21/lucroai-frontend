@@ -43,6 +43,7 @@ import {
   type ProdutoRentavel,
 } from '../painel.calculos';
 import { Termo } from '@/features/aprender/components/termo';
+import type { DadosDoExemplo } from '@/features/aprender/termos';
 import { GraficoEvolucao } from './grafico-evolucao';
 
 function nada() {
@@ -197,7 +198,11 @@ export function PainelTela({ nome }: { nome: string | null }) {
                 indicadores ? (
                   <>
                     <StatCard
-                      title={<Termo id="faturamento">Você vendeu</Termo>}
+                      title={
+                        <Termo id="faturamento" dados={indicadores}>
+                          Você vendeu
+                        </Termo>
+                      }
                       value={formatMoeda(indicadores.faturamento)}
                       detail="Este mês"
                     />
@@ -241,6 +246,10 @@ export function PainelTela({ nome }: { nome: string | null }) {
                     resumo.data.pontoEquilibrio,
                     indicadores.faturamento,
                   )}
+                  dados={{
+                    valor: resumo.data.pontoEquilibrio.valor,
+                    faturamento: indicadores.faturamento,
+                  }}
                 />
               ) : null,
           })}
@@ -331,7 +340,7 @@ function Heroi({
       title={
         heroi.estado === 'positivo' ? (
           <>
-            <Termo id="sobrou-pra-voce" tom="sobre-cor">
+            <Termo id="sobrou-pra-voce" tom="sobre-cor" dados={indicadores}>
               Sobrou pra você
             </Termo>{' '}
             este mês
@@ -424,8 +433,11 @@ const PARA_PAGAR_AS_CONTAS = 'Para pagar as contas do mês';
 /** "Para pagar as contas do mês, venda R$ X" com o quanto já foi vendido (FE-45, FE-58). */
 function ContasDoMes({
   ponto,
+  dados,
 }: {
   ponto: ReturnType<typeof pontoEquilibrioDoPainel>;
+  /** Para o exemplo "No seu caso" da Pitada (FE-65). */
+  dados: DadosDoExemplo<'para-pagar-as-contas'>;
 }) {
   return (
     <section
@@ -433,7 +445,9 @@ function ContasDoMes({
       className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
     >
       <h2 className="text-body font-bold text-ink">
-        <Termo id="para-pagar-as-contas">{PARA_PAGAR_AS_CONTAS}</Termo>
+        <Termo id="para-pagar-as-contas" dados={dados}>
+          {PARA_PAGAR_AS_CONTAS}
+        </Termo>
         {ponto.titulo.slice(PARA_PAGAR_AS_CONTAS.length)}
       </h2>
       {ponto.progresso !== null ? (

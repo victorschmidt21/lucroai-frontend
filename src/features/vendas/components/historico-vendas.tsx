@@ -210,6 +210,18 @@ function ListaDeVendas({
 
   const vendas = query.data;
   const resumo = resumirVendas(vendas);
+  // Exemplo da Pitada de "Lucro real" (FE-65): o primeiro item com lucro real da lista.
+  const itemComLucro = vendas
+    .flatMap((venda) => venda.itens)
+    .find((item) => item.lucroReal !== null);
+  const exemploLucro = itemComLucro
+    ? {
+        nome:
+          nomes.get(itemComLucro.receitaId) ??
+          `Produto #${itemComLucro.receitaId}`,
+        lucroReal: itemComLucro.lucroReal,
+      }
+    : null;
 
   return (
     <>
@@ -262,7 +274,11 @@ function ListaDeVendas({
             },
             {
               id: 'lucroReal',
-              header: <Termo id="lucro-real">Lucro real</Termo>,
+              header: (
+                <Termo id="lucro-real" dados={exemploLucro}>
+                  Lucro real
+                </Termo>
+              ),
               align: 'right',
               cell: (venda) => (
                 <LucroRealDosItens
