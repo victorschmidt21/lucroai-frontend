@@ -14,6 +14,7 @@ import {
   CONTROL_CLASSES,
   CONTROL_HEIGHT_CLASSES,
   FieldLayout,
+  textoDoNo,
   useFieldControl,
   type FieldProps,
 } from './label';
@@ -182,7 +183,7 @@ export function Combobox({
         <ul
           id={listId}
           role="listbox"
-          aria-label={label}
+          aria-label={textoDoNo(label)}
           hidden={!aberto || filtradas.length === 0}
           className="absolute inset-x-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-surface-raised py-1 shadow-elevacao"
         >

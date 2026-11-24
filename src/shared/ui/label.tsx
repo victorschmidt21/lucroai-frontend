@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { useId } from 'react';
+import { isValidElement, useId } from 'react';
 import { cn } from './cn';
 import { IconErro } from './icons/acoes';
 
@@ -41,18 +41,44 @@ export type FieldControlProps = {
   required?: boolean;
   'aria-invalid'?: true;
   'aria-describedby'?: string;
+  'aria-labelledby'?: string;
 };
 
 export type FieldProps = {
-  label: string;
+  /**
+   * Texto ou nó do rótulo. Um nó (com um `<Termo>`, FE-64) ganha um texto só para
+   * leitor de tela, ligado ao campo por `aria-labelledby`: assim o campo é anunciado
+   * pelo rótulo, e não pelo "O que é...?" do botão da Pitada.
+   */
+  label: ReactNode;
   error?: string;
   hint?: string;
   id?: string;
   required?: boolean;
 };
 
+/** Texto puro de um rótulo em nó (`<>Rende <Termo>quanto</Termo></>` vira "Rende quanto"). */
+export function textoDoNo(no: ReactNode): string {
+  if (typeof no === 'string' || typeof no === 'number') return String(no);
+  if (Array.isArray(no)) return no.map(textoDoNo).join('');
+  if (isValidElement<{ children?: ReactNode }>(no)) {
+    return textoDoNo(no.props.children);
+  }
+  return '';
+}
+
+function rotuloEmNo(label: ReactNode) {
+  return typeof label !== 'string' && typeof label !== 'number';
+}
+
 /** Liga rótulo, dica e erro ao controle, para o leitor de tela anunciar os três. */
-export function useFieldControl({ id, error, hint, required }: FieldProps) {
+export function useFieldControl({
+  id,
+  error,
+  hint,
+  required,
+  label,
+}: FieldProps) {
   const generatedId = useId();
   const controlId = id ?? generatedId;
   const hintId = hint ? `${controlId}-dica` : undefined;
@@ -64,6 +90,7 @@ export function useFieldControl({ id, error, hint, required }: FieldProps) {
     required,
     ...(error ? { 'aria-invalid': true } : {}),
     ...(describedBy ? { 'aria-describedby': describedBy } : {}),
+    ...(rotuloEmNo(label) ? { 'aria-labelledby': `${controlId}-rotulo` } : {}),
   };
 
   return { controlProps, hintId, errorId };
@@ -98,6 +125,11 @@ export function FieldLayout({
       >
         {label}
       </Label>
+      {rotuloEmNo(label) ? (
+        <span id={`${controlId}-rotulo`} hidden>
+          {textoDoNo(label)}
+        </span>
+      ) : null}
       {children}
       {hint ? (
         <p id={hintId} className="text-caption font-normal text-ink-muted">

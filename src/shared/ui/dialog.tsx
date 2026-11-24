@@ -1,7 +1,13 @@
 'use client';
 
 import { Dialog as RadixDialog } from 'radix-ui';
-import type { ReactElement, ReactNode } from 'react';
+import {
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { IconButton } from './button';
 import { cn } from './cn';
 import { IconFechar } from './icons/acoes';
@@ -17,6 +23,42 @@ export type ModalProps = {
   children?: ReactNode;
 };
 
+/** Quanto arrastar a alça para baixo (em px) para fechar a gaveta. */
+const ARRASTO_PARA_FECHAR = 80;
+
+/** Arrastar a alça para baixo move a gaveta junto e, passando do limite, fecha. */
+function useArrastarParaFechar(fechar: () => void) {
+  const inicio = useRef<number | null>(null);
+  const [deslocamento, setDeslocamento] = useState(0);
+
+  function terminar() {
+    const fechou =
+      inicio.current !== null && deslocamento > ARRASTO_PARA_FECHAR;
+    inicio.current = null;
+    setDeslocamento(0);
+    if (fechou) fechar();
+  }
+
+  return {
+    deslocamento,
+    handlers: {
+      onPointerDown(event: PointerEvent<HTMLDivElement>) {
+        inicio.current = event.clientY;
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      },
+      onPointerMove(event: PointerEvent<HTMLDivElement>) {
+        if (inicio.current === null) return;
+        setDeslocamento(Math.max(0, event.clientY - inicio.current));
+      },
+      onPointerUp: terminar,
+      onPointerCancel: () => {
+        inicio.current = null;
+        setDeslocamento(0);
+      },
+    },
+  };
+}
+
 /** Base do Dialog e do Drawer: o Radix cuida do foco, do Esc e do `aria-modal`. */
 export function Modal({
   title,
@@ -28,7 +70,10 @@ export function Modal({
   footer,
   children,
   contentClassName,
-}: ModalProps & { contentClassName: string }) {
+  alca = false,
+}: ModalProps & { contentClassName: string; alca?: boolean }) {
+  const arrasto = useArrastarParaFechar(() => onOpenChange?.(false));
+
   return (
     <RadixDialog.Root
       open={open}
@@ -47,7 +92,23 @@ export function Modal({
             'fixed z-50 flex flex-col gap-4 overflow-y-auto bg-surface-raised p-5 text-ink shadow-elevacao',
             contentClassName,
           )}
+          style={
+            arrasto.deslocamento > 0
+              ? { transform: `translateY(${arrasto.deslocamento}px)` }
+              : undefined
+          }
         >
+          {alca ? (
+            // Alça da gaveta (FE-64): arrastar para baixo fecha. Decorativa para o
+            // leitor de tela, que fecha pelo botão "Fechar" ou pelo Esc.
+            <div
+              aria-hidden="true"
+              className="-mx-5 -mt-5 -mb-3 flex h-8 shrink-0 cursor-grab touch-none justify-center pt-3 lg:hidden"
+              {...arrasto.handlers}
+            >
+              <span className="h-1.5 w-10 rounded-full bg-border-strong" />
+            </div>
+          ) : null}
           <div className="flex items-start justify-between gap-4">
             <RadixDialog.Title className="pt-2 text-display">
               {title}
