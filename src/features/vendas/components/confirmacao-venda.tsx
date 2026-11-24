@@ -29,6 +29,8 @@ type Props = {
   /** Venda a confirmar; `null` fecha. Aberta ao registrar (FE-16) e pelo histórico (FE-18). */
   venda: Venda | null;
   onFechar: () => void;
+  /** A venda foi concluída (anotada): a tela mostra a dica da taxa do canal (FE-68). */
+  onConcluida?: (venda: Venda) => void;
 };
 
 /**
@@ -36,7 +38,7 @@ type Props = {
  * cancelar ou fechar, mantendo a venda pendente. Origem: `_ConfirmacaoSheet` de
  * vendas_page.dart. Drawer de baixo no celular e Dialog a partir de `md`.
  */
-export function ConfirmacaoVenda({ venda, onFechar }: Props) {
+export function ConfirmacaoVenda({ venda, onFechar, onConcluida }: Props) {
   const [ocupado, setOcupado] = useState(false);
 
   return (
@@ -54,6 +56,7 @@ export function ConfirmacaoVenda({ venda, onFechar }: Props) {
           venda={venda}
           onFechar={onFechar}
           onOcupado={setOcupado}
+          onConcluida={onConcluida}
         />
       ) : null}
     </ResponsiveDialog>
@@ -64,10 +67,12 @@ function Conteudo({
   venda: inicial,
   onFechar,
   onOcupado,
+  onConcluida,
 }: {
   venda: Venda;
   onFechar: () => void;
   onOcupado: (ocupado: boolean) => void;
+  onConcluida?: (venda: Venda) => void;
 }) {
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -114,6 +119,7 @@ function Conteudo({
       const atualizada = await atualizar.mutateAsync({ id: venda.id, status });
       toast.success(await mensagem());
       setVenda(atualizada);
+      if (atualizada.status === 'CONCLUIDA') onConcluida?.(atualizada);
     } catch (error) {
       // 422 `ESTOQUE_INSUFICIENTE`: a venda continua pendente e abre o mesmo
       // diálogo da conferência. Os outros erros ficam em `atualizar.error`.

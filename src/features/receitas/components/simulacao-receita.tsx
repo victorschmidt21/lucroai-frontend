@@ -23,6 +23,7 @@ import { IconInfo } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Select } from '@/shared/ui/select';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import {
   receitaCustoOptions,
   receitaDetailOptions,
@@ -67,6 +68,9 @@ function mensagemDeErro(error: unknown) {
  */
 export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
   const receita = useQuery(receitaDetailOptions(receitaId));
+  // Aqui, e não no cartão, para a dica de margem negativa (FE-68) ler o resultado.
+  const simular = useSimularCenario();
+  const resultado = simular.data;
 
   let conteudo;
   if (receita.isError) {
@@ -86,7 +90,7 @@ export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
         <p className="text-body font-semibold wrap-anywhere text-ink">
           {receita.data.nome}
         </p>
-        <CenarioCard receita={receita.data} />
+        <CenarioCard receita={receita.data} simular={simular} />
         <CustoLotesCard receitaId={receitaId} />
       </div>
     );
@@ -103,13 +107,33 @@ export function SimulacaoReceitaPagina({ receitaId }: { receitaId: number }) {
           </Link>
         }
       />
+      <DicaNaHora
+        tela="simulacao"
+        prejuizo={
+          receita.data && resultado
+            ? {
+                receitaId,
+                receita: receita.data.nome,
+                custo: resultado.custoUnitario,
+                preco: resultado.precoVenda,
+                lucroPorUnidade: resultado.lucroPorUnidade,
+                hrefAjuste: `/receitas/${receitaId}`,
+              }
+            : null
+        }
+      />
       {conteudo}
     </div>
   );
 }
 
-function CenarioCard({ receita }: { receita: Receita }) {
-  const simular = useSimularCenario();
+function CenarioCard({
+  receita,
+  simular,
+}: {
+  receita: Receita;
+  simular: ReturnType<typeof useSimularCenario>;
+}) {
   const form = useForm<
     SimulacaoCenarioFormInput,
     unknown,

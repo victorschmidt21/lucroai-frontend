@@ -19,6 +19,7 @@ import {
 import { IlustracaoDespensa } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import { insumosListOptions } from '../api/insumos.queries';
 import { useDeleteInsumo } from '../hooks/use-delete-insumo';
@@ -93,6 +94,7 @@ export function InsumosLista({
         title="Ingredientes e embalagens"
         subtitle="O que você compra para produzir"
         actions={novoInsumo}
+        topo={<DicaNaHora tela="insumos" />}
         label="Ingredientes e embalagens"
         query={query}
         searchField="nome"

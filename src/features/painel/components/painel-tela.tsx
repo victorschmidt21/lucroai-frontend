@@ -42,6 +42,7 @@ import {
   vendasDoMes,
   type ProdutoRentavel,
 } from '../painel.calculos';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import type { DadosDoExemplo } from '@/features/aprender/termos';
 import { GraficoEvolucao } from './grafico-evolucao';
@@ -178,6 +179,7 @@ export function PainelTela({
           {hoje ? textoFechamentoDoMes(hoje) : null}
         </p>
       </header>
+      <DicaNaHora tela="inicio" vendas={vendas.data ?? null} />
 
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <div className="flex min-w-0 flex-col gap-5">

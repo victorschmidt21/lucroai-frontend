@@ -28,6 +28,7 @@ import { Input } from '@/shared/ui/input';
 import { PageHeader } from '@/shared/ui/page-header';
 import { SegmentedControl } from '@/shared/ui/segmented-control';
 import { useBuscaNaUrl } from '@/shared/ui/use-busca-na-url';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { estoqueKeys } from '../api/estoque.queries';
 import { useEstoques, type ItemEstoque } from '../hooks/use-estoques';
 import { estoqueSearchSchema } from '../schemas/estoque-search.schema';
@@ -111,6 +112,7 @@ export function EstoqueLista() {
           </Button>
         }
       />
+      <DicaNaHora tela="estoque" />
 
       <search>
         <form

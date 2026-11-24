@@ -51,6 +51,8 @@ type ListPageProps<Row> = {
   filterEmptyAction?: ReactNode;
   /** Cartão de resumo acima da lista (total de gastos). */
   summary?: ReactNode;
+  /** Faixa logo abaixo do título, como a dica na hora certa (FE-68). */
+  topo?: ReactNode;
 };
 
 const LINHAS_DO_ESQUELETO = ['w-3/4', 'w-1/2', 'w-2/3'];
@@ -98,6 +100,7 @@ export function ListPage<Row>({
   filterEmptyTitle = 'Nenhum resultado para os filtros.',
   filterEmptyAction,
   summary,
+  topo,
 }: ListPageProps<Row>) {
   const busca = useBuscaNaUrl();
   const campoDeBusca = useRef<HTMLInputElement>(null);
@@ -187,6 +190,7 @@ export function ListPage<Row>({
   return (
     <div className="flex flex-col gap-5">
       <PageHeader title={title} subtitle={subtitle} actions={actions} />
+      {topo}
       {summary}
       {searchField ? (
         <search>

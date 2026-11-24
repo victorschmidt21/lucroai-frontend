@@ -14,6 +14,7 @@ import { ErrorState } from '@/shared/ui/error-state';
 import { IconAlerta, IconEditar, IconSimular } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import { receitaDetailOptions } from '../api/receitas.queries';
 import {
@@ -90,9 +91,35 @@ export function ReceitaDetalhePagina({ receitaId }: { receitaId: number }) {
           </>
         }
       />
+      <DicaNaHora
+        tela="receita"
+        prejuizo={receita.data ? prejuizoDaReceita(receita.data) : null}
+      />
       {conteudo}
     </div>
   );
+}
+
+/**
+ * Canal em que o lucro por unidade do preço é negativo (o pior), para a dica
+ * de margem negativa (FE-68); `null` quando todos deixam lucro.
+ */
+function prejuizoDaReceita(receita: Receita) {
+  let pior: { preco: number; lucro: number } | null = null;
+  for (const { preco, composicao } of receita.precos) {
+    const lucro = composicao?.lucro.valor;
+    if (preco === null || lucro === undefined || lucro >= 0) continue;
+    if (!pior || lucro < pior.lucro) pior = { preco, lucro };
+  }
+  if (!pior) return null;
+  return {
+    receitaId: receita.id,
+    receita: receita.nome,
+    custo: receita.custo.unitario,
+    preco: pior.preco,
+    lucroPorUnidade: pior.lucro,
+    hrefAjuste: `/receitas/${receita.id}/editar`,
+  };
 }
 
 function Linha({

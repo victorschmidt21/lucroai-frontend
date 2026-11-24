@@ -21,6 +21,7 @@ import {
 import { IlustracaoCaderno } from '@/shared/ui/ilustracoes';
 import { ListPage } from '@/shared/ui/list-page';
 import { useToast } from '@/shared/ui/toast';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { receitasListOptions } from '../api/receitas.queries';
 import { useDeleteReceita } from '../hooks/use-delete-receita';
 
@@ -50,6 +51,7 @@ export function ReceitasLista() {
         title="Receitas"
         subtitle="Quanto custa e quanto cobrar por cada uma"
         actions={novaReceita}
+        topo={<DicaNaHora tela="receitas" />}
         label="Receitas"
         query={query}
         searchField="nome"

@@ -38,6 +38,7 @@ import {
   receitasListOptions,
   simulacaoReceitaOptions,
 } from '@/features/receitas/api/receitas.queries';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import { vendasListOptions } from '@/features/vendas/api/vendas.queries';
 import {
@@ -230,6 +231,22 @@ function Simulacao({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* A dica de margem negativa (FE-68) olha o preço que você pratica, não o simulado. */}
+      <DicaNaHora
+        tela="simulacao"
+        prejuizo={
+          atual.data
+            ? {
+                receitaId: receita.id,
+                receita: receita.nome,
+                custo: atual.data.custoUnitario,
+                preco: atual.data.precoVenda,
+                lucroPorUnidade: atual.data.lucroPorUnidade,
+                hrefAjuste: `/receitas/${receita.id}`,
+              }
+            : null
+        }
+      />
       <Card className="items-center text-center">
         <h2 className="text-section-label text-ink-muted">PREÇO SIMULADO</h2>
         <p
