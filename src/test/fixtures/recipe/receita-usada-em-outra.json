@@ -1,0 +1,54 @@
+{
+  "id": 157,
+  "empresaId": 30,
+  "nome": "Brigadeiro branco",
+  "rendimento": 1000,
+  "unidadeRendimento": "G",
+  "custoProducao": 74.14,
+  "custoUnitario": 0.0741,
+  "usoPorLote": 0.1,
+  "embalagemPorUnidade": 0,
+  "perdaPercentual": 0,
+  "vendavel": false,
+  "dataCriacao": "2026-05-31T01:19:53.170Z",
+  "itens": [
+    {
+      "insumoId": 389,
+      "quantidade": 790,
+      "custoCalculado": 13.8
+    },
+    {
+      "insumoId": 385,
+      "quantidade": 200,
+      "custoCalculado": 5.5
+    },
+    {
+      "insumoId": 379,
+      "quantidade": 20,
+      "custoCalculado": 0.6
+    },
+    {
+      "insumoId": 390,
+      "quantidade": 30,
+      "custoCalculado": 1.73
+    }
+  ],
+  "receitas": [],
+  "usadaEm": [
+    {
+      "receitaId": 159,
+      "nome": "Brownie Dois Amores"
+    }
+  ],
+  "custo": {
+    "ingredientesLote": 21.63,
+    "gastosMensaisLote": 2.52,
+    "ingredientes": 0.0216,
+    "gastosMensais": 0.0025,
+    "gastosPorUnidade": 0.05,
+    "embalagem": 0,
+    "perdas": 0,
+    "unitario": 0.0741
+  },
+  "precos": []
+}

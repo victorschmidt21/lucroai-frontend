@@ -1,0 +1,65 @@
+{
+  "estoqueNegativo": [],
+  "produtosNegativos": [
+    {
+      "receitaId": 157,
+      "nome": "Brigadeiro branco",
+      "saldo": -300,
+      "unidade": "G"
+    },
+    {
+      "receitaId": 156,
+      "nome": "Brigadeiro preto",
+      "saldo": -300,
+      "unidade": "G"
+    },
+    {
+      "receitaId": 158,
+      "nome": "Brownie",
+      "saldo": -2,
+      "unidade": "UN"
+    }
+  ],
+  "precoDefasado": [
+    {
+      "id": 379,
+      "nome": "Manteiga sem Sal",
+      "unidade": "G",
+      "custoMedio": 0.024,
+      "custoReposicao": 0.03,
+      "aumentoPercentual": 0.25,
+      "receitas": [
+        {
+          "id": 159,
+          "nome": "Brownie Dois Amores",
+          "precoSugerido": 17.1845,
+          "precoComCustoMedio": 17.0463
+        },
+        {
+          "id": 158,
+          "nome": "Brownie",
+          "precoSugerido": 2.2185,
+          "precoComCustoMedio": 2.1398
+        },
+        {
+          "id": 155,
+          "nome": "Quindim",
+          "precoSugerido": 2.8952,
+          "precoComCustoMedio": 2.8791
+        },
+        {
+          "id": 154,
+          "nome": "Brigadeiro Gourmet",
+          "precoSugerido": 0.8077,
+          "precoComCustoMedio": 0.8035
+        },
+        {
+          "id": 153,
+          "nome": "Bolo de Chocolate",
+          "precoSugerido": 3.0385,
+          "precoComCustoMedio": 2.9662
+        }
+      ]
+    }
+  ]
+}

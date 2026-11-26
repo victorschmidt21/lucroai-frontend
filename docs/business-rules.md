@@ -330,6 +330,59 @@ A web não envia o `margem_lucro` legado (markup): o campo "Margem de lucro (%)"
 | Linha do insumo                | nome e unidade                                                      | nome, "Custo: R$ X", quantidade com a unidade e "Remover <nome>"                                                                                                                                                                                                  |
 | Detalhe (FE-44)                | —                                                                   | subtítulo "Custo de cada unidade e preço em cada lugar onde você vende"; "Voltar para receitas", "Simular", "Editar"; "Custo de 1 unidade", "Preço sugerido por canal", "Para onde vai cada R$ 1,00"; erro "Não foi possível carregar a receita."                 |
 
+### Receita dentro de receita (FE-70)
+
+Backend: BE-39 e BE-40 (`create-receita.dto.ts`, `validarItensDaReceita` e `validarMudancaDeUnidade` de `receitas.calculos.ts` do monolito). Exemplo do seed: o **Brownie Dois Amores** leva 1 Brownie (un), 150 g de Brigadeiro preto, 150 g de Brigadeiro branco e 30 g de Leite em Pó Ninho.
+
+- **Corpo**: `receitas: [{ receita_id, quantidade }]` e `vendavel` no `POST` e no `PUT /receitas/:id`; a web envia sempre os dois, com `insumos`. A `quantidade` é por lote, na unidade em que a receita usada rende (`unidadeRendimento`), e precisa ser > 0 (`@IsPositive`). Sem repetir a receita ("Receita repetida", garantia final; o diálogo já não oferece de novo).
+- **Quem pode entrar** (`receitasQuePodemEntrar`, `receitas.calculos.ts`): todas as receitas da empresa menos a própria, as que já têm receitas dentro (um nível só) e as que já estão na lista. As não vendidas sozinhas também entram.
+- **Quem não pode levar receitas** (`motivoSemReceitasDentro`): a receita que já vai dentro de outra (`usadaEm` não vazio). O botão "Adicionar receita" fica desabilitado, com o motivo embaixo; o mesmo acontece, sem texto, quando não há receita para oferecer.
+- **Unidade do rendimento**: desabilitada quando a receita vai dentro de outra (o backend responde 409 `RECEITA_EM_USO` se mudar).
+- **Lista do formulário**: ingredientes e receitas numa lista só (ingredientes primeiro), com o selo "receita" nas receitas. O custo da linha da receita é `round2(quantidade × receitas[].custoUnitario)` da API (BE-40, só ingredientes, forno e perda) e aparece só nas receitas já salvas: a web não recalcula o custo de uma receita (regra 10).
+- **Vendável**: chave "Vendo esta receita sozinha", ligada por padrão. Desligada, a receita só vai dentro de outras (sem preço; a lista, o detalhe e as vendas são da FE-71 e da FE-72).
+- O formulário não exige ao menos um item: com a receita vazia, o backend responde 400 `DADOS_INVALIDOS`, como antes.
+
+| Onde                                        | Texto                                                                                                                                                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Botão                                       | "Adicionar receita", ao lado de "Adicionar ingrediente"                                                                                                                                                                 |
+| Apoio embaixo dos botões                    | "Brigadeiro, recheio ou massa que você já cadastrou também pode entrar: é a receita dentro de receita." (Pitada `receita-dentro-de-receita`)                                                                            |
+| Motivo do botão bloqueado                   | "A receita <nome> já vai dentro de <A, B e C>, então não pode levar outras receitas."                                                                                                                                   |
+| Diálogo                                     | "Adicionar receita", "Receita", "Quantidade" (com a unidade do rendimento), "Cancelar", "Adicionar"; dica "A receita de <nome> rende <rendimento> <unidade>. Quanto vai em 1 lote desta?" (`dicaDaQuantidadeDaReceita`) |
+| Selo na linha                               | "receita"                                                                                                                                                                                                               |
+| Chave                                       | "Vendo esta receita sozinha", com "Desligue se ela só vai dentro de outras receitas, como um recheio."                                                                                                                  |
+| Unidade bloqueada                           | "Não muda: esta receita vai dentro de outra."                                                                                                                                                                           |
+| 422 `RECEITA_USA_ELA_MESMA`                 | "Uma receita não pode ir dentro dela mesma."                                                                                                                                                                            |
+| 422 `RECEITA_DENTRO_DE_RECEITA_COM_RECEITA` | "Só dá para pôr dentro uma receita feita só de ingredientes. E uma receita que já vai dentro de outra não pode levar receitas."                                                                                         |
+| 409 `RECEITA_EM_USO` (no formulário)        | "Esta receita já vai dentro de outra, então a unidade do rendimento não pode mudar."                                                                                                                                    |
+
+As mensagens trocam o texto do backend pelo `code` (`traduzirErroDaReceita`, `receita-form.schema.ts`), só no formulário.
+
+### Receita dentro de receita: detalhe e lista (FE-71)
+
+Backend: BE-40 (`custo`, `receitas[].custoUnitario` e `custoCalculado`, `precos: []` com `vendavel: false`) e o 409 `RECEITA_EM_USO` do `DELETE` (BE-39).
+
+- **Ingredientes de 1 lote** (detalhe): os ingredientes (nome do catálogo, quantidade na unidade do insumo, `itens[].custoCalculado`) e depois as receitas usadas (nome com link para o detalhe dela e o selo "receita", quantidade na unidade do rendimento, `receitas[].custoCalculado`), com "Total dos ingredientes" = `custo.ingredientesLote`, que já soma as receitas (no seed, Brownie Dois Amores: R$ 1,73 + 1,80 + 3,70 + 3,62 = R$ 10,85). Nada é recalculado.
+- **Vai dentro de** (detalhe): com `usadaEm` não vazio, "Vai dentro de: <A>, <B>", cada nome com link.
+- **Não vendida sozinha** (`vendavel: false`; `precoOuNaoVendida`, `receitas.calculos.ts`): no lugar de "Preço sugerido por canal", um cartão com o selo "Só vai dentro de outras", "Esta receita não é vendida sozinha. O custo dela entra nas receitas onde ela vai." e "Custo para usar dentro de outra receita: R$ 0,0241/g" (`formatCustoUnitario`, na unidade do rendimento). O custo é o `custoUnitario` do item na receita que a usa (`custoParaUsarDentro`; ver a lacuna 29 de [api-integration.md](api-integration.md#lacunas-do-backend)). Somem o botão "Simular" (detalhe e lista) e a linha "Lucro desta receita"; o subtítulo vira "Do que é feita e quanto custa".
+- **Lista**: selo "Só vai dentro de outras" ao lado do nome e `—` no Preço no Balcão. Filtro "Todas", "Vendo sozinha" e "Só vai dentro de outras" (`passaNoFiltroDeVenda`), em `?tipo=vendo|dentro` (`receitasSearchSchema`); vazio pelo filtro: "Nenhuma receita vendida sozinha." / "Nenhuma receita só vai dentro de outras.", com "Ver todas".
+- **Excluir receita usada em outra** (`motivoParaNaoExcluir`): no lugar da confirmação, o diálogo "Não dá para excluir esta receita" com "A receita <nome> vai dentro de <A e B>. Tire ela de lá antes de excluir.", um link para cada receita e o botão "Entendi". O `DELETE` não é chamado (a API daria 409 `RECEITA_EM_USO`).
+
+### Receita dentro de receita: produção, vendas e avisos (FE-72)
+
+Backend: BE-41 (`receitasUsadas` na `Producao`, `estoqueNegativo` e `vendavel` em `GET /estoque/produtos`, `produtosNegativos` em `GET /alertas` e o 422 `RECEITA_NAO_VENDIDA_SOZINHA` em `POST /vendas`). Produzir uma receita com receitas dentro tira cada uma do estoque pronto dela; o saldo pode ficar negativo (permitido, com aviso).
+
+```
+vai usar     = round6(quantidade por lote × lotes)    // na unidade do rendimento da receita usada
+você tem     = saldo pronto (GET /estoque/produtos), 0 se ela nunca teve produção
+saldo depois = round6(você tem − vai usar)            // < 0: aviso amarelo, sem bloquear
+```
+
+- **Anotar fornada** (`calcularUsoDoEstoquePronto`, `producoes.calculos.ts`): com uma receita com receitas dentro e os lotes preenchidos, o bloco "Sai do estoque pronto" mostra, por receita usada, "Vai usar 300 g de Brigadeiro branco; você tem 0 g.". Se o saldo for ficar negativo, a caixa amarela (`warning`) "Registre antes a produção de Brigadeiro branco." com "Se anotar assim, o estoque pronto fica em -300 g.". O botão continua liberado. A conta é só a prévia: o saldo gravado é o do backend.
+- **Detalhe da fornada**: com `receitasUsadas` não vazio, a seção "Receitas usadas (saíram do estoque pronto)", com o nome e a quantidade gravados (na unidade do rendimento), antes da "Parte das contas do mês".
+- **Vendas**: a lista "Receita" de "Adicionar produto" não oferece a receita com `vendavel: false` (`receitasParaVender`, `vendas.calculos.ts`); o backend responderia 422 `RECEITA_NAO_VENDIDA_SOZINHA`.
+- **Estoque pronto** (tela Estoque, seção "Receitas prontas", `montarEstoquePronto`, `estoque.calculos.ts`): um cartão por receita de `GET /estoque/produtos`, com o nome e "Disponível". A receita vendida mostra "un"; a que só vai dentro de outras, a unidade do rendimento (g, ml). Negativas primeiro, depois por nome. Com `estoqueNegativo`, o selo "Estoque negativo", "Disponível" em `danger` e o link "Registrar produção" (`/producoes?novo=1&receitaId=<id>`, que abre "Anotar fornada" com a receita escolhida). Sem saldo nenhum: "Nenhuma receita pronta ainda. Anote uma fornada para ela aparecer aqui.".
+- **Aviso ao entrar**: o grupo `produtosNegativos` ([Aviso ao entrar](#aviso-ao-entrar)).
+
 ## Estoque de insumos
 
 FE-13. Origem: `lib/features/estoques/domain/entities/estoque_com_insumo.dart`, `lib/features/estoques/presentation/widgets/estoque_card.dart`, `lib/features/estoques/presentation/pages/estoques_page.dart`, `lib/features/estoques/data/datasources/estoque_remote_datasource.dart`. Backend: `services/operations-service/src/modules/estoque/`.
@@ -960,15 +1013,16 @@ FE-47, só na web. Backend: BE-32 (`estoqueNegativo` em `Insumo` e `Estoque`, e 
 
 Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver itens, abre o diálogo "Avisos":
 
-| Lista             | Texto                                                                                              | Cada item                                                                                                                                                                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `estoqueNegativo` | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
-| `precoDefasado`   | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
+| Lista                       | Texto                                                                                              | Cada item                                                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `estoqueNegativo`           | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
+| `produtosNegativos` (FE-72) | "Estas receitas estão com estoque negativo: registre a produção para acertar o saldo."             | nome, selo "Estoque negativo", "Saldo: -300 g" (na unidade do rendimento) e o link "Registrar produção" (`/producoes?novo=1&receitaId=<id>`)                                                        |
+| `precoDefasado`             | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
 
 - Sem preço possível (`precoSugerido: null`): "Sem preço que pague tudo: as taxas e o lucro passam de 100%." (FE-57). Insumo sem receita: "Nenhum produto usa este ingrediente.".
 - Seguir um link ou "Fechar" fecha o aviso.
 - **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
-- **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
+- **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros + receitas com estoque pronto negativo, desde a FE-72) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
 - **Dica na hora certa** (FE-68, [aprender.md](aprender.md#dica-na-hora-certa)): as dicas "Faltou anotar uma compra?" (Ingredientes e Estoque) e "Um ingrediente ficou mais caro" (Receitas) complementam o aviso. Só aparecem com o aviso resolvido e se ele não abriu sozinho na sessão (a sessão em que abriu fica em `lucroai:aviso-ao-entrar-abriu`, no `sessionStorage`); nunca junto com ele. As outras dicas (margem negativa, taxa do canal e primeiro mês) e as regras de uma por sessão e uma vez só estão na mesma seção.
 
 ## Login e mensagens de erro gerais

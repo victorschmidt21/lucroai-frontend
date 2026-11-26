@@ -2,11 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { receitaSchema } from '@/shared/api/contracts/recipe';
 import receitaDoSeed from '@/test/fixtures/recipe/receita.json';
 import {
+  makeReceita,
   makeComposicaoPreco,
   makePrecoCanal,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
+import receitaComReceitas from '@/test/fixtures/recipe/receita-com-receitas.json';
+import receitaUsadaEmOutra from '@/test/fixtures/recipe/receita-usada-em-outra.json';
 import {
+  custoParaUsarDentro,
+  motivoParaNaoExcluir,
+  passaNoFiltroDeVenda,
+  precoOuNaoVendida,
+  TEXTO_NAO_VENDIDA_SOZINHA,
+  dicaDaQuantidadeDaReceita,
+  motivoSemReceitasDentro,
+  receitasQuePodemEntrar,
   calcularCustoItem,
   avisoDePrejuizo,
   avisoSemPrecoPossivel,
@@ -254,5 +265,179 @@ describe('avisoSemPrecoPossivel', () => {
     expect(avisoSemPrecoPossivel(1.05)).toBe(
       'Não existe preço que pague tudo: as taxas e o lucro já somam 105,0% do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.',
     );
+  });
+});
+
+describe('receitasQuePodemEntrar (FE-70)', () => {
+  const preto = makeReceita({ id: 5, nome: 'Brigadeiro preto' });
+  const branco = makeReceita({ id: 6, nome: 'Brigadeiro branco' });
+  const brownie = makeReceita({ id: 7, nome: 'Brownie' });
+  const doisAmores = makeReceita({
+    id: 8,
+    nome: 'Brownie Dois Amores',
+    receitas: [
+      { receitaId: 5, nome: 'Brigadeiro preto', quantidade: 150, unidade: 'G' },
+    ],
+  });
+  const todas = [preto, branco, brownie, doisAmores];
+  const ids = (lista: { id: number }[]) => lista.map((receita) => receita.id);
+
+  it('no cadastro, oferece só as receitas sem receitas dentro', () => {
+    expect(ids(receitasQuePodemEntrar(todas, { jaAdicionadas: [] }))).toEqual([
+      5, 6, 7,
+    ]);
+  });
+
+  it('não oferece a própria receita', () => {
+    expect(
+      ids(receitasQuePodemEntrar(todas, { receitaId: 7, jaAdicionadas: [] })),
+    ).toEqual([5, 6]);
+  });
+
+  it('não oferece de novo as que já estão na receita', () => {
+    expect(
+      ids(receitasQuePodemEntrar(todas, { receitaId: 8, jaAdicionadas: [5] })),
+    ).toEqual([6, 7]);
+  });
+
+  it('sem receitas, não oferece nada', () => {
+    expect(receitasQuePodemEntrar([], { jaAdicionadas: [] })).toEqual([]);
+  });
+});
+
+describe('motivoSemReceitasDentro', () => {
+  it('diz onde a receita já vai', () => {
+    expect(
+      motivoSemReceitasDentro(
+        makeReceita({
+          nome: 'Brigadeiro branco',
+          usadaEm: [{ receitaId: 8, nome: 'Brownie Dois Amores' }],
+        }),
+      ),
+    ).toBe(
+      'A receita Brigadeiro branco já vai dentro de Brownie Dois Amores, então não pode levar outras receitas.',
+    );
+  });
+
+  it('junta os nomes quando vai dentro de mais de uma', () => {
+    expect(
+      motivoSemReceitasDentro(
+        makeReceita({
+          nome: 'Brigadeiro preto',
+          usadaEm: [
+            { receitaId: 8, nome: 'Brownie Dois Amores' },
+            { receitaId: 9, nome: 'Bolo Prestígio' },
+          ],
+        }),
+      ),
+    ).toContain('dentro de Brownie Dois Amores e Bolo Prestígio,');
+  });
+
+  it('é null no cadastro e na receita que não vai dentro de outra', () => {
+    expect(motivoSemReceitasDentro(undefined)).toBeNull();
+    expect(motivoSemReceitasDentro(makeReceita())).toBeNull();
+  });
+});
+
+describe('dicaDaQuantidadeDaReceita', () => {
+  it('fala na unidade em que a receita rende', () => {
+    expect(
+      dicaDaQuantidadeDaReceita({
+        nome: 'Brigadeiro preto',
+        rendimento: 1000,
+        unidadeRendimento: 'G',
+      }),
+    ).toBe(
+      'A receita de Brigadeiro preto rende 1.000 g. Quanto vai em 1 lote desta?',
+    );
+    expect(
+      dicaDaQuantidadeDaReceita({
+        nome: 'Brownie',
+        rendimento: 12,
+        unidadeRendimento: 'UN',
+      }),
+    ).toBe('A receita de Brownie rende 12 un. Quanto vai em 1 lote desta?');
+  });
+});
+
+describe('precoOuNaoVendida', () => {
+  it('receita vendida mostra os preços por canal', () => {
+    expect(precoOuNaoVendida(makeReceita({ vendavel: true }), 0.07)).toEqual({
+      tipo: 'precos',
+    });
+  });
+
+  it('receita que só vai dentro de outras mostra o texto e o custo por grama', () => {
+    const brigadeiro = receitaSchema.parse(receitaUsadaEmOutra);
+    expect(precoOuNaoVendida(brigadeiro, 0.0241)).toEqual({
+      tipo: 'naoVendida',
+      texto:
+        'Esta receita não é vendida sozinha. O custo dela entra nas receitas onde ela vai.',
+      custo: 'R$ 0,0241/g',
+    });
+  });
+
+  it('usa a unidade do rendimento (ml ou unidade)', () => {
+    const calda = makeReceita({ vendavel: false, unidadeRendimento: 'ML' });
+    const resultado = precoOuNaoVendida(calda, 0.5);
+    expect(resultado).toMatchObject({
+      texto: TEXTO_NAO_VENDIDA_SOZINHA,
+      custo: 'R$ 0,5000/ml',
+    });
+  });
+});
+
+describe('custoParaUsarDentro', () => {
+  const brigadeiro = receitaSchema.parse(receitaUsadaEmOutra);
+  const brownieDoisAmores = receitaSchema.parse(receitaComReceitas);
+
+  it('usa o custo que a API mostra na receita onde ela vai', () => {
+    expect(
+      custoParaUsarDentro(brigadeiro, [makeReceita(), brownieDoisAmores]),
+    ).toBe(0.0241);
+  });
+
+  it('sem receita que a use, fica o custo dela mesma', () => {
+    expect(custoParaUsarDentro(brigadeiro, [makeReceita()])).toBe(0.0741);
+  });
+});
+
+describe('motivoParaNaoExcluir', () => {
+  it('diz onde a receita vai', () => {
+    expect(
+      motivoParaNaoExcluir({
+        nome: 'Brigadeiro branco',
+        usadaEm: [
+          { receitaId: 159, nome: 'Brownie Dois Amores' },
+          { receitaId: 160, nome: 'Bolo Prestígio' },
+        ],
+      }),
+    ).toBe(
+      'A receita Brigadeiro branco vai dentro de Brownie Dois Amores e Bolo Prestígio. Tire ela de lá antes de excluir.',
+    );
+  });
+
+  it('receita que não vai dentro de outra pode ser excluída', () => {
+    expect(motivoParaNaoExcluir(makeReceita())).toBeNull();
+  });
+});
+
+describe('passaNoFiltroDeVenda', () => {
+  const vendida = makeReceita({ vendavel: true });
+  const soDentro = makeReceita({ vendavel: false });
+
+  it('"Todas" mostra as duas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'todas')).toBe(true);
+    expect(passaNoFiltroDeVenda(soDentro, 'todas')).toBe(true);
+  });
+
+  it('"Vendo sozinha" mostra só as vendidas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'vendo')).toBe(true);
+    expect(passaNoFiltroDeVenda(soDentro, 'vendo')).toBe(false);
+  });
+
+  it('"Só vai dentro de outras" mostra só as não vendidas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'dentro')).toBe(false);
+    expect(passaNoFiltroDeVenda(soDentro, 'dentro')).toBe(true);
   });
 });

@@ -26,6 +26,23 @@ describe('totalDeAlertas', () => {
       totalDeAlertas(makeAlertas({ estoqueNegativo: [], precoDefasado: [] })),
     ).toBe(0);
   });
+
+  it('soma também as receitas com estoque pronto negativo (FE-72)', () => {
+    expect(
+      totalDeAlertas(
+        makeAlertas({
+          produtosNegativos: [
+            {
+              receitaId: 157,
+              nome: 'Brigadeiro branco',
+              saldo: -300,
+              unidade: 'G',
+            },
+          ],
+        }),
+      ),
+    ).toBe(3);
+  });
 });
 
 describe('deveAbrirAviso (uma vez por sessão)', () => {

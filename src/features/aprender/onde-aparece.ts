@@ -42,6 +42,7 @@ const TELAS: readonly TelaComTermos[] = [
       'embalagem',
       'perda',
       'lucro-desejado',
+      'receita-dentro-de-receita',
     ],
   },
   {

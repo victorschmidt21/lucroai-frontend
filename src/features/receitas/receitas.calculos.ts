@@ -1,9 +1,15 @@
+import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
 import type {
   ComposicaoPreco,
   PrecoCanal,
+  Receita,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
-import { arredondarCentavos, formatMoeda } from '@/shared/format/moeda';
+import {
+  arredondarCentavos,
+  formatCustoUnitario,
+  formatMoeda,
+} from '@/shared/format/moeda';
 import { formatMargem, formatNumero } from '@/shared/format/numero';
 
 /*
@@ -178,4 +184,111 @@ export function formatarResultadoDaSimulacao(
  */
 export function avisoSemPrecoPossivel(percentuais: number) {
   return `Não existe preço que pague tudo: as taxas e o lucro já somam ${formatMargem(percentuais)} do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.`;
+}
+
+/**
+ * Receitas que podem ir dentro desta (receita dentro de receita, BE-39): nem
+ * ela mesma, nem as que já têm receitas dentro (um nível só), nem as que já
+ * estão na lista. `receitaId` é `undefined` no cadastro.
+ */
+export function receitasQuePodemEntrar(
+  receitas: readonly Receita[],
+  {
+    receitaId,
+    jaAdicionadas,
+  }: { receitaId?: number; jaAdicionadas: readonly number[] },
+): Receita[] {
+  const adicionadas = new Set(jaAdicionadas);
+  return receitas.filter(
+    (receita) =>
+      receita.id !== receitaId &&
+      receita.receitas.length === 0 &&
+      !adicionadas.has(receita.id),
+  );
+}
+
+/**
+ * Por que esta receita não pode levar outras dentro: ela já vai dentro de
+ * outra (um nível só). `null` quando pode.
+ */
+export function motivoSemReceitasDentro(
+  receita: Pick<Receita, 'nome' | 'usadaEm'> | undefined,
+): string | null {
+  if (!receita || receita.usadaEm.length === 0) return null;
+  return `A receita ${receita.nome} já vai dentro de ${ondeVai(receita)}, então não pode levar outras receitas.`;
+}
+
+/** "A, B e C": as receitas onde esta vai. */
+function ondeVai(receita: Pick<Receita, 'usadaEm'>) {
+  return new Intl.ListFormat('pt-BR').format(
+    receita.usadaEm.map((uso) => uso.nome),
+  );
+}
+
+/**
+ * Por que esta receita não pode ser excluída (FE-71): ela vai dentro de
+ * outras, e a API recusaria com 409 `RECEITA_EM_USO`. `null` quando pode.
+ */
+export function motivoParaNaoExcluir(
+  receita: Pick<Receita, 'nome' | 'usadaEm'>,
+): string | null {
+  if (receita.usadaEm.length === 0) return null;
+  return `A receita ${receita.nome} vai dentro de ${ondeVai(receita)}. Tire ela de lá antes de excluir.`;
+}
+
+/**
+ * Custo de 1 unidade (grama, ml ou unidade do rendimento) da receita quando
+ * ela vai dentro de outra: o `custoUnitario` que a API mostra no item da
+ * receita que a usa (só ingredientes, forno e perda, BE-40). Se ela ainda não
+ * vai dentro de nenhuma, fica o custo dela mesma (`custo.unitario`).
+ */
+export function custoParaUsarDentro(
+  receita: Pick<Receita, 'id' | 'custo'>,
+  todas: readonly Pick<Receita, 'receitas'>[],
+): number {
+  for (const outra of todas) {
+    const item = outra.receitas.find((uso) => uso.receitaId === receita.id);
+    if (item?.custoUnitario !== undefined) return item.custoUnitario;
+  }
+  return receita.custo.unitario;
+}
+
+export const TEXTO_NAO_VENDIDA_SOZINHA =
+  'Esta receita não é vendida sozinha. O custo dela entra nas receitas onde ela vai.';
+
+/**
+ * O que o detalhe mostra no lugar dos preços (FE-71): os preços por canal e a
+ * simulação quando a receita é vendida; quando ela só vai dentro de outras
+ * (`vendavel: false`, sem `precos` na API), o texto de "não vendida sozinha"
+ * com o custo por grama, ml ou unidade.
+ */
+export function precoOuNaoVendida(
+  receita: Pick<Receita, 'vendavel' | 'unidadeRendimento'>,
+  custoParaUso: number,
+): { tipo: 'precos' } | { tipo: 'naoVendida'; texto: string; custo: string } {
+  if (receita.vendavel) return { tipo: 'precos' };
+  return {
+    tipo: 'naoVendida',
+    texto: TEXTO_NAO_VENDIDA_SOZINHA,
+    custo: formatCustoUnitario(custoParaUso, receita.unidadeRendimento),
+  };
+}
+
+export type FiltroDeVenda = 'todas' | 'vendo' | 'dentro';
+
+/** Filtro da lista (FE-71): "Todas", "Vendo sozinha" e "Só vai dentro de outras". */
+export function passaNoFiltroDeVenda(
+  receita: Pick<Receita, 'vendavel'>,
+  filtro: FiltroDeVenda,
+) {
+  if (filtro === 'vendo') return receita.vendavel;
+  if (filtro === 'dentro') return !receita.vendavel;
+  return true;
+}
+
+/** Dica da quantidade no diálogo, na unidade em que a receita escolhida rende. */
+export function dicaDaQuantidadeDaReceita(
+  receita: Pick<Receita, 'nome' | 'rendimento' | 'unidadeRendimento'>,
+) {
+  return `A receita de ${receita.nome} rende ${formatNumero(receita.rendimento)} ${UNIDADE_MEDIDA_ROTULOS[receita.unidadeRendimento]}. Quanto vai em 1 lote desta?`;
 }

@@ -25,6 +25,7 @@ export function makeProducao(overrides: Partial<Producao> = {}): Producao {
         valorRateado: 3,
       },
     ],
+    receitasUsadas: [],
     ...overrides,
   };
 }

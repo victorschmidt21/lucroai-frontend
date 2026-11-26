@@ -1,4 +1,5 @@
 import type { StatusVenda } from '@/shared/api/contracts/enums';
+import type { Receita } from '@/shared/api/contracts/recipe';
 import {
   descreverLucroReal,
   isFaturavel,
@@ -12,6 +13,17 @@ import { arredondarCentavos, formatMoeda } from '@/shared/format/moeda';
  * `ItemCarrinho.subtotal` de vendas_state.dart e `_totalCarrinho` de
  * vendas_page.dart; o total repete o `round2` do `venda.service.ts` (`create`).
  */
+
+/**
+ * Receitas que aparecem para vender (FE-72): a que só vai dentro de outras
+ * (`vendavel: false`) fica de fora, porque o backend recusa a venda dela
+ * (422 `RECEITA_NAO_VENDIDA_SOZINHA`, BE-41).
+ */
+export function receitasParaVender<T extends Pick<Receita, 'vendavel'>>(
+  receitas: readonly T[],
+) {
+  return receitas.filter((receita) => receita.vendavel);
+}
 
 type ItemParaTotal = { quantidade: number; precoUnitario: number };
 

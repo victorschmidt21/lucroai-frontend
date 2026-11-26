@@ -26,6 +26,7 @@ function renderPagina({
 }: { receitaId?: number; configuracao?: ConfiguracaoCustos } = {}) {
   server.use(
     mockApi('GET /insumos', INSUMOS),
+    mockApi('GET /receitas', []),
     mockApi('GET /configuracao-custos', configuracao),
   );
   return renderWithQuery(
@@ -183,7 +184,9 @@ describe('nova receita', OPCOES, () => {
         embalagem_por_unidade: 0.15,
         perda_percentual: 0.05,
         lucro_percentual: null,
+        vendavel: true,
         insumos: [{ insumo_id: 3, quantidade: 100 }],
+        receitas: [],
       },
     ]);
     expect(window.location.pathname).toBe('/receitas/9');
@@ -290,7 +293,9 @@ describe('editar receita', OPCOES, () => {
         embalagem_por_unidade: 0,
         perda_percentual: 0,
         lucro_percentual: 0.2,
+        vendavel: true,
         insumos: [{ insumo_id: 1, quantidade: 1 }],
+        receitas: [],
       },
     ]);
     expect(window.location.pathname).toBe('/receitas/1');

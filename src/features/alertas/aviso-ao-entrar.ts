@@ -12,8 +12,13 @@ export function idDaSessao(usuario: Pick<UsuarioAtual, 'id' | 'expiraEm'>) {
   return `${usuario.id}:${usuario.expiraEm}`;
 }
 
+/** Soma os três grupos do aviso; o de receitas com estoque pronto negativo desde a FE-72. */
 export function totalDeAlertas(alertas: Alertas) {
-  return alertas.estoqueNegativo.length + alertas.precoDefasado.length;
+  return (
+    alertas.estoqueNegativo.length +
+    alertas.precoDefasado.length +
+    alertas.produtosNegativos.length
+  );
 }
 
 /**

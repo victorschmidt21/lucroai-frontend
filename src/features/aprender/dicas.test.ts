@@ -59,6 +59,7 @@ const ALERTAS: Alertas = {
       ],
     },
   ],
+  produtosNegativos: [],
 };
 
 describe('dicaDaVez', () => {
@@ -187,6 +188,7 @@ describe('dicaDaVez', () => {
             alertas: {
               estoqueNegativo: [],
               precoDefasado: [{ ...ALERTAS.precoDefasado[0]!, receitas: [] }],
+              produtosNegativos: [],
             },
             avisoLiberado: true,
           }),

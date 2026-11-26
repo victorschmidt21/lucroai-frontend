@@ -34,8 +34,8 @@ function existeRota(href: string) {
 }
 
 describe('base de termos', () => {
-  it('tem os 24 termos e todos passam no schema', () => {
-    expect(TERMOS).toHaveLength(24);
+  it('tem os 25 termos e todos passam no schema', () => {
+    expect(TERMOS).toHaveLength(25);
     const invalidos = TERMOS.filter(
       (termo) => !termoSchema.safeParse(termo).success,
     ).map((termo) => termo.id);

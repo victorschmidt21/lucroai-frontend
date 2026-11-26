@@ -5,6 +5,7 @@ import type {
   UpdateReceitaBody,
 } from '@/shared/api/contracts/recipe';
 import { unidadeMedidaSchema } from '@/shared/api/contracts/enums';
+import { ApiError } from '@/shared/api/errors';
 import {
   formatNumeroEditavel,
   inteiroBR,
@@ -28,6 +29,7 @@ const VALOR_INVALIDO = 'Valor inválido';
 export const PERCENTUAL_INVALIDO = 'Informe um percentual de 0 a 99';
 const INVALIDO = 'Inválido';
 const INSUMO_REPETIDO = 'Ingrediente repetido';
+const RECEITA_REPETIDA = 'Receita repetida';
 
 /** `@MaxLength(80)` de `create-receita.dto.ts`. */
 export const NOME_MAX = 80;
@@ -89,6 +91,31 @@ export const receitaFormSchema = z.object({
         vistos.add(insumo_id);
       });
     }),
+  /** `false`: só vai dentro de outras receitas, sem preço (BE-39). */
+  vendavel: z.boolean(),
+  /** Receitas usadas dentro desta (BE-39), um nível só. */
+  receitas: z
+    .array(
+      z.object({
+        receita_id: z.number().int().positive(),
+        /** Na unidade do rendimento da receita usada; `@IsPositive` no backend. */
+        quantidade: numeroBR(z.number({ error: INVALIDO }).positive(INVALIDO)),
+      }),
+    )
+    // O diálogo só oferece receitas fora desta; isto é a garantia final.
+    .superRefine((receitas, ctx) => {
+      const vistas = new Set<number>();
+      receitas.forEach(({ receita_id }, indice) => {
+        if (vistas.has(receita_id)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: RECEITA_REPETIDA,
+            path: [indice, 'receita_id'],
+          });
+        }
+        vistas.add(receita_id);
+      });
+    }),
 });
 
 export type ReceitaFormInput = z.input<typeof receitaFormSchema>;
@@ -104,6 +131,8 @@ export const receitaFormVazio: ReceitaFormInput = {
   perda_percentual: '',
   lucro_percentual: '',
   insumos: [],
+  vendavel: true,
+  receitas: [],
 };
 
 /** Zero aparece vazio, como o campo de quem nunca preencheu. */
@@ -130,6 +159,11 @@ export function toReceitaFormInput(receita: Receita): ReceitaFormInput {
       insumo_id: item.insumoId,
       quantidade: formatNumeroEditavel(item.quantidade),
     })),
+    vendavel: receita.vendavel,
+    receitas: receita.receitas.map((item) => ({
+      receita_id: item.receitaId,
+      quantidade: formatNumeroEditavel(item.quantidade),
+    })),
   };
 }
 
@@ -152,7 +186,9 @@ export function toCreateReceitaBody(
       values.lucro_percentual === undefined
         ? null
         : percentualParaFracao(values.lucro_percentual),
+    vendavel: values.vendavel,
     insumos: values.insumos,
+    receitas: values.receitas,
   };
 }
 
@@ -175,3 +211,40 @@ export const novoInsumoSchema = z.object({
 });
 
 export type NovoInsumoInput = z.input<typeof novoInsumoSchema>;
+
+/** Diálogo "Adicionar receita": receita escolhida e quantidade > 0. */
+export const novaReceitaSchema = z.object({
+  receita_id: z
+    .string({ error: OBRIGATORIO })
+    .regex(/^\d+$/, OBRIGATORIO)
+    .transform(Number),
+  quantidade: numeroBR(z.number({ error: OBRIGATORIO }).positive(OBRIGATORIO)),
+});
+
+export type NovaReceitaInput = z.input<typeof novaReceitaSchema>;
+
+const MENSAGENS_DOS_ERROS_DA_RECEITA: Record<string, string> = {
+  RECEITA_USA_ELA_MESMA: 'Uma receita não pode ir dentro dela mesma.',
+  RECEITA_DENTRO_DE_RECEITA_COM_RECEITA:
+    'Só dá para pôr dentro uma receita feita só de ingredientes. E uma receita que já vai dentro de outra não pode levar receitas.',
+  // No formulário, o 409 só vem da troca da unidade do rendimento (BE-39).
+  RECEITA_EM_USO:
+    'Esta receita já vai dentro de outra, então a unidade do rendimento não pode mudar.',
+};
+
+/**
+ * Troca a mensagem dos erros da receita dentro de receita (BE-39) por uma em
+ * linguagem simples, decidindo pelo `code`. Os outros erros passam como estão.
+ */
+export function traduzirErroDaReceita(error: unknown): unknown {
+  if (!(error instanceof ApiError) || !error.code) return error;
+  const mensagem = MENSAGENS_DOS_ERROS_DA_RECEITA[error.code];
+  if (!mensagem) return error;
+  return new ApiError({
+    statusCode: error.statusCode,
+    message: mensagem,
+    mensagens: error.mensagens,
+    code: error.code,
+    details: error.details,
+  });
+}

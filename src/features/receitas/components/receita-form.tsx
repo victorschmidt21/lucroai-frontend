@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useFieldArray, useWatch } from 'react-hook-form';
+import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { configuracaoCustosOptions } from '@/features/configuracoes/api/configuracoes.queries';
 import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
 import type { Insumo } from '@/shared/api/contracts/catalog';
@@ -30,11 +30,20 @@ import { IconAdicionar, IconExcluir } from '@/shared/ui/icons/acoes';
 import { PageHeader } from '@/shared/ui/page-header';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useToast } from '@/shared/ui/toast';
-import { receitaDetailOptions } from '../api/receitas.queries';
+import { Badge } from '@/shared/ui/badge';
+import { Checkbox } from '@/shared/ui/checkbox';
+import {
+  receitaDetailOptions,
+  receitasListOptions,
+} from '../api/receitas.queries';
 import { useCreateReceita } from '../hooks/use-create-receita';
 import { useUpdateReceita } from '../hooks/use-update-receita';
 import { Termo } from '@/features/aprender/components/termo';
-import { calcularCustoItem } from '../receitas.calculos';
+import {
+  calcularCustoItem,
+  motivoSemReceitasDentro,
+  receitasQuePodemEntrar,
+} from '../receitas.calculos';
 import {
   NOME_MAX,
   receitaFormSchema,
@@ -42,9 +51,11 @@ import {
   toCreateReceitaBody,
   toReceitaFormInput,
   toUpdateReceitaBody,
+  traduzirErroDaReceita,
   type ReceitaFormInput,
 } from '../schemas/receita-form.schema';
 import { AdicionarInsumoDialog } from './adicionar-insumo-dialog';
+import { AdicionarReceitaDialog } from './adicionar-receita-dialog';
 import { AvisoDeSaida } from './aviso-de-saida';
 
 type Props = {
@@ -64,10 +75,12 @@ export function ReceitaFormPagina({ receitaId }: Props) {
     enabled: edicao,
   });
   const insumos = useQuery(insumosListOptions());
+  // Para o "Adicionar receita" (receita dentro de receita, FE-70).
+  const receitas = useQuery(receitasListOptions());
   const configuracao = useQuery(configuracaoCustosOptions());
   const queries = edicao
-    ? [receita, insumos, configuracao]
-    : [insumos, configuracao];
+    ? [receita, insumos, receitas, configuracao]
+    : [insumos, receitas, configuracao];
   const comErro = queries.filter((query) => query.isError);
 
   let conteudo;
@@ -86,7 +99,12 @@ export function ReceitaFormPagina({ receitaId }: Props) {
         }}
       />
     );
-  } else if (!insumos.data || !configuracao.data || (edicao && !receita.data)) {
+  } else if (
+    !insumos.data ||
+    !receitas.data ||
+    !configuracao.data ||
+    (edicao && !receita.data)
+  ) {
     conteudo = (
       <div className="flex flex-col gap-4">
         <Skeleton aria-label="Carregando receita" className="h-12" />
@@ -98,6 +116,7 @@ export function ReceitaFormPagina({ receitaId }: Props) {
       <ReceitaForm
         receita={receita.data}
         insumos={insumos.data}
+        todasReceitas={receitas.data}
         configuracao={configuracao.data}
       />
     );
@@ -114,12 +133,16 @@ export function ReceitaFormPagina({ receitaId }: Props) {
 function ReceitaForm({
   receita,
   insumos,
+  todasReceitas,
   configuracao,
 }: {
   receita?: Receita;
   insumos: Insumo[];
+  todasReceitas: Receita[];
   configuracao: ConfiguracaoCustos;
 }) {
+  // A unidade do rendimento não muda enquanto outra receita usa esta (BE-39).
+  const usadaEmOutra = (receita?.usadaEm.length ?? 0) > 0;
   const router = useRouter();
   const toast = useToast();
   const create = useCreateReceita();
@@ -135,15 +158,19 @@ function ReceitaForm({
       // Depois de salvar, o detalhe mostra o custo e os preços calculados pela API.
       onSubmit={async (values) => {
         let salva: Receita;
-        if (receita) {
-          salva = await update.mutateAsync({
-            id: receita.id,
-            body: toUpdateReceitaBody(values),
-          });
-          toast.success('Receita atualizada com sucesso.');
-        } else {
-          salva = await create.mutateAsync(toCreateReceitaBody(values));
-          toast.success('Receita criada com sucesso.');
+        try {
+          if (receita) {
+            salva = await update.mutateAsync({
+              id: receita.id,
+              body: toUpdateReceitaBody(values),
+            });
+            toast.success('Receita atualizada com sucesso.');
+          } else {
+            salva = await create.mutateAsync(toCreateReceitaBody(values));
+            toast.success('Receita criada com sucesso.');
+          }
+        } catch (error) {
+          throw traduzirErroDaReceita(error);
         }
         router.push(`/receitas/${salva.id}`);
       }}
@@ -160,9 +187,24 @@ function ReceitaForm({
           hint="Por lote, sem contar as que sobram ou estragam."
           required
         />
-        <FormUnidadeSelect name="unidadeRendimento" label="Unidade" required />
+        <FormUnidadeSelect
+          name="unidadeRendimento"
+          label="Unidade"
+          required
+          disabled={usadaEmOutra}
+          hint={
+            usadaEmOutra
+              ? 'Não muda: esta receita vai dentro de outra.'
+              : undefined
+          }
+        />
       </div>
-      <InsumosDaReceita insumos={insumos} />
+      <VendavelCampo />
+      <ItensDaReceita
+        receita={receita}
+        insumos={insumos}
+        todasReceitas={todasReceitas}
+      />
       <Card title="Custos e lucro">
         <div className="grid gap-3 sm:grid-cols-2">
           <FormDecimalInput
@@ -207,28 +249,77 @@ function nomeDoInsumo(insumo: Insumo | undefined, insumoId: number) {
   return insumo?.nome ?? `Ingrediente #${insumoId}`;
 }
 
-function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
-  const { fields, append, remove } = useFieldArray<ReceitaFormInput, 'insumos'>(
-    { name: 'insumos' },
+/** Chave "Vendo esta receita sozinha" (`vendavel`, BE-39), ligada por padrão. */
+function VendavelCampo() {
+  const { register } = useFormContext<ReceitaFormInput>();
+
+  return (
+    <Checkbox
+      label="Vendo esta receita sozinha"
+      hint="Desligue se ela só vai dentro de outras receitas, como um recheio."
+      {...register('vendavel')}
+    />
   );
+}
+
+/**
+ * Ingredientes e receitas numa lista só (FE-70): os ingredientes primeiro, e
+ * cada receita com o selo "receita". O custo da linha da receita vem da API
+ * (`receitas[].custoUnitario`, BE-40), então só aparece depois de salvar.
+ */
+function ItensDaReceita({
+  receita,
+  insumos,
+  todasReceitas,
+}: {
+  receita?: Receita;
+  insumos: Insumo[];
+  todasReceitas: Receita[];
+}) {
+  const ingredientes = useFieldArray<ReceitaFormInput, 'insumos'>({
+    name: 'insumos',
+  });
+  const receitasDentro = useFieldArray<ReceitaFormInput, 'receitas'>({
+    name: 'receitas',
+  });
   const quantidades = useWatch<ReceitaFormInput, 'insumos'>({
     name: 'insumos',
   });
-  const [adicionando, setAdicionando] = useState(false);
+  const quantidadesDasReceitas = useWatch<ReceitaFormInput, 'receitas'>({
+    name: 'receitas',
+  });
+  const [adicionando, setAdicionando] = useState<
+    'ingrediente' | 'receita' | null
+  >(null);
+
   const porId = new Map(insumos.map((insumo) => [insumo.id, insumo]));
-  const naReceita = new Set(fields.map((field) => field.insumo_id));
+  const naReceita = new Set(
+    ingredientes.fields.map((field) => field.insumo_id),
+  );
   const disponiveis = insumos.filter((insumo) => !naReceita.has(insumo.id));
   const todosAdicionados = disponiveis.length === 0 && insumos.length > 0;
 
+  const receitasPorId = new Map(todasReceitas.map((item) => [item.id, item]));
+  const salvasPorId = new Map(
+    (receita?.receitas ?? []).map((item) => [item.receitaId, item]),
+  );
+  const receitasDisponiveis = receitasQuePodemEntrar(todasReceitas, {
+    receitaId: receita?.id,
+    jaAdicionadas: receitasDentro.fields.map((field) => field.receita_id),
+  });
+  const motivo = motivoSemReceitasDentro(receita);
+  const vazia =
+    ingredientes.fields.length === 0 && receitasDentro.fields.length === 0;
+
   return (
     <Card title={<Termo id="ficha-tecnica">Ingredientes e embalagens</Termo>}>
-      {fields.length === 0 ? (
+      {vazia ? (
         <p className="text-body text-ink-muted">
           Nenhum ingrediente adicionado.
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {fields.map((field, indice) => {
+          {ingredientes.fields.map((field, indice) => {
             const insumo = porId.get(field.insumo_id);
             const nome = nomeDoInsumo(insumo, field.insumo_id);
             const quantidade = parseNumeroBR(quantidades?.[indice]?.quantidade);
@@ -238,58 +329,144 @@ function InsumosDaReceita({ insumos }: { insumos: Insumo[] }) {
                 : null;
 
             return (
-              <li
+              <LinhaDoItem
                 key={field.id}
-                className="flex flex-wrap items-start gap-3 rounded-md border border-border bg-surface-alt p-3"
-              >
-                <div className="flex min-w-0 grow basis-40 flex-col gap-0.5 pt-1">
-                  <p className="text-body font-medium wrap-anywhere text-ink">
-                    {nome}
-                  </p>
-                  <p className="text-small text-ink-muted tabular-nums">
-                    Custo: {formatMoeda(custo)}
-                  </p>
-                </div>
-                <div className="w-36">
-                  <FormDecimalInput
-                    name={`insumos.${indice}.quantidade`}
-                    label="Quantidade"
-                    aria-label={`Quantidade de ${nome}`}
-                    unidade={
-                      insumo
-                        ? UNIDADE_MEDIDA_ROTULOS[insumo.unidade]
-                        : undefined
-                    }
-                  />
-                </div>
-                <IconButton
-                  aria-label={`Remover ${nome}`}
-                  className="mt-7"
-                  onClick={() => remove(indice)}
-                >
-                  <IconExcluir />
-                </IconButton>
-              </li>
+                nome={nome}
+                custo={formatMoeda(custo)}
+                campo={`insumos.${indice}.quantidade`}
+                unidade={
+                  insumo ? UNIDADE_MEDIDA_ROTULOS[insumo.unidade] : undefined
+                }
+                onRemover={() => ingredientes.remove(indice)}
+              />
+            );
+          })}
+          {receitasDentro.fields.map((field, indice) => {
+            const usada = receitasPorId.get(field.receita_id);
+            const salva = salvasPorId.get(field.receita_id);
+            const nome =
+              usada?.nome ?? salva?.nome ?? `Receita #${field.receita_id}`;
+            const unidade = usada?.unidadeRendimento ?? salva?.unidade;
+            const quantidade = parseNumeroBR(
+              quantidadesDasReceitas?.[indice]?.quantidade,
+            );
+            const custo =
+              salva?.custoUnitario !== undefined && quantidade !== null
+                ? formatMoeda(
+                    calcularCustoItem(quantidade, salva.custoUnitario),
+                  )
+                : null;
+
+            return (
+              <LinhaDoItem
+                key={field.id}
+                nome={nome}
+                selo
+                custo={custo}
+                campo={`receitas.${indice}.quantidade`}
+                unidade={unidade ? UNIDADE_MEDIDA_ROTULOS[unidade] : undefined}
+                onRemover={() => receitasDentro.remove(indice)}
+              />
             );
           })}
         </ul>
       )}
-      <Button
-        variant="secundario"
-        disabled={disponiveis.length === 0}
-        onClick={() => setAdicionando(true)}
-      >
-        <IconAdicionar className="size-5" />
-        {todosAdicionados
-          ? 'Todos os ingredientes adicionados'
-          : 'Adicionar ingrediente'}
-      </Button>
+      <div className="flex flex-wrap gap-2 *:grow sm:*:grow-0">
+        <Button
+          variant="secundario"
+          disabled={disponiveis.length === 0}
+          onClick={() => setAdicionando('ingrediente')}
+        >
+          <IconAdicionar className="size-5" />
+          {todosAdicionados
+            ? 'Todos os ingredientes adicionados'
+            : 'Adicionar ingrediente'}
+        </Button>
+        <Button
+          variant="secundario"
+          disabled={motivo !== null || receitasDisponiveis.length === 0}
+          aria-describedby={motivo ? 'motivo-sem-receitas' : undefined}
+          onClick={() => setAdicionando('receita')}
+        >
+          <IconAdicionar className="size-5" />
+          Adicionar receita
+        </Button>
+      </div>
+      {motivo ? (
+        <p id="motivo-sem-receitas" className="text-small text-ink-muted">
+          {motivo}
+        </p>
+      ) : (
+        <p className="text-small text-ink-muted">
+          Brigadeiro, recheio ou massa que você já cadastrou também pode entrar:
+          é a{' '}
+          <Termo id="receita-dentro-de-receita">
+            receita dentro de receita
+          </Termo>
+          .
+        </p>
+      )}
       <AdicionarInsumoDialog
-        open={adicionando}
-        onOpenChange={setAdicionando}
+        open={adicionando === 'ingrediente'}
+        onOpenChange={(aberto) => setAdicionando(aberto ? 'ingrediente' : null)}
         disponiveis={disponiveis}
-        onAdicionar={(item) => append(item)}
+        onAdicionar={(item) => ingredientes.append(item)}
+      />
+      <AdicionarReceitaDialog
+        open={adicionando === 'receita'}
+        onOpenChange={(aberto) => setAdicionando(aberto ? 'receita' : null)}
+        disponiveis={receitasDisponiveis}
+        onAdicionar={(item) => receitasDentro.append(item)}
       />
     </Card>
+  );
+}
+
+function LinhaDoItem({
+  nome,
+  selo = false,
+  custo,
+  campo,
+  unidade,
+  onRemover,
+}: {
+  nome: string;
+  /** Selo "receita" nas receitas usadas dentro. */
+  selo?: boolean;
+  /** `null`: sem custo para mostrar (receita ainda não salva). */
+  custo: string | null;
+  campo: string;
+  unidade?: string;
+  onRemover: () => void;
+}) {
+  return (
+    <li className="flex flex-wrap items-start gap-3 rounded-md border border-border bg-surface-alt p-3">
+      <div className="flex min-w-0 grow basis-40 flex-col gap-0.5 pt-1">
+        <p className="flex flex-wrap items-center gap-2 text-body font-medium wrap-anywhere text-ink">
+          {nome}
+          {selo ? <Badge tone="destaque">receita</Badge> : null}
+        </p>
+        {custo !== null ? (
+          <p className="text-small text-ink-muted tabular-nums">
+            Custo: {custo}
+          </p>
+        ) : null}
+      </div>
+      <div className="w-36">
+        <FormDecimalInput
+          name={campo}
+          label="Quantidade"
+          aria-label={`Quantidade de ${nome}`}
+          unidade={unidade}
+        />
+      </div>
+      <IconButton
+        aria-label={`Remover ${nome}`}
+        className="mt-7"
+        onClick={onRemover}
+      >
+        <IconExcluir />
+      </IconButton>
+    </li>
   );
 }

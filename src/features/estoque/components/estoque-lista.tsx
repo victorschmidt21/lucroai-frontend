@@ -33,6 +33,7 @@ import { estoqueKeys } from '../api/estoque.queries';
 import { useEstoques, type ItemEstoque } from '../hooks/use-estoques';
 import { estoqueSearchSchema } from '../schemas/estoque-search.schema';
 import { EstoqueCard } from './estoque-card';
+import { EstoquePronto } from './estoque-pronto';
 
 type FiltroStatus = 'todos' | 'baixo';
 
@@ -230,6 +231,8 @@ export function EstoqueLista() {
           ))}
         </ul>
       )}
+
+      <EstoquePronto />
     </div>
   );
 }
