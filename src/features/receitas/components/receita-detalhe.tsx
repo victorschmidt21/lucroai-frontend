@@ -3,10 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
 import type { PrecoCanal, Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatMargem, formatQuantidade } from '@/shared/format/numero';
+import { Badge } from '@/shared/ui/badge';
 import { buttonClasses } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { cn } from '@/shared/ui/cn';
@@ -16,9 +18,14 @@ import { PageHeader } from '@/shared/ui/page-header';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
-import { receitaDetailOptions } from '../api/receitas.queries';
+import {
+  receitaDetailOptions,
+  receitasListOptions,
+} from '../api/receitas.queries';
 import {
   avisoSemPrecoPossivel,
+  custoParaUsarDentro,
+  precoOuNaoVendida,
   montarBarraDoPreco,
   type ParteDaBarra,
   type ParteDaBarraId,
@@ -68,19 +75,26 @@ export function ReceitaDetalhePagina({ receitaId }: { receitaId: number }) {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <PageHeader
         title={receita.data?.nome ?? 'Receita'}
-        subtitle="Custo de cada unidade e preço em cada lugar onde você vende"
+        subtitle={
+          receita.data?.vendavel === false
+            ? 'Do que é feita e quanto custa'
+            : 'Custo de cada unidade e preço em cada lugar onde você vende'
+        }
         actions={
           <>
             <Link href="/receitas" className={buttonClasses('secundario')}>
               Voltar para receitas
             </Link>
-            <Link
-              href={`/receitas/${receitaId}/simular`}
-              className={buttonClasses('secundario')}
-            >
-              <IconSimular className="size-5" />
-              Simular
-            </Link>
+            {/* Receita que só vai dentro de outras não tem preço para simular. */}
+            {receita.data?.vendavel === false ? null : (
+              <Link
+                href={`/receitas/${receitaId}/simular`}
+                className={buttonClasses('secundario')}
+              >
+                <IconSimular className="size-5" />
+                Simular
+              </Link>
+            )}
             <Link
               href={`/receitas/${receitaId}/editar`}
               className={buttonClasses('primario')}
@@ -205,45 +219,185 @@ function Detalhe({ receita }: { receita: Receita }) {
             destaque
           />
         </dl>
-        <p className="text-small text-ink-muted">
-          <Termo id="lucro-desejado">Lucro desta receita</Termo>
-          {`: ${formatMargem(lucro)} de cada R$ 1,00 vendido${
-            receita.lucroPercentual === undefined ? ' (padrão da empresa)' : ''
-          }.`}
-        </p>
+        {receita.vendavel ? (
+          <p className="text-small text-ink-muted">
+            <Termo id="lucro-desejado">Lucro desta receita</Termo>
+            {`: ${formatMargem(lucro)} de cada R$ 1,00 vendido${
+              receita.lucroPercentual === undefined
+                ? ' (padrão da empresa)'
+                : ''
+            }.`}
+          </p>
+        ) : null}
       </Card>
 
-      <section
-        aria-labelledby="precos-por-canal"
-        className="flex flex-col gap-3"
-      >
-        <h2 id="precos-por-canal" className="text-title text-ink">
-          <Termo id="preco-sugerido" dados={receita}>
-            Preço sugerido
-          </Termo>{' '}
-          por <Termo id="canal-de-venda">canal</Termo>
-        </h2>
-        {receita.precos.length === 0 ? (
-          <Card>
-            <p className="text-body text-ink-muted">
-              Nenhuma forma de venda ativa.{' '}
-              <Link href="/configuracoes" className="text-accent underline">
-                Ative uma em Ajustes de preço
-              </Link>
-              .
-            </p>
-          </Card>
-        ) : (
-          <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {receita.precos.map((preco) => (
-              <li key={preco.canalId} className="flex">
-                <PrecoDoCanal preco={preco} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <ItensDaReceita receita={receita} />
+
+      {receita.usadaEm.length > 0 ? <VaiDentroDe receita={receita} /> : null}
+
+      {receita.vendavel ? (
+        <PrecosPorCanal receita={receita} />
+      ) : (
+        <NaoVendidaSozinha receita={receita} />
+      )}
     </div>
+  );
+}
+
+function PrecosPorCanal({ receita }: { receita: Receita }) {
+  return (
+    <section aria-labelledby="precos-por-canal" className="flex flex-col gap-3">
+      <h2 id="precos-por-canal" className="text-title text-ink">
+        <Termo id="preco-sugerido" dados={receita}>
+          Preço sugerido
+        </Termo>{' '}
+        por <Termo id="canal-de-venda">canal</Termo>
+      </h2>
+      {receita.precos.length === 0 ? (
+        <Card>
+          <p className="text-body text-ink-muted">
+            Nenhuma forma de venda ativa.{' '}
+            <Link href="/configuracoes" className="text-accent underline">
+              Ative uma em Ajustes de preço
+            </Link>
+            .
+          </p>
+        </Card>
+      ) : (
+        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {receita.precos.map((preco) => (
+            <li key={preco.canalId} className="flex">
+              <PrecoDoCanal preco={preco} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * No lugar dos preços e da simulação, quando a receita só vai dentro de
+ * outras (`vendavel: false`, FE-71): o custo dela que entra nessas receitas.
+ */
+function NaoVendidaSozinha({ receita }: { receita: Receita }) {
+  const todas = useQuery(receitasListOptions());
+  const resultado = precoOuNaoVendida(
+    receita,
+    custoParaUsarDentro(receita, todas.data ?? []),
+  );
+  if (resultado.tipo !== 'naoVendida') return null;
+
+  return (
+    <Card>
+      <Badge tone="destaque" className="self-start">
+        Só vai dentro de outras
+      </Badge>
+      <p className="text-body text-ink">{resultado.texto}</p>
+      <p className="text-body text-ink-muted">
+        Custo para usar dentro de outra receita:{' '}
+        <span className="font-semibold text-ink tabular-nums">
+          {resultado.custo}
+        </span>
+      </p>
+    </Card>
+  );
+}
+
+/** "Vai dentro de: Brownie Dois Amores", com link para cada receita (FE-71). */
+function VaiDentroDe({ receita }: { receita: Receita }) {
+  return (
+    <Card>
+      <p className="text-body text-ink">
+        <Termo id="receita-dentro-de-receita">Vai dentro de</Termo>:{' '}
+        {receita.usadaEm.map((uso, indice) => (
+          <span key={uso.receitaId}>
+            {indice > 0 ? ', ' : null}
+            <Link
+              href={`/receitas/${uso.receitaId}`}
+              className="text-accent underline"
+            >
+              {uso.nome}
+            </Link>
+          </span>
+        ))}
+      </p>
+    </Card>
+  );
+}
+
+/**
+ * Ingredientes e receitas de 1 lote com o custo de cada um, tudo da API
+ * (`itens[].custoCalculado` e `receitas[].custoCalculado`); o total é o
+ * `custo.ingredientesLote`, que já soma as receitas usadas (BE-40).
+ */
+function ItensDaReceita({ receita }: { receita: Receita }) {
+  const insumos = useQuery(insumosListOptions());
+  const porId = new Map((insumos.data ?? []).map((item) => [item.id, item]));
+
+  return (
+    <Card title={<Termo id="ficha-tecnica">Ingredientes de 1 lote</Termo>}>
+      <ul className="flex flex-col gap-2">
+        {receita.itens.map((item) => {
+          const insumo = porId.get(item.insumoId);
+          return (
+            <LinhaDoItem
+              key={`insumo-${item.insumoId}`}
+              nome={insumo?.nome ?? `Ingrediente #${item.insumoId}`}
+              quantidade={formatQuantidade(item.quantidade, insumo?.unidade)}
+              custo={formatMoeda(item.custoCalculado)}
+            />
+          );
+        })}
+        {receita.receitas.map((item) => (
+          <LinhaDoItem
+            key={`receita-${item.receitaId}`}
+            nome={
+              <>
+                <Link
+                  href={`/receitas/${item.receitaId}`}
+                  className="text-accent underline"
+                >
+                  {item.nome}
+                </Link>{' '}
+                <Badge tone="destaque">receita</Badge>
+              </>
+            }
+            quantidade={formatQuantidade(item.quantidade, item.unidade)}
+            custo={formatMoeda(item.custoCalculado)}
+          />
+        ))}
+      </ul>
+      <dl className="border-t border-border pt-3">
+        <Linha
+          rotulo="Total dos ingredientes"
+          valor={formatMoeda(receita.custo.ingredientesLote)}
+          destaque
+        />
+      </dl>
+    </Card>
+  );
+}
+
+function LinhaDoItem({
+  nome,
+  quantidade,
+  custo,
+}: {
+  nome: ReactNode;
+  quantidade: string;
+  custo: string;
+}) {
+  return (
+    <li className="flex items-baseline justify-between gap-3">
+      <span className="flex min-w-0 flex-col">
+        <span className="text-body wrap-anywhere text-ink">{nome}</span>
+        <span className="text-small text-ink-muted tabular-nums">
+          {quantidade}
+        </span>
+      </span>
+      <span className="text-body text-ink tabular-nums">{custo}</span>
+    </li>
   );
 }
 
