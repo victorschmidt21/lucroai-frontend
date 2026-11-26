@@ -41,6 +41,8 @@ export function makeEstoqueProduto(
   return {
     receitaId: 1,
     quantidadeDisponivel: 150,
+    estoqueNegativo: false,
+    vendavel: true,
     dataAlteracao: '2026-06-02T10:00:00.000Z',
     ...overrides,
   };

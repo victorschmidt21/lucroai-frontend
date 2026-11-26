@@ -1,0 +1,52 @@
+{
+  "id": 132,
+  "receitaId": 159,
+  "empresaId": 30,
+  "quantidade": 2,
+  "totalUnidades": 2,
+  "custoTotal": 22.01,
+  "custoUnitario": 11.0029,
+  "dataProducao": "2026-11-26T02:28:38.487Z",
+  "rateios": [
+    {
+      "gastoIndiretoId": 150,
+      "descricao": "DAS do MEI",
+      "valorRateado": 0.02
+    },
+    {
+      "gastoIndiretoId": 149,
+      "descricao": "Gás de Cozinha (P45)",
+      "valorRateado": 0.04
+    },
+    {
+      "gastoIndiretoId": 148,
+      "descricao": "Aluguel do Espaço",
+      "valorRateado": 0.36
+    },
+    {
+      "gastoIndiretoId": 147,
+      "descricao": "Energia Elétrica",
+      "valorRateado": 0.09
+    }
+  ],
+  "receitasUsadas": [
+    {
+      "receitaId": 158,
+      "nome": "Brownie",
+      "quantidade": 2,
+      "unidade": "UN"
+    },
+    {
+      "receitaId": 156,
+      "nome": "Brigadeiro preto",
+      "quantidade": 300,
+      "unidade": "G"
+    },
+    {
+      "receitaId": 157,
+      "nome": "Brigadeiro branco",
+      "quantidade": 300,
+      "unidade": "G"
+    }
+  ]
+}

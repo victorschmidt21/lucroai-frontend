@@ -41,15 +41,18 @@ import empresaCriada from '@/test/fixtures/auth/empresa-criada.json';
 import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
 import alertas from '@/test/fixtures/catalog/alertas.json';
+import alertasProdutosNegativos from '@/test/fixtures/catalog/alertas-produtos-negativos.json';
 import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
 import insumos from '@/test/fixtures/catalog/insumos.json';
 import estoqueInsumos from '@/test/fixtures/operations/estoque-insumos.json';
 import estoqueProdutos from '@/test/fixtures/operations/estoque-produtos.json';
+import estoqueProdutosNegativos from '@/test/fixtures/operations/estoque-produtos-negativos.json';
 import estoque from '@/test/fixtures/operations/estoque.json';
 import movimentacoes from '@/test/fixtures/operations/movimentacoes.json';
 import producao from '@/test/fixtures/operations/producao.json';
+import producaoComReceitas from '@/test/fixtures/operations/producao-com-receitas.json';
 import producoes from '@/test/fixtures/operations/producoes.json';
 import canais from '@/test/fixtures/pricing/canais.json';
 import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
@@ -151,6 +154,25 @@ const CASOS: Caso[] = [
     fixture: alertas,
     factory: makeAlertas(),
     invalida: { ...makeAlertas(), precoDefasado: undefined },
+  },
+  {
+    nome: 'alertas com receitas de estoque pronto negativo (BE-41)',
+    schema: alertasSchema,
+    fixture: alertasProdutosNegativos,
+    factory: makeAlertas({
+      produtosNegativos: [
+        {
+          receitaId: 157,
+          nome: 'Brigadeiro branco',
+          saldo: -300,
+          unidade: 'G',
+        },
+      ],
+    }),
+    invalida: {
+      ...makeAlertas(),
+      produtosNegativos: [{ id: 157, nome: 'Brigadeiro branco', saldo: -300 }],
+    },
   },
   {
     nome: 'alertas sem itens',
@@ -292,6 +314,20 @@ const CASOS: Caso[] = [
     invalida: [{ ...makeEstoqueProduto(), receitaId: '1' }],
   },
   {
+    nome: 'estoque de produto acabado com saldo negativo (BE-41)',
+    schema: z.array(estoqueProdutoSchema),
+    fixture: estoqueProdutosNegativos,
+    factory: [
+      makeEstoqueProduto({
+        receitaId: 157,
+        quantidadeDisponivel: -300,
+        estoqueNegativo: true,
+        vendavel: false,
+      }),
+    ],
+    invalida: [{ ...makeEstoqueProduto(), estoqueNegativo: 'sim' }],
+  },
+  {
     nome: 'movimentações de estoque',
     schema: z.array(movimentacaoEstoqueSchema),
     fixture: movimentacoes,
@@ -314,6 +350,25 @@ const CASOS: Caso[] = [
     fixture: producao,
     factory: makeProducao(),
     invalida: { ...makeProducao(), quantidade: 1.5 },
+  },
+  {
+    nome: 'produção com receitas usadas (BE-41)',
+    schema: producaoSchema,
+    fixture: producaoComReceitas,
+    factory: makeProducao({
+      receitasUsadas: [
+        {
+          receitaId: 157,
+          nome: 'Brigadeiro branco',
+          quantidade: 300,
+          unidade: 'G',
+        },
+      ],
+    }),
+    invalida: {
+      ...makeProducao(),
+      receitasUsadas: [{ receitaId: 157, nome: 'Brigadeiro branco' }],
+    },
   },
   {
     nome: 'lista de vendas',
@@ -382,6 +437,30 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
+  it('alertas de um backend anterior à BE-41 vêm sem receitas negativas', () => {
+    expect(unwrap(alertas, alertasSchema).produtosNegativos).toEqual([]);
+  });
+
+  it('os alertas do seed listam o Brigadeiro branco com −300 g', () => {
+    const lidos = unwrap(alertasProdutosNegativos, alertasSchema);
+
+    expect(
+      lidos.produtosNegativos.find((item) => item.receitaId === 157),
+    ).toEqual({
+      receitaId: 157,
+      nome: 'Brigadeiro branco',
+      saldo: -300,
+      unidade: 'G',
+    });
+  });
+
+  it('produção e estoque pronto de um backend anterior à BE-41', () => {
+    expect(unwrap(producao, producaoSchema).receitasUsadas).toEqual([]);
+    expect(
+      unwrap(estoqueProdutos, z.array(estoqueProdutoSchema))[0],
+    ).toMatchObject({ estoqueNegativo: false, vendavel: true });
+  });
+
   it('receita de um backend anterior à BE-39 vem vendável e sem receitas', () => {
     const {
       vendavel,

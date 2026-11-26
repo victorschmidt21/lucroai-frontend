@@ -140,10 +140,27 @@ export const alertaPrecoDefasadoSchema = z.object({
 
 export type AlertaPrecoDefasado = z.infer<typeof alertaPrecoDefasadoSchema>;
 
-/** `GET /alertas`: sem alerta, as duas listas vêm vazias. */
+/**
+ * Receita com o estoque pronto abaixo de zero (BE-41): foi usada dentro de
+ * outra sem a produção dela ter sido registrada.
+ */
+export const alertaProdutoNegativoSchema = z.object({
+  receitaId: z.number().int(),
+  nome: z.string(),
+  /** Saldo do estoque pronto, abaixo de zero, com 6 casas. */
+  saldo: z.number(),
+  /** Unidade do rendimento da receita. */
+  unidade: unidadeMedidaSchema,
+});
+
+export type AlertaProdutoNegativo = z.infer<typeof alertaProdutoNegativoSchema>;
+
+/** `GET /alertas`: sem alerta, as listas vêm vazias. */
 export const alertasSchema = z.object({
   estoqueNegativo: z.array(alertaEstoqueNegativoSchema),
   precoDefasado: z.array(alertaPrecoDefasadoSchema),
+  /** Novo (BE-41); `[]` com um backend anterior. */
+  produtosNegativos: z.array(alertaProdutoNegativoSchema).default([]),
 });
 
 export type Alertas = z.infer<typeof alertasSchema>;
