@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type {
   AlertaEstoqueNegativo,
   AlertaPrecoDefasado,
+  AlertaProdutoNegativo,
   Alertas,
 } from '@/shared/api/contracts/catalog';
 import { formatMoeda } from '@/shared/format/moeda';
@@ -20,7 +21,8 @@ type Props = {
 
 /**
  * Lista de avisos (FE-47, docs/business-rules.md#avisos-ao-entrar): estoque
- * negativo, com o link para registrar a compra, e ingredientes que ficaram
+ * negativo, com o link para registrar a compra; receitas com o estoque pronto
+ * negativo (FE-72), com o link para registrar a produção; e ingredientes que ficaram
  * mais caros, com o preço novo sugerido e o link para a receita. Seguir um
  * link fecha o aviso.
  */
@@ -51,6 +53,25 @@ export function AvisosDialog({ open, onOpenChange, alertas }: Props) {
             {alertas.estoqueNegativo.map((item) => (
               <li key={item.id}>
                 <ItemEstoqueNegativo item={item} onNavegar={fechar} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {alertas.produtosNegativos.length > 0 ? (
+        <section
+          aria-labelledby="aviso-produto-negativo"
+          className="flex flex-col gap-2"
+        >
+          <h3 id="aviso-produto-negativo" className="text-body font-semibold">
+            Estas receitas estão com estoque negativo: registre a produção para
+            acertar o saldo.
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {alertas.produtosNegativos.map((item) => (
+              <li key={item.receitaId}>
+                <ItemProdutoNegativo item={item} onNavegar={fechar} />
               </li>
             ))}
           </ul>
@@ -104,6 +125,36 @@ function ItemEstoqueNegativo({
         className={buttonClasses('primario', undefined, 'compacto')}
       >
         Registrar compra
+      </Link>
+    </div>
+  );
+}
+
+function ItemProdutoNegativo({
+  item,
+  onNavegar,
+}: {
+  item: AlertaProdutoNegativo;
+  onNavegar: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-surface-alt p-3">
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="font-semibold wrap-anywhere">{item.nome}</span>
+        <span className="flex flex-wrap items-center gap-2">
+          <EstoqueNegativoBadge />
+          <span className="text-small font-semibold text-danger tabular-nums">
+            Saldo: {formatQuantidade(item.saldo, item.unidade)}
+          </span>
+        </span>
+      </div>
+      <Link
+        href={`/producoes?novo=1&receitaId=${item.receitaId}`}
+        aria-label={`Registrar produção de ${item.nome}`}
+        onClick={onNavegar}
+        className={buttonClasses('primario', undefined, 'compacto')}
+      >
+        Registrar produção
       </Link>
     </div>
   );
