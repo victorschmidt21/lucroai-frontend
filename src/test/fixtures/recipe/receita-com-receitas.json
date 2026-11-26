@@ -1,0 +1,155 @@
+{
+  "id": 159,
+  "empresaId": 30,
+  "nome": "Brownie Dois Amores",
+  "rendimento": 1,
+  "unidadeRendimento": "UN",
+  "custoProducao": 12.65,
+  "custoUnitario": 12.6547,
+  "margemLucro": 0.3333,
+  "precoSugerido": 17.1845,
+  "usoPorLote": 0.01,
+  "embalagemPorUnidade": 1.5,
+  "perdaPercentual": 0,
+  "lucroPercentual": 0.25,
+  "vendavel": true,
+  "dataCriacao": "2026-05-31T01:19:53.170Z",
+  "itens": [
+    {
+      "insumoId": 390,
+      "quantidade": 30,
+      "custoCalculado": 1.73
+    }
+  ],
+  "receitas": [
+    {
+      "receitaId": 158,
+      "nome": "Brownie",
+      "quantidade": 1,
+      "unidade": "UN",
+      "custoUnitario": 1.8029,
+      "custoCalculado": 1.8
+    },
+    {
+      "receitaId": 156,
+      "nome": "Brigadeiro preto",
+      "quantidade": 150,
+      "unidade": "G",
+      "custoUnitario": 0.0247,
+      "custoCalculado": 3.7
+    },
+    {
+      "receitaId": 157,
+      "nome": "Brigadeiro branco",
+      "quantidade": 150,
+      "unidade": "G",
+      "custoUnitario": 0.0241,
+      "custoCalculado": 3.62
+    }
+  ],
+  "usadaEm": [],
+  "custo": {
+    "ingredientesLote": 10.85,
+    "gastosMensaisLote": 0.25,
+    "ingredientes": 10.8532,
+    "gastosMensais": 0.2515,
+    "gastosPorUnidade": 0.05,
+    "embalagem": 1.5,
+    "perdas": 0,
+    "unitario": 12.6547
+  },
+  "precos": [
+    {
+      "canalId": 172,
+      "canal": "Balcão",
+      "balcao": true,
+      "percentuais": 0.2636,
+      "preco": 17.1845,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": {
+          "valor": 10.8532,
+          "fracao": 0.6316
+        },
+        "gastosMensais": {
+          "valor": 0.2515,
+          "fracao": 0.0146
+        },
+        "gastosPorUnidade": {
+          "valor": 0.05,
+          "fracao": 0.0029
+        },
+        "embalagem": {
+          "valor": 1.5,
+          "fracao": 0.0873
+        },
+        "perdas": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "imposto": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "taxaCanal": {
+          "valor": 0.2337,
+          "fracao": 0.0136
+        },
+        "gastosPercentuais": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "lucro": {
+          "valor": 4.2961,
+          "fracao": 0.25
+        }
+      }
+    },
+    {
+      "canalId": 173,
+      "canal": "iFood",
+      "balcao": false,
+      "percentuais": 0.402,
+      "preco": 21.1617,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": {
+          "valor": 10.8532,
+          "fracao": 0.5129
+        },
+        "gastosMensais": {
+          "valor": 0.2515,
+          "fracao": 0.0119
+        },
+        "gastosPorUnidade": {
+          "valor": 0.05,
+          "fracao": 0.0024
+        },
+        "embalagem": {
+          "valor": 1.5,
+          "fracao": 0.0709
+        },
+        "perdas": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "imposto": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "taxaCanal": {
+          "valor": 3.2166,
+          "fracao": 0.152
+        },
+        "gastosPercentuais": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "lucro": {
+          "valor": 5.2904,
+          "fracao": 0.25
+        }
+      }
+    }
+  ]
+}

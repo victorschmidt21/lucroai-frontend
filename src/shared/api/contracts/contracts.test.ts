@@ -55,6 +55,8 @@ import canais from '@/test/fixtures/pricing/canais.json';
 import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
 import receitaCustoSimulada from '@/test/fixtures/recipe/receita-custo-simulada.json';
 import receitaCusto from '@/test/fixtures/recipe/receita-custo.json';
+import receitaComReceitas from '@/test/fixtures/recipe/receita-com-receitas.json';
+import receitaUsadaEmOutra from '@/test/fixtures/recipe/receita-usada-em-outra.json';
 import receita from '@/test/fixtures/recipe/receita.json';
 import receitas from '@/test/fixtures/recipe/receitas.json';
 import simulacaoCenario from '@/test/fixtures/recipe/simulacao-cenario.json';
@@ -193,6 +195,38 @@ const CASOS: Caso[] = [
     fixture: receita,
     factory: makeReceita(),
     invalida: { ...makeReceita(), custo: undefined, precos: undefined },
+  },
+  {
+    nome: 'receita com receitas dentro (BE-39/BE-40)',
+    schema: receitaSchema,
+    fixture: receitaComReceitas,
+    factory: makeReceita({
+      receitas: [
+        {
+          receitaId: 5,
+          nome: 'Brigadeiro preto',
+          quantidade: 150,
+          unidade: 'G',
+          custoUnitario: 0.0247,
+          custoCalculado: 3.7,
+        },
+      ],
+    }),
+    invalida: {
+      ...makeReceita(),
+      receitas: [{ receitaId: 5, nome: 'Brigadeiro preto', quantidade: 150 }],
+    },
+  },
+  {
+    nome: 'receita usada em outra e não vendida sozinha',
+    schema: receitaSchema,
+    fixture: receitaUsadaEmOutra,
+    factory: makeReceita({
+      vendavel: false,
+      precos: [],
+      usadaEm: [{ receitaId: 8, nome: 'Brownie Dois Amores' }],
+    }),
+    invalida: { ...makeReceita(), usadaEm: [{ receitaId: 8 }] },
   },
   {
     nome: 'custo da receita',
@@ -348,6 +382,35 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
+  it('receita de um backend anterior à BE-39 vem vendável e sem receitas', () => {
+    const {
+      vendavel,
+      receitas: receitasDentro,
+      usadaEm,
+      ...antiga
+    } = makeReceita();
+    expect([vendavel, receitasDentro, usadaEm]).toEqual([true, [], []]);
+
+    const lida = unwrap(antiga, receitaSchema);
+
+    expect(lida.vendavel).toBe(true);
+    expect(lida.receitas).toEqual([]);
+    expect(lida.usadaEm).toEqual([]);
+  });
+
+  it('a receita do seed com receitas dentro traz a unidade e o custo de cada uma', () => {
+    const lida = unwrap(receitaComReceitas, receitaSchema);
+
+    expect(
+      lida.receitas.map((item) => [item.nome, item.quantidade, item.unidade]),
+    ).toEqual([
+      ['Brownie', 1, 'UN'],
+      ['Brigadeiro preto', 150, 'G'],
+      ['Brigadeiro branco', 150, 'G'],
+    ]);
+    expect(lida.receitas[1]?.custoCalculado).toBe(3.7);
+  });
+
   it('receita sem preço possível omite o preço sugerido', () => {
     const semPreco = unwrap(
       { ...makeReceita(), precoSugerido: undefined },

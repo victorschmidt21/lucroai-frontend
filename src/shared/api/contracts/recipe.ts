@@ -15,6 +15,35 @@ export const itemReceitaSchema = z.object({
 
 export type ItemReceita = z.infer<typeof itemReceitaSchema>;
 
+/**
+ * `ItemReceitaReceitaDto` (BE-39/BE-40): receita usada dentro desta. A
+ * `quantidade` é por lote, na `unidade` do rendimento da receita usada.
+ */
+export const itemReceitaReceitaSchema = z.object({
+  receitaId: z.number().int(),
+  nome: z.string(),
+  quantidade: z.number(),
+  /** `unidadeRendimento` da receita usada. */
+  unidade: unidadeMedidaSchema,
+  /**
+   * Custo de 1 unidade da receita usada (ingredientes, forno e perda; sem
+   * embalagem nem gastos por unidade), com 4 casas. Opcional: só desde a BE-40.
+   */
+  custoUnitario: z.number().optional(),
+  /** `quantidade × custoUnitario`, com 2 casas (BE-40). */
+  custoCalculado: z.number().optional(),
+});
+
+export type ItemReceitaReceita = z.infer<typeof itemReceitaReceitaSchema>;
+
+/** `UsadaEmDto` (BE-39): receita que usa esta dentro dela. */
+export const usadaEmSchema = z.object({
+  receitaId: z.number().int(),
+  nome: z.string(),
+});
+
+export type UsadaEm = z.infer<typeof usadaEmSchema>;
+
 /** `receita.dto.ts` (`CustoReceitaDetalheDto`): de onde vem o custo de 1 unidade (BE-28). */
 export const custoReceitaDetalheSchema = z.object({
   /** Ingredientes de 1 lote, com 2 casas. */
@@ -94,8 +123,18 @@ export const receitaSchema = z.object({
   custoUnitario: z.number().optional(),
   /** Preço do Balcão; omitido sem preço possível. */
   precoSugerido: z.number().optional(),
+  /**
+   * `false`: a receita só vai dentro de outras e não tem preço (BE-39). Os
+   * campos da receita dentro de receita têm padrão para aceitar um backend
+   * anterior à BE-39, que não os manda.
+   */
+  vendavel: z.boolean().default(true),
   dataCriacao: z.iso.datetime(),
   itens: z.array(itemReceitaSchema),
+  /** Receitas usadas dentro desta (um nível só, BE-39). */
+  receitas: z.array(itemReceitaReceitaSchema).default([]),
+  /** Receitas que usam esta dentro delas (BE-39). */
+  usadaEm: z.array(usadaEmSchema).default([]),
   custo: custoReceitaDetalheSchema,
   /** Um por canal ativo, em ordem de criação do canal (Balcão primeiro). */
   precos: z.array(precoCanalSchema),
@@ -119,7 +158,12 @@ export type CreateReceitaBody = {
   perda_percentual?: number;
   /** Fração do preço de 0 até menos de 1; `null` usa o lucro padrão da empresa. */
   lucro_percentual?: number | null;
-  insumos: { insumo_id: number; quantidade: number }[];
+  /** Padrão `true`; `false` só vai dentro de outras receitas (BE-39). */
+  vendavel?: boolean;
+  /** Opcional desde a BE-39: a receita precisa de ao menos um insumo ou receita. */
+  insumos?: { insumo_id: number; quantidade: number }[];
+  /** Receitas usadas dentro desta, na unidade do rendimento de cada uma (BE-39). */
+  receitas?: { receita_id: number; quantidade: number }[];
 };
 
 /** `update-receita.dto.ts` (`PUT`, com todos os campos opcionais). */
