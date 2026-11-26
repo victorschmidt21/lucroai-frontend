@@ -29,6 +29,7 @@ import {
   type ItemVendaFormInput,
   type ItemVendaFormValues,
 } from '../schemas/item-venda.schema';
+import { receitasParaVender } from '../vendas.calculos';
 
 type Props = {
   onAdicionar: (item: ItemVendaFormValues, receita: Receita) => void;
@@ -77,7 +78,7 @@ export function AdicionarProdutoCard({ onAdicionar, bloqueado, canal }: Props) {
           <CampoCanal {...canal} />
           <CampoReceita
             canalId={canal.id}
-            receitas={receitas.data ?? []}
+            receitas={receitasParaVender(receitas.data ?? [])}
             carregando={receitas.isPending}
             erro={receitas.isError ? getErrorMessage(receitas.error) : null}
           />

@@ -5,6 +5,7 @@ import {
   nomeDoCanal,
   periodoPadrao,
   quantidadeDaVenda,
+  receitasParaVender,
   resumirVendas,
   subtotalItem,
   totalCarrinho,
@@ -186,5 +187,17 @@ describe('mensagemVendaAnotada', () => {
 
   it('sem o total do mês, só a primeira frase', () => {
     expect(mensagemVendaAnotada(null)).toBe('Venda anotada!');
+  });
+});
+
+describe('receitasParaVender', () => {
+  it('tira a receita que só vai dentro de outras', () => {
+    const receitas = [
+      { id: 1, vendavel: true },
+      { id: 2, vendavel: false },
+      { id: 3, vendavel: true },
+    ];
+
+    expect(receitasParaVender(receitas).map((r) => r.id)).toEqual([1, 3]);
   });
 });
