@@ -2,11 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { receitaSchema } from '@/shared/api/contracts/recipe';
 import receitaDoSeed from '@/test/fixtures/recipe/receita.json';
 import {
+  makeReceita,
   makeComposicaoPreco,
   makePrecoCanal,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
 import {
+  dicaDaQuantidadeDaReceita,
+  motivoSemReceitasDentro,
+  receitasQuePodemEntrar,
   calcularCustoItem,
   avisoDePrejuizo,
   avisoSemPrecoPossivel,
@@ -254,5 +258,97 @@ describe('avisoSemPrecoPossivel', () => {
     expect(avisoSemPrecoPossivel(1.05)).toBe(
       'Não existe preço que pague tudo: as taxas e o lucro já somam 105,0% do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.',
     );
+  });
+});
+
+describe('receitasQuePodemEntrar (FE-70)', () => {
+  const preto = makeReceita({ id: 5, nome: 'Brigadeiro preto' });
+  const branco = makeReceita({ id: 6, nome: 'Brigadeiro branco' });
+  const brownie = makeReceita({ id: 7, nome: 'Brownie' });
+  const doisAmores = makeReceita({
+    id: 8,
+    nome: 'Brownie Dois Amores',
+    receitas: [
+      { receitaId: 5, nome: 'Brigadeiro preto', quantidade: 150, unidade: 'G' },
+    ],
+  });
+  const todas = [preto, branco, brownie, doisAmores];
+  const ids = (lista: { id: number }[]) => lista.map((receita) => receita.id);
+
+  it('no cadastro, oferece só as receitas sem receitas dentro', () => {
+    expect(ids(receitasQuePodemEntrar(todas, { jaAdicionadas: [] }))).toEqual([
+      5, 6, 7,
+    ]);
+  });
+
+  it('não oferece a própria receita', () => {
+    expect(
+      ids(receitasQuePodemEntrar(todas, { receitaId: 7, jaAdicionadas: [] })),
+    ).toEqual([5, 6]);
+  });
+
+  it('não oferece de novo as que já estão na receita', () => {
+    expect(
+      ids(receitasQuePodemEntrar(todas, { receitaId: 8, jaAdicionadas: [5] })),
+    ).toEqual([6, 7]);
+  });
+
+  it('sem receitas, não oferece nada', () => {
+    expect(receitasQuePodemEntrar([], { jaAdicionadas: [] })).toEqual([]);
+  });
+});
+
+describe('motivoSemReceitasDentro', () => {
+  it('diz onde a receita já vai', () => {
+    expect(
+      motivoSemReceitasDentro(
+        makeReceita({
+          nome: 'Brigadeiro branco',
+          usadaEm: [{ receitaId: 8, nome: 'Brownie Dois Amores' }],
+        }),
+      ),
+    ).toBe(
+      'A receita Brigadeiro branco já vai dentro de Brownie Dois Amores, então não pode levar outras receitas.',
+    );
+  });
+
+  it('junta os nomes quando vai dentro de mais de uma', () => {
+    expect(
+      motivoSemReceitasDentro(
+        makeReceita({
+          nome: 'Brigadeiro preto',
+          usadaEm: [
+            { receitaId: 8, nome: 'Brownie Dois Amores' },
+            { receitaId: 9, nome: 'Bolo Prestígio' },
+          ],
+        }),
+      ),
+    ).toContain('dentro de Brownie Dois Amores e Bolo Prestígio,');
+  });
+
+  it('é null no cadastro e na receita que não vai dentro de outra', () => {
+    expect(motivoSemReceitasDentro(undefined)).toBeNull();
+    expect(motivoSemReceitasDentro(makeReceita())).toBeNull();
+  });
+});
+
+describe('dicaDaQuantidadeDaReceita', () => {
+  it('fala na unidade em que a receita rende', () => {
+    expect(
+      dicaDaQuantidadeDaReceita({
+        nome: 'Brigadeiro preto',
+        rendimento: 1000,
+        unidadeRendimento: 'G',
+      }),
+    ).toBe(
+      'A receita de Brigadeiro preto rende 1.000 g. Quanto vai em 1 lote desta?',
+    );
+    expect(
+      dicaDaQuantidadeDaReceita({
+        nome: 'Brownie',
+        rendimento: 12,
+        unidadeRendimento: 'UN',
+      }),
+    ).toBe('A receita de Brownie rende 12 un. Quanto vai em 1 lote desta?');
   });
 });

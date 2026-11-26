@@ -1,6 +1,8 @@
+import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
 import type {
   ComposicaoPreco,
   PrecoCanal,
+  Receita,
   SimulacaoCenario,
 } from '@/shared/api/contracts/recipe';
 import { arredondarCentavos, formatMoeda } from '@/shared/format/moeda';
@@ -178,4 +180,47 @@ export function formatarResultadoDaSimulacao(
  */
 export function avisoSemPrecoPossivel(percentuais: number) {
   return `Não existe preço que pague tudo: as taxas e o lucro já somam ${formatMargem(percentuais)} do preço. Diminua o lucro da receita ou as taxas em Ajustes de preço.`;
+}
+
+/**
+ * Receitas que podem ir dentro desta (receita dentro de receita, BE-39): nem
+ * ela mesma, nem as que já têm receitas dentro (um nível só), nem as que já
+ * estão na lista. `receitaId` é `undefined` no cadastro.
+ */
+export function receitasQuePodemEntrar(
+  receitas: readonly Receita[],
+  {
+    receitaId,
+    jaAdicionadas,
+  }: { receitaId?: number; jaAdicionadas: readonly number[] },
+): Receita[] {
+  const adicionadas = new Set(jaAdicionadas);
+  return receitas.filter(
+    (receita) =>
+      receita.id !== receitaId &&
+      receita.receitas.length === 0 &&
+      !adicionadas.has(receita.id),
+  );
+}
+
+/**
+ * Por que esta receita não pode levar outras dentro: ela já vai dentro de
+ * outra (um nível só). `null` quando pode.
+ */
+export function motivoSemReceitasDentro(
+  receita: Pick<Receita, 'nome' | 'usadaEm'> | undefined,
+): string | null {
+  if (!receita || receita.usadaEm.length === 0) return null;
+  // "A, B e C".
+  const onde = new Intl.ListFormat('pt-BR').format(
+    receita.usadaEm.map((uso) => uso.nome),
+  );
+  return `A receita ${receita.nome} já vai dentro de ${onde}, então não pode levar outras receitas.`;
+}
+
+/** Dica da quantidade no diálogo, na unidade em que a receita escolhida rende. */
+export function dicaDaQuantidadeDaReceita(
+  receita: Pick<Receita, 'nome' | 'rendimento' | 'unidadeRendimento'>,
+) {
+  return `A receita de ${receita.nome} rende ${formatNumero(receita.rendimento)} ${UNIDADE_MEDIDA_ROTULOS[receita.unidadeRendimento]}. Quanto vai em 1 lote desta?`;
 }
