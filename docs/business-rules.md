@@ -330,6 +330,33 @@ A web não envia o `margem_lucro` legado (markup): o campo "Margem de lucro (%)"
 | Linha do insumo                | nome e unidade                                                      | nome, "Custo: R$ X", quantidade com a unidade e "Remover <nome>"                                                                                                                                                                                                  |
 | Detalhe (FE-44)                | —                                                                   | subtítulo "Custo de cada unidade e preço em cada lugar onde você vende"; "Voltar para receitas", "Simular", "Editar"; "Custo de 1 unidade", "Preço sugerido por canal", "Para onde vai cada R$ 1,00"; erro "Não foi possível carregar a receita."                 |
 
+### Receita dentro de receita (FE-70)
+
+Backend: BE-39 e BE-40 (`create-receita.dto.ts`, `validarItensDaReceita` e `validarMudancaDeUnidade` de `receitas.calculos.ts` do monolito). Exemplo do seed: o **Brownie Dois Amores** leva 1 Brownie (un), 150 g de Brigadeiro preto, 150 g de Brigadeiro branco e 30 g de Leite em Pó Ninho.
+
+- **Corpo**: `receitas: [{ receita_id, quantidade }]` e `vendavel` no `POST` e no `PUT /receitas/:id`; a web envia sempre os dois, com `insumos`. A `quantidade` é por lote, na unidade em que a receita usada rende (`unidadeRendimento`), e precisa ser > 0 (`@IsPositive`). Sem repetir a receita ("Receita repetida", garantia final; o diálogo já não oferece de novo).
+- **Quem pode entrar** (`receitasQuePodemEntrar`, `receitas.calculos.ts`): todas as receitas da empresa menos a própria, as que já têm receitas dentro (um nível só) e as que já estão na lista. As não vendidas sozinhas também entram.
+- **Quem não pode levar receitas** (`motivoSemReceitasDentro`): a receita que já vai dentro de outra (`usadaEm` não vazio). O botão "Adicionar receita" fica desabilitado, com o motivo embaixo; o mesmo acontece, sem texto, quando não há receita para oferecer.
+- **Unidade do rendimento**: desabilitada quando a receita vai dentro de outra (o backend responde 409 `RECEITA_EM_USO` se mudar).
+- **Lista do formulário**: ingredientes e receitas numa lista só (ingredientes primeiro), com o selo "receita" nas receitas. O custo da linha da receita é `round2(quantidade × receitas[].custoUnitario)` da API (BE-40, só ingredientes, forno e perda) e aparece só nas receitas já salvas: a web não recalcula o custo de uma receita (regra 10).
+- **Vendável**: chave "Vendo esta receita sozinha", ligada por padrão. Desligada, a receita só vai dentro de outras (sem preço; a lista, o detalhe e as vendas são da FE-71 e da FE-72).
+- O formulário não exige ao menos um item: com a receita vazia, o backend responde 400 `DADOS_INVALIDOS`, como antes.
+
+| Onde                                        | Texto                                                                                                                                                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Botão                                       | "Adicionar receita", ao lado de "Adicionar ingrediente"                                                                                                                                                                 |
+| Apoio embaixo dos botões                    | "Brigadeiro, recheio ou massa que você já cadastrou também pode entrar: é a receita dentro de receita." (Pitada `receita-dentro-de-receita`)                                                                            |
+| Motivo do botão bloqueado                   | "A receita <nome> já vai dentro de <A, B e C>, então não pode levar outras receitas."                                                                                                                                   |
+| Diálogo                                     | "Adicionar receita", "Receita", "Quantidade" (com a unidade do rendimento), "Cancelar", "Adicionar"; dica "A receita de <nome> rende <rendimento> <unidade>. Quanto vai em 1 lote desta?" (`dicaDaQuantidadeDaReceita`) |
+| Selo na linha                               | "receita"                                                                                                                                                                                                               |
+| Chave                                       | "Vendo esta receita sozinha", com "Desligue se ela só vai dentro de outras receitas, como um recheio."                                                                                                                  |
+| Unidade bloqueada                           | "Não muda: esta receita vai dentro de outra."                                                                                                                                                                           |
+| 422 `RECEITA_USA_ELA_MESMA`                 | "Uma receita não pode ir dentro dela mesma."                                                                                                                                                                            |
+| 422 `RECEITA_DENTRO_DE_RECEITA_COM_RECEITA` | "Só dá para pôr dentro uma receita feita só de ingredientes. E uma receita que já vai dentro de outra não pode levar receitas."                                                                                         |
+| 409 `RECEITA_EM_USO` (no formulário)        | "Esta receita já vai dentro de outra, então a unidade do rendimento não pode mudar."                                                                                                                                    |
+
+As mensagens trocam o texto do backend pelo `code` (`traduzirErroDaReceita`, `receita-form.schema.ts`), só no formulário.
+
 ## Estoque de insumos
 
 FE-13. Origem: `lib/features/estoques/domain/entities/estoque_com_insumo.dart`, `lib/features/estoques/presentation/widgets/estoque_card.dart`, `lib/features/estoques/presentation/pages/estoques_page.dart`, `lib/features/estoques/data/datasources/estoque_remote_datasource.dart`. Backend: `services/operations-service/src/modules/estoque/`.

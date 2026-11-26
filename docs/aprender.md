@@ -39,7 +39,7 @@ Desde a FE-64. Arquivos em `src/features/aprender/components/`: `termo.tsx` (`<T
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Início (painel)          | `sobrou-pra-voce` (herói, só com lucro), `faturamento` ("Você vendeu"), `para-pagar-as-contas`                                                                                                                                                                                |
 | Receita, detalhe         | `custo-por-unidade` (cartão), `ficha-tecnica` ("Ingredientes"), `divisao-das-contas` ("Contas do mês"), `embalagem`, `perda` ("Perdas"), `rendimento` (no "Custo do lote"), `lucro-desejado` ("Lucro desta receita"), `preco-sugerido` e `canal-de-venda` (título dos preços) |
-| Receita, formulário      | `rendimento` ("unidades boas"), `ficha-tecnica` ("Ingredientes e embalagens"), `divisao-das-contas` (fornadas do lote), `embalagem`, `perda`, `lucro-desejado`                                                                                                                |
+| Receita, formulário      | `rendimento` ("unidades boas"), `ficha-tecnica` ("Ingredientes e embalagens"), `divisao-das-contas` (fornadas do lote), `embalagem`, `perda`, `lucro-desejado`, `receita-dentro-de-receita` (apoio de "Adicionar receita", FE-70)                                             |
 | Simulação (`/simulacao`) | `margem` ("Lucro real", em %), `custo-por-unidade` ("Custo unitário"), `preco-sugerido` ("Preço atual")                                                                                                                                                                       |
 | Custos (cálculo real)    | `contas-do-mes` ("Custos invisíveis"), `custo-da-receita` ("Custo Total")                                                                                                                                                                                                     |
 | Vendas                   | `canal-de-venda` ("Onde vendeu?"), `lucro-real` (coluna do histórico, no computador)                                                                                                                                                                                          |
@@ -296,32 +296,33 @@ O campo opcional `exemplo` (FE-65) é uma função pura `(dados) => string | nul
 
 ## Lista de termos
 
-| Assunto | id                        | Título                      | Ação                                    |
-| ------- | ------------------------- | --------------------------- | --------------------------------------- |
-| custos  | `custo-da-receita`        | Custo da receita            | Ver Receitas → `/receitas`              |
-| custos  | `rendimento`              | Rendimento                  | Ver Receitas → `/receitas`              |
-| custos  | `custo-por-unidade`       | Custo de 1 unidade          | Ver Receitas → `/receitas`              |
-| custos  | `ficha-tecnica`           | Ficha técnica               | Ver Receitas → `/receitas`              |
-| custos  | `embalagem`               | Embalagem                   | Ver Ingredientes → `/insumos`           |
-| custos  | `perda`                   | Perda                       | Ver Receitas → `/receitas`              |
-| custos  | `contas-do-mes`           | Contas do mês               | Ver Contas do mês → `/gastos-indiretos` |
-| custos  | `divisao-das-contas`      | Divisão das contas do mês   | Ver Ajustes de preço → `/configuracoes` |
-| custos  | `fornadas-por-mes`        | Fornadas por mês            | Ver Ajustes de preço → `/configuracoes` |
-| custos  | `custo-medio`             | Custo médio do ingrediente  | Ver Estoque → `/estoque`                |
-| custos  | `imposto`                 | Imposto sobre as vendas     | Ver Ajustes de preço → `/configuracoes` |
-| custos  | `das-do-mei`              | DAS do MEI                  | Ver Contas do mês → `/gastos-indiretos` |
-| preco   | `preco-sugerido`          | Preço sugerido              | Ver Receitas → `/receitas`              |
-| preco   | `lucro-desejado`          | Lucro que você quer         | Ver Ajustes de preço → `/configuracoes` |
-| preco   | `margem`                  | Margem                      | Simular outro preço → `/simulacao`      |
-| preco   | `canal-de-venda`          | Canal de venda              | Ver Ajustes de preço → `/configuracoes` |
-| preco   | `taxa-do-canal`           | Taxa do canal               | Ver Ajustes de preço → `/configuracoes` |
-| preco   | `preco-que-precisa-subir` | Preço que precisa subir     | Ver Receitas → `/receitas`              |
-| vendas  | `faturamento`             | Faturamento                 | Ver Vendas → `/vendas`                  |
-| vendas  | `lucro-real`              | Lucro real da venda         | Ver Vendas → `/vendas`                  |
-| vendas  | `sobrou-pra-voce`         | Sobrou pra você             | Ir para o Início → `/`                  |
-| vendas  | `para-pagar-as-contas`    | Para pagar as contas do mês | Ir para o Início → `/`                  |
-| estoque | `fornada`                 | Fornada                     | Ver Fornadas → `/producoes`             |
-| estoque | `estoque-negativo`        | Estoque negativo            | Ver Estoque → `/estoque`                |
+| Assunto | id                          | Título                      | Ação                                    |
+| ------- | --------------------------- | --------------------------- | --------------------------------------- |
+| custos  | `custo-da-receita`          | Custo da receita            | Ver Receitas → `/receitas`              |
+| custos  | `rendimento`                | Rendimento                  | Ver Receitas → `/receitas`              |
+| custos  | `custo-por-unidade`         | Custo de 1 unidade          | Ver Receitas → `/receitas`              |
+| custos  | `ficha-tecnica`             | Ficha técnica               | Ver Receitas → `/receitas`              |
+| custos  | `embalagem`                 | Embalagem                   | Ver Ingredientes → `/insumos`           |
+| custos  | `perda`                     | Perda                       | Ver Receitas → `/receitas`              |
+| custos  | `receita-dentro-de-receita` | Receita dentro de receita   | Ver Receitas → `/receitas`              |
+| custos  | `contas-do-mes`             | Contas do mês               | Ver Contas do mês → `/gastos-indiretos` |
+| custos  | `divisao-das-contas`        | Divisão das contas do mês   | Ver Ajustes de preço → `/configuracoes` |
+| custos  | `fornadas-por-mes`          | Fornadas por mês            | Ver Ajustes de preço → `/configuracoes` |
+| custos  | `custo-medio`               | Custo médio do ingrediente  | Ver Estoque → `/estoque`                |
+| custos  | `imposto`                   | Imposto sobre as vendas     | Ver Ajustes de preço → `/configuracoes` |
+| custos  | `das-do-mei`                | DAS do MEI                  | Ver Contas do mês → `/gastos-indiretos` |
+| preco   | `preco-sugerido`            | Preço sugerido              | Ver Receitas → `/receitas`              |
+| preco   | `lucro-desejado`            | Lucro que você quer         | Ver Ajustes de preço → `/configuracoes` |
+| preco   | `margem`                    | Margem                      | Simular outro preço → `/simulacao`      |
+| preco   | `canal-de-venda`            | Canal de venda              | Ver Ajustes de preço → `/configuracoes` |
+| preco   | `taxa-do-canal`             | Taxa do canal               | Ver Ajustes de preço → `/configuracoes` |
+| preco   | `preco-que-precisa-subir`   | Preço que precisa subir     | Ver Receitas → `/receitas`              |
+| vendas  | `faturamento`               | Faturamento                 | Ver Vendas → `/vendas`                  |
+| vendas  | `lucro-real`                | Lucro real da venda         | Ver Vendas → `/vendas`                  |
+| vendas  | `sobrou-pra-voce`           | Sobrou pra você             | Ir para o Início → `/`                  |
+| vendas  | `para-pagar-as-contas`      | Para pagar as contas do mês | Ir para o Início → `/`                  |
+| estoque | `fornada`                   | Fornada                     | Ver Fornadas → `/producoes`             |
+| estoque | `estoque-negativo`          | Estoque negativo            | Ver Estoque → `/estoque`                |
 
 ## Decisões da FE-63
 
