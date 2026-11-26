@@ -65,7 +65,12 @@ export const TERMOS_CUSTOS = [
     porQueImporta:
       'Ingrediente esquecido na ficha é custo que o preço não paga.',
     acao: { rotulo: 'Ver Receitas', href: '/receitas' },
-    relacionados: ['custo-da-receita', 'embalagem', 'custo-medio'],
+    relacionados: [
+      'custo-da-receita',
+      'embalagem',
+      'custo-medio',
+      'receita-dentro-de-receita',
+    ],
   }),
   definirTermo({
     id: 'embalagem',
@@ -92,6 +97,20 @@ export const TERMOS_CUSTOS = [
       'Sem contar a perda, cada fornada custa mais do que o app mostra.',
     acao: { rotulo: 'Ver Receitas', href: '/receitas' },
     relacionados: ['custo-por-unidade', 'ficha-tecnica'],
+  }),
+  definirTermo({
+    id: 'receita-dentro-de-receita',
+    titulo: 'Receita dentro de receita',
+    assunto: 'custos',
+    sinonimos: ['sub-receita', 'recheio', 'ficha composta', 'massa base'],
+    curto:
+      'Uma receita que você já cadastrou e que vai dentro de outra, como o brigadeiro no brownie.',
+    explicacao:
+      'Na receita, toque em Adicionar receita e diga quanto vai em 1 lote, na unidade em que ela rende. O custo dela entra junto com os ingredientes. A receita de dentro só pode ter ingredientes.',
+    porQueImporta:
+      'Assim o recheio entra no custo sem você copiar os ingredientes dele.',
+    acao: { rotulo: 'Ver Receitas', href: '/receitas' },
+    relacionados: ['ficha-tecnica', 'custo-da-receita', 'rendimento'],
   }),
   definirTermo({
     id: 'contas-do-mes',
