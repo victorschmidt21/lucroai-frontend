@@ -7,7 +7,14 @@ import {
   makePrecoCanal,
   makeSimulacaoCenario,
 } from '@/test/factories/receita.factory';
+import receitaComReceitas from '@/test/fixtures/recipe/receita-com-receitas.json';
+import receitaUsadaEmOutra from '@/test/fixtures/recipe/receita-usada-em-outra.json';
 import {
+  custoParaUsarDentro,
+  motivoParaNaoExcluir,
+  passaNoFiltroDeVenda,
+  precoOuNaoVendida,
+  TEXTO_NAO_VENDIDA_SOZINHA,
   dicaDaQuantidadeDaReceita,
   motivoSemReceitasDentro,
   receitasQuePodemEntrar,
@@ -350,5 +357,87 @@ describe('dicaDaQuantidadeDaReceita', () => {
         unidadeRendimento: 'UN',
       }),
     ).toBe('A receita de Brownie rende 12 un. Quanto vai em 1 lote desta?');
+  });
+});
+
+describe('precoOuNaoVendida', () => {
+  it('receita vendida mostra os preços por canal', () => {
+    expect(precoOuNaoVendida(makeReceita({ vendavel: true }), 0.07)).toEqual({
+      tipo: 'precos',
+    });
+  });
+
+  it('receita que só vai dentro de outras mostra o texto e o custo por grama', () => {
+    const brigadeiro = receitaSchema.parse(receitaUsadaEmOutra);
+    expect(precoOuNaoVendida(brigadeiro, 0.0241)).toEqual({
+      tipo: 'naoVendida',
+      texto:
+        'Esta receita não é vendida sozinha. O custo dela entra nas receitas onde ela vai.',
+      custo: 'R$ 0,0241/g',
+    });
+  });
+
+  it('usa a unidade do rendimento (ml ou unidade)', () => {
+    const calda = makeReceita({ vendavel: false, unidadeRendimento: 'ML' });
+    const resultado = precoOuNaoVendida(calda, 0.5);
+    expect(resultado).toMatchObject({
+      texto: TEXTO_NAO_VENDIDA_SOZINHA,
+      custo: 'R$ 0,5000/ml',
+    });
+  });
+});
+
+describe('custoParaUsarDentro', () => {
+  const brigadeiro = receitaSchema.parse(receitaUsadaEmOutra);
+  const brownieDoisAmores = receitaSchema.parse(receitaComReceitas);
+
+  it('usa o custo que a API mostra na receita onde ela vai', () => {
+    expect(
+      custoParaUsarDentro(brigadeiro, [makeReceita(), brownieDoisAmores]),
+    ).toBe(0.0241);
+  });
+
+  it('sem receita que a use, fica o custo dela mesma', () => {
+    expect(custoParaUsarDentro(brigadeiro, [makeReceita()])).toBe(0.0741);
+  });
+});
+
+describe('motivoParaNaoExcluir', () => {
+  it('diz onde a receita vai', () => {
+    expect(
+      motivoParaNaoExcluir({
+        nome: 'Brigadeiro branco',
+        usadaEm: [
+          { receitaId: 159, nome: 'Brownie Dois Amores' },
+          { receitaId: 160, nome: 'Bolo Prestígio' },
+        ],
+      }),
+    ).toBe(
+      'A receita Brigadeiro branco vai dentro de Brownie Dois Amores e Bolo Prestígio. Tire ela de lá antes de excluir.',
+    );
+  });
+
+  it('receita que não vai dentro de outra pode ser excluída', () => {
+    expect(motivoParaNaoExcluir(makeReceita())).toBeNull();
+  });
+});
+
+describe('passaNoFiltroDeVenda', () => {
+  const vendida = makeReceita({ vendavel: true });
+  const soDentro = makeReceita({ vendavel: false });
+
+  it('"Todas" mostra as duas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'todas')).toBe(true);
+    expect(passaNoFiltroDeVenda(soDentro, 'todas')).toBe(true);
+  });
+
+  it('"Vendo sozinha" mostra só as vendidas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'vendo')).toBe(true);
+    expect(passaNoFiltroDeVenda(soDentro, 'vendo')).toBe(false);
+  });
+
+  it('"Só vai dentro de outras" mostra só as não vendidas', () => {
+    expect(passaNoFiltroDeVenda(vendida, 'dentro')).toBe(false);
+    expect(passaNoFiltroDeVenda(soDentro, 'dentro')).toBe(true);
   });
 });
