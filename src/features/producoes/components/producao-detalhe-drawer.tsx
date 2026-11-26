@@ -6,7 +6,7 @@ import type { Producao } from '@/shared/api/contracts/operations';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatNumero } from '@/shared/format/numero';
+import { formatNumero, formatQuantidade } from '@/shared/format/numero';
 import { Drawer } from '@/shared/ui/drawer';
 import { ErrorState } from '@/shared/ui/error-state';
 import { producaoDetailOptions } from '../api/producoes.queries';
@@ -75,6 +75,29 @@ function Detalhe({
           valor={formatCustoPorUnidade(producao.custoUnitario)}
         />
       </dl>
+      {producao.receitasUsadas.length > 0 ? (
+        <section
+          aria-labelledby="receitas-usadas-titulo"
+          className="flex flex-col gap-2"
+        >
+          <h3 id="receitas-usadas-titulo" className="text-small text-ink-muted">
+            Receitas usadas (saíram do estoque pronto)
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {producao.receitasUsadas.map((usada) => (
+              <li
+                key={usada.receitaId}
+                className="flex justify-between gap-3 rounded-md border border-border bg-surface p-3"
+              >
+                <span className="min-w-0 wrap-anywhere">{usada.nome}</span>
+                <span className="shrink-0 font-semibold tabular-nums">
+                  {formatQuantidade(usada.quantidade, usada.unidade)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <section aria-labelledby="rateios-titulo" className="flex flex-col gap-2">
         <h3 id="rateios-titulo" className="text-small text-ink-muted">
           Parte das contas do mês

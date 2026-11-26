@@ -3,14 +3,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useController, useWatch } from 'react-hook-form';
 import { configuracaoCustosOptions } from '@/features/configuracoes/api/configuracoes.queries';
+import { estoqueProdutosOptions } from '@/features/estoque/api/estoque.queries';
 import { gastosIndiretosListOptions } from '@/features/gastos-indiretos/api/gastos-indiretos.queries';
 import { receitasListOptions } from '@/features/receitas/api/receitas.queries';
 import type { GastoIndireto } from '@/shared/api/contracts/catalog';
 import { UNIDADE_MEDIDA_ROTULOS } from '@/shared/api/contracts/enums';
+import type { EstoqueProduto } from '@/shared/api/contracts/operations';
 import type { Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
 import { formatMoeda } from '@/shared/format/moeda';
-import { formatNumero } from '@/shared/format/numero';
+import { formatNumero, formatQuantidade } from '@/shared/format/numero';
 import { parseInteiroBR } from '@/shared/format/numero-br';
 import { Alert } from '@/shared/ui/alert';
 import { ToggleChip } from '@/shared/ui/chip';
@@ -21,7 +23,10 @@ import { Termo } from '@/features/aprender/components/termo';
 import type { DadosDoExemplo } from '@/features/aprender/termos';
 import { calcularTotalContasDoMes } from '@/shared/domain/contas-do-mes';
 import { useCreateProducao } from '../hooks/use-create-producao';
-import { calcularPreviaProducao } from '../producoes.calculos';
+import {
+  calcularPreviaProducao,
+  calcularUsoDoEstoquePronto,
+} from '../producoes.calculos';
 import {
   producaoFormSchema,
   producaoFormVazio,
@@ -47,6 +52,11 @@ export function ProducaoFormDialog({
   const receitas = useQuery(receitasListOptions());
   const gastos = useQuery(gastosIndiretosListOptions());
   const configuracao = useQuery(configuracaoCustosOptions());
+  // Saldo pronto das receitas usadas dentro da escolhida (FE-72).
+  const estoquePronto = useQuery({
+    ...estoqueProdutosOptions(),
+    enabled: open,
+  });
   // Só a conta do mês entra na produção (BE-30): os outros tipos ficam na receita e na venda.
   const contasDoMes = (gastos.data ?? []).filter(
     (gasto) => gasto.tipo === 'MENSAL',
@@ -112,6 +122,10 @@ export function ProducaoFormDialog({
         receitas={receitas.data ?? []}
         gastos={contasDoMes}
         capacidadeMensal={configuracao.data?.capacidadeMensal}
+      />
+      <SaidaDoEstoquePronto
+        receitas={receitas.data ?? []}
+        saldos={estoquePronto.data}
       />
     </FormDialog>
   );
@@ -257,6 +271,63 @@ function Previa({
           </p>
         </>
       )}
+    </section>
+  );
+}
+
+/**
+ * Receita com receitas dentro (FE-72): o que sai do estoque pronto de cada uma
+ * ("Vai usar 300 g de Brigadeiro branco; você tem 100 g"). Saldo que vai
+ * ficar negativo ganha o aviso amarelo, sem bloquear: o negativo é permitido.
+ */
+function SaidaDoEstoquePronto({
+  receitas,
+  saldos,
+}: {
+  receitas: readonly Receita[];
+  /** Sem o saldo ainda (carregando ou com erro), não mostra a conta. */
+  saldos: readonly EstoqueProduto[] | undefined;
+}) {
+  const [receitaId, quantidade] = useWatch<
+    ProducaoFormInput,
+    ['receitaId', 'quantidade']
+  >({ name: ['receitaId', 'quantidade'] });
+
+  const receita = receitas.find((atual) => String(atual.id) === receitaId);
+  const lotes = parseInteiroBR(quantidade);
+
+  if (!receita || receita.receitas.length === 0 || !lotes || !saldos) {
+    return null;
+  }
+
+  const usos = calcularUsoDoEstoquePronto(receita.receitas, lotes, saldos);
+
+  return (
+    <section
+      aria-label="Sai do estoque pronto"
+      aria-live="polite"
+      className="flex flex-col gap-2 text-small"
+    >
+      <p className="text-ink-muted">Sai do estoque pronto</p>
+      <ul className="flex flex-col gap-2">
+        {usos.map((uso) => (
+          <li key={uso.receitaId} className="flex flex-col gap-2">
+            <span className="wrap-anywhere">
+              {`Vai usar ${formatQuantidade(uso.vaiUsar, uso.unidade)} de ${uso.nome}; você tem ${formatQuantidade(uso.voceTem, uso.unidade)}.`}
+            </span>
+            {uso.ficaNegativo ? (
+              <output className="flex flex-col gap-1 rounded-md border border-warning/40 bg-warning/8 p-3 text-ink">
+                <span className="font-semibold wrap-anywhere">
+                  {`Registre antes a produção de ${uso.nome}.`}
+                </span>
+                <span className="wrap-anywhere">
+                  {`Se anotar assim, o estoque pronto fica em ${formatQuantidade(uso.saldoDepois, uso.unidade)}.`}
+                </span>
+              </output>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

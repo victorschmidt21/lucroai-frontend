@@ -1,4 +1,7 @@
 import type { GastoIndireto } from '@/shared/api/contracts/catalog';
+import type { UnidadeMedida } from '@/shared/api/contracts/enums';
+import type { EstoqueProduto } from '@/shared/api/contracts/operations';
+import type { ItemReceitaReceita } from '@/shared/api/contracts/recipe';
 import { arredondarCentavos } from '@/shared/format/moeda';
 
 // Fórmulas de `producoes/domain/producoes.calculos.ts` e
@@ -63,4 +66,53 @@ export function calcularPreviaProducao(
   );
 
   return { totalUnidades, rateios, totalRateio };
+}
+
+/** Arredonda a 6 casas, como o saldo do estoque pronto no backend (`round6`). */
+const round6 = (valor: number) => Math.round(valor * 1_000_000) / 1_000_000;
+
+/** O que uma receita usada dentro da produzida tira do estoque pronto dela. */
+export type UsoDoEstoquePronto = {
+  receitaId: number;
+  nome: string;
+  unidade: UnidadeMedida;
+  /** `quantidade por lote × lotes`, na unidade do rendimento da receita usada. */
+  vaiUsar: number;
+  /** Saldo pronto hoje; 0 se a receita nunca teve produção. */
+  voceTem: number;
+  /** `voceTem − vaiUsar`: pode ficar negativo (a produção não bloqueia). */
+  saldoDepois: number;
+  ficaNegativo: boolean;
+};
+
+/**
+ * Prévia de "Vai usar 300 g de Brigadeiro branco; você tem 100 g" (FE-72), a
+ * mesma conta da baixa do backend (BE-41, docs/business-rules.md#produção-com-receita-dentro-de-receita):
+ * `saida = quantidade por lote × lotes` e `saldo = round6(saldo − saida)`.
+ */
+export function calcularUsoDoEstoquePronto(
+  receitasDentro: readonly Pick<
+    ItemReceitaReceita,
+    'receitaId' | 'nome' | 'quantidade' | 'unidade'
+  >[],
+  lotes: number,
+  saldos: readonly Pick<EstoqueProduto, 'receitaId' | 'quantidadeDisponivel'>[],
+): UsoDoEstoquePronto[] {
+  return receitasDentro.map((item) => {
+    const vaiUsar = round6(item.quantidade * lotes);
+    const voceTem =
+      saldos.find((saldo) => saldo.receitaId === item.receitaId)
+        ?.quantidadeDisponivel ?? 0;
+    const saldoDepois = round6(voceTem - vaiUsar);
+
+    return {
+      receitaId: item.receitaId,
+      nome: item.nome,
+      unidade: item.unidade,
+      vaiUsar,
+      voceTem,
+      saldoDepois,
+      ficaNegativo: saldoDepois < 0,
+    };
+  });
 }
