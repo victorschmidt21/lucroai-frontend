@@ -367,6 +367,22 @@ Backend: BE-40 (`custo`, `receitas[].custoUnitario` e `custoCalculado`, `precos:
 - **Lista**: selo "Só vai dentro de outras" ao lado do nome e `—` no Preço no Balcão. Filtro "Todas", "Vendo sozinha" e "Só vai dentro de outras" (`passaNoFiltroDeVenda`), em `?tipo=vendo|dentro` (`receitasSearchSchema`); vazio pelo filtro: "Nenhuma receita vendida sozinha." / "Nenhuma receita só vai dentro de outras.", com "Ver todas".
 - **Excluir receita usada em outra** (`motivoParaNaoExcluir`): no lugar da confirmação, o diálogo "Não dá para excluir esta receita" com "A receita <nome> vai dentro de <A e B>. Tire ela de lá antes de excluir.", um link para cada receita e o botão "Entendi". O `DELETE` não é chamado (a API daria 409 `RECEITA_EM_USO`).
 
+### Receita dentro de receita: produção, vendas e avisos (FE-72)
+
+Backend: BE-41 (`receitasUsadas` na `Producao`, `estoqueNegativo` e `vendavel` em `GET /estoque/produtos`, `produtosNegativos` em `GET /alertas` e o 422 `RECEITA_NAO_VENDIDA_SOZINHA` em `POST /vendas`). Produzir uma receita com receitas dentro tira cada uma do estoque pronto dela; o saldo pode ficar negativo (permitido, com aviso).
+
+```
+vai usar     = round6(quantidade por lote × lotes)    // na unidade do rendimento da receita usada
+você tem     = saldo pronto (GET /estoque/produtos), 0 se ela nunca teve produção
+saldo depois = round6(você tem − vai usar)            // < 0: aviso amarelo, sem bloquear
+```
+
+- **Anotar fornada** (`calcularUsoDoEstoquePronto`, `producoes.calculos.ts`): com uma receita com receitas dentro e os lotes preenchidos, o bloco "Sai do estoque pronto" mostra, por receita usada, "Vai usar 300 g de Brigadeiro branco; você tem 0 g.". Se o saldo for ficar negativo, a caixa amarela (`warning`) "Registre antes a produção de Brigadeiro branco." com "Se anotar assim, o estoque pronto fica em -300 g.". O botão continua liberado. A conta é só a prévia: o saldo gravado é o do backend.
+- **Detalhe da fornada**: com `receitasUsadas` não vazio, a seção "Receitas usadas (saíram do estoque pronto)", com o nome e a quantidade gravados (na unidade do rendimento), antes da "Parte das contas do mês".
+- **Vendas**: a lista "Receita" de "Adicionar produto" não oferece a receita com `vendavel: false` (`receitasParaVender`, `vendas.calculos.ts`); o backend responderia 422 `RECEITA_NAO_VENDIDA_SOZINHA`.
+- **Estoque pronto** (tela Estoque, seção "Receitas prontas", `montarEstoquePronto`, `estoque.calculos.ts`): um cartão por receita de `GET /estoque/produtos`, com o nome e "Disponível". A receita vendida mostra "un"; a que só vai dentro de outras, a unidade do rendimento (g, ml). Negativas primeiro, depois por nome. Com `estoqueNegativo`, o selo "Estoque negativo", "Disponível" em `danger` e o link "Registrar produção" (`/producoes?novo=1&receitaId=<id>`, que abre "Anotar fornada" com a receita escolhida). Sem saldo nenhum: "Nenhuma receita pronta ainda. Anote uma fornada para ela aparecer aqui.".
+- **Aviso ao entrar**: o grupo `produtosNegativos` ([Aviso ao entrar](#aviso-ao-entrar)).
+
 ## Estoque de insumos
 
 FE-13. Origem: `lib/features/estoques/domain/entities/estoque_com_insumo.dart`, `lib/features/estoques/presentation/widgets/estoque_card.dart`, `lib/features/estoques/presentation/pages/estoques_page.dart`, `lib/features/estoques/data/datasources/estoque_remote_datasource.dart`. Backend: `services/operations-service/src/modules/estoque/`.
@@ -997,15 +1013,16 @@ FE-47, só na web. Backend: BE-32 (`estoqueNegativo` em `Insumo` e `Estoque`, e 
 
 Na primeira leitura de `GET /alertas` da sessão, se alguma das listas tiver itens, abre o diálogo "Avisos":
 
-| Lista             | Texto                                                                                              | Cada item                                                                                                                                                                                           |
-| ----------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `estoqueNegativo` | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
-| `precoDefasado`   | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
+| Lista                       | Texto                                                                                              | Cada item                                                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `estoqueNegativo`           | "Estes ingredientes estão com estoque negativo: registre a compra para acertar o saldo e o custo." | nome, selo "Estoque negativo", "Saldo: -500 g" e o link "Registrar compra" (`/insumos?compra=<id>`, que abre o detalhe com "Registrar compra")                                                      |
+| `produtosNegativos` (FE-72) | "Estas receitas estão com estoque negativo: registre a produção para acertar o saldo."             | nome, selo "Estoque negativo", "Saldo: -300 g" (na unidade do rendimento) e o link "Registrar produção" (`/producoes?novo=1&receitaId=<id>`)                                                        |
+| `precoDefasado`             | "Estes ingredientes ficaram mais caros: o preço destes produtos precisa subir."                    | nome e "25,0% mais caro" (`aumentoPercentual`); por receita, "Preço novo sugerido: R$ X (antes R$ Y)" (`precoSugerido` e `precoComCustoMedio`, no Balcão) e o link "Ver receita" (`/receitas/<id>`) |
 
 - Sem preço possível (`precoSugerido: null`): "Sem preço que pague tudo: as taxas e o lucro passam de 100%." (FE-57). Insumo sem receita: "Nenhum produto usa este ingrediente.".
 - Seguir um link ou "Fechar" fecha o aviso.
 - **Uma vez por sessão** (`features/alertas/aviso-ao-entrar.ts`, `deveAbrirAviso`): a decisão é tomada uma vez, na primeira leitura dos alertas. Abre se houver alertas e a sessão ainda não tiver sido verificada; aberto ou não, a sessão fica marcada. Alertas que surgem durante o uso (uma produção que deixa o saldo negativo) não abrem o aviso: aparecem no indicador. A sessão é `<id do usuário>:<fim do token>`, que muda a cada login; ela é guardada no `sessionStorage` (só esse id, nenhum dado de negócio), para recarregar a página não reabrir o aviso. Sair e entrar de novo é outra sessão.
-- **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
+- **Indicador**: com algum alerta, um ícone de aviso com o contador (insumos negativos + insumos mais caros + receitas com estoque pronto negativo, desde a FE-72) fica no topo do menu lateral e no cabeçalho do celular ("Ver 2 avisos"); ele reabre o diálogo. Sem alertas, não aparece.
 - **Dica na hora certa** (FE-68, [aprender.md](aprender.md#dica-na-hora-certa)): as dicas "Faltou anotar uma compra?" (Ingredientes e Estoque) e "Um ingrediente ficou mais caro" (Receitas) complementam o aviso. Só aparecem com o aviso resolvido e se ele não abriu sozinho na sessão (a sessão em que abriu fica em `lucroai:aviso-ao-entrar-abriu`, no `sessionStorage`); nunca junto com ele. As outras dicas (margem negativa, taxa do canal e primeiro mês) e as regras de uma por sessão e uma vez só estão na mesma seção.
 
 ## Login e mensagens de erro gerais
