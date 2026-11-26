@@ -357,6 +357,16 @@ Backend: BE-39 e BE-40 (`create-receita.dto.ts`, `validarItensDaReceita` e `vali
 
 As mensagens trocam o texto do backend pelo `code` (`traduzirErroDaReceita`, `receita-form.schema.ts`), só no formulário.
 
+### Receita dentro de receita: detalhe e lista (FE-71)
+
+Backend: BE-40 (`custo`, `receitas[].custoUnitario` e `custoCalculado`, `precos: []` com `vendavel: false`) e o 409 `RECEITA_EM_USO` do `DELETE` (BE-39).
+
+- **Ingredientes de 1 lote** (detalhe): os ingredientes (nome do catálogo, quantidade na unidade do insumo, `itens[].custoCalculado`) e depois as receitas usadas (nome com link para o detalhe dela e o selo "receita", quantidade na unidade do rendimento, `receitas[].custoCalculado`), com "Total dos ingredientes" = `custo.ingredientesLote`, que já soma as receitas (no seed, Brownie Dois Amores: R$ 1,73 + 1,80 + 3,70 + 3,62 = R$ 10,85). Nada é recalculado.
+- **Vai dentro de** (detalhe): com `usadaEm` não vazio, "Vai dentro de: <A>, <B>", cada nome com link.
+- **Não vendida sozinha** (`vendavel: false`; `precoOuNaoVendida`, `receitas.calculos.ts`): no lugar de "Preço sugerido por canal", um cartão com o selo "Só vai dentro de outras", "Esta receita não é vendida sozinha. O custo dela entra nas receitas onde ela vai." e "Custo para usar dentro de outra receita: R$ 0,0241/g" (`formatCustoUnitario`, na unidade do rendimento). O custo é o `custoUnitario` do item na receita que a usa (`custoParaUsarDentro`; ver a lacuna 29 de [api-integration.md](api-integration.md#lacunas-do-backend)). Somem o botão "Simular" (detalhe e lista) e a linha "Lucro desta receita"; o subtítulo vira "Do que é feita e quanto custa".
+- **Lista**: selo "Só vai dentro de outras" ao lado do nome e `—` no Preço no Balcão. Filtro "Todas", "Vendo sozinha" e "Só vai dentro de outras" (`passaNoFiltroDeVenda`), em `?tipo=vendo|dentro` (`receitasSearchSchema`); vazio pelo filtro: "Nenhuma receita vendida sozinha." / "Nenhuma receita só vai dentro de outras.", com "Ver todas".
+- **Excluir receita usada em outra** (`motivoParaNaoExcluir`): no lugar da confirmação, o diálogo "Não dá para excluir esta receita" com "A receita <nome> vai dentro de <A e B>. Tire ela de lá antes de excluir.", um link para cada receita e o botão "Entendi". O `DELETE` não é chamado (a API daria 409 `RECEITA_EM_USO`).
+
 ## Estoque de insumos
 
 FE-13. Origem: `lib/features/estoques/domain/entities/estoque_com_insumo.dart`, `lib/features/estoques/presentation/widgets/estoque_card.dart`, `lib/features/estoques/presentation/pages/estoques_page.dart`, `lib/features/estoques/data/datasources/estoque_remote_datasource.dart`. Backend: `services/operations-service/src/modules/estoque/`.

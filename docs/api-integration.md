@@ -423,6 +423,7 @@ Encontradas na análise dos microsserviços. Cada uma diz o que a web faz. Desde
 26. **Resolvida.** ~~`POST /vendas` não confere a empresa da receita~~: receita de outra empresa → `404`.
 27. **Resolvida.** ~~Simulação divide por preço 0~~: `400` `PRECO_INVALIDO`, cuja mensagem a tela da FE-20 mostra.
 28. **`GET /configuracao-custos` não diz se a configuração foi salva pela pessoa** (sem data de atualização nem indicador; a empresa nasce com os valores padrão, BE-24). → O passo 3 dos Primeiros passos (FE-66) conta como feito quando `capacidadeMensal` é diferente de 40, o padrão do backend ([business-rules.md](business-rules.md#primeiros-passos)).
+29. **Receita não vendida sozinha sem o custo de usar dentro** (BE-40). O `custoUnitario` e o `custo` da própria receita somam embalagem e gastos por unidade, mas o custo que entra nas outras (`receitas[].custoUnitario` de quem a usa) é só ingredientes, forno e perda: no seed, o Brigadeiro branco custa R$ 0,0741/g no próprio detalhe (com R$ 0,05/g de gastos por unidade) e R$ 0,0241/g dentro do Brownie Dois Amores. → O detalhe da receita com `vendavel: false` mostra o valor de quem a usa (`custoParaUsarDentro`, FE-71), lido da lista de receitas; sem ninguém que a use, mostra o `custo.unitario`. O ideal é a API devolver esse custo na própria receita.
 
 ## Divergências entre as issues e o backend
 
