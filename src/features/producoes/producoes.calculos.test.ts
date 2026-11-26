@@ -138,13 +138,13 @@ describe('calcularUsoDoEstoquePronto', () => {
   });
 
   it('arredonda a 6 casas, como o backend', () => {
-    const [uso] = calcularUsoDoEstoquePronto(
+    const [usoDoBrigadeiro] = calcularUsoDoEstoquePronto(
       [{ receitaId: 1, nome: 'Calda', quantidade: 0.1, unidade: 'L' }],
       3,
       [{ receitaId: 1, quantidadeDisponivel: 0.3 }],
     );
 
-    expect(uso).toMatchObject({ vaiUsar: 0.3, saldoDepois: 0 });
+    expect(usoDoBrigadeiro).toMatchObject({ vaiUsar: 0.3, saldoDepois: 0 });
   });
 
   it('receita só com ingredientes não usa nada do estoque pronto', () => {
