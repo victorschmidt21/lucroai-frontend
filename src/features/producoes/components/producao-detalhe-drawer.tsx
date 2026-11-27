@@ -74,6 +74,13 @@ function Detalhe({
           rotulo="Custo unitário"
           valor={formatCustoPorUnidade(producao.custoUnitario)}
         />
+        {/* Gravado pela API (BE-47), já somado ao custo total; `null` nas antigas. */}
+        {producao.custoTrabalho != null ? (
+          <Item
+            rotulo="Seu trabalho"
+            valor={formatMoeda(producao.custoTrabalho)}
+          />
+        ) : null}
       </dl>
       {producao.receitasUsadas.length > 0 ? (
         <section
