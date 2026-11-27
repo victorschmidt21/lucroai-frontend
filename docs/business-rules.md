@@ -225,6 +225,23 @@ totalContasDoMes = Σ gasto.valor, só dos gastos MENSAL
 
 O formulário recebe pontos percentuais (`12`) e envia a fração (`0.12`, `percentualParaFracao`); na edição, a fração volta como `12`. Ao trocar o tipo, o rótulo e a máscara do campo do valor mudam (R$ ou %), e o valor digitado fica como está.
 
+### Cobrança dupla do seu trabalho (FE-78)
+
+O trabalho da dona entra pelo [valor da sua hora](#valor-da-sua-hora-fe-76) vezes o tempo de cada receita; uma conta do mês com o salário dela seria dividida pelas fornadas e cobraria o trabalho duas vezes. `lembraSeuTrabalho(descricao)` (`gastos-indiretos.calculos.ts`) reconhece o nome que lembra o trabalho dela:
+
+- compara sem acento e sem maiúscula (`normalizarTexto`);
+- por **palavra inteira** (limite de palavra `\b` da regex): "salário(s)", "pró-labore" (com hífen, espaço ou junto, e no plural), "retirada(s)", "meu(s)" e "minha(s)";
+- "Meu salário", "SALARIO", "Pró-labore" e "Minha parte" avisam; "Luz", "Comunicação" e "Fermento" não avisam (a palavra inteira evita achar "meu" ou "minha" no meio de outro nome).
+
+Aviso (só avisa, **não bloqueia** salvar):
+
+| Onde                       | Quando                                                   | Texto                                                                                                                                                     |
+| -------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lista, acima do total      | um aviso por conta com nome reconhecido                  | `“<descrição>”: Seu trabalho agora entra pelo valor da sua hora. Tire esta conta para não cobrar duas vezes.` e "Ver Ajustes de preço" (`/configuracoes`) |
+| Formulário, abaixo do nome | enquanto o nome digitado é reconhecido (antes de salvar) | "Seu trabalho agora entra pelo valor da sua hora. Tire esta conta para não cobrar duas vezes." e "Ver Ajustes de preço"                                   |
+
+O aviso usa o `Aviso` de `shared/ui/alert.tsx` (borda e fundo `warning`, ícone e texto). No formulário, fica num `<output>`, para o leitor de tela anunciar quando aparece.
+
 ### Validações
 
 | Campo (contrato)             | Regra                           | Mensagem                                            | Origem                                                 |
@@ -1020,6 +1037,20 @@ A soma dos percentuais não é barrada: o backend devolve o canal sem preço (`P
 | Toasts dos canais    | "Forma de venda criada.", "Forma de venda atualizada.", "Forma de venda excluída."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Confirmação          | "Excluir forma de venda" / `Deseja excluir "<nome>"? As vendas já feitas nela continuam no histórico.`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Erros                | "Não foi possível carregar as configurações." / "Não foi possível carregar as formas de venda."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+
+### Valor da hora vazio (FE-78)
+
+Backend: BE-47, `valorHoraVazio` em `GET /alertas` (`true` quando o `valorHora` é ≤ 0 e alguma receita, vendável ou não, tem `minutosTrabalhoPorLote > 0`; o contrato lê `false` quando um backend anterior não manda o campo). Nada é calculado na tela.
+
+- Texto: "Você ainda não disse quanto vale sua hora. Sem isso, seu trabalho não entra no preço.", com o link "Dizer o valor da sua hora" (`/configuracoes`).
+- Onde: no Início, logo abaixo da saudação e da dica na hora certa; no detalhe da receita, abaixo do cabeçalho, **só** na receita com `minutosTrabalhoPorLote > 0`.
+- O componente é `AvisoValorHoraVazio` (`shared/avisos/aviso-valor-hora-vazio.tsx`), que lê os alertas já em cache pelo `AvisosProvider` (`useAvisos`): nenhuma requisição nova. Salvar os Ajustes de preço e salvar uma receita invalidam os alertas, e o aviso aparece ou some sozinho.
+- Não entra no diálogo "Avisos" nem no contador do indicador: é um aviso fixo nas duas telas, até ela preencher o valor da hora.
+
+### Aprender: seu trabalho (FE-78)
+
+- Guia "Como cobrar pelo seu trabalho" (`/aprender/guias/cobrar-pelo-seu-trabalho`, [aprender.md](aprender.md#guias)): por que não é conta do mês, como achar o valor da hora, que tempo contar, o exemplo do brigadeiro (R$ 18,75/h, 40 min, 50 un → R$ 0,25 por unidade) e trabalho × lucro. A busca do Aprender acha o guia por "trabalho", "hora" e "salário".
+- Dica na hora certa `tempo-de-trabalho` no formulário da receita, logo abaixo do campo "Tempo de trabalho por lote", quando o tempo digitado passa de 0: "Seu tempo também tem preço" / "Este tempo vezes o valor da sua hora entra no custo de cada unidade. Por isso seu salário não vai nas contas do mês." / "Como cobrar pelo seu trabalho" → o guia.
 
 ## Estoque negativo e avisos ao entrar
 
