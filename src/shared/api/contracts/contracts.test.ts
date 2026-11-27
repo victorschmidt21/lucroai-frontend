@@ -53,12 +53,14 @@ import estoque from '@/test/fixtures/operations/estoque.json';
 import movimentacoes from '@/test/fixtures/operations/movimentacoes.json';
 import producao from '@/test/fixtures/operations/producao.json';
 import producaoComReceitas from '@/test/fixtures/operations/producao-com-receitas.json';
+import producaoComTrabalho from '@/test/fixtures/operations/producao-com-trabalho.json';
 import producoes from '@/test/fixtures/operations/producoes.json';
 import canais from '@/test/fixtures/pricing/canais.json';
 import configuracaoCustos from '@/test/fixtures/pricing/configuracao-custos.json';
 import receitaCustoSimulada from '@/test/fixtures/recipe/receita-custo-simulada.json';
 import receitaCusto from '@/test/fixtures/recipe/receita-custo.json';
 import receitaComReceitas from '@/test/fixtures/recipe/receita-com-receitas.json';
+import receitaComTrabalho from '@/test/fixtures/recipe/receita-com-trabalho.json';
 import receitaUsadaEmOutra from '@/test/fixtures/recipe/receita-usada-em-outra.json';
 import receita from '@/test/fixtures/recipe/receita.json';
 import receitas from '@/test/fixtures/recipe/receitas.json';
@@ -240,6 +242,13 @@ const CASOS: Caso[] = [
     },
   },
   {
+    nome: 'receita com o seu trabalho (BE-45/BE-46)',
+    schema: receitaSchema,
+    fixture: receitaComTrabalho,
+    factory: makeReceita({ minutosTrabalhoPorLote: 80 }),
+    invalida: { ...makeReceita(), minutosTrabalhoPorLote: '80' },
+  },
+  {
     nome: 'receita usada em outra e não vendida sozinha',
     schema: receitaSchema,
     fixture: receitaUsadaEmOutra,
@@ -371,6 +380,13 @@ const CASOS: Caso[] = [
     },
   },
   {
+    nome: 'produção com o seu trabalho (BE-47)',
+    schema: producaoSchema,
+    fixture: producaoComTrabalho,
+    factory: makeProducao({ custoTrabalho: 12.5 }),
+    invalida: { ...makeProducao(), custoTrabalho: '12,50' },
+  },
+  {
     nome: 'lista de vendas',
     schema: z.array(vendaSchema),
     fixture: vendas,
@@ -437,6 +453,39 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
+  it('a receita do seed traz os minutos e o seu trabalho (BE-45/BE-46)', () => {
+    const lida = unwrap(receitaComTrabalho, receitaSchema);
+    expect(lida.minutosTrabalhoPorLote).toBe(40);
+    expect(lida.custo.trabalhoLote).toBe(12.5);
+    expect(lida.custo.trabalho).toBe(0.625);
+    expect(lida.precos[0]?.composicao?.trabalho.valor).toBe(0.625);
+  });
+
+  it('receita de um backend anterior à BE-45 vem com o trabalho em 0', () => {
+    const lida = unwrap(receita, receitaSchema);
+    expect(lida.minutosTrabalhoPorLote).toBe(0);
+    expect(lida.custo.trabalhoLote).toBe(0);
+    expect(lida.custo.trabalho).toBe(0);
+    expect(lida.precos[0]?.composicao?.trabalho).toEqual({
+      valor: 0,
+      fracao: 0,
+    });
+  });
+
+  it('a produção do seed traz o custo do trabalho (BE-47)', () => {
+    expect(unwrap(producaoComTrabalho, producaoSchema).custoTrabalho).toBe(
+      12.5,
+    );
+  });
+
+  it('produção anterior à BE-47 vem sem o custo do trabalho', () => {
+    expect(unwrap(producao, producaoSchema).custoTrabalho).toBeUndefined();
+    expect(
+      unwrap({ ...producao, custoTrabalho: null }, producaoSchema)
+        .custoTrabalho,
+    ).toBeNull();
+  });
+
   it('a configuração do seed traz o valor da hora (BE-45)', () => {
     expect(unwrap(configuracaoCustos, configuracaoCustosSchema).valorHora).toBe(
       18.75,

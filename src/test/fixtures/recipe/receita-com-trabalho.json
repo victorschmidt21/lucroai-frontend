@@ -1,0 +1,170 @@
+{
+  "id": 199,
+  "empresaId": 30,
+  "nome": "Brownie",
+  "rendimento": 20,
+  "unidadeRendimento": "UN",
+  "custoProducao": 50.27,
+  "custoUnitario": 2.5134,
+  "margemLucro": 0.1765,
+  "precoSugerido": 3.005,
+  "usoPorLote": 0.5,
+  "embalagemPorUnidade": 0,
+  "minutosTrabalhoPorLote": 40,
+  "perdaPercentual": 0.05,
+  "vendavel": true,
+  "dataCriacao": "2026-06-01T02:02:50.910Z",
+  "itens": [
+    {
+      "insumoId": 447,
+      "quantidade": 0.2,
+      "custoCalculado": 0.7
+    },
+    {
+      "insumoId": 448,
+      "quantidade": 0.3,
+      "custoCalculado": 1.38
+    },
+    {
+      "insumoId": 449,
+      "quantidade": 200,
+      "custoCalculado": 6
+    },
+    {
+      "insumoId": 450,
+      "quantidade": 4,
+      "custoCalculado": 3
+    },
+    {
+      "insumoId": 453,
+      "quantidade": 80,
+      "custoCalculado": 3.6
+    },
+    {
+      "insumoId": 456,
+      "quantidade": 0.2,
+      "custoCalculado": 7
+    }
+  ],
+  "receitas": [],
+  "usadaEm": [
+    {
+      "receitaId": 200,
+      "nome": "Brownie Dois Amores"
+    }
+  ],
+  "custo": {
+    "ingredientesLote": 21.68,
+    "gastosMensaisLote": 12.58,
+    "trabalhoLote": 12.5,
+    "ingredientes": 1.084,
+    "gastosMensais": 0.6288,
+    "trabalho": 0.625,
+    "gastosPorUnidade": 0.05,
+    "embalagem": 0,
+    "perdas": 0.1257,
+    "unitario": 2.5134
+  },
+  "precos": [
+    {
+      "canalId": 187,
+      "canal": "Balcão",
+      "balcao": true,
+      "percentuais": 0.1636,
+      "preco": 3.005,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": {
+          "valor": 1.084,
+          "fracao": 0.3607
+        },
+        "gastosMensais": {
+          "valor": 0.6288,
+          "fracao": 0.2092
+        },
+        "trabalho": {
+          "valor": 0.625,
+          "fracao": 0.208
+        },
+        "gastosPorUnidade": {
+          "valor": 0.05,
+          "fracao": 0.0166
+        },
+        "embalagem": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "perdas": {
+          "valor": 0.1257,
+          "fracao": 0.0418
+        },
+        "imposto": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "taxaCanal": {
+          "valor": 0.0409,
+          "fracao": 0.0136
+        },
+        "gastosPercentuais": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "lucro": {
+          "valor": 0.4508,
+          "fracao": 0.15
+        }
+      }
+    },
+    {
+      "canalId": 188,
+      "canal": "iFood",
+      "balcao": false,
+      "percentuais": 0.302,
+      "preco": 3.6009,
+      "motivo": null,
+      "composicao": {
+        "ingredientes": {
+          "valor": 1.084,
+          "fracao": 0.301
+        },
+        "gastosMensais": {
+          "valor": 0.6288,
+          "fracao": 0.1746
+        },
+        "trabalho": {
+          "valor": 0.625,
+          "fracao": 0.1736
+        },
+        "gastosPorUnidade": {
+          "valor": 0.05,
+          "fracao": 0.0139
+        },
+        "embalagem": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "perdas": {
+          "valor": 0.1257,
+          "fracao": 0.0349
+        },
+        "imposto": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "taxaCanal": {
+          "valor": 0.5473,
+          "fracao": 0.152
+        },
+        "gastosPercentuais": {
+          "valor": 0,
+          "fracao": 0
+        },
+        "lucro": {
+          "valor": 0.5401,
+          "fracao": 0.15
+        }
+      }
+    }
+  ]
+}

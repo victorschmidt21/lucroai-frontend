@@ -1,0 +1,34 @@
+{
+  "id": 154,
+  "receitaId": 196,
+  "empresaId": 30,
+  "quantidade": 1,
+  "totalUnidades": 12,
+  "custoTotal": 35.88,
+  "custoUnitario": 2.9896,
+  "custoTrabalho": 12.5,
+  "dataProducao": "2026-06-05T02:02:50.910Z",
+  "rateios": [
+    {
+      "gastoIndiretoId": 172,
+      "descricao": "Energia Elétrica",
+      "valorRateado": 2.25
+    },
+    {
+      "gastoIndiretoId": 173,
+      "descricao": "Aluguel do Espaço",
+      "valorRateado": 9
+    },
+    {
+      "gastoIndiretoId": 174,
+      "descricao": "Gás de Cozinha (P45)",
+      "valorRateado": 0.93
+    },
+    {
+      "gastoIndiretoId": 175,
+      "descricao": "DAS do MEI",
+      "valorRateado": 0.4
+    }
+  ],
+  "receitasUsadas": []
+}
