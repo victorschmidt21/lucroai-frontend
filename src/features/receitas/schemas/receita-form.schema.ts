@@ -16,6 +16,10 @@ import {
   fracaoParaPercentual,
   percentualParaFracao,
 } from '@/shared/format/numero';
+import {
+  horasEMinutosParaMinutos,
+  minutosParaHorasEMinutos,
+} from '../receitas.calculos';
 
 // docs/business-rules.md#receitas-formulário-e-custo. Origem: `_openReceitaForm`
 // e `_showAddInsumoDialog` de receitas_page.dart; limites de `create-receita.dto.ts`
@@ -67,6 +71,16 @@ export const receitaFormSchema = z.object({
   perda_percentual: percentualOpcional(),
   /** Em pontos percentuais (`15`); vazio usa o lucro padrão da empresa. */
   lucro_percentual: percentualOpcional(),
+  /**
+   * Tempo de trabalho de 1 lote em horas e minutos (FE-77); vazio é 0. Vão
+   * juntos no `minutos_trabalho_por_lote` (≥ 0, fracionário permitido).
+   */
+  horas_trabalho: numeroBROpcional(
+    z.number({ error: VALOR_INVALIDO }).min(0, VALOR_INVALIDO),
+  ),
+  minutos_trabalho: numeroBROpcional(
+    z.number({ error: VALOR_INVALIDO }).min(0, VALOR_INVALIDO),
+  ),
   insumos: z
     .array(
       z.object({
@@ -130,6 +144,8 @@ export const receitaFormVazio: ReceitaFormInput = {
   embalagem_por_unidade: '',
   perda_percentual: '',
   lucro_percentual: '',
+  horas_trabalho: '',
+  minutos_trabalho: '',
   insumos: [],
   vendavel: true,
   receitas: [],
@@ -141,6 +157,7 @@ function campoOuVazio(valor: number) {
 }
 
 export function toReceitaFormInput(receita: Receita): ReceitaFormInput {
+  const trabalho = minutosParaHorasEMinutos(receita.minutosTrabalhoPorLote);
   return {
     nome: receita.nome,
     rendimento: String(receita.rendimento),
@@ -155,6 +172,8 @@ export function toReceitaFormInput(receita: Receita): ReceitaFormInput {
       receita.lucroPercentual === undefined
         ? ''
         : formatNumeroEditavel(fracaoParaPercentual(receita.lucroPercentual)),
+    horas_trabalho: campoOuVazio(trabalho.horas),
+    minutos_trabalho: campoOuVazio(trabalho.minutos),
     insumos: receita.itens.map((item) => ({
       insumo_id: item.insumoId,
       quantidade: formatNumeroEditavel(item.quantidade),
@@ -168,7 +187,8 @@ export function toReceitaFormInput(receita: Receita): ReceitaFormInput {
 }
 
 /**
- * Envia a ficha técnica inteira: vazio vira 0 (embalagem e perda) ou `null`
+ * Envia a ficha técnica inteira: vazio vira 0 (embalagem, perda e tempo de
+ * trabalho, que vai em minutos) ou `null`
  * (lucro), que no `PUT` também volta ao lucro padrão da empresa. Os
  * percentuais vão como fração.
  */
@@ -186,6 +206,10 @@ export function toCreateReceitaBody(
       values.lucro_percentual === undefined
         ? null
         : percentualParaFracao(values.lucro_percentual),
+    minutos_trabalho_por_lote: horasEMinutosParaMinutos({
+      horas: values.horas_trabalho,
+      minutos: values.minutos_trabalho,
+    }),
     vendavel: values.vendavel,
     insumos: values.insumos,
     receitas: values.receitas,

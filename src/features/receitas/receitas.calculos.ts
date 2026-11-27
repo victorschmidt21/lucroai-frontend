@@ -11,6 +11,7 @@ import {
   formatMoeda,
 } from '@/shared/format/moeda';
 import { formatMargem, formatNumero } from '@/shared/format/numero';
+import { formatNumeroEditavel } from '@/shared/format/numero-br';
 
 /*
  * Desde a FE-44 o custo e o preço da receita vêm sempre da API (`custo` e
@@ -27,6 +28,7 @@ export function calcularCustoItem(quantidade: number, custoUnitario: number) {
 export type ParteDaBarraId =
   | 'ingredientes'
   | 'contasDoMes'
+  | 'seuTrabalho'
   | 'embalagemEPerdas'
   | 'imposto'
   | 'taxaCanal'
@@ -55,8 +57,9 @@ function somar(...partes: { valor: number; fracao: number }[]) {
 /**
  * "Para onde vai cada R$ 1,00" do preço de um canal, a partir da `composicao`
  * da API, sem recalcular nada: os gastos por unidade (saquinho, etiqueta)
- * entram em "Embalagem e perdas". Partes com zero ficam de fora, menos o
- * lucro, que sempre aparece. A ordem é a da barra.
+ * entram em "Embalagem e perdas". Partes com zero ficam de fora (inclusive
+ * "Seu trabalho" sem minutos ou sem o valor da hora, FE-77), menos o lucro,
+ * que sempre aparece. A ordem é a da barra.
  */
 export function montarBarraDoPreco(
   composicao: ComposicaoPreco,
@@ -72,6 +75,11 @@ export function montarBarraDoPreco(
       id: 'contasDoMes',
       rotulo: 'Contas do mês',
       ...somar(composicao.gastosMensais),
+    },
+    {
+      id: 'seuTrabalho',
+      rotulo: 'Seu trabalho',
+      ...somar(composicao.trabalho),
     },
     {
       id: 'embalagemEPerdas',
@@ -239,7 +247,7 @@ export function motivoParaNaoExcluir(
 /**
  * Custo de 1 unidade (grama, ml ou unidade do rendimento) da receita quando
  * ela vai dentro de outra: o `custoUnitario` que a API mostra no item da
- * receita que a usa (só ingredientes, forno e perda, BE-40). Se ela ainda não
+ * receita que a usa (ingredientes, forno, seu trabalho e perda, BE-40/BE-46). Se ela ainda não
  * vai dentro de nenhuma, fica o custo dela mesma (`custo.unitario`).
  */
 export function custoParaUsarDentro(
@@ -291,4 +299,50 @@ export function dicaDaQuantidadeDaReceita(
   receita: Pick<Receita, 'nome' | 'rendimento' | 'unidadeRendimento'>,
 ) {
   return `A receita de ${receita.nome} rende ${formatNumero(receita.rendimento)} ${UNIDADE_MEDIDA_ROTULOS[receita.unidadeRendimento]}. Quanto vai em 1 lote desta?`;
+}
+
+/** Tempo de trabalho de 1 lote em horas e minutos, como no formulário (FE-77). */
+export type HorasEMinutos = { horas: number; minutos: number };
+
+/**
+ * `minutosTrabalhoPorLote` em horas cheias e o resto em minutos: 80 vira
+ * 1 h 20 min. Minutos fracionários (a API aceita) ficam no resto, com até 4
+ * casas para tirar o ruído do ponto flutuante.
+ */
+export function minutosParaHorasEMinutos(total: number): HorasEMinutos {
+  const seguro = Number.isFinite(total) && total > 0 ? total : 0;
+  const horas = Math.floor(seguro / 60);
+  return { horas, minutos: round4(seguro - horas * 60) };
+}
+
+/**
+ * Horas e minutos digitados viram o `minutos_trabalho_por_lote` do corpo:
+ * 1 h 20 min vira 80. Vazio conta como 0; aceita horas quebradas (1,5 h).
+ */
+export function horasEMinutosParaMinutos({
+  horas = 0,
+  minutos = 0,
+}: Partial<HorasEMinutos>): number {
+  return round4(horas * 60 + minutos);
+}
+
+/** "1 h 20 min", "40 min", "2 h"; 0 vira "0 min". */
+export function formatTempoDeTrabalho(total: number): string {
+  const { horas, minutos } = minutosParaHorasEMinutos(total);
+  const partes: string[] = [];
+  if (horas > 0) partes.push(`${formatNumeroEditavel(horas)} h`);
+  if (minutos > 0 || horas === 0)
+    partes.push(`${formatNumeroEditavel(minutos)} min`);
+  return partes.join(' ');
+}
+
+/**
+ * Linha "Seu trabalho" no custo do detalhe (FE-77): só aparece quando o
+ * trabalho do lote é maior que zero (sem minutos ou com o valor da hora em 0,
+ * fica de fora, como a fatia da barra).
+ */
+export function mostrarSeuTrabalho(
+  custo: Pick<Receita['custo'], 'trabalhoLote'>,
+): boolean {
+  return custo.trabalhoLote > 0;
 }

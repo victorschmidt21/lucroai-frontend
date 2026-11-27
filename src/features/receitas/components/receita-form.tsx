@@ -219,6 +219,7 @@ function ReceitaForm({
             hint="Divide as contas do mês entre as receitas. Padrão: 1."
             required
           />
+          <TempoDeTrabalhoCampo />
           <FormMoneyInput
             name="embalagem_por_unidade"
             label={
@@ -247,6 +248,43 @@ function ReceitaForm({
 
 function nomeDoInsumo(insumo: Insumo | undefined, insumoId: number) {
   return insumo?.nome ?? `Ingrediente #${insumoId}`;
+}
+
+/**
+ * "Tempo de trabalho por lote" em horas e minutos (FE-77), que vai no
+ * `minutos_trabalho_por_lote`. Na receita que usa outras, a ajuda lembra que
+ * o tempo delas já está no custo de cada uma.
+ */
+function TempoDeTrabalhoCampo() {
+  const receitas = useWatch<ReceitaFormInput, 'receitas'>({ name: 'receitas' });
+  const usaOutras = (receitas?.length ?? 0) > 0;
+
+  return (
+    <fieldset
+      aria-describedby="tempo-de-trabalho-ajuda"
+      className="flex min-w-0 flex-col gap-1.5 sm:col-span-2"
+    >
+      <legend className="mb-1.5 text-small font-extrabold text-ink">
+        Tempo de trabalho por lote
+      </legend>
+      <div className="grid grid-cols-2 gap-3">
+        <FormDecimalInput name="horas_trabalho" label="Horas" unidade="h" />
+        <FormDecimalInput
+          name="minutos_trabalho"
+          label="Minutos"
+          unidade="min"
+        />
+      </div>
+      <p
+        id="tempo-de-trabalho-ajuda"
+        className="text-caption font-normal text-ink-muted"
+      >
+        {usaOutras
+          ? 'Conte só o tempo de montar. O tempo das receitas que vão dentro já está no custo delas.'
+          : 'Quanto tempo você fica ocupada com esta receita: preparar, mexer, montar, embalar. Não conte o tempo em que ela fica sozinha no forno ou na geladeira.'}
+      </p>
+    </fieldset>
+  );
 }
 
 /** Chave "Vendo esta receita sozinha" (`vendavel`, BE-39), ligada por padrão. */

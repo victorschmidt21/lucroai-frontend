@@ -23,6 +23,8 @@ const valido: ReceitaFormInput = {
   embalagem_por_unidade: '0,15',
   perda_percentual: '5',
   lucro_percentual: '20',
+  horas_trabalho: '',
+  minutos_trabalho: '',
   insumos: [
     { insumo_id: 1, quantidade: '0,25' },
     { insumo_id: 3, quantidade: '100' },
@@ -188,6 +190,7 @@ describe('toCreateReceitaBody', () => {
       embalagem_por_unidade: 0.15,
       perda_percentual: 0.05,
       lucro_percentual: 0.2,
+      minutos_trabalho_por_lote: 0,
       vendavel: true,
       insumos: [
         { insumo_id: 1, quantidade: 0.25 },
@@ -246,6 +249,8 @@ describe('toReceitaFormInput', () => {
       embalagem_por_unidade: '0,15',
       perda_percentual: '5',
       lucro_percentual: '25',
+      horas_trabalho: '',
+      minutos_trabalho: '',
       insumos: [
         { insumo_id: 1, quantidade: '1' },
         { insumo_id: 8, quantidade: '0,02' },
@@ -271,6 +276,62 @@ describe('toReceitaFormInput', () => {
       uso_por_lote: '1',
       lucro_percentual: '',
       insumos: [],
+    });
+  });
+});
+
+describe('tempo de trabalho por lote (FE-77)', () => {
+  it('1 h 20 min envia minutos_trabalho_por_lote: 80', () => {
+    const valores = receitaFormSchema.parse({
+      ...valido,
+      horas_trabalho: '1',
+      minutos_trabalho: '20',
+    });
+    expect(toCreateReceitaBody(valores).minutos_trabalho_por_lote).toBe(80);
+    expect(toUpdateReceitaBody(valores).minutos_trabalho_por_lote).toBe(80);
+  });
+
+  it('só minutos, minutos acima de 60 e decimais também valem', () => {
+    const minutos = (horas_trabalho: string, minutos_trabalho: string) =>
+      toCreateReceitaBody(
+        receitaFormSchema.parse({
+          ...valido,
+          horas_trabalho,
+          minutos_trabalho,
+        }),
+      ).minutos_trabalho_por_lote;
+    expect(minutos('', '40')).toBe(40);
+    expect(minutos('', '90')).toBe(90);
+    expect(minutos('1,5', '')).toBe(90);
+    expect(minutos('', '12,5')).toBe(12.5);
+    expect(minutos('', '')).toBe(0);
+  });
+
+  it('recusa tempo negativo ou que não é número', () => {
+    expect(mensagens({ horas_trabalho: '-1' })).toEqual([
+      ['horas_trabalho', 'Valor inválido'],
+    ]);
+    expect(mensagens({ minutos_trabalho: 'abc' })).toEqual([
+      ['minutos_trabalho', 'Valor inválido'],
+    ]);
+  });
+
+  it('editar mostra os minutos salvos como horas e minutos', () => {
+    expect(
+      toReceitaFormInput(makeReceita({ minutosTrabalhoPorLote: 80 })),
+    ).toMatchObject({ horas_trabalho: '1', minutos_trabalho: '20' });
+    expect(
+      toReceitaFormInput(makeReceita({ minutosTrabalhoPorLote: 40 })),
+    ).toMatchObject({ horas_trabalho: '', minutos_trabalho: '40' });
+    expect(
+      toReceitaFormInput(makeReceita({ minutosTrabalhoPorLote: 0 })),
+    ).toMatchObject({ horas_trabalho: '', minutos_trabalho: '' });
+  });
+
+  it('o formulário vazio começa sem tempo de trabalho', () => {
+    expect(receitaFormVazio).toMatchObject({
+      horas_trabalho: '',
+      minutos_trabalho: '',
     });
   });
 });
