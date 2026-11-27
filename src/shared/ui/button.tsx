@@ -20,6 +20,11 @@ const VARIANT_CLASSES = {
   // Base do `IconButton`: círculo Merengue com ícone `ink`.
   icone:
     'border-transparent bg-surface-alt text-ink not-disabled:hover:bg-accent-soft',
+  // `IconButton` dentro do campo (`trailing` do `Input`, FE-74): só o ícone, sem
+  // círculo. `ink-muted` como o ícone à esquerda; Damasco (`highlight-ink`) no
+  // hover, que passa de 3:1. O anel de foco entra 4px para não cobrir a borda.
+  'icone-campo':
+    'border-transparent bg-transparent text-ink-muted not-disabled:hover:text-highlight-ink focus-visible:-outline-offset-4',
 };
 
 // Pílula com 48px de altura em qualquer tela (área de toque da marca, FE-53).

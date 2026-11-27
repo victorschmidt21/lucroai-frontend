@@ -22,9 +22,14 @@ const ITEM_LINHA =
   'flex min-h-12 items-center gap-3 rounded-full px-4 py-2 text-body transition-colors duration-150';
 
 // Barra inferior do celular (FE-57): cinco colunas, ícone de 24px sobre o rótulo
-// de 12px. O contorno do foco fica para dentro, para não ser cortado.
+// de 12px. Cada coluna tem uma folga de 4px (`COLUNA_BARRA`), e o item ativo
+// ganha um fundo `accent-soft` de cantos arredondados (14px) em volta do ícone e do
+// rótulo (FE-75); 56px do item + 8px de folga mantêm a barra com 64px. O
+// contorno do foco fica para dentro e acompanha o arredondado.
+const COLUNA_BARRA = 'min-w-0 p-1';
 const ITEM_BARRA =
-  'flex min-h-16 w-full flex-col items-center justify-center gap-0.5 rounded-md px-0.5 text-nav whitespace-nowrap -outline-offset-2 transition-colors duration-150';
+  'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-nav whitespace-nowrap -outline-offset-2 transition-colors duration-150';
+const ITEM_BARRA_ATIVO = cn(COR_ATIVO, 'bg-accent-soft');
 
 type MenuNavegacaoProps = {
   variante: 'lateral' | 'inferior';
@@ -55,12 +60,15 @@ export function MenuNavegacao({ variante }: MenuNavegacaoProps) {
         {ITENS_BARRA_INFERIOR.map((item) => {
           const ativo = item === itemAtivo;
           return (
-            <li key={item.href} className="min-w-0">
+            <li key={item.href} className={COLUNA_BARRA}>
               <Link
                 href={item.href}
                 prefetch={false}
                 {...(ativo ? { 'aria-current': 'page' } : {})}
-                className={cn(ITEM_BARRA, ativo ? COR_ATIVO : COR_INATIVO)}
+                className={cn(
+                  ITEM_BARRA,
+                  ativo ? ITEM_BARRA_ATIVO : COR_INATIVO,
+                )}
               >
                 <IconeDaBarra item={item} ativo={ativo} />
                 {item.label}
@@ -68,13 +76,16 @@ export function MenuNavegacao({ variante }: MenuNavegacaoProps) {
             </li>
           );
         })}
-        <li className="min-w-0">
+        <li className={COLUNA_BARRA}>
           <Drawer
             title="Mais"
             trigger={
               <button
                 type="button"
-                className={cn(ITEM_BARRA, maisAtivo ? COR_ATIVO : COR_INATIVO)}
+                className={cn(
+                  ITEM_BARRA,
+                  maisAtivo ? ITEM_BARRA_ATIVO : COR_INATIVO,
+                )}
               >
                 <IconeDaBarra
                   item={{ label: 'Mais', href: '', icone: IconMais }}
@@ -92,19 +103,13 @@ export function MenuNavegacao({ variante }: MenuNavegacaoProps) {
   );
 }
 
-/** Pílula `accent-soft` atrás do ícone, que marca o item ativo (FE-55). */
+/**
+ * Ícone de 24px do item da barra, em `accent` quando ativo (FE-55). O fundo
+ * `accent-soft` do item ativo fica no item inteiro, não atrás do ícone (FE-75).
+ */
 function IconeDaBarra({ item, ativo }: { item: ItemMenu; ativo: boolean }) {
   const Icone = item.icone;
-  return (
-    <span
-      className={cn(
-        'flex h-7 w-11 max-w-full items-center justify-center rounded-full',
-        ativo && 'bg-accent-soft',
-      )}
-    >
-      <Icone className={cn('size-6', ativo && 'text-accent')} />
-    </span>
-  );
+  return <Icone className={cn('size-6', ativo && 'text-accent')} />;
 }
 
 function ListaEmLinha({

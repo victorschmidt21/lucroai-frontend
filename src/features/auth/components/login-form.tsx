@@ -93,6 +93,7 @@ export function LoginForm({
         error={erros.senha}
         trailing={
           <IconButton
+            variant="icone-campo"
             aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
             onClick={() => setMostrarSenha((atual) => !atual)}
           >

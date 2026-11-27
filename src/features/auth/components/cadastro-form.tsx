@@ -154,6 +154,7 @@ export function CadastroForm() {
           error={erros.senha}
           trailing={
             <IconButton
+              variant="icone-campo"
               aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
               onClick={() => setMostrarSenha((atual) => !atual)}
             >
@@ -187,6 +188,7 @@ export function CadastroForm() {
           error={erros.token_cadastro}
           trailing={
             <IconButton
+              variant="icone-campo"
               aria-label={mostrarToken ? 'Ocultar token' : 'Mostrar token'}
               onClick={() => setMostrarToken((atual) => !atual)}
             >
