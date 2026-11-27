@@ -25,6 +25,8 @@ import {
 import {
   avisoSemPrecoPossivel,
   custoParaUsarDentro,
+  formatTempoDeTrabalho,
+  mostrarSeuTrabalho,
   precoOuNaoVendida,
   montarBarraDoPreco,
   type ParteDaBarra,
@@ -35,6 +37,7 @@ import {
 const COR_DA_PARTE: Record<ParteDaBarraId, string> = {
   ingredientes: 'bg-accent',
   contasDoMes: 'bg-warning',
+  seuTrabalho: 'bg-highlight',
   embalagemEPerdas: 'bg-ink-muted',
   imposto: 'bg-danger',
   taxaCanal: 'bg-ink',
@@ -188,6 +191,19 @@ function Detalhe({ receita }: { receita: Receita }) {
             rotulo={<Termo id="divisao-das-contas">Contas do mês</Termo>}
             valor={formatMoeda(custo.gastosMensais)}
           />
+          {mostrarSeuTrabalho(custo) ? (
+            <Linha
+              rotulo={
+                <span className="flex flex-col">
+                  Seu trabalho
+                  <span className="text-small tabular-nums">
+                    {`${formatMoeda(custo.trabalhoLote)} no lote (${formatTempoDeTrabalho(receita.minutosTrabalhoPorLote)})`}
+                  </span>
+                </span>
+              }
+              valor={formatMoeda(custo.trabalho)}
+            />
+          ) : null}
           {custo.gastosPorUnidade > 0 ? (
             <Linha
               rotulo="Gastos por unidade"
@@ -295,7 +311,10 @@ function NaoVendidaSozinha({ receita }: { receita: Receita }) {
       </Badge>
       <p className="text-body text-ink">{resultado.texto}</p>
       <p className="text-body text-ink-muted">
-        Custo para usar dentro de outra receita:{' '}
+        Custo para usar dentro de outra receita
+        {mostrarSeuTrabalho(receita.custo)
+          ? ' (já com o seu trabalho)'
+          : ''}:{' '}
         <span className="font-semibold text-ink tabular-nums">
           {resultado.custo}
         </span>

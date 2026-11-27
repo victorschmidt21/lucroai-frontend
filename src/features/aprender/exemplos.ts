@@ -40,6 +40,7 @@ export function exemploCustoPorUnidade({
     [custo.perdas, 'de perdas'],
     [custo.gastosPorUnidade, 'de gastos por unidade'],
     [custo.gastosMensais, 'das contas do mês'],
+    [custo.trabalho, 'do seu trabalho'],
   ] as const;
   const lista = partes
     .filter(([valor]) => valor > 0)

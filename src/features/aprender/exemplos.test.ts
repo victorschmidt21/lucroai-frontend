@@ -19,8 +19,10 @@ import { buscarTermo } from './termos';
 const CUSTO: Receita['custo'] = {
   ingredientesLote: 46.8,
   gastosMensaisLote: 6,
+  trabalhoLote: 0,
   ingredientes: 3.9,
   gastosMensais: 0.5,
+  trabalho: 0,
   gastosPorUnidade: 0,
   embalagem: 0.4,
   perdas: 0.3,
@@ -42,6 +44,7 @@ function preco(canal: string, valor: number | null, lucro = 0.3): PrecoCanal {
         : {
             ingredientes: parte,
             gastosMensais: parte,
+            trabalho: parte,
             gastosPorUnidade: parte,
             embalagem: parte,
             perdas: parte,
@@ -94,6 +97,23 @@ describe('exemplos da Pitada (FE-65)', () => {
         }),
       ).toBe(
         'Cada unidade da receita Pão custa R$ 4,45: R$ 3,90 de ingredientes, R$ 0,05 de gastos por unidade e R$ 0,50 das contas do mês.',
+      );
+    });
+
+    it('inclui o seu trabalho quando há (FE-77)', () => {
+      expect(
+        exemploCustoPorUnidade({
+          nome: 'Brownie',
+          custo: {
+            ...CUSTO,
+            embalagem: 0,
+            perdas: 0,
+            trabalho: 0.25,
+            unitario: 4.65,
+          },
+        }),
+      ).toBe(
+        'Cada unidade da receita Brownie custa R$ 4,65: R$ 3,90 de ingredientes, R$ 0,50 das contas do mês e R$ 0,25 do seu trabalho.',
       );
     });
 
