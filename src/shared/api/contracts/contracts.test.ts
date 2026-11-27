@@ -42,6 +42,7 @@ import jwtPayload from '@/test/fixtures/auth/jwt-payload.json';
 import login from '@/test/fixtures/auth/login.json';
 import alertas from '@/test/fixtures/catalog/alertas.json';
 import alertasProdutosNegativos from '@/test/fixtures/catalog/alertas-produtos-negativos.json';
+import alertasValorHoraVazio from '@/test/fixtures/catalog/alertas-valor-hora-vazio.json';
 import comprasInsumo from '@/test/fixtures/catalog/compras-insumo.json';
 import gastosIndiretos from '@/test/fixtures/catalog/gastos-indiretos.json';
 import insumo from '@/test/fixtures/catalog/insumo.json';
@@ -175,6 +176,13 @@ const CASOS: Caso[] = [
       ...makeAlertas(),
       produtosNegativos: [{ id: 157, nome: 'Brigadeiro branco', saldo: -300 }],
     },
+  },
+  {
+    nome: 'alertas com o valor da hora vazio (BE-47)',
+    schema: alertasSchema,
+    fixture: alertasValorHoraVazio,
+    factory: makeAlertas({ valorHoraVazio: true }),
+    invalida: { ...makeAlertas(), valorHoraVazio: 'sim' },
   },
   {
     nome: 'alertas sem itens',
@@ -501,6 +509,16 @@ describe('campos sem valor', () => {
 
   it('alertas de um backend anterior à BE-41 vêm sem receitas negativas', () => {
     expect(unwrap(alertas, alertasSchema).produtosNegativos).toEqual([]);
+  });
+
+  it('alertas de um backend anterior à BE-47 vêm com o valor da hora preenchido', () => {
+    expect(unwrap(alertas, alertasSchema).valorHoraVazio).toBe(false);
+  });
+
+  it('alertas com o valor da hora 0 e receita com minutos avisam', () => {
+    expect(unwrap(alertasValorHoraVazio, alertasSchema).valorHoraVazio).toBe(
+      true,
+    );
   });
 
   it('os alertas do seed listam o Brigadeiro branco com −300 g', () => {

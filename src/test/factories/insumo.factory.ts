@@ -86,7 +86,8 @@ export function makeCompraInsumo(
 
 /**
  * `GET /alertas` (BE-32): a farinha com saldo negativo e a manteiga 25% mais
- * cara; sem receita com estoque pronto negativo (`produtosNegativos`, BE-41).
+ * cara; sem receita com estoque pronto negativo (`produtosNegativos`, BE-41)
+ * e com o valor da hora preenchido (`valorHoraVazio`, BE-47).
  */
 export function makeAlertas(overrides: Partial<Alertas> = {}): Alertas {
   return {
@@ -112,6 +113,7 @@ export function makeAlertas(overrides: Partial<Alertas> = {}): Alertas {
       },
     ],
     produtosNegativos: [],
+    valorHoraVazio: false,
     ...overrides,
   };
 }
