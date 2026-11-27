@@ -13,6 +13,7 @@ const valido: ConfiguracaoCustosFormInput = {
   lucroPadrao: '15',
   impostoPercentual: '0',
   taxaMaquininha: '1,36',
+  valorHora: '18,75',
 };
 
 function mensagens(entrada: Record<string, unknown>) {
@@ -40,8 +41,25 @@ describe('configuracaoCustosFormSchema', () => {
       lucroPadrao: 15,
       impostoPercentual: 0,
       taxaMaquininha: 1.36,
+      valorHora: 18.75,
     });
   });
+
+  it.each(['0', '0,00', '18,75', '1.500,5'])(
+    'aceita o valor da hora "%s"',
+    (valorHora) => {
+      expect(mensagens({ valorHora })).toEqual([]);
+    },
+  );
+
+  it.each(['', '-1', '-0,01', 'abc'])(
+    'recusa o valor da hora "%s"',
+    (valorHora) => {
+      expect(mensagens({ valorHora })).toEqual([
+        ['valorHora', 'Informe um valor de R$ 0,00 ou mais'],
+      ]);
+    },
+  );
 
   it.each(['', '0', '-3', 'abc'])(
     'recusa a capacidade "%s" no campo',
@@ -90,7 +108,14 @@ describe('conversão entre a tela e a API', () => {
     );
   });
 
-  it('envia os cinco campos, com os percentuais em fração do preço', () => {
+  it('a hora começa em 0,00 quando não foi definida', () => {
+    expect(
+      toConfiguracaoCustosFormInput(makeConfiguracaoCustos({ valorHora: 0 }))
+        .valorHora,
+    ).toBe('0,00');
+  });
+
+  it('envia os seis campos, com os percentuais em fração do preço', () => {
     expect(
       toUpdateConfiguracaoCustosBody(
         configuracaoCustosFormSchema.parse({
@@ -104,6 +129,7 @@ describe('conversão entre a tela e a API', () => {
       lucroPadrao: 0.15,
       impostoPercentual: 0.06,
       taxaMaquininha: 0.0136,
+      valorHora: 18.75,
     });
   });
 });

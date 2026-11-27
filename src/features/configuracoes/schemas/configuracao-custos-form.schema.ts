@@ -9,8 +9,12 @@ import { percentualDaApi, percentualDaTela } from '../configuracoes.calculos';
 import { campoPercentual } from './percentual';
 
 const CAPACIDADE_INVALIDA = 'Informe um número maior que zero';
+export const VALOR_HORA_INVALIDO = 'Informe um valor de R$ 0,00 ou mais';
 
-/** Limites de `validarConfiguracaoCustos` (BE-24): capacidade > 0, percentuais de 0 a 100. */
+/**
+ * Limites de `validarConfiguracaoCustos` (BE-24, BE-45): capacidade > 0,
+ * percentuais de 0 a 100 e valor da hora ≥ 0.
+ */
 export const configuracaoCustosFormSchema = z.object({
   baseRateio: baseRateioSchema,
   capacidadeMensal: numeroBR(
@@ -19,6 +23,9 @@ export const configuracaoCustosFormSchema = z.object({
   lucroPadrao: campoPercentual(),
   impostoPercentual: campoPercentual(),
   taxaMaquininha: campoPercentual(),
+  valorHora: numeroBR(
+    z.number({ error: VALOR_HORA_INVALIDO }).min(0, VALOR_HORA_INVALIDO),
+  ),
 });
 
 export type ConfiguracaoCustosFormInput = z.input<
@@ -37,10 +44,11 @@ export function toConfiguracaoCustosFormInput(
     lucroPadrao: percentualDaApi(config.lucroPadrao),
     impostoPercentual: percentualDaApi(config.impostoPercentual),
     taxaMaquininha: percentualDaApi(config.taxaMaquininha),
+    valorHora: formatNumeroEditavel(config.valorHora, 2),
   };
 }
 
-/** Envia os cinco campos, com os percentuais em fração do preço. */
+/** Envia os seis campos, com os percentuais em fração do preço e a hora em reais. */
 export function toUpdateConfiguracaoCustosBody(
   values: ConfiguracaoCustosFormValues,
 ): UpdateConfiguracaoCustosBody {
@@ -50,5 +58,6 @@ export function toUpdateConfiguracaoCustosBody(
     lucroPadrao: percentualDaTela(values.lucroPadrao),
     impostoPercentual: percentualDaTela(values.impostoPercentual),
     taxaMaquininha: percentualDaTela(values.taxaMaquininha),
+    valorHora: values.valorHora,
   };
 }

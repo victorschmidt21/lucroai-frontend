@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calcularValorHora,
   formatComissao,
   percentualDaApi,
   percentualDaTela,
@@ -45,5 +46,39 @@ describe('formatComissao', () => {
     [0, '0%'],
   ])('%s vira "%s"', (fracao, texto) => {
     expect(formatComissao(fracao)).toBe(texto);
+  });
+});
+
+describe('calcularValorHora (ganho do mês ÷ horas de produção)', () => {
+  it('R$ 1.500 em 80 h dá R$ 18,75', () => {
+    expect(calcularValorHora(1500, 80)).toEqual({ valor: 18.75 });
+  });
+
+  it('arredonda para 2 casas', () => {
+    expect(calcularValorHora(1000, 3)).toEqual({ valor: 333.33 });
+    expect(calcularValorHora(100, 6)).toEqual({ valor: 16.67 });
+  });
+
+  it('ganho 0 dá hora 0', () => {
+    expect(calcularValorHora(0, 80)).toEqual({ valor: 0 });
+  });
+
+  it('não calcula sem o ganho', () => {
+    expect(calcularValorHora(null, 80)).toEqual({
+      motivo: 'Diga quanto você quer ganhar por mês para fazer a conta.',
+    });
+  });
+
+  it('não calcula com as horas vazias', () => {
+    expect(calcularValorHora(1500, null)).toEqual({
+      motivo: 'Diga quantas horas por mês você passa produzindo.',
+    });
+  });
+
+  it.each([0, -5])('não calcula com %s horas', (horas) => {
+    expect(calcularValorHora(1500, horas)).toEqual({
+      motivo:
+        'Com 0 horas não dá para fazer a conta. Conte as horas em que você está produzindo.',
+    });
   });
 });
