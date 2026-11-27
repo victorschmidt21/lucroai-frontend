@@ -16,7 +16,8 @@ type InputProps = ComponentProps<'input'> &
     hideLabel?: boolean;
     /**
      * Controle à direita, dentro do campo, como o "Mostrar senha" do login. É
-     * interativo (um `IconButton`), ao contrário do `icon`.
+     * interativo (um `IconButton` com `variant="icone-campo"`, sem fundo), ao
+     * contrário do `icon`.
      */
     trailing?: ReactNode;
   };
@@ -75,7 +76,7 @@ export function Input({
           ) : null}
           {input}
           {trailing ? (
-            <span className="absolute top-1/2 right-1 -translate-y-1/2">
+            <span className="absolute top-1/2 right-1 flex -translate-y-1/2">
               {trailing}
             </span>
           ) : null}
