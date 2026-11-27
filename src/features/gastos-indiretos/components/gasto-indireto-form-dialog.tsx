@@ -16,8 +16,10 @@ import {
   FormSelect,
 } from '@/shared/ui/form';
 import { useToast } from '@/shared/ui/toast';
+import { lembraSeuTrabalho } from '../gastos-indiretos.calculos';
 import { useCreateGastoIndireto } from '../hooks/use-create-gasto-indireto';
 import { useUpdateGastoIndireto } from '../hooks/use-update-gasto-indireto';
+import { AvisoCobrancaDupla } from './aviso-cobranca-dupla';
 import {
   DESCRICAO_MAX,
   gastoIndiretoFormSchema,
@@ -73,9 +75,27 @@ export function GastoIndiretoFormDialog({ open, onOpenChange, gasto }: Props) {
         maxLength={DESCRICAO_MAX}
         required
       />
+      <AvisoDoNome />
       <CampoTipo />
       <CampoValor />
     </FormDialog>
+  );
+}
+
+/**
+ * Aviso de cobrança dupla enquanto ela digita o nome (FE-78), antes de salvar.
+ * Não bloqueia o "Salvar". A região `status` existe sempre, para o leitor de
+ * tela anunciar quando o aviso aparece.
+ */
+function AvisoDoNome() {
+  const descricao = useWatch<GastoIndiretoFormInput, 'descricao'>({
+    name: 'descricao',
+  });
+
+  return (
+    <output className="block">
+      {lembraSeuTrabalho(descricao ?? '') ? <AvisoCobrancaDupla /> : null}
+    </output>
   );
 }
 

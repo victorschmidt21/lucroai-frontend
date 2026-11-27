@@ -24,8 +24,10 @@ import { gastosIndiretosListOptions } from '../api/gastos-indiretos.queries';
 import {
   calcularTotalContasDoMes,
   formatValorDoGasto,
+  lembraSeuTrabalho,
 } from '../gastos-indiretos.calculos';
 import { useDeleteGastoIndireto } from '../hooks/use-delete-gasto-indireto';
+import { AvisoCobrancaDupla } from './aviso-cobranca-dupla';
 import { GastoIndiretoFormDialog } from './gasto-indireto-form-dialog';
 
 type Formulario = { aberto: boolean; gasto?: GastoIndireto };
@@ -88,6 +90,14 @@ export function GastosIndiretosLista({
               Alterações afetam o custo unitário de todas as receitas
               automaticamente.
             </p>
+            {gastos
+              .filter((gasto) => lembraSeuTrabalho(gasto.descricao))
+              .map((gasto) => (
+                <AvisoCobrancaDupla
+                  key={gasto.id}
+                  descricao={gasto.descricao}
+                />
+              ))}
             {gastos.length > 0 ? <TotalGastos gastos={gastos} /> : null}
           </>
         }
