@@ -38,9 +38,11 @@ import {
 } from '../api/receitas.queries';
 import { useCreateReceita } from '../hooks/use-create-receita';
 import { useUpdateReceita } from '../hooks/use-update-receita';
+import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import {
   calcularCustoItem,
+  horasEMinutosParaMinutos,
   motivoSemReceitasDentro,
   receitasQuePodemEntrar,
 } from '../receitas.calculos';
@@ -258,6 +260,17 @@ function nomeDoInsumo(insumo: Insumo | undefined, insumoId: number) {
 function TempoDeTrabalhoCampo() {
   const receitas = useWatch<ReceitaFormInput, 'receitas'>({ name: 'receitas' });
   const usaOutras = (receitas?.length ?? 0) > 0;
+  const horas = useWatch<ReceitaFormInput, 'horas_trabalho'>({
+    name: 'horas_trabalho',
+  });
+  const minutos = useWatch<ReceitaFormInput, 'minutos_trabalho'>({
+    name: 'minutos_trabalho',
+  });
+  // Para a dica na hora certa (FE-78): aparece quando ela conta o tempo.
+  const minutosTrabalho = horasEMinutosParaMinutos({
+    horas: parseNumeroBR(horas) ?? 0,
+    minutos: parseNumeroBR(minutos) ?? 0,
+  });
 
   return (
     <fieldset
@@ -283,6 +296,7 @@ function TempoDeTrabalhoCampo() {
           ? 'Conte só o tempo de montar. O tempo das receitas que vão dentro já está no custo delas.'
           : 'Quanto tempo você fica ocupada com esta receita: preparar, mexer, montar, embalar. Não conte o tempo em que ela fica sozinha no forno ou na geladeira.'}
       </p>
+      <DicaNaHora tela="receita-form" minutosTrabalho={minutosTrabalho} />
     </fieldset>
   );
 }
