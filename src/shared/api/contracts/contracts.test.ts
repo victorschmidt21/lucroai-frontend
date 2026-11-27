@@ -408,7 +408,7 @@ const CASOS: Caso[] = [
     schema: configuracaoCustosSchema,
     fixture: configuracaoCustos,
     factory: makeConfiguracaoCustos(),
-    invalida: { ...makeConfiguracaoCustos(), baseRateio: 'HORAS' },
+    invalida: { ...makeConfiguracaoCustos(), valorHora: '18,75' },
   },
   {
     nome: 'lista de canais de venda',
@@ -437,6 +437,19 @@ describe.each(CASOS)(
 );
 
 describe('campos sem valor', () => {
+  it('a configuração do seed traz o valor da hora (BE-45)', () => {
+    expect(unwrap(configuracaoCustos, configuracaoCustosSchema).valorHora).toBe(
+      18.75,
+    );
+  });
+
+  it('configuração de um backend anterior à BE-45 vem com a hora em 0', () => {
+    const { valorHora, ...antiga } = makeConfiguracaoCustos();
+    expect(valorHora).toBe(18.75);
+
+    expect(unwrap(antiga, configuracaoCustosSchema).valorHora).toBe(0);
+  });
+
   it('alertas de um backend anterior à BE-41 vêm sem receitas negativas', () => {
     expect(unwrap(alertas, alertasSchema).produtosNegativos).toEqual([]);
   });

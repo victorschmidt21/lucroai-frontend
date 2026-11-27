@@ -3,7 +3,7 @@ import type {
   ConfiguracaoCustos,
 } from '@/shared/api/contracts/pricing';
 
-/** Configuração da padaria do seed: 100 fornadas e maquininha de 1,36%. */
+/** Configuração da padaria do seed: 100 fornadas, maquininha de 1,36% e hora de R$ 18,75. */
 export function makeConfiguracaoCustos(
   overrides: Partial<ConfiguracaoCustos> = {},
 ): ConfiguracaoCustos {
@@ -14,6 +14,7 @@ export function makeConfiguracaoCustos(
     lucroPadrao: 0.15,
     impostoPercentual: 0,
     taxaMaquininha: 0.0136,
+    valorHora: 18.75,
     ...overrides,
   };
 }

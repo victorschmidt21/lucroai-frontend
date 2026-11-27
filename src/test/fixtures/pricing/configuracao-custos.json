@@ -4,5 +4,6 @@
   "capacidadeMensal": 100,
   "lucroPadrao": 0.15,
   "impostoPercentual": 0,
-  "taxaMaquininha": 0.0136
+  "taxaMaquininha": 0.0136,
+  "valorHora": 18.75
 }

@@ -15,6 +15,8 @@ export const configuracaoCustosSchema = z.object({
   lucroPadrao: z.number(),
   impostoPercentual: z.number(),
   taxaMaquininha: z.number(),
+  /** Reais por hora do trabalho da dona, ≥ 0 (BE-45); 0 em backend anterior. */
+  valorHora: z.number().default(0),
 });
 
 export type ConfiguracaoCustos = z.infer<typeof configuracaoCustosSchema>;
