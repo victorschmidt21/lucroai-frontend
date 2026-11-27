@@ -154,6 +154,7 @@ const HOVER_DO_BOTAO: Record<ButtonVariant, string> = {
   perigo: 'border-danger! bg-danger!',
   fantasma: 'border-accent!',
   icone: 'bg-accent-soft!',
+  'icone-campo': 'text-highlight-ink!',
 };
 const FOCO_SIMULADO = 'outline-2 outline-offset-2 outline-accent';
 const HOVER_DO_CAMPO = 'border-ink!';
