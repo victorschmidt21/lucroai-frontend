@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
 import type { PrecoCanal, Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
+import { AvisoValorHoraVazio } from '@/shared/avisos/aviso-valor-hora-vazio';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatMargem, formatQuantidade } from '@/shared/format/numero';
 import { Badge } from '@/shared/ui/badge';
@@ -112,6 +113,10 @@ export function ReceitaDetalhePagina({ receitaId }: { receitaId: number }) {
         tela="receita"
         prejuizo={receita.data ? prejuizoDaReceita(receita.data) : null}
       />
+      {/* Só na receita com tempo de trabalho: sem minutos, o valor da hora não muda nada nela (FE-78). */}
+      {receita.data && receita.data.minutosTrabalhoPorLote > 0 ? (
+        <AvisoValorHoraVazio />
+      ) : null}
       {conteudo}
     </div>
   );
