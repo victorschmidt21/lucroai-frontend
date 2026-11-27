@@ -42,6 +42,7 @@ import {
   vendasDoMes,
   type ProdutoRentavel,
 } from '../painel.calculos';
+import { AvisoValorHoraVazio } from '@/shared/avisos/aviso-valor-hora-vazio';
 import { DicaNaHora } from '@/features/aprender/components/dica-na-hora';
 import { Termo } from '@/features/aprender/components/termo';
 import type { DadosDoExemplo } from '@/features/aprender/termos';
@@ -180,6 +181,7 @@ export function PainelTela({
         </p>
       </header>
       <DicaNaHora tela="inicio" vendas={vendas.data ?? null} />
+      <AvisoValorHoraVazio />
 
       <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
         <div className="flex min-w-0 flex-col gap-5">

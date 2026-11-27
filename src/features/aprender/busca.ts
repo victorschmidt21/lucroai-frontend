@@ -1,5 +1,6 @@
 import { normalizarTexto } from '@/shared/api/filtros';
 import type { Termo } from './aprender.schema';
+import { GUIAS, type Guia } from './guias';
 import { TERMOS } from './termos';
 
 /**
@@ -41,4 +42,20 @@ function prioridadeDoTermo(termo: Termo, busca: string): number | null {
     return 2;
   }
   return null;
+}
+
+/**
+ * Guias que a busca acha (FE-78): o texto no título ou nas `palavras` do guia,
+ * sem acento e sem caixa, na ordem da lista. Texto vazio devolve todos.
+ */
+export function buscarGuias(q: string, guias: readonly Guia[] = GUIAS): Guia[] {
+  const busca = normalizarTexto(q.trim());
+
+  if (!busca) return [...guias];
+
+  return guias.filter((guia) =>
+    [guia.titulo, ...(guia.palavras ?? [])].some((texto) =>
+      normalizarTexto(texto).includes(busca),
+    ),
+  );
 }

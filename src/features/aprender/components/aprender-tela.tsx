@@ -14,8 +14,7 @@ import { Input } from '@/shared/ui/input';
 import { PageHeader } from '@/shared/ui/page-header';
 import { useBuscaNaUrl } from '@/shared/ui/use-busca-na-url';
 import type { Assunto } from '../aprender.schema';
-import { buscarTermos } from '../busca';
-import { GUIAS } from '../guias';
+import { buscarGuias, buscarTermos } from '../busca';
 import { aprenderSearchSchema } from '../schemas/aprender-search.schema';
 
 const OPCOES_ASSUNTO: { value: Assunto | undefined; label: string }[] = [
@@ -56,6 +55,8 @@ export function AprenderTela() {
   const termos = buscarTermos(busca.termo).filter(
     (termo) => assunto === undefined || termo.assunto === assunto,
   );
+  // Os guias não têm assunto: a busca filtra, os chips não (FE-78).
+  const guias = buscarGuias(busca.termo);
 
   return (
     <div className="flex flex-col gap-5">
@@ -101,7 +102,7 @@ export function AprenderTela() {
         ))}
       </fieldset>
 
-      {termos.length === 0 ? (
+      {termos.length === 0 && guias.length === 0 ? (
         <EmptyState
           ilustracao={<IlustracaoCaderno />}
           title="Ainda não temos essa palavra. Tente outra, como “custo” ou “preço”."
@@ -113,7 +114,7 @@ export function AprenderTela() {
             ) : undefined
           }
         />
-      ) : (
+      ) : termos.length === 0 ? null : (
         <ul aria-label="Palavras" className="grid gap-3 md:grid-cols-2">
           {termos.map((termo) => (
             <li key={termo.id}>
@@ -126,32 +127,36 @@ export function AprenderTela() {
         </ul>
       )}
 
-      <section aria-labelledby="guias" className="flex flex-col gap-3">
-        <h2 id="guias" className="text-section-label text-ink-muted">
-          Guias
-        </h2>
-        <ul className="grid gap-3 md:grid-cols-3">
-          {GUIAS.map((guia) => (
-            <li key={guia.id}>
-              <Link
-                href={`/aprender/guias/${guia.id}`}
-                className={cn(
-                  CARTAO_LINK,
-                  'flex-row items-center justify-between gap-3',
-                )}
-              >
-                <span className="flex flex-col gap-1">
-                  <span className="font-display text-title">{guia.titulo}</span>
-                  <span className="text-small text-ink-muted">
-                    {guia.passos.length} passos
+      {guias.length === 0 ? null : (
+        <section aria-labelledby="guias" className="flex flex-col gap-3">
+          <h2 id="guias" className="text-section-label text-ink-muted">
+            Guias
+          </h2>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {guias.map((guia) => (
+              <li key={guia.id}>
+                <Link
+                  href={`/aprender/guias/${guia.id}`}
+                  className={cn(
+                    CARTAO_LINK,
+                    'flex-row items-center justify-between gap-3',
+                  )}
+                >
+                  <span className="flex flex-col gap-1">
+                    <span className="font-display text-title">
+                      {guia.titulo}
+                    </span>
+                    <span className="text-small text-ink-muted">
+                      {guia.passos.length} passos
+                    </span>
                   </span>
-                </span>
-                <IconSeta className="size-5 shrink-0 text-accent" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+                  <IconSeta className="size-5 shrink-0 text-accent" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

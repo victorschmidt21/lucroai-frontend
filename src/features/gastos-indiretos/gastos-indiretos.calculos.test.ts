@@ -3,6 +3,7 @@ import { makeGastosDoSeed } from '@/test/factories/gasto-indireto.factory';
 import {
   calcularTotalContasDoMes,
   formatValorDoGasto,
+  lembraSeuTrabalho,
 } from './gastos-indiretos.calculos';
 
 describe('calcularTotalContasDoMes', () => {
@@ -42,5 +43,36 @@ describe('formatValorDoGasto', () => {
     [{ valor: 0.075, tipo: 'PERCENTUAL_VENDA' }, '7,5% da venda'],
   ] as const)('%o vira "%s"', (gasto, texto) => {
     expect(formatValorDoGasto(gasto)).toBe(texto);
+  });
+});
+
+describe('lembraSeuTrabalho', () => {
+  it.each([
+    'Meu salário',
+    'SALARIO',
+    'Salários da casa',
+    'Pró-labore',
+    'pro labore',
+    'Prolabore da Mah',
+    'Retirada',
+    'retiradas do mês',
+    'Minha parte',
+    'meus ganhos',
+  ])('reconhece "%s"', (descricao) => {
+    expect(lembraSeuTrabalho(descricao)).toBe(true);
+  });
+
+  it.each([
+    'Luz',
+    'Gás',
+    'Aluguel',
+    'Comunicação',
+    'Fermento',
+    'Internet',
+    'DAS do MEI',
+    'Saquinho',
+    '',
+  ])('não reconhece "%s"', (descricao) => {
+    expect(lembraSeuTrabalho(descricao)).toBe(false);
   });
 });

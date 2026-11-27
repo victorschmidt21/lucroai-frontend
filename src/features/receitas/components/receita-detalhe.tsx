@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { insumosListOptions } from '@/features/insumos/api/insumos.queries';
 import type { PrecoCanal, Receita } from '@/shared/api/contracts/recipe';
 import { getErrorMessage } from '@/shared/api/errors';
+import { AvisoValorHoraVazio } from '@/shared/avisos/aviso-valor-hora-vazio';
 import { formatMoeda } from '@/shared/format/moeda';
 import { formatMargem, formatQuantidade } from '@/shared/format/numero';
 import { Badge } from '@/shared/ui/badge';
@@ -25,6 +26,8 @@ import {
 import {
   avisoSemPrecoPossivel,
   custoParaUsarDentro,
+  formatTempoDeTrabalho,
+  mostrarSeuTrabalho,
   precoOuNaoVendida,
   montarBarraDoPreco,
   type ParteDaBarra,
@@ -35,6 +38,7 @@ import {
 const COR_DA_PARTE: Record<ParteDaBarraId, string> = {
   ingredientes: 'bg-accent',
   contasDoMes: 'bg-warning',
+  seuTrabalho: 'bg-highlight',
   embalagemEPerdas: 'bg-ink-muted',
   imposto: 'bg-danger',
   taxaCanal: 'bg-ink',
@@ -109,6 +113,10 @@ export function ReceitaDetalhePagina({ receitaId }: { receitaId: number }) {
         tela="receita"
         prejuizo={receita.data ? prejuizoDaReceita(receita.data) : null}
       />
+      {/* Só na receita com tempo de trabalho: sem minutos, o valor da hora não muda nada nela (FE-78). */}
+      {receita.data && receita.data.minutosTrabalhoPorLote > 0 ? (
+        <AvisoValorHoraVazio />
+      ) : null}
       {conteudo}
     </div>
   );
@@ -188,6 +196,19 @@ function Detalhe({ receita }: { receita: Receita }) {
             rotulo={<Termo id="divisao-das-contas">Contas do mês</Termo>}
             valor={formatMoeda(custo.gastosMensais)}
           />
+          {mostrarSeuTrabalho(custo) ? (
+            <Linha
+              rotulo={
+                <span className="flex flex-col">
+                  Seu trabalho
+                  <span className="text-small tabular-nums">
+                    {`${formatMoeda(custo.trabalhoLote)} no lote (${formatTempoDeTrabalho(receita.minutosTrabalhoPorLote)})`}
+                  </span>
+                </span>
+              }
+              valor={formatMoeda(custo.trabalho)}
+            />
+          ) : null}
           {custo.gastosPorUnidade > 0 ? (
             <Linha
               rotulo="Gastos por unidade"
@@ -295,7 +316,10 @@ function NaoVendidaSozinha({ receita }: { receita: Receita }) {
       </Badge>
       <p className="text-body text-ink">{resultado.texto}</p>
       <p className="text-body text-ink-muted">
-        Custo para usar dentro de outra receita:{' '}
+        Custo para usar dentro de outra receita
+        {mostrarSeuTrabalho(receita.custo)
+          ? ' (já com o seu trabalho)'
+          : ''}:{' '}
         <span className="font-semibold text-ink tabular-nums">
           {resultado.custo}
         </span>

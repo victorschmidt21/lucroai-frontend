@@ -9,6 +9,7 @@ import {
 } from '@/test/factories/receita.factory';
 import receitaComReceitas from '@/test/fixtures/recipe/receita-com-receitas.json';
 import receitaUsadaEmOutra from '@/test/fixtures/recipe/receita-usada-em-outra.json';
+import receitaComTrabalho from '@/test/fixtures/recipe/receita-com-trabalho.json';
 import {
   custoParaUsarDentro,
   motivoParaNaoExcluir,
@@ -24,6 +25,10 @@ import {
   formatarResultadoDaSimulacao,
   montarBarraDoPreco,
   sugestaoDoCanal,
+  formatTempoDeTrabalho,
+  horasEMinutosParaMinutos,
+  minutosParaHorasEMinutos,
+  mostrarSeuTrabalho,
 } from './receitas.calculos';
 
 describe('calcularCustoItem', () => {
@@ -83,6 +88,33 @@ describe('montarBarraDoPreco', () => {
         (parte) => parte.id === 'lucro',
       );
       expect(lucro?.fracao).toBe(0.15);
+    }
+  });
+
+  it('sem trabalho (0 minutos ou valor da hora 0), a fatia "Seu trabalho" fica de fora', () => {
+    const barra = montarBarraDoPreco(makeComposicaoPreco(), makePrecoCanal());
+
+    expect(barra.map((parte) => parte.id)).not.toContain('seuTrabalho');
+  });
+
+  it('com trabalho, mostra a fatia "Seu trabalho" e as fatias somam 100% (Brownie do seed)', () => {
+    const receita = receitaSchema.parse(receitaComTrabalho);
+
+    for (const preco of receita.precos) {
+      if (!preco.composicao) throw new Error('canal do seed sem preço');
+      const barra = montarBarraDoPreco(preco.composicao, preco);
+      const trabalho = barra.find((parte) => parte.id === 'seuTrabalho');
+
+      expect(trabalho?.rotulo).toBe('Seu trabalho');
+      expect(trabalho?.valor).toBe(preco.composicao.trabalho.valor);
+      // Logo depois das contas do mês.
+      expect(barra.map((parte) => parte.id).indexOf('seuTrabalho')).toBe(
+        barra.map((parte) => parte.id).indexOf('contasDoMes') + 1,
+      );
+      expect(barra.reduce((soma, parte) => soma + parte.fracao, 0)).toBeCloseTo(
+        1,
+        3,
+      );
     }
   });
 
@@ -439,5 +471,47 @@ describe('passaNoFiltroDeVenda', () => {
   it('"Só vai dentro de outras" mostra só as não vendidas', () => {
     expect(passaNoFiltroDeVenda(vendida, 'dentro')).toBe(false);
     expect(passaNoFiltroDeVenda(soDentro, 'dentro')).toBe(true);
+  });
+});
+
+describe('tempo de trabalho (FE-77)', () => {
+  it('1 h 20 min vira 80 minutos', () => {
+    expect(horasEMinutosParaMinutos({ horas: 1, minutos: 20 })).toBe(80);
+  });
+
+  it('campo vazio conta como 0, e horas quebradas viram minutos', () => {
+    expect(horasEMinutosParaMinutos({})).toBe(0);
+    expect(horasEMinutosParaMinutos({ minutos: 40 })).toBe(40);
+    expect(horasEMinutosParaMinutos({ horas: 1.5 })).toBe(90);
+    expect(horasEMinutosParaMinutos({ horas: 0.1, minutos: 0.2 })).toBe(6.2);
+  });
+
+  it('80 minutos salvos voltam como 1 h 20 min', () => {
+    expect(minutosParaHorasEMinutos(80)).toEqual({ horas: 1, minutos: 20 });
+    expect(minutosParaHorasEMinutos(40)).toEqual({ horas: 0, minutos: 40 });
+    expect(minutosParaHorasEMinutos(120)).toEqual({ horas: 2, minutos: 0 });
+    expect(minutosParaHorasEMinutos(0)).toEqual({ horas: 0, minutos: 0 });
+  });
+
+  it('minutos fracionários ficam no resto, e valor inválido vira 0', () => {
+    expect(minutosParaHorasEMinutos(72.5)).toEqual({ horas: 1, minutos: 12.5 });
+    expect(minutosParaHorasEMinutos(-5)).toEqual({ horas: 0, minutos: 0 });
+    expect(minutosParaHorasEMinutos(Number.NaN)).toEqual({
+      horas: 0,
+      minutos: 0,
+    });
+  });
+
+  it('formata o tempo para o detalhe', () => {
+    expect(formatTempoDeTrabalho(80)).toBe('1 h 20 min');
+    expect(formatTempoDeTrabalho(40)).toBe('40 min');
+    expect(formatTempoDeTrabalho(120)).toBe('2 h');
+    expect(formatTempoDeTrabalho(72.5)).toBe('1 h 12,5 min');
+    expect(formatTempoDeTrabalho(0)).toBe('0 min');
+  });
+
+  it('a linha "Seu trabalho" só aparece com trabalho no lote', () => {
+    expect(mostrarSeuTrabalho({ trabalhoLote: 12.5 })).toBe(true);
+    expect(mostrarSeuTrabalho({ trabalhoLote: 0 })).toBe(false);
   });
 });

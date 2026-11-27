@@ -60,6 +60,7 @@ const ALERTAS: Alertas = {
     },
   ],
   produtosNegativos: [],
+  valorHoraVazio: false,
 };
 
 describe('dicaDaVez', () => {
@@ -189,6 +190,7 @@ describe('dicaDaVez', () => {
               estoqueNegativo: [],
               precoDefasado: [{ ...ALERTAS.precoDefasado[0]!, receitas: [] }],
               produtosNegativos: [],
+              valorHoraVazio: false,
             },
             avisoLiberado: true,
           }),
@@ -290,6 +292,29 @@ describe('dicaDaVez', () => {
         [],
       );
       expect(dica?.id).toBe('primeiro-mes');
+    });
+  });
+
+  describe('tempo-de-trabalho', () => {
+    it('aparece no formulário da receita quando ela conta o tempo de trabalho', () => {
+      const dica = dicaDaVez(
+        contexto({ tela: 'receita-form', minutosTrabalho: 40 }),
+        [],
+      );
+
+      expect(dica?.id).toBe('tempo-de-trabalho');
+      expect(dica?.acao.href).toBe('/aprender/guias/cobrar-pelo-seu-trabalho');
+    });
+
+    it('não aparece sem minutos nem em outra tela', () => {
+      for (const minutosTrabalho of [0, null, undefined]) {
+        expect(
+          dicaDaVez(contexto({ tela: 'receita-form', minutosTrabalho }), []),
+        ).toBeNull();
+      }
+      expect(
+        dicaDaVez(contexto({ tela: 'receita', minutosTrabalho: 40 }), []),
+      ).toBeNull();
     });
   });
 

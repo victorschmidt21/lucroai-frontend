@@ -17,8 +17,10 @@ export function makeCustoReceitaDetalhe(
   return {
     ingredientesLote: 3.81,
     gastosMensaisLote: 5.03,
+    trabalhoLote: 0,
     ingredientes: 0.1359,
     gastosMensais: 0.1796,
+    trabalho: 0,
     gastosPorUnidade: 0.05,
     embalagem: 0,
     perdas: 0.0192,
@@ -34,6 +36,7 @@ export function makeComposicaoPreco(
   return {
     ingredientes: { valor: 0.1359, fracao: 0.2954 },
     gastosMensais: { valor: 0.1796, fracao: 0.3905 },
+    trabalho: { valor: 0, fracao: 0 },
     gastosPorUnidade: { valor: 0.05, fracao: 0.1087 },
     embalagem: { valor: 0, fracao: 0 },
     perdas: { valor: 0.0192, fracao: 0.0418 },
@@ -72,6 +75,7 @@ export function makeReceita(overrides: Partial<Receita> = {}): Receita {
     usoPorLote: 1,
     embalagemPorUnidade: 0,
     perdaPercentual: 0,
+    minutosTrabalhoPorLote: 0,
     custoProducao: 3.31,
     custoUnitario: 0.07,
     precoSugerido: 0.11,

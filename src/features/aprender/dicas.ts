@@ -17,6 +17,7 @@ export const DICA_IDS = [
   'preco-que-precisa-subir',
   'taxa-do-canal',
   'primeiro-mes',
+  'tempo-de-trabalho',
 ] as const;
 
 export type DicaId = (typeof DICA_IDS)[number];
@@ -33,7 +34,8 @@ export type TelaDaDica =
   | 'estoque'
   | 'receitas'
   | 'vendas'
-  | 'inicio';
+  | 'inicio'
+  | 'receita-form';
 
 const DICAS_DA_TELA: Record<TelaDaDica, readonly DicaId[]> = {
   receita: ['margem-negativa'],
@@ -43,6 +45,7 @@ const DICAS_DA_TELA: Record<TelaDaDica, readonly DicaId[]> = {
   receitas: ['preco-que-precisa-subir'],
   vendas: ['taxa-do-canal'],
   inicio: ['primeiro-mes'],
+  'receita-form': ['tempo-de-trabalho'],
 };
 
 /** Trecho do texto: texto simples ou um termo, que a tela mostra com `<Termo>`. */
@@ -78,6 +81,8 @@ export type DadosDaDica = {
   vendaAnotada?: { canal: string; comissao: number; total: number } | null;
   /** As vendas que o Início já carregou (os últimos seis meses). */
   vendas?: readonly { dataVenda: string; status: StatusVenda }[] | null;
+  /** Minutos de trabalho por lote que ela está digitando na receita (FE-78). */
+  minutosTrabalho?: number | null;
 };
 
 export type ContextoDaDica = DadosDaDica & {
@@ -198,12 +203,30 @@ function primeiroMes({ vendas, agora }: ContextoDaDica): Dica | null {
   };
 }
 
+function tempoDeTrabalho({ minutosTrabalho }: ContextoDaDica): Dica | null {
+  if (!minutosTrabalho || minutosTrabalho <= 0) return null;
+  return {
+    id: 'tempo-de-trabalho',
+    titulo: 'Seu tempo também tem preço',
+    texto: [
+      'Este tempo vezes o valor da sua hora entra no ',
+      { termo: 'custo-por-unidade', texto: 'custo de cada unidade' },
+      '. Por isso seu salário não vai nas contas do mês.',
+    ],
+    acao: {
+      rotulo: 'Como cobrar pelo seu trabalho',
+      href: '/aprender/guias/cobrar-pelo-seu-trabalho',
+    },
+  };
+}
+
 const GATILHOS: Record<DicaId, (contexto: ContextoDaDica) => Dica | null> = {
   'margem-negativa': margemNegativa,
   'estoque-negativo': estoqueNegativo,
   'preco-que-precisa-subir': precoQuePrecisaSubir,
   'taxa-do-canal': taxaDoCanal,
   'primeiro-mes': primeiroMes,
+  'tempo-de-trabalho': tempoDeTrabalho,
 };
 
 /**

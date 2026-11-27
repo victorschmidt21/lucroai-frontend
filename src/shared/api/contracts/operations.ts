@@ -98,6 +98,12 @@ export const producaoSchema = z.object({
   totalUnidades: z.number(),
   custoTotal: z.number().nullable(),
   custoUnitario: z.number().nullable(),
+  /**
+   * Seu trabalho na produção (lotes × trabalho de 1 lote, com o valor da hora
+   * do momento), com 2 casas, já somado ao `custoTotal` (BE-47). `null` nas
+   * produções anteriores à BE-47; ausente em backend anterior.
+   */
+  custoTrabalho: z.number().nullable().optional(),
   dataProducao: z.iso.datetime(),
   rateios: z.array(rateioProducaoSchema),
   /** Novo (BE-41): `[]` na receita só com insumos e com backend anterior. */

@@ -26,8 +26,8 @@ export const itemReceitaReceitaSchema = z.object({
   /** `unidadeRendimento` da receita usada. */
   unidade: unidadeMedidaSchema,
   /**
-   * Custo de 1 unidade da receita usada (ingredientes, forno e perda; sem
-   * embalagem nem gastos por unidade), com 4 casas. Opcional: só desde a BE-40.
+   * Custo de 1 unidade da receita usada (ingredientes, forno, seu trabalho
+   * (BE-46) e perda; sem embalagem nem gastos por unidade), com 4 casas. Opcional: só desde a BE-40.
    */
   custoUnitario: z.number().optional(),
   /** `quantidade × custoUnitario`, com 2 casas (BE-40). */
@@ -50,9 +50,16 @@ export const custoReceitaDetalheSchema = z.object({
   ingredientesLote: z.number(),
   /** Gastos `MENSAL` de 1 lote, com 2 casas. */
   gastosMensaisLote: z.number(),
+  /**
+   * Seu trabalho em 1 lote (`minutosTrabalhoPorLote ÷ 60 × valorHora`), com 2
+   * casas (BE-46). Padrão 0 para backend anterior à BE-46.
+   */
+  trabalhoLote: z.number().default(0),
   /** Por unidade, com 4 casas (como os campos abaixo). */
   ingredientes: z.number(),
   gastosMensais: z.number(),
+  /** Seu trabalho por unidade, antes da perda (BE-46); padrão 0. */
+  trabalho: z.number().default(0),
   gastosPorUnidade: z.number(),
   embalagem: z.number(),
   /** O que a perda acrescenta ao custo. */
@@ -75,6 +82,8 @@ export type ParteDoPreco = z.infer<typeof parteDoPrecoSchema>;
 export const composicaoPrecoSchema = z.object({
   ingredientes: parteDoPrecoSchema,
   gastosMensais: parteDoPrecoSchema,
+  /** Seu trabalho (BE-46); zerado para backend anterior à BE-46. */
+  trabalho: parteDoPrecoSchema.default({ valor: 0, fracao: 0 }),
   gastosPorUnidade: parteDoPrecoSchema,
   embalagem: parteDoPrecoSchema,
   perdas: parteDoPrecoSchema,
@@ -117,6 +126,12 @@ export const receitaSchema = z.object({
   perdaPercentual: z.number(),
   /** Fração do **preço**; omitido quando a receita usa o lucro padrão da empresa. */
   lucroPercentual: z.number().optional(),
+  /**
+   * Minutos em que a dona fica ocupada com 1 lote, sem o tempo sozinha no
+   * forno ou na geladeira (BE-45); fracionário permitido. Padrão 0 para
+   * backend anterior à BE-45.
+   */
+  minutosTrabalhoPorLote: z.number().default(0),
   /** `custoUnitario × rendimento` (1 lote), calculado na leitura. */
   custoProducao: z.number().optional(),
   /** Custo de 1 unidade (com embalagem e perda), calculado na leitura. */
@@ -158,6 +173,8 @@ export type CreateReceitaBody = {
   perda_percentual?: number;
   /** Fração do preço de 0 até menos de 1; `null` usa o lucro padrão da empresa. */
   lucro_percentual?: number | null;
+  /** Minutos de trabalho em 1 lote, ≥ 0 (fracionário permitido); padrão 0 (BE-45). */
+  minutos_trabalho_por_lote?: number;
   /** Padrão `true`; `false` só vai dentro de outras receitas (BE-39). */
   vendavel?: boolean;
   /** Opcional desde a BE-39: a receita precisa de ao menos um insumo ou receita. */

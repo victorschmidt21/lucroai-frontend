@@ -161,6 +161,12 @@ export const alertasSchema = z.object({
   precoDefasado: z.array(alertaPrecoDefasadoSchema),
   /** Novo (BE-41); `[]` com um backend anterior. */
   produtosNegativos: z.array(alertaProdutoNegativoSchema).default([]),
+  /**
+   * Novo (BE-47): o valor da hora é 0 e alguma receita (vendável ou não) tem
+   * minutos de trabalho, então o seu trabalho não entra no custo; `false`
+   * com um backend anterior.
+   */
+  valorHoraVazio: z.boolean().default(false),
 });
 
 export type Alertas = z.infer<typeof alertasSchema>;
