@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import type { Termo } from './aprender.schema';
-import { buscarTermos } from './busca';
+import { buscarGuias, buscarTermos } from './busca';
 import { TERMOS } from './termos';
 
 function ids(termos: Termo[]) {
@@ -72,5 +72,24 @@ describe('buscarTermos', () => {
 
   it('com o texto vazio, devolve todos os termos', () => {
     expect(buscarTermos('   ')).toHaveLength(TERMOS.length);
+  });
+});
+
+describe('buscarGuias', () => {
+  const idsDosGuias = (q: string) => buscarGuias(q).map((guia) => guia.id);
+
+  it('acha o guia do seu trabalho por "trabalho", "hora" e "salário"', () => {
+    for (const q of ['trabalho', 'hora', 'salário', 'SALARIO', ' Hora ']) {
+      expect(idsDosGuias(q)).toContain('cobrar-pelo-seu-trabalho');
+    }
+  });
+
+  it('procura no título e nas palavras, não nos passos', () => {
+    expect(idsDosGuias('fornada')).toEqual(['registrar-fornada']);
+    expect(idsDosGuias('brigadeiro')).toEqual([]);
+  });
+
+  it('texto vazio devolve todos os guias', () => {
+    expect(buscarGuias('  ')).toHaveLength(4);
   });
 });

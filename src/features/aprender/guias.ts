@@ -24,6 +24,11 @@ export const passoDoGuiaSchema = z.object({
 export const guiaSchema = z.object({
   id: z.string().regex(ID_KEBAB, 'Use kebab-case'),
   titulo: z.string().trim().min(1),
+  /**
+   * Palavras que ela usaria na busca do Aprender (FE-78), além do título.
+   * Não aparecem na tela.
+   */
+  palavras: z.array(z.string().trim().min(1)).optional(),
   passos: z.array(passoDoGuiaSchema).min(1).max(LIMITES_GUIA.passos),
 });
 
@@ -119,6 +124,41 @@ export const GUIAS: readonly Guia[] = [
           'Ajuste o preço da receita, ou simule outro preço antes de mudar.',
         termo: 'margem',
         link: { rotulo: 'Simular outro preço', href: '/simulacao' },
+      },
+    ],
+  },
+  {
+    id: 'cobrar-pelo-seu-trabalho',
+    titulo: 'Como cobrar pelo seu trabalho',
+    palavras: ['hora', 'valor da hora', 'salário', 'tempo', 'retirada'],
+    passos: [
+      {
+        texto:
+          'Tire seu salário das contas do mês: elas se dividem pelas fornadas, e não pelo tempo que você passa em cada receita.',
+        termo: 'contas-do-mes',
+        link: { rotulo: 'Ver Contas do mês', href: '/gastos-indiretos' },
+      },
+      {
+        texto:
+          'Diga quanto vale sua hora: quanto quer ganhar por mês, dividido pelas horas que passa produzindo.',
+        link: { rotulo: 'Ver Ajustes de preço', href: '/configuracoes' },
+      },
+      {
+        texto:
+          'Na receita, conte o tempo em que você fica ocupada com o lote: preparar, mexer, montar, embalar. O forno sozinho não conta.',
+        link: { rotulo: 'Ver Receitas', href: '/receitas' },
+      },
+      {
+        texto:
+          'Exemplo: com a hora a R$ 18,75, 40 minutos num lote de 50 brigadeiros somam R$ 0,25 em cada unidade.',
+        termo: 'custo-por-unidade',
+        link: { rotulo: 'Ver Receitas', href: '/receitas' },
+      },
+      {
+        texto:
+          'Seu trabalho é custo, não lucro: o lucro é o que sobra para o negócio depois de pagar tudo, inclusive você.',
+        termo: 'lucro-desejado',
+        link: { rotulo: 'Ver Ajustes de preço', href: '/configuracoes' },
       },
     ],
   },

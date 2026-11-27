@@ -8,7 +8,15 @@ import { isTermoId } from './termos';
 const PASTA_DAS_ROTAS = path.resolve(process.cwd(), 'src/app/(app)');
 
 /** Palavras da marca que não aparecem no texto da tela (docs/marca.md). */
-const PALAVRAS_PROIBIDAS = ['rateio', 'markup', 'gastos indiretos', 'insumo'];
+const PALAVRAS_PROIBIDAS = [
+  'rateio',
+  'markup',
+  'gastos indiretos',
+  'insumo',
+  'pro-labore',
+  'pro labore',
+  'mao de obra',
+];
 
 function existeRota(href: string) {
   const caminho = href.split(/[?#]/)[0];
@@ -20,11 +28,12 @@ const PASSOS = GUIAS.flatMap((guia) =>
 );
 
 describe('guias', () => {
-  it('tem os 3 guias, todos válidos pelo schema', () => {
+  it('tem os 4 guias, todos válidos pelo schema', () => {
     expect(GUIAS.map((guia) => guia.titulo)).toEqual([
       'Como chegar no preço do seu bolo',
       'Como registrar uma fornada',
       'O que fazer quando um ingrediente fica mais caro',
+      'Como cobrar pelo seu trabalho',
     ]);
     const invalidos = GUIAS.filter(
       (guia) => !guiaSchema.safeParse(guia).success,
